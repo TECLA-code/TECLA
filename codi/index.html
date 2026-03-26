@@ -2720,7 +2720,7 @@
     let _modesIndex = [];
     async function _loadModesIndex() {
       if (_modesIndex.length) return _modesIndex;
-      try { const r = await fetch('/py/modes_index.json'); const d = await r.json(); _modesIndex = d.modes || []; } catch { }
+      try { const r = await fetch('./py/modes_index.json'); const d = await r.json(); _modesIndex = d.modes || []; } catch { }
       return _modesIndex;
     }
     async function _getEffectiveModes() {
@@ -4248,7 +4248,7 @@
 
       try {
         // 1. Load manifest
-        const manifestRes = await fetch('/device_files_manifest.json');
+        const manifestRes = await fetch('./device_files_manifest.json');
         if (!manifestRes.ok) throw new Error('No s\'ha trobat device_files_manifest.json al servidor');
         const manifest = await manifestRes.json();
 

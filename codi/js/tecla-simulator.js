@@ -45,7 +45,7 @@ export class TECLASimulator {
         });
 
         // Carrega i executa els mocks
-        const mocksRes = await fetch('/py/tecla_mocks.py');
+        const mocksRes = await fetch('./py/tecla_mocks.py');
         const mocksCode = await mocksRes.text();
         await this.pyodide.runPythonAsync(mocksCode);
         await this.pyodide.runPythonAsync('install_mocks()');
@@ -56,7 +56,7 @@ export class TECLASimulator {
         await this.pyodide.runPythonAsync("import sys; sys.path.insert(0, '/tecla')");
 
         // Carrega base_mode.py al VFS
-        const baseRes = await fetch('/py/base_mode.py');
+        const baseRes = await fetch('./py/base_mode.py');
         const baseCode = await baseRes.text();
         this.pyodide.FS.writeFile('/tecla/modes/base_mode.py', baseCode);
 
