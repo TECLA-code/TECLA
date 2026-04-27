@@ -2259,16 +2259,18 @@
             <strong>arrossega'l al volum RPI-RP2</strong> al Finder. El dispositiu es reiniciarà automàticament.
           </p>
           <div style="display:flex;flex-direction:column;gap:8px">
-            <a class="btn btn-sm" id="btn-flash-nuke" href="./firmware/flash_nuke.uf2" download="flash_nuke.uf2" data-i18n="btn_dl_nuke">⚠
-              Descarregar flash_nuke.uf2</a>
-            <a class="btn btn-sm btn-primary" id="btn-install-cp"
-              href="./firmware/adafruit-circuitpython-raspberry_pi_pico-es-10.0.3.uf2"
-              download="circuitpython-pico-10.0.3.uf2" data-i18n="btn_dl_cp">⬇ Descarregar CircuitPython 10.0.3</a>
+            <button class="btn btn-sm" id="btn-flash-nuke" data-i18n="btn_dl_nuke">⚠ Instal·lar flash_nuke</button>
+            <button class="btn btn-sm btn-primary" id="btn-install-cp" data-i18n="btn_dl_cp">⚡ Instal·lar CircuitPython 10.0.3</button>
             <button class="btn btn-sm" id="btn-fw-instructions" data-i18n="btn_fw_instructions">ℹ Instruccions completes</button>
+            <div style="font-size:11px; margin-top:4px; text-align:center;">
+              <a href="./firmware/adafruit-circuitpython-raspberry_pi_pico-es-10.0.3.uf2" download="circuitpython.uf2" style="color:var(--text3);text-decoration:underline;">Descàrrega manual CP</a>
+              <span style="color:var(--text3)">·</span>
+              <a href="./firmware/flash_nuke.uf2" download="flash_nuke.uf2" style="color:var(--text3);text-decoration:underline;">Descàrrega manual Nuke</a>
+            </div>
           </div>
           <p style="font-size:11px;color:var(--text2);margin-top:10px;line-height:1.6" data-i18n="fw_step1_note">
             <strong>Per entrar al mode bootloader:</strong><br>Mantén premut BOOTSEL mentre connectes el USB-C.<br>
-            <strong>Després de descarregar:</strong><br>Obre el Finder → arrossega el .uf2 al volum RPI-RP2.
+            <strong>Instal·lació:</strong><br>Prem un dels botons superiors i selecciona el volum RPI-RP2.
           </p>
         </div>
         <div class="card">
@@ -4297,21 +4299,68 @@
       alert(`Instruccions d'instal·lació del Firmware TECLA\n\n` +
         `PAS 1 — CircuitPython (mode bootloader RPI-RP2):\n` +
         `  a. Connecta la Pico mantenint premut BOOTSEL\n` +
-        `     → Apareix com "RPI-RP2" al Finder\n` +
-        `  b. (Opcional) Descarrega flash_nuke.uf2 i arrossega'l\n` +
-        `     al volum RPI-RP2 per esborrar tot el contingut\n` +
-        `  c. Descarrega CircuitPython 10.0.3 i arrossega'l\n` +
-        `     al volum RPI-RP2 → el dispositiu es reinicia com CIRCUITPY\n\n` +
+        `     → Apareix com "RPI-RP2" a l'ordinador\n` +
+        `  b. (Opcional) Instal·la flash_nuke seleccionant el volum RPI-RP2\n` +
+        `  c. Instal·la CircuitPython 10.0.3 seleccionant el volum RPI-RP2\n` +
+        `     → el dispositiu es reinicia com a volum CIRCUITPY\n\n` +
         `PAS 2 — Firmware TECLA (volum CIRCUITPY):\n` +
         `  a. A la pestanya "Tecles", prem "Connectar"\n` +
         `     → Selecciona el volum CIRCUITPY\n` +
         `  b. Torna a "Firmware" → prem "Refrescar estat"\n` +
         `  c. Prem "Instal·lar / Actualitzar firmware"\n` +
-        `  d. Reinicia el dispositiu per aplicar els canvis\n\n` +
-        `NOTA: Els fitxers .uf2 s'han d'arrossegar manualment\n` +
-        `des del Finder al volum RPI-RP2 (no es poden escriure\n` +
-        `via web per limitacions del sistema operatiu).`);
+        `  d. Reinicia el dispositiu per aplicar els canvis`);
     });
+
+    // ── Instal·lació directa de UF2 ─────────────────────────────────
+    async function _installUF2(url, filename) {
+      if (!('showDirectoryPicker' in window)) {
+        alert('El teu navegador no suporta l\\'escriptura directa de carpetes. Si us plau, utilitza els enllaços de descàrrega manual.');
+        return;
+      }
+      try {
+        _fwMsg(`Selecciona la carpeta de la unitat RPI-RP2 per instal·lar ${filename}...`);
+        const dirHandle = await window.showDirectoryPicker({ mode: 'readwrite', id: 'rp2', startIn: 'desktop' });
+        
+        if (dirHandle.name !== 'RPI-RP2' && !confirm(`La carpeta seleccionada es diu "${dirHandle.name}", no "RPI-RP2". Estàs segur/a que és el dispositiu correcte?`)) {
+          _fwMsg('Instal·lació cancel·lada.');
+          return;
+        }
+
+        _fwMsg(`Descarregant ${filename}...`);
+        _fwProgress(20);
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+        const blob = await res.blob();
+        
+        _fwMsg(`Escrivint ${filename} al dispositiu... (es reiniciarà automàticament)`);
+        _fwProgress(60);
+        
+        const fileHandle = await dirHandle.getFileHandle(filename, { create: true });
+        const writable = await fileHandle.createWritable();
+        try {
+          await writable.write(blob);
+          await writable.close();
+        } catch (writeErr) {
+          // The device reboots instantly after a valid UF2 is written, causing a write/close error.
+          // This is expected behavior!
+          console.log("Error esperat durant l'escriptura (el dispositiu s'ha reiniciat):", writeErr);
+        }
+        
+        _fwProgress(100);
+        _fwMsg(`✓ Instal·lació de ${filename} enviada! El dispositiu s'hauria d'estar reiniciant.`);
+        log(`✓ Fitxer ${filename} escrit a ${dirHandle.name}`, 'ok');
+      } catch (e) {
+        if (e.name === 'AbortError') {
+          _fwMsg('Selecció de carpeta cancel·lada.');
+        } else {
+          _fwMsg(`Error instal·lant UF2: ${e.message}`);
+          console.error(e);
+        }
+      }
+    }
+
+    document.getElementById('btn-flash-nuke')?.addEventListener('click', () => _installUF2('./firmware/flash_nuke.uf2', 'flash_nuke.uf2'));
+    document.getElementById('btn-install-cp')?.addEventListener('click', () => _installUF2('./firmware/adafruit-circuitpython-raspberry_pi_pico-es-10.0.3.uf2', 'circuitpython.uf2'));
 
     // ── Instal·lar / Actualitzar firmware TECLA ──────────────────────
     document.getElementById('btn-install-fw')?.addEventListener('click', async () => {
@@ -4349,7 +4398,14 @@
 
         _fwMsg(`Preparant ${filesToCopy.length} fitxers…`); _fwProgress(3);
 
-        // 3. Pre-create all directories (fixes NotFoundError on FAT32/macOS Chrome .crswap issue)
+        // 3. Delete code.py and main.py first to stop CircuitPython auto-reloading
+        // This is CRITICAL for fresh installations where code.py runs an infinite loop
+        _fwMsg('Aturant auto-reload...'); _fwProgress(4);
+        try { await device.deleteFile('code.py'); } catch { /* ok */ }
+        try { await device.deleteFile('main.py'); } catch { /* ok */ }
+        await new Promise(r => setTimeout(r, 600)); // wait for reboot/stop to settle
+
+        // 4. Pre-create all directories (fixes NotFoundError on FAT32/macOS Chrome .crswap issue)
         _fwMsg('Creant directoris…'); _fwProgress(5);
         const DIRS = ['config', 'core', 'core/animations', 'effects', 'lib',
           'lib/adafruit_hid', 'lib/adafruit_midi', 'modes'];
@@ -4359,7 +4415,7 @@
         // Let macOS FAT32 VFS commit the new directories before writing files
         await new Promise(r => setTimeout(r, 400));
 
-        // 4. Clean unused modes already on device (mirror desktop _clean_unused_modes)
+        // 5. Clean unused modes already on device (mirror desktop _clean_unused_modes)
         _fwMsg('Netejant modes no seleccionats…');
         try {
           const modesEntries = await device.listDir('modes');
@@ -4374,14 +4430,14 @@
           }
         } catch (e) { console.warn('Error llistant modes del dispositiu:', e.message); }
 
-        // 5. Backup config if preserve
+        // 6. Backup config if preserve
         let configBackup = null;
         if (preserve) {
           try { configBackup = await device.readFile('config/tecla_config.json'); }
           catch { /* no config yet */ }
         }
 
-        // 6. Copy files
+        // 7. Copy files
         let done = 0; const errors = [];
         for (const relPath of filesToCopy) {
           _fwMsg(`Copiant ${relPath}…`);
@@ -4390,13 +4446,27 @@
             const res = await fetch(`./device_files/${relPath}`);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const content = isBinary ? await res.arrayBuffer() : await res.text();
-            await device.writeFile(relPath, content);
+            
+            // Retry logic for writing files to FAT32
+            let writeAttempts = 0;
+            while (writeAttempts < 3) {
+              try {
+                await device.writeFile(relPath, content);
+                await new Promise(r => setTimeout(r, 10)); // tiny delay to let VFS catch up
+                break; // success
+              } catch (writeErr) {
+                writeAttempts++;
+                console.warn(`Retry ${writeAttempts} for ${relPath} due to: ${writeErr.message}`);
+                await new Promise(r => setTimeout(r, 200));
+                if (writeAttempts === 3) throw writeErr;
+              }
+            }
           } catch (e) { errors.push(`${relPath}: ${e.message}`); console.warn('Skipping', relPath, e.message); }
           done++;
           _fwProgress(Math.round(5 + (done / filesToCopy.length) * 83));
         }
 
-        // 6. Write local config (from buildDeviceConfig) → config/tecla_config.json
+        // 8. Write local config (from buildDeviceConfig) → config/tecla_config.json
         _fwMsg('Escrivint configuració…'); _fwProgress(90);
         try {
           const cfgData = JSON.stringify(buildDeviceConfig(), null, 2);
@@ -4405,9 +4475,6 @@
           if (configBackup) { try { await device.writeFile('config/tecla_config.json', configBackup); } catch { } }
           errors.push(`config/tecla_config.json: ${e.message}`);
         }
-
-        // 7. Delete code.py if it exists (conflicts with main.py)
-        try { await device.deleteFile('code.py'); } catch { /* ok if missing */ }
 
         // 8. Write version marker
         try { await device.writeFile('tecla_version.txt', 'TECLA v3.0 (web install)'); }
@@ -5002,9 +5069,9 @@ body{background:var(--sim-bg,#0a0a0a);color:var(--text,#e0e0e0);font-family:syst
         toast_prog_saved: '✓ Progressió desada',
                 toast_scale_saved: '✓ Escala desada',
         fw_step1_desc: `Descarrega el fitxer i <strong>arrossega'l al volum RPI-RP2</strong> al Finder. El dispositiu es reiniciarà automàticament.`,
-        btn_dl_nuke: '⚠ Descarregar flash_nuke.uf2',
-        btn_dl_cp: '⬇ Descarregar CircuitPython 10.0.3',
-        fw_step1_note: `<strong>Per entrar al mode bootloader:</strong><br>Mantén premut BOOTSEL mentre connectes el USB-C.<br><strong>Després de descarregar:</strong><br>Obre el Finder → arrossega el .uf2 al volum RPI-RP2.`,
+        btn_dl_nuke: '⚠ Instal·lar flash_nuke al dispositiu',
+        btn_dl_cp: '⚡ Instal·lar CircuitPython 10.0.3',
+        fw_step1_note: `<strong>Per entrar al mode bootloader:</strong><br>Mantén premut BOOTSEL mentre connectes el USB-C.<br><strong>Instal·lació:</strong><br>Prem un dels botons superiors i selecciona la carpeta de la unitat RPI-RP2 per instal·lar-ho automàticament.`,
         fw_step2_desc: `Quan el dispositiu apareix com <strong>CIRCUITPY</strong>, connecta'l a la pestanya <strong>Tecles</strong> i instal·la el firmware.`,
         fw_preserve: 'Preservar configuració existent',
         guide_toc: `
@@ -5168,9 +5235,9 @@ body{background:var(--sim-bg,#0a0a0a);color:var(--text,#e0e0e0);font-family:syst
         toast_prog_saved: '✓ Progresión guardada',
                 toast_scale_saved: '✓ Escala guardada',
         fw_step1_desc: `Descarga el archivo y <strong>arrástralo al volumen RPI-RP2</strong> en Finder/Explorador. El dispositivo se reiniciará automáticamente.`,
-        btn_dl_nuke: '⚠ Descargar flash_nuke.uf2',
-        btn_dl_cp: '⬇ Descargar CircuitPython 10.0.3',
-        fw_step1_note: `<strong>Para entrar en modo bootloader:</strong><br>Mantén pulsado BOOTSEL mientras conectas el USB-C.<br><strong>Después de descargar:</strong><br>Abre Finder/Explorador → arrastra el .uf2 al volumen RPI-RP2.`,
+        btn_dl_nuke: '⚠ Instalar flash_nuke en el dispositivo',
+        btn_dl_cp: '⚡ Instalar CircuitPython 10.0.3',
+        fw_step1_note: `<strong>Para entrar en modo bootloader:</strong><br>Mantén pulsado BOOTSEL mientras conectas el USB-C.<br><strong>Instalación:</strong><br>Pulsa uno de los botones superiores y selecciona la carpeta de la unidad RPI-RP2 para instalarlo automáticamente.`,
         fw_step2_desc: `Cuando el dispositivo aparezca como <strong>CIRCUITPY</strong>, conéctalo en la pestaña <strong>Teclas</strong> e instala el firmware.`,
         fw_preserve: 'Preservar configuración existente',
         guide_toc: `
@@ -5334,9 +5401,9 @@ body{background:var(--sim-bg,#0a0a0a);color:var(--text,#e0e0e0);font-family:syst
         toast_prog_saved: '✓ Progression saved',
                 toast_scale_saved: '✓ Scale saved',
         fw_step1_desc: `Download the file and <strong>drag it to the RPI-RP2 volume</strong> in Finder/Explorer. The device will restart automatically.`,
-        btn_dl_nuke: '⚠ Download flash_nuke.uf2',
-        btn_dl_cp: '⬇ Download CircuitPython 10.0.3',
-        fw_step1_note: `<strong>To enter bootloader mode:</strong><br>Press and hold BOOTSEL while plugging in the USB-C cable.<br><strong>After downloading:</strong><br>Open Finder/Explorer → drag the .uf2 to the RPI-RP2 volume.`,
+        btn_dl_nuke: '⚠ Install flash_nuke to device',
+        btn_dl_cp: '⚡ Install CircuitPython 10.0.3',
+        fw_step1_note: `<strong>To enter bootloader mode:</strong><br>Press and hold BOOTSEL while plugging in the USB-C cable.<br><strong>Installation:</strong><br>Click one of the buttons above and select the RPI-RP2 volume folder to install it automatically.`,
         fw_step2_desc: `When the device appears as <strong>CIRCUITPY</strong>, connect to it in the <strong>Keys</strong> tab and install the firmware.`,
         fw_preserve: 'Preserve existing configuration',
         guide_toc: `
