@@ -4573,7 +4573,7 @@
     // ── Instal·lació directa de UF2 ─────────────────────────────────
     async function _installUF2(url, filename) {
       if (!('showDirectoryPicker' in window)) {
-        alert('El teu navegador no suporta l\\'escriptura directa de carpetes. Si us plau, utilitza els enllaços de descàrrega manual.');
+        alert("El teu navegador no suporta l'escriptura directa de carpetes. Si us plau, utilitza els enllaços de descàrrega manual.");
         return;
       }
       try {
@@ -4647,7 +4647,7 @@
           try {
             if (fwType === 'macro' && relPath === 'main.py') continue; // We will provide macro_main.py as main.py later
             const isBinary = relPath.endsWith('.mpy');
-            const fileRes = await fetch(\`./device_files/\${relPath}\`);
+            const fileRes = await fetch(`./device_files/${relPath}`);
             const content = isBinary ? await fileRes.arrayBuffer() : await fileRes.text();
             zip.file(relPath, content);
           } catch(e) { console.warn("Failed to zip file:", relPath); }
@@ -4671,7 +4671,7 @@
         _fwProgress(100);
         
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = \`TECLA_Firmware_\${fwType.toUpperCase()}.zip\`; a.click();
+        const a = document.createElement('a'); a.href = url; a.download = `TECLA_Firmware_${fwType.toUpperCase()}.zip`; a.click();
         URL.revokeObjectURL(url);
         _fwMsg('✓ ZIP descarregat. Descomprimeix-lo i copia el contingut al volum CIRCUITPY.', 'ok');
       } catch (e) {
