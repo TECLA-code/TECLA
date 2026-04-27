@@ -2669,6 +2669,7 @@
 
     // ── Tab navigation ─────────────────────────────────────────────
     let _builtKeys = false, _builtModes = false;
+    let _modesIndex = [];
     document.querySelectorAll('.nav-tab').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
@@ -2913,7 +2914,6 @@
     // ══════════════════════════════════════════════════════════════
     // TECLES — Grid 4×4
     // ══════════════════════════════════════════════════════════════
-    let _modesIndex = [];
     async function _loadModesIndex() {
       if (_modesIndex.length) return _modesIndex;
       try { const r = await fetch('./py/modes_index.json'); const d = await r.json(); _modesIndex = d.modes || []; } catch { }
