@@ -3088,17 +3088,17 @@
           valSel.innerHTML = '';
           if (typeSel.value === 'key') {
             mods.style.display = 'flex';
-            keys.forEach(k => valSel.innerHTML += \`<option value="\${k}">\${k}</option>\`);
+            keys.forEach(k => valSel.innerHTML += '<option value="' + k + '">' + k + '</option>');
           } else if (typeSel.value === 'media') {
             mods.style.display = 'none';
-            media.forEach(m => valSel.innerHTML += \`<option value="\${m.val}">\${m.l}</option>\`);
+            media.forEach(m => valSel.innerHTML += '<option value="' + m.val + '">' + m.l + '</option>');
           } else {
             valSel.style.display = 'none';
             mods.style.display = 'none';
             return;
           }
           valSel.style.display = 'block';
-          if(_macroConfig.keys[i].type === typeSel.value && _macroConfig.keys[i].val) {
+          if (_macroConfig.keys[i].type === typeSel.value && _macroConfig.keys[i].val) {
             valSel.value = _macroConfig.keys[i].val;
           }
         });
@@ -3108,29 +3108,29 @@
         typeSel.value = cfg.type || 'none';
         typeSel.dispatchEvent(new Event('change'));
         if (cfg.type === 'key') {
-          document.getElementById(\`macro-k\${i}-mod-ctrl\`).checked = !!cfg.ctrl;
-          document.getElementById(\`macro-k\${i}-mod-shift\`).checked = !!cfg.shift;
-          document.getElementById(\`macro-k\${i}-mod-alt\`).checked = !!cfg.alt;
-          document.getElementById(\`macro-k\${i}-mod-cmd\`).checked = !!cfg.cmd;
+          document.getElementById('macro-k' + i + '-mod-ctrl').checked = !!cfg.ctrl;
+          document.getElementById('macro-k' + i + '-mod-shift').checked = !!cfg.shift;
+          document.getElementById('macro-k' + i + '-mod-alt').checked = !!cfg.alt;
+          document.getElementById('macro-k' + i + '-mod-cmd').checked = !!cfg.cmd;
         }
       }
       
-      ['x','y','z'].forEach((axis, idx) => {
-        const sel = document.getElementById(\`macro-pot-\${axis}\`);
+      ['x', 'y', 'z'].forEach((axis, idx) => {
+        const sel = document.getElementById('macro-pot-' + axis);
         if (sel) sel.value = _macroConfig.pots[idx] || 'none';
       });
     }
     
     document.getElementById('btn-save-macros')?.addEventListener('click', async () => {
       for (let i = 0; i < 16; i++) {
-        const type = document.getElementById(\`macro-k\${i}-type\`).value;
+        const type = document.getElementById('macro-k' + i + '-type').value;
         const cfg = { type };
-        if (type !== 'none') cfg.val = document.getElementById(\`macro-k\${i}-val\`).value;
+        if (type !== 'none') cfg.val = document.getElementById('macro-k' + i + '-val').value;
         if (type === 'key') {
-          cfg.ctrl = document.getElementById(\`macro-k\${i}-mod-ctrl\`).checked;
-          cfg.shift = document.getElementById(\`macro-k\${i}-mod-shift\`).checked;
-          cfg.alt = document.getElementById(\`macro-k\${i}-mod-alt\`).checked;
-          cfg.cmd = document.getElementById(\`macro-k\${i}-mod-cmd\`).checked;
+          cfg.ctrl = document.getElementById('macro-k' + i + '-mod-ctrl').checked;
+          cfg.shift = document.getElementById('macro-k' + i + '-mod-shift').checked;
+          cfg.alt = document.getElementById('macro-k' + i + '-mod-alt').checked;
+          cfg.cmd = document.getElementById('macro-k' + i + '-mod-cmd').checked;
         }
         _macroConfig.keys[i] = cfg;
       }
@@ -3148,7 +3148,7 @@
         try {
           await device.writeFile('macro_config.json', cfgString);
           log('✓ Configuració de Macros desada a la placa.', 'ok');
-        } catch (e) { log(\`Error desant macros: \${e.message}\`, 'warn'); }
+        } catch (e) { log('Error desant macros: ' + e.message, 'warn'); }
       }
     });
 
@@ -3157,8 +3157,8 @@
       // Toggle tabs
       document.getElementById('nav-tab-macros').style.display = isMacro ? '' : 'none';
       ['modes', 'progressions', 'scales', 'simulator'].forEach(tab => {
-        const el = document.querySelector(\`.nav-tab[data-tab="\${tab}"]\`);
-        if(el) el.style.display = isMacro ? 'none' : '';
+        const el = document.querySelector('.nav-tab[data-tab="' + tab + '"]');
+        if (el) el.style.display = isMacro ? 'none' : '';
       });
       // Switch to Macro tab automatically
       if (isMacro) {
