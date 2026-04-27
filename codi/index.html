@@ -2038,15 +2038,6 @@
     <div class="tab-panel" id="tab-modes">
       <div class="panel-grid cols2">
         <div class="card">
-          <div class="card-title">Tipus de Firmware</div>
-          <p style="font-size:12px;color:var(--text2);margin-top:-6px;margin-bottom:12px;">Escull el mode de funcionament del dispositiu.</p>
-          <select class="form-select" id="fw-type-select" style="margin-bottom:12px;">
-            <option value="musical">TECLA Musical (MIDI, Escales, Synth)</option>
-            <option value="macro">TECLA Macro (Teclat/Streamdeck, Controls PC)</option>
-          </select>
-        </div>
-
-        <div class="card">
           <div class="card-title" data-i18n="card_modes_install">Modes a instal·lar al dispositiu</div>
           <div class="checklist" id="modes-list-check">
             <div class="empty"><span class="spinner"></span></div>
@@ -2298,6 +2289,14 @@
     <!-- ══ FIRMWARE ══════════════════════════════════════════════ -->
     <div class="tab-panel" id="tab-firmware">
       <div class="fw-grid">
+        <div class="card">
+          <div class="card-title">Tipus de Firmware</div>
+          <p style="font-size:12px;color:var(--text2);margin-top:-6px;margin-bottom:12px;">Escull el mode de funcionament del dispositiu. En mode Macro, les tecles actuen com a dreceres de teclat.</p>
+          <select class="form-select" id="fw-type-select" style="margin-bottom:0;">
+            <option value="musical">TECLA Musical (MIDI, Escales, Synth)</option>
+            <option value="macro">TECLA Macro (Teclat/Streamdeck, Controls PC)</option>
+          </select>
+        </div>
         <div class="card">
           <div class="card-title" data-i18n="card_fw_state">Estat del sistema</div>
           <div class="fw-status-row"><span class="fw-status-key" data-i18n="fw_bootloader_label">Mode Bootloader</span><span
@@ -3169,12 +3168,15 @@
       localStorage.setItem('tecla-fw-type', e.target.value);
     });
     
-    // Init fw-type-select on boot
+    // Init fw-type-select on boot — always start as 'musical' to avoid hiding tabs
     const savedFwType = localStorage.getItem('tecla-fw-type') || 'musical';
     const fwSel = document.getElementById('fw-type-select');
     if (fwSel) {
       fwSel.value = savedFwType;
-      fwSel.dispatchEvent(new Event('change'));
+      // Only fire change if macro, to avoid hiding tabs unnecessarily on musical mode
+      if (savedFwType === 'macro') {
+        fwSel.dispatchEvent(new Event('change'));
+      }
     }
 
     // Wire bank controls once at startup (outside buildKeysGrid so they're always active)
