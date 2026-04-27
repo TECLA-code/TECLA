@@ -1101,6 +1101,16 @@
       transition: width .25s
     }
 
+    .fw-dl-secondary {
+      font-size: 11px;
+      color: var(--accent);
+      text-align: center;
+      text-decoration: underline;
+      background: none;
+      border: none;
+      padding: 2px 0;
+    }
+
     .fw-msg {
       font-size: 11.5px;
       color: var(--text2);
@@ -2259,14 +2269,15 @@
             <strong>arrossega'l al volum RPI-RP2</strong> al Finder. El dispositiu es reiniciarà automàticament.
           </p>
           <div style="display:flex;flex-direction:column;gap:8px">
-            <button class="btn btn-sm" id="btn-flash-nuke" data-i18n="btn_dl_nuke">⚠ Instal·lar flash_nuke al RPI-RP2</button>
-            <button class="btn btn-sm btn-primary" id="btn-install-cp" data-i18n="btn_dl_cp">⚡ Instal·lar CircuitPython 10.0.3 al RPI-RP2</button>
-            <button class="btn btn-sm" id="btn-fw-instructions" data-i18n="btn_fw_instructions">ℹ Instruccions completes</button>
-            <div id="fw-uf2-dl-fallback" style="display:none;font-size:11px;text-align:center;padding-top:2px;">
-              Descàrrega manual:
-              <a href="./firmware/flash_nuke.uf2" download="flash_nuke.uf2" style="color:var(--accent)">flash_nuke.uf2</a> ·
-              <a href="./firmware/adafruit-circuitpython-raspberry_pi_pico-es-10.0.3.uf2" download="circuitpython-pico-10.0.3.uf2" style="color:var(--accent)">CircuitPython 10.0.3</a>
+            <div id="fw-step1-direct" style="display:none;flex-direction:column;gap:6px">
+              <button class="btn btn-sm" id="btn-flash-nuke" data-i18n="btn_dl_nuke">⚠ Instal·lar flash_nuke al RPI-RP2</button>
+              <button class="btn btn-sm btn-primary" id="btn-install-cp" data-i18n="btn_dl_cp">⚡ Instal·lar CircuitPython 10.0.3 al RPI-RP2</button>
             </div>
+            <div id="fw-step1-manual" style="display:flex;flex-direction:column;gap:6px">
+              <a class="btn btn-sm" href="./firmware/flash_nuke.uf2" download="flash_nuke.uf2" data-i18n="btn_dl_nuke_manual">⬇ Descarregar flash_nuke.uf2</a>
+              <a class="btn btn-sm btn-primary" href="./firmware/adafruit-circuitpython-raspberry_pi_pico-es-10.0.3.uf2" download="circuitpython-pico-10.0.3.uf2" data-i18n="btn_dl_cp_manual">⬇ Descarregar CircuitPython 10.0.3</a>
+            </div>
+            <button class="btn btn-sm" id="btn-fw-instructions" data-i18n="btn_fw_instructions">ℹ Instruccions completes</button>
           </div>
           <p style="font-size:11px;color:var(--text2);margin-top:10px;line-height:1.6" data-i18n="fw_step1_note">
             <strong>Per entrar al mode bootloader:</strong><br>Mantén premut BOOTSEL mentre connectes el USB-C.<br>
@@ -2283,6 +2294,10 @@
                 configuració existent</span></label>
             <button class="btn btn-sm btn-primary" id="btn-install-fw" disabled data-i18n="btn_install_fw">Instal·lar / Actualitzar firmware</button>
             <button class="btn btn-sm" id="btn-verify-fw" disabled data-i18n="btn_verify_fw">Verificar instal·lació</button>
+            <div style="border-top:1px solid var(--border);margin-top:4px;padding-top:8px;display:flex;flex-direction:column;gap:6px">
+              <button class="btn btn-sm" id="btn-download-fw-zip" data-i18n="btn_download_fw_zip">⬇ Descarregar firmware ZIP (sense connexió)</button>
+              <p style="font-size:10px;color:var(--text3);margin:0;line-height:1.5" data-i18n="fw_zip_note">Compatible amb tots els navegadors. Extreu tots els fitxers del ZIP al volum <strong>CIRCUITPY</strong> amb el Finder (Mac) o l'Explorador de Windows.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -4368,6 +4383,83 @@
     document.getElementById('btn-flash-nuke')?.addEventListener('click', () => _installUF2('./firmware/flash_nuke.uf2', 'flash_nuke.uf2'));
     document.getElementById('btn-install-cp')?.addEventListener('click', () => _installUF2('./firmware/adafruit-circuitpython-raspberry_pi_pico-es-10.0.3.uf2', 'circuitpython.uf2'));
 
+    // Adaptar Step 1 a la compatibilitat del navegador
+    (function () {
+      const hasPicker = 'showDirectoryPicker' in window;
+      const direct = document.getElementById('fw-step1-direct');
+      const manual = document.getElementById('fw-step1-manual');
+      if (direct) direct.style.display = hasPicker ? 'flex' : 'none';
+      if (manual && hasPicker) {
+        manual.querySelectorAll('a').forEach(a => { a.className = 'fw-dl-secondary'; });
+      }
+    })();
+
+    // ── Descarregar firmware ZIP (tots els navegadors) ─────────────────
+    document.getElementById('btn-download-fw-zip')?.addEventListener('click', _downloadFirmwareZip);
+
+    async function _downloadFirmwareZip() {
+      const btn = document.getElementById('btn-download-fw-zip');
+      if (btn) btn.disabled = true;
+      try {
+        _fwMsg('Carregant compressor ZIP…'); _fwProgress(2);
+        if (!window.JSZip) {
+          await new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+            s.onload = resolve; s.onerror = reject;
+            document.head.appendChild(s);
+          });
+        }
+        _fwMsg('Llegint manifest…'); _fwProgress(5);
+        const manifestRes = await fetch('./device_files_manifest.json');
+        if (!manifestRes.ok) throw new Error('No s\'ha trobat device_files_manifest.json al servidor');
+        const manifest = await manifestRes.json();
+        const mc = _loadModesConfig();
+        const enabledSet = new Set(mc.enabled_modes || []);
+        const ESSENTIAL_MODES = new Set(['base_mode.py', 'mode_manager.py', '__init__.py', 'mode_keyboard.py']);
+        const filesToCopy = manifest.files.filter(relPath => {
+          const fname = relPath.split('/').pop();
+          if (relPath.startsWith('modes/mode_') && relPath.endsWith('.py')) {
+            if (ESSENTIAL_MODES.has(fname)) return true;
+            return enabledSet.has(fname);
+          }
+          return true;
+        });
+        const zip = new window.JSZip();
+        let done = 0;
+        for (const relPath of filesToCopy) {
+          _fwMsg(`Afegint ${relPath}…`);
+          try {
+            const isBinary = relPath.endsWith('.mpy');
+            const res = await fetch(`./device_files/${relPath}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const content = isBinary ? await res.arrayBuffer() : await res.text();
+            zip.file(relPath, content);
+          } catch (e) { console.warn('Skipping', relPath, e.message); }
+          done++;
+          _fwProgress(5 + Math.round((done / filesToCopy.length) * 80));
+        }
+        zip.file('config/tecla_config.json', JSON.stringify(buildDeviceConfig(), null, 2));
+        zip.file('tecla_version.txt', 'TECLA v3.0 (web install)');
+        _fwMsg('Generant ZIP…'); _fwProgress(88);
+        const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+        _fwProgress(96);
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'tecla_firmware.zip';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(a.href);
+        _fwProgress(100);
+        _fwMsg('✓ ZIP descarregat! Extreu TOTS els fitxers al volum CIRCUITPY i reinicia el dispositiu.');
+        log('✓ Firmware ZIP descarregat.', 'ok');
+      } catch (e) {
+        _fwMsg(`Error generant ZIP: ${e.message}`);
+        log(`Error ZIP: ${e.message}`, 'err');
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
     // ── Instal·lar / Actualitzar firmware TECLA ──────────────────────
     document.getElementById('btn-install-fw')?.addEventListener('click', async () => {
       if (!device.isConnected()) { alert('Connecta el dispositiu (CIRCUITPY) a la pestanya "Tecles" primer.'); return; }
@@ -5056,11 +5148,15 @@ body{background:var(--sim-bg,#0a0a0a);color:var(--text,#e0e0e0);font-family:syst
         toast_pots_saved: '✓ Potenciòmetres guardats',
         toast_prog_saved: '✓ Progressió desada',
                 toast_scale_saved: '✓ Escala desada',
-        fw_step1_desc: `Descarrega el fitxer i <strong>arrossega'l al volum RPI-RP2</strong> al Finder. El dispositiu es reiniciarà automàticament.`,
+        fw_step1_desc: `<strong>Chrome/Edge/Arc:</strong> instal·la directament amb els botons. <strong>Altres navegadors:</strong> descarrega i arrossega el fitxer al volum <strong>RPI-RP2</strong>.`,
         btn_dl_nuke: '⚠ Instal·lar flash_nuke al RPI-RP2',
         btn_dl_cp: '⚡ Instal·lar CircuitPython 10.0.3 al RPI-RP2',
-        fw_step1_note: `<strong>Per entrar al mode bootloader:</strong><br>Mantén premut BOOTSEL mentre connectes el USB-C.<br><strong>Instal·lació directa (Chrome/Edge):</strong><br>Prem el botó i selecciona el volum RPI-RP2 al selector de carpetes.`,
+        btn_dl_nuke_manual: '⬇ Descarregar flash_nuke.uf2',
+        btn_dl_cp_manual: '⬇ Descarregar CircuitPython 10.0.3',
+        fw_step1_note: `<strong>Per entrar al mode bootloader:</strong><br>Mantén premut BOOTSEL mentre connectes el USB-C.<br><strong>Instal·lació directa (Chrome/Edge):</strong> Prem el botó → selecciona el volum RPI-RP2.<br><strong>Descàrrega manual:</strong> Obre el Finder (Mac) o l'Explorador de Windows → arrossega el .uf2 al volum RPI-RP2.`,
         fw_step2_desc: `Quan el dispositiu apareix com <strong>CIRCUITPY</strong>, connecta'l a la pestanya <strong>Tecles</strong> i instal·la el firmware.`,
+        btn_download_fw_zip: '⬇ Descarregar firmware ZIP (sense connexió)',
+        fw_zip_note: `Compatible amb tots els navegadors. Extreu tots els fitxers del ZIP directament al volum <strong>CIRCUITPY</strong> amb el Finder (Mac) o l'Explorador de Windows, i reinicia el dispositiu.`,
         fw_preserve: 'Preservar configuració existent',
         guide_toc: `
             <a href="#gs-1">1. Instal·lar el CircuitPython</a>
@@ -5222,11 +5318,15 @@ body{background:var(--sim-bg,#0a0a0a);color:var(--text,#e0e0e0);font-family:syst
         toast_pots_saved: '✓ Potenciómetros guardados',
         toast_prog_saved: '✓ Progresión guardada',
                 toast_scale_saved: '✓ Escala guardada',
-        fw_step1_desc: `Descarga el archivo y <strong>arrástralo al volumen RPI-RP2</strong> en Finder/Explorador. El dispositivo se reiniciará automáticamente.`,
+        fw_step1_desc: `<strong>Chrome/Edge/Arc:</strong> instala directamente con los botones. <strong>Otros navegadores:</strong> descarga y arrastra el archivo al volumen <strong>RPI-RP2</strong>.`,
         btn_dl_nuke: '⚠ Instalar flash_nuke en RPI-RP2',
         btn_dl_cp: '⚡ Instalar CircuitPython 10.0.3 en RPI-RP2',
-        fw_step1_note: `<strong>Para entrar en modo bootloader:</strong><br>Mantén pulsado BOOTSEL mientras conectas el USB-C.<br><strong>Instalación directa (Chrome/Edge):</strong><br>Pulsa el botón y selecciona el volumen RPI-RP2 en el selector.`,
+        btn_dl_nuke_manual: '⬇ Descargar flash_nuke.uf2',
+        btn_dl_cp_manual: '⬇ Descargar CircuitPython 10.0.3',
+        fw_step1_note: `<strong>Para entrar en modo bootloader:</strong><br>Mantén pulsado BOOTSEL mientras conectas el USB-C.<br><strong>Instalación directa (Chrome/Edge):</strong> Pulsa el botón → selecciona el volumen RPI-RP2.<br><strong>Descarga manual:</strong> Abre Finder (Mac) o el Explorador de Windows → arrastra el .uf2 al volumen RPI-RP2.`,
         fw_step2_desc: `Cuando el dispositivo aparezca como <strong>CIRCUITPY</strong>, conéctalo en la pestaña <strong>Teclas</strong> e instala el firmware.`,
+        btn_download_fw_zip: '⬇ Descargar firmware ZIP (sin conexión)',
+        fw_zip_note: `Compatible con todos los navegadores. Extrae todos los archivos del ZIP directamente en el volumen <strong>CIRCUITPY</strong> con Finder (Mac) o el Explorador de Windows, y reinicia el dispositivo.`,
         fw_preserve: 'Preservar configuración existente',
         guide_toc: `
             <a href="#gs-1">1. Instalar CircuitPython</a>
@@ -5388,11 +5488,15 @@ body{background:var(--sim-bg,#0a0a0a);color:var(--text,#e0e0e0);font-family:syst
         toast_pots_saved: '✓ Potentiometers saved',
         toast_prog_saved: '✓ Progression saved',
                 toast_scale_saved: '✓ Scale saved',
-        fw_step1_desc: `Download the file and <strong>drag it to the RPI-RP2 volume</strong> in Finder/Explorer. The device will restart automatically.`,
+        fw_step1_desc: `<strong>Chrome/Edge/Arc:</strong> install directly using the buttons. <strong>Other browsers:</strong> download and drag the file to the <strong>RPI-RP2</strong> volume.`,
         btn_dl_nuke: '⚠ Install flash_nuke to RPI-RP2',
         btn_dl_cp: '⚡ Install CircuitPython 10.0.3 to RPI-RP2',
-        fw_step1_note: `<strong>To enter bootloader mode:</strong><br>Press and hold BOOTSEL while plugging in the USB-C cable.<br><strong>Direct install (Chrome/Edge):</strong><br>Click the button and select the RPI-RP2 volume in the folder picker.`,
+        btn_dl_nuke_manual: '⬇ Download flash_nuke.uf2',
+        btn_dl_cp_manual: '⬇ Download CircuitPython 10.0.3',
+        fw_step1_note: `<strong>To enter bootloader mode:</strong><br>Press and hold BOOTSEL while plugging in the USB-C cable.<br><strong>Direct install (Chrome/Edge):</strong> Click the button → select the RPI-RP2 volume.<br><strong>Manual download:</strong> Open Finder (Mac) or Windows Explorer → drag the .uf2 to the RPI-RP2 volume.`,
         fw_step2_desc: `When the device appears as <strong>CIRCUITPY</strong>, connect to it in the <strong>Keys</strong> tab and install the firmware.`,
+        btn_download_fw_zip: '⬇ Download firmware ZIP (no connection needed)',
+        fw_zip_note: `Works with any browser. Extract all files from the ZIP directly to the <strong>CIRCUITPY</strong> volume using Finder (Mac) or Windows Explorer, then restart the device.`,
         fw_preserve: 'Preserve existing configuration',
         guide_toc: `
             <a href="#gs-1">1. Install CircuitPython</a>
