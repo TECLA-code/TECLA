@@ -2954,8 +2954,8 @@
       log(`Configuració desada: ${assigned} tecles assignades a '${bank.name}'.`, 'ok');
       if (device.isConnected()) {
         try {
-          await device.writeFile('tecla_web_config.json', JSON.stringify(buildDeviceConfig(), null, 2));
-          log('✓ Sincronitzat al dispositiu (tecla_web_config.json).', 'ok');
+          await device.writeFile('config/tecla_config.json', JSON.stringify(buildDeviceConfig(), null, 2));
+          log('✓ Sincronitzat al dispositiu (config/tecla_config.json).', 'ok');
         } catch (e) { log(`Error sincronitzant: ${e.message}`, 'warn'); }
       }
     });
@@ -2964,19 +2964,28 @@
       const mc = _loadModesConfig();
       // Convert file names ("mode_mandelbrot.py") → display names ("Mandelbrot") that mode_manager.py expects
       const fileToName = Object.fromEntries(_modesIndex.map(m => [m.file, m.name]));
+      // These go inside each bank (firmware reads from bank level via config_manager.get_*)
+      const potFn = mc.potentiometer_functions || {};
+      const arpPotFn = mc.arp_potentiometer_functions || {};
+      const scales = mc.keyboard_scales || [0, 1, 4, 5, 7, 8, 13, 15, 18, 19];
+      const arpModes = mc.arpeggiator_modes || Array.from({ length: 16 }, (_, i) => i);
       return {
         banks: _keysConfig.banks.map(b => ({
           name: b.name,
           modes: b.modes.map(f => f ? (fileToName[f] || f) : ''),
-          efectos_temporales: b.efectos || {}
+          efectos_temporales: b.efectos || {},
+          potentiometer_functions: potFn,
+          arp_potentiometer_functions: arpPotFn,
+          keyboard_scales: scales,
+          arpeggiator_modes: arpModes
         })),
         current_bank: _keysConfig.currentBank,
         enabled_modes: mc.enabled_modes || [],
         available_effects: mc.available_effects || ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend'],
-        keyboard_scales: mc.keyboard_scales || [],
-        arpeggiator_modes: mc.arpeggiator_modes || Array.from({ length: 16 }, (_, i) => i),
-        potentiometer_functions: mc.potentiometer_functions || {},
-        arp_potentiometer_functions: mc.arp_potentiometer_functions || {}
+        keyboard_scales: scales,
+        arpeggiator_modes: arpModes,
+        potentiometer_functions: potFn,
+        arp_potentiometer_functions: arpPotFn
       };
     }
 
@@ -3240,8 +3249,8 @@
       log('Funcions dels potenciòmetres guardades.', 'ok');
       if (device.isConnected()) {
         try {
-          await device.writeFile('tecla_web_config.json', JSON.stringify(buildDeviceConfig(), null, 2));
-          log('✓ Potenciòmetres sincronitzats al dispositiu.', 'ok');
+          await device.writeFile('config/tecla_config.json', JSON.stringify(buildDeviceConfig(), null, 2));
+          log('✓ Potenciòmetres sincronitzats al dispositiu (config/tecla_config.json).', 'ok');
         } catch (e) { log(`Error sincronitzant: ${e.message}`, 'warn'); }
       }
     });
