@@ -1274,6 +1274,36 @@
       margin: 10px 0
     }
 
+    .guide-key-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      margin: 12px 0;
+      max-width: 320px
+    }
+
+    .guide-key {
+      background: var(--sim-key);
+      border: 1px solid var(--sim-key-bd);
+      border-radius: 7px;
+      aspect-ratio: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-user-select: none;
+      user-select: none
+    }
+
+    .guide-key-num {
+      font-size: 9px;
+      color: var(--sim-lbl);
+      font-family: var(--mono);
+      position: absolute;
+      top: 5px;
+      left: 6px
+    }
+
     .guide-toc {
       display: flex;
       flex-direction: column;
@@ -2513,19 +2543,7 @@
             <p class="guide-li">Tecla <strong>14</strong>: baixar d'octava.</p>
             <p class="guide-li">Tecla <strong>15</strong>: pujar d'octava.</p>
             <p class="guide-li">Tecla <strong>16</strong>: aturar el so (All Notes Off).</p>
-            <pre class="guide-diagram">┌────┬────┬────┬────┐
-│ 1  │ 2  │ 3  │ 4  │
-│    │    │    │    │
-├────┼────┼────┼────┤
-│ 5  │ 6  │ 7  │ 8  │
-│    │    │    │    │
-├────┼────┼────┼────┤
-│ 9  │ 10 │ 11 │ 12 │
-│    │    │    │    │
-├────┼────┼────┼────┤
-│ 13 │ 14 │ 15 │ 16 │
-│    │    │    │    │
-└────┴────┴────┴────┘</pre>
+            <div class="guide-key-grid"><div class="guide-key"><span class="guide-key-num">1</span></div><div class="guide-key"><span class="guide-key-num">2</span></div><div class="guide-key"><span class="guide-key-num">3</span></div><div class="guide-key"><span class="guide-key-num">4</span></div><div class="guide-key"><span class="guide-key-num">5</span></div><div class="guide-key"><span class="guide-key-num">6</span></div><div class="guide-key"><span class="guide-key-num">7</span></div><div class="guide-key"><span class="guide-key-num">8</span></div><div class="guide-key"><span class="guide-key-num">9</span></div><div class="guide-key"><span class="guide-key-num">10</span></div><div class="guide-key"><span class="guide-key-num">11</span></div><div class="guide-key"><span class="guide-key-num">12</span></div><div class="guide-key"><span class="guide-key-num">13</span></div><div class="guide-key"><span class="guide-key-num">14</span></div><div class="guide-key"><span class="guide-key-num">15</span></div><div class="guide-key"><span class="guide-key-num">16</span></div></div>
 
             <div class="guide-h2">Capa 2 · Modes</div>
             <p class="guide-li">S'activa amb la tecla 13. Es configura a la pestanya <em>Tecles</em>.</p>
@@ -5200,19 +5218,7 @@ body{background:var(--sim-bg,#0a0a0a);color:var(--text,#e0e0e0);font-family:syst
             <p class="guide-li">Tecla <strong>14</strong>: baixar d'octava.</p>
             <p class="guide-li">Tecla <strong>15</strong>: pujar d'octava.</p>
             <p class="guide-li">Tecla <strong>16</strong>: aturar el so (All Notes Off).</p>
-            <pre class="guide-diagram">┌────┬────┬────┬────┐
-│ 1  │ 2  │ 3  │ 4  │
-│    │    │    │    │
-├────┼────┼────┼────┤
-│ 5  │ 6  │ 7  │ 8  │
-│    │    │    │    │
-├────┼────┼────┼────┤
-│ 9  │ 10 │ 11 │ 12 │
-│    │    │    │    │
-├────┼────┼────┼────┤
-│ 13 │ 14 │ 15 │ 16 │
-│    │    │    │    │
-└────┴────┴────┴────┘</pre>
+            <div class="guide-key-grid"><div class="guide-key"><span class="guide-key-num">1</span></div><div class="guide-key"><span class="guide-key-num">2</span></div><div class="guide-key"><span class="guide-key-num">3</span></div><div class="guide-key"><span class="guide-key-num">4</span></div><div class="guide-key"><span class="guide-key-num">5</span></div><div class="guide-key"><span class="guide-key-num">6</span></div><div class="guide-key"><span class="guide-key-num">7</span></div><div class="guide-key"><span class="guide-key-num">8</span></div><div class="guide-key"><span class="guide-key-num">9</span></div><div class="guide-key"><span class="guide-key-num">10</span></div><div class="guide-key"><span class="guide-key-num">11</span></div><div class="guide-key"><span class="guide-key-num">12</span></div><div class="guide-key"><span class="guide-key-num">13</span></div><div class="guide-key"><span class="guide-key-num">14</span></div><div class="guide-key"><span class="guide-key-num">15</span></div><div class="guide-key"><span class="guide-key-num">16</span></div></div>
             <div class="guide-h2">Capa 2 · Modes</div>
             <p class="guide-li">S'activa amb la tecla 13. Es configura a la pestanya <em>Tecles</em>.</p>
             <p class="guide-li">Tecles <strong>1–12</strong>: modes assignats.</p>
@@ -5374,19 +5380,7 @@ body{background:var(--sim-bg,#0a0a0a);color:var(--text,#e0e0e0);font-family:syst
             <p class="guide-li">Tecla <strong>14</strong>: bajar de octava.</p>
             <p class="guide-li">Tecla <strong>15</strong>: subir de octava.</p>
             <p class="guide-li">Tecla <strong>16</strong>: detener el sonido (All Notes Off).</p>
-            <pre class="guide-diagram">┌────┬────┬────┬────┐
-│ 1  │ 2  │ 3  │ 4  │
-│    │    │    │    │
-├────┼────┼────┼────┤
-│ 5  │ 6  │ 7  │ 8  │
-│    │    │    │    │
-├────┼────┼────┼────┤
-│ 9  │ 10 │ 11 │ 12 │
-│    │    │    │    │
-├────┼────┼────┼────┤
-│ 13 │ 14 │ 15 │ 16 │
-│    │    │    │    │
-└────┴────┴────┴────┘</pre>
+            <div class="guide-key-grid"><div class="guide-key"><span class="guide-key-num">1</span></div><div class="guide-key"><span class="guide-key-num">2</span></div><div class="guide-key"><span class="guide-key-num">3</span></div><div class="guide-key"><span class="guide-key-num">4</span></div><div class="guide-key"><span class="guide-key-num">5</span></div><div class="guide-key"><span class="guide-key-num">6</span></div><div class="guide-key"><span class="guide-key-num">7</span></div><div class="guide-key"><span class="guide-key-num">8</span></div><div class="guide-key"><span class="guide-key-num">9</span></div><div class="guide-key"><span class="guide-key-num">10</span></div><div class="guide-key"><span class="guide-key-num">11</span></div><div class="guide-key"><span class="guide-key-num">12</span></div><div class="guide-key"><span class="guide-key-num">13</span></div><div class="guide-key"><span class="guide-key-num">14</span></div><div class="guide-key"><span class="guide-key-num">15</span></div><div class="guide-key"><span class="guide-key-num">16</span></div></div>
             <div class="guide-h2">Capa 2 · Modos</div>
             <p class="guide-li">Se activa con la tecla 13. Se configura en la pestaña <em>Teclas</em>.</p>
             <p class="guide-li">Teclas <strong>1–12</strong>: modos asignados.</p>
@@ -5548,19 +5542,7 @@ body{background:var(--sim-bg,#0a0a0a);color:var(--text,#e0e0e0);font-family:syst
             <p class="guide-li">Key <strong>14</strong>: octave down.</p>
             <p class="guide-li">Key <strong>15</strong>: octave up.</p>
             <p class="guide-li">Key <strong>16</strong>: stop sound (All Notes Off).</p>
-            <pre class="guide-diagram">┌────┬────┬────┬────┐
-│ 1  │ 2  │ 3  │ 4  │
-│    │    │    │    │
-├────┼────┼────┼────┤
-│ 5  │ 6  │ 7  │ 8  │
-│    │    │    │    │
-├────┼────┼────┼────┤
-│ 9  │ 10 │ 11 │ 12 │
-│    │    │    │    │
-├────┼────┼────┼────┤
-│ 13 │ 14 │ 15 │ 16 │
-│    │    │    │    │
-└────┴────┴────┴────┘</pre>
+            <div class="guide-key-grid"><div class="guide-key"><span class="guide-key-num">1</span></div><div class="guide-key"><span class="guide-key-num">2</span></div><div class="guide-key"><span class="guide-key-num">3</span></div><div class="guide-key"><span class="guide-key-num">4</span></div><div class="guide-key"><span class="guide-key-num">5</span></div><div class="guide-key"><span class="guide-key-num">6</span></div><div class="guide-key"><span class="guide-key-num">7</span></div><div class="guide-key"><span class="guide-key-num">8</span></div><div class="guide-key"><span class="guide-key-num">9</span></div><div class="guide-key"><span class="guide-key-num">10</span></div><div class="guide-key"><span class="guide-key-num">11</span></div><div class="guide-key"><span class="guide-key-num">12</span></div><div class="guide-key"><span class="guide-key-num">13</span></div><div class="guide-key"><span class="guide-key-num">14</span></div><div class="guide-key"><span class="guide-key-num">15</span></div><div class="guide-key"><span class="guide-key-num">16</span></div></div>
             <div class="guide-h2">Layer 2 · Modes</div>
             <p class="guide-li">Activated with key 13. Configured in the <em>Keys</em> tab.</p>
             <p class="guide-li">Keys <strong>1–12</strong>: assigned modes.</p>
