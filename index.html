@@ -3469,6 +3469,22 @@
     };
 
     // ══════════════════════════════════════════════════════════════
+    // SYSTEM VOLUME HELPER (via server.py local, macOS only)
+    // ══════════════════════════════════════════════════════════════
+    let _sysVolTimer = 0;
+    function _setSysVol(midiVal) {
+      const now = Date.now();
+      if (now - _sysVolTimer < 80) return; // throttle ~12/s
+      _sysVolTimer = now;
+      const vol = Math.round((midiVal / 127) * 100);
+      fetch('http://127.0.0.1:8080/sys/volume', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value: vol })
+      }).catch(() => {}); // no-op si el servidor no corre
+    }
+
+    // ══════════════════════════════════════════════════════════════
     // KEYBOARD MODE — JavaScript mirror of mode_keyboard.py
     // ══════════════════════════════════════════════════════════════
     class KeyboardMode {
@@ -3635,7 +3651,7 @@
         if (['Brillantor', 'Velocity'].includes(fn)) { this.velocity = Math.max(20, v); }
         else if (['Modulació', 'Modulation', 'Modulation (CC1)'].includes(fn)) { this.webMidi.send('control_change', 1, v, 0); }
         else if (['Sustain', 'Sustain (CC64)'].includes(fn)) { this.webMidi.send('control_change', 64, v, 0); }
-        else if (['Volum', 'Volume', 'Expression (CC11)'].includes(fn)) { this.webMidi.send('control_change', 7, v, 0); }
+        else if (['Volum', 'Volume', 'Expression (CC11)'].includes(fn)) { this.webMidi.send('control_change', 7, v, 0); _setSysVol(v); }
         else if (['Gate', 'Gate Length'].includes(fn)) { if (v < 10) { this.gateEnabled = false; this.webMidi.send('control_change', 11, 127, 0); } else { this.gateEnabled = true; this.gatePeriod = 0.5 - (v / 127) * 0.45; } }
         else if (fn === 'Pitch Bend') { this.webMidi.send('pitchwheel', v < 5 ? 0 : Math.round((v / 127) * 8191), 0, 0); }
         else if (['Velocitat (BPM)', 'Arp Speed (BPM)'].includes(fn)) { this.arpSpeed = 60.0 / (30 + (v / 127) * 1970); }
