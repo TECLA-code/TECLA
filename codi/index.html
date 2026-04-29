@@ -959,6 +959,7 @@
     .pot-row {
       display: flex;
       flex-direction: column;
+      align-items: center;
       gap: 5px;
       flex: 1;
       min-width: 80px;
@@ -967,7 +968,8 @@
 
     .pot-row>label {
       font-size: 11px;
-      color: var(--sim-pot-lbl)
+      color: var(--sim-pot-lbl);
+      text-align: center
     }
 
     .pot-range {
@@ -999,7 +1001,43 @@
       font-size: 10px;
       color: var(--sim-pot-val);
       font-family: var(--mono);
-      text-align: right
+      text-align: center
+    }
+
+    .pot-knob {
+      cursor: ns-resize;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+      outline: none
+    }
+
+    .knob-svg {
+      width: 64px;
+      height: 64px;
+      display: block;
+      overflow: visible
+    }
+
+    .knob-track {
+      fill: none;
+      stroke: var(--sim-pot-track);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-dasharray: 103.67 1000
+    }
+
+    .knob-fill {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-dasharray: 0 1000
+    }
+
+    .knob-dot {
+      fill: var(--text);
+      opacity: .55
     }
 
     .sim-log-wrap {
@@ -2257,16 +2295,49 @@
               <div class="sim-buttons-grid" id="sim-buttons-grid"></div>
             </div>
             <div class="sim-pots">
-              <div class="pot-row"><label id="pot-lbl-0">X</label><input type="range" class="pot-range sim-pot-range"
-                  data-pot="0" min="0" max="127" value="0">
+              <div class="pot-row">
+                <label id="pot-lbl-0">X</label>
+                <div class="pot-knob sim-pot-knob" data-pot="0" data-val="0" tabindex="0">
+                  <svg class="knob-svg" viewBox="0 0 60 60">
+                    <g transform="rotate(-225, 30, 30)">
+                      <circle class="knob-track" cx="30" cy="30" r="22"/>
+                      <circle class="knob-fill" cx="30" cy="30" r="22"/>
+                    </g>
+                    <g class="knob-indicator-group" transform="rotate(-135, 30, 30)">
+                      <circle class="knob-dot" cx="30" cy="9" r="2.5"/>
+                    </g>
+                  </svg>
+                </div>
                 <div class="pot-val" id="pot-val-0">0</div>
               </div>
-              <div class="pot-row"><label id="pot-lbl-1">Y</label><input type="range" class="pot-range sim-pot-range"
-                  data-pot="1" min="0" max="127" value="0">
+              <div class="pot-row">
+                <label id="pot-lbl-1">Y</label>
+                <div class="pot-knob sim-pot-knob" data-pot="1" data-val="0" tabindex="0">
+                  <svg class="knob-svg" viewBox="0 0 60 60">
+                    <g transform="rotate(-225, 30, 30)">
+                      <circle class="knob-track" cx="30" cy="30" r="22"/>
+                      <circle class="knob-fill" cx="30" cy="30" r="22"/>
+                    </g>
+                    <g class="knob-indicator-group" transform="rotate(-135, 30, 30)">
+                      <circle class="knob-dot" cx="30" cy="9" r="2.5"/>
+                    </g>
+                  </svg>
+                </div>
                 <div class="pot-val" id="pot-val-1">0</div>
               </div>
-              <div class="pot-row"><label id="pot-lbl-2">Z</label><input type="range" class="pot-range sim-pot-range"
-                  data-pot="2" min="0" max="127" value="0">
+              <div class="pot-row">
+                <label id="pot-lbl-2">Z</label>
+                <div class="pot-knob sim-pot-knob" data-pot="2" data-val="0" tabindex="0">
+                  <svg class="knob-svg" viewBox="0 0 60 60">
+                    <g transform="rotate(-225, 30, 30)">
+                      <circle class="knob-track" cx="30" cy="30" r="22"/>
+                      <circle class="knob-fill" cx="30" cy="30" r="22"/>
+                    </g>
+                    <g class="knob-indicator-group" transform="rotate(-135, 30, 30)">
+                      <circle class="knob-dot" cx="30" cy="9" r="2.5"/>
+                    </g>
+                  </svg>
+                </div>
                 <div class="pot-val" id="pot-val-2">0</div>
               </div>
             </div>
@@ -4126,6 +4197,27 @@
       _floatLogCallback?.(msg, type);
     }
 
+    // ── Circular knob helpers (module scope – accessible from float handler) ──
+    const _arcFull = 2 * Math.PI * 22 * (270 / 360); // 103.67px
+    let _knobDrag = null, _knobDragY = 0, _knobDragVal = 0;
+
+    function _setKnobValue(knob, val) {
+      const v = Math.max(0, Math.min(127, val | 0));
+      knob.dataset.val = v;
+      const filled = (v / 127) * _arcFull;
+      knob.querySelector('.knob-fill').style.strokeDasharray = `${filled.toFixed(2)} 1000`;
+      const angle = -135 + (v / 127) * 270;
+      knob.querySelector('.knob-indicator-group').setAttribute('transform', `rotate(${angle.toFixed(1)}, 30, 30)`);
+      document.getElementById(`pot-val-${knob.dataset.pot}`).textContent = v;
+    }
+
+    function _potKnobFire(knob, val) {
+      _setKnobValue(knob, val);
+      const idx = +knob.dataset.pot;
+      if (isKbMode) kbMode?.setPot(idx, val);
+      else simulator?.setPot(idx, val);
+    }
+
     async function initSimulator() {
       buildButtonGrid();
       await loadBuiltinModes();
@@ -4155,13 +4247,24 @@
         simlog(`Error Pyodide: ${e.message}`, 'err');
       }
 
-      document.querySelectorAll('.sim-pot-range').forEach(range => {
-        range.addEventListener('input', () => {
-          const idx = +range.dataset.pot; const val = +range.value;
-          if (isKbMode) kbMode?.setPot(idx, val);
-          else simulator?.setPot(idx, val);
-          document.getElementById(`pot-val-${idx}`).textContent = val;
+      // Register knob event listeners
+      document.querySelectorAll('.sim-pot-knob').forEach(knob => {
+        knob.addEventListener('pointerdown', e => {
+          e.preventDefault();
+          _knobDrag = knob; _knobDragY = e.clientY; _knobDragVal = +knob.dataset.val;
+          knob.setPointerCapture(e.pointerId);
         });
+        knob.addEventListener('pointermove', e => {
+          if (_knobDrag !== knob) return;
+          const delta = Math.round((_knobDragY - e.clientY) * 0.8);
+          _potKnobFire(knob, _knobDragVal + delta);
+        });
+        knob.addEventListener('pointerup', () => { _knobDrag = null; });
+        knob.addEventListener('wheel', e => {
+          e.preventDefault();
+          _potKnobFire(knob, +knob.dataset.val + (e.deltaY < 0 ? 2 : -2));
+        }, { passive: false });
+        knob.addEventListener('dblclick', () => _potKnobFire(knob, 64));
       });
     }
 
@@ -5057,8 +5160,8 @@ body{background:var(--sim-bg,#0a0a0a);color:var(--text,#e0e0e0);font-family:syst
           setTimeout(_syncLabels, 60);
         }
         if (d?.type === 'pot') {
-          const r = document.querySelector(`.sim-pot-range[data-pot="${d.idx}"]`);
-          if (r) { r.value = d.val; r.dispatchEvent(new Event('input')); }
+          const k = document.querySelector(`.sim-pot-knob[data-pot="${d.idx}"]`);
+          if (k) _potKnobFire(k, d.val);
           else {
             if (isKbMode) kbMode?.setPot(d.idx, d.val);
             else simulator?.setPot(d.idx, d.val);
