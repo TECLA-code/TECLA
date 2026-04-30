@@ -851,7 +851,8 @@
     .sim-content {
       flex: 1;
       display: flex;
-      flex-direction: column
+      flex-direction: row;
+      align-items: stretch
     }
 
     .sim-device {
@@ -946,22 +947,20 @@
 
     .sim-pots {
       display: flex;
-      flex-direction: row;
-      gap: 18px;
-      padding: 14px 20px 10px;
-      border-top: 1px solid var(--border);
+      flex-direction: column;
+      gap: 16px;
+      padding: 20px 16px;
+      border-left: 1px solid var(--border);
       background: var(--sim-bg);
       justify-content: center;
-      align-items: flex-start
+      align-items: stretch;
+      min-width: 110px
     }
 
     .pot-row {
       display: flex;
       flex-direction: column;
-      gap: 5px;
-      flex: 1;
-      min-width: 80px;
-      max-width: 160px
+      gap: 5px
     }
 
     .pot-row>label {
