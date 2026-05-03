@@ -2881,13 +2881,34 @@
       log(`Capa reanomenada a '${bank.name}'.`, 'ok');
     });
 
-    document.getElementById('btn-save-keys')?.addEventListener('click', async () => {
+    function showButtonSuccess(btn) {
+      if (!btn) return;
+      const overlay = document.createElement('div');
+      overlay.textContent = 'Guardat correctament';
+      Object.assign(overlay.style, {
+        position: 'absolute', top: '0', left: '0', right: '0', bottom: '0',
+        background: 'rgba(34, 197, 94, 0.92)', color: '#fff',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontWeight: '600', fontSize: '11px', zIndex: '10',
+        opacity: '0', transition: 'opacity 0.2s', pointerEvents: 'none'
+      });
+      btn.style.position = 'relative'; btn.style.overflow = 'hidden';
+      btn.appendChild(overlay);
+      void overlay.offsetWidth;
+      overlay.style.opacity = '1';
+      setTimeout(() => {
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.remove(), 200);
+      }, 1500);
+    }
+
+    document.getElementById('btn-save-keys')?.addEventListener('click', async (e) => {
       _readGridIntoBank(_keysConfig.currentBank);
       _saveKeysConfig(_keysConfig);
       const bank = _keysConfig.banks[_keysConfig.currentBank];
       const assigned = bank.modes.filter(Boolean).length;
       log(`Configuració desada: ${assigned} tecles assignades a '${bank.name}'.`, 'ok');
-      alert('Guardat correctament');
+      showButtonSuccess(e.currentTarget);
       if (device.isConnected()) {
         try {
           await device.writeFile('tecla_web_config.json', JSON.stringify(buildDeviceConfig(), null, 2));
@@ -3044,12 +3065,12 @@
       setSelectVal('arp-pot-z', apf.arp_pot_z || 'Modulació');
     }
 
-    document.getElementById('btn-save-modes')?.addEventListener('click', () => {
+    document.getElementById('btn-save-modes')?.addEventListener('click', (e) => {
       const enabled = [...document.querySelectorAll('#modes-list-check input:checked')].map(c => c.value);
       const mc = _loadModesConfig(); mc.enabled_modes = enabled; _saveModesConfig(mc);
       log(`${enabled.length} modes guardats. Actualitzant desplegables de tecles…`, 'ok');
       refreshKeyDropdowns();
-      alert('Guardat correctament');
+      showButtonSuccess(e.currentTarget);
     });
     document.getElementById('btn-modes-all')?.addEventListener('click', () => document.querySelectorAll('#modes-list-check input').forEach(c => c.checked = true));
     document.getElementById('btn-modes-none')?.addEventListener('click', () => document.querySelectorAll('#modes-list-check input').forEach(c => c.checked = false));
