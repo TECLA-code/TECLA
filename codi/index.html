@@ -369,16 +369,25 @@
     }
 
     /* KEYS GRID (Interactive) */
-    .device-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 20px 0; }
-    .keys-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 380px; margin: 0 auto; }
-    .key-btn { aspect-ratio: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.1s; position: relative; }
-    .key-btn:hover { border-color: var(--border-h); background: var(--surface3); }
-    .key-btn:active, .key-btn.pressed { transform: scale(.95); }
-    .key-num { position: absolute; top: 5px; left: 6px; font-size: 9px; color: var(--text3); font-family: var(--mono); pointer-events: none; }
-    .key-btn.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
-    .key-label { font-size: 10px; font-weight: 600; color: var(--text); font-family: var(--mono); pointer-events: none; text-align: center; padding: 0 4px; line-height: 1.2; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .key-btn.special { background: rgba(255, 255, 255, 0.02); }
-    .key-btn.special .key-label { color: var(--text2); font-weight: 500; white-space: normal; }
+    .device-wrap { display: flex; flex-direction: row-reverse; align-items: center; justify-content: center; gap: 20px; padding: 20px 0; }
+    .keys-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 380px; }
+    .key-btn { aspect-ratio: 1; background: #dde1eb; border: 1px solid rgba(0,0,0,0.18); border-radius: 7px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.1s; position: relative; box-shadow: 0 3px 0 rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.55); }
+    .key-btn:hover { border-color: rgba(0,0,0,0.28); background: #eaecf5; }
+    .key-btn:active, .key-btn.pressed { transform: scale(.95); box-shadow: 0 1px 0 rgba(0,0,0,0.3), inset 0 1px 2px rgba(0,0,0,0.15); }
+    .key-num { position: absolute; top: 5px; left: 6px; font-size: 9px; color: rgba(0,0,0,0.35); font-family: var(--mono); pointer-events: none; }
+    .key-btn.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent), 0 3px 0 rgba(0,0,0,0.2); }
+    .key-label { font-size: 10px; font-weight: 700; color: rgba(0,0,0,0.72); font-family: var(--mono); pointer-events: none; text-align: center; padding: 0 4px; line-height: 1.2; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .key-btn.special { background: rgba(0, 0, 0, 0.05); }
+    .key-btn.special .key-label { color: rgba(0,0,0,0.6); font-weight: 600; white-space: normal; }
+
+    /* POTS */
+    .pots-row-visual { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+    .pot-wrapper { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: ns-resize; opacity: 0.8; transition: opacity 0.2s; }
+    .pot-wrapper:hover, .pot-wrapper.active { opacity: 1; }
+    .pot-wrapper.active .pot-knob { border-color: var(--accent); box-shadow: 0 3px 0 rgba(0,0,0,0.28), 0 0 0 2px var(--accent); }
+    .pot-knob { width: 50px; height: 50px; border-radius: 50%; border: 2px solid rgba(0,0,0,0.2); background: #dde1eb; position: relative; box-shadow: 0 3px 0 rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.6); }
+    .pot-indicator { position: absolute; top: 4px; left: 50%; transform: translateX(-50%); width: 2px; height: 10px; background: rgba(0,0,0,0.45); border-radius: 2px; }
+    .pot-label-vis { font-size: 11px; font-weight: 600; color: var(--text); }
 
     /* Config Drawer */
     .config-drawer { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border-h); transform: translateY(100%); transition: transform 0.25s cubic-bezier(.4,0,.2,1); z-index: 250; max-height: 75vh; overflow-y: auto; box-shadow: 0 -10px 40px rgba(0,0,0,0.5); }
@@ -1749,6 +1758,9 @@
         <div class="section-title">Configuració de Tecles</div>
         <p style="font-size:11.5px;color:var(--text2);margin-bottom:14px">Clica a les tecles 1-12 per assignar-hi un mode. Les tecles 13-16 tenen funcions fixes o ajustables clicant.</p>
         <div class="device-wrap">
+          <div class="pots-row-visual" id="device-pots">
+            <!-- JS renders pots here -->
+          </div>
           <div class="keys-grid" id="device-keys">
             <!-- JS renders keys here -->
           </div>
@@ -2013,22 +2025,11 @@
             </div>
           </div>
           <div class="sim-content">
-            <div class="sim-device">
-              <div class="sim-buttons-grid" id="sim-buttons-grid"></div>
-            </div>
-            <div class="sim-pots">
-              <div class="pot-row"><label id="pot-lbl-0">X</label><input type="range" class="pot-range sim-pot-range"
-                  data-pot="0" min="0" max="127" value="0">
-                <div class="pot-val" id="pot-val-0">0</div>
+            <div class="device-wrap" style="transform: scale(0.9); transform-origin: top center;">
+              <div class="pots-row-visual" id="sim-pots-visual">
+                <!-- JS renders sim pots here -->
               </div>
-              <div class="pot-row"><label id="pot-lbl-1">Y</label><input type="range" class="pot-range sim-pot-range"
-                  data-pot="1" min="0" max="127" value="0">
-                <div class="pot-val" id="pot-val-1">0</div>
-              </div>
-              <div class="pot-row"><label id="pot-lbl-2">Z</label><input type="range" class="pot-range sim-pot-range"
-                  data-pot="2" min="0" max="127" value="0">
-                <div class="pot-val" id="pot-val-2">0</div>
-              </div>
+              <div class="keys-grid" id="sim-buttons-grid"></div>
             </div>
           </div>
           <div class="sim-log-wrap">
@@ -2600,7 +2601,7 @@
     let _modesIndex = [];
     async function _loadModesIndex() {
       if (_modesIndex.length) return _modesIndex;
-      try { const r = await fetch('/py/modes_index.json'); const d = await r.json(); _modesIndex = d.modes || []; } catch { }
+      try { const r = await fetch('py/modes_index.json'); const d = await r.json(); _modesIndex = d.modes || []; } catch { }
       return _modesIndex;
     }
     async function _getEffectiveModes() {
@@ -2634,7 +2635,7 @@
       if (device.isConnected()) {
         try { return await device.readFile(`modes/${file}`); } catch { }
       }
-      const res = await fetch(`/py/modes/${file}`);
+      const res = await fetch(`py/modes/${file}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.text();
     }
@@ -2647,7 +2648,7 @@
       const enabled = mc.enabled_modes;
       if (!enabled || !enabled.length) return allModes;
       const byFile = Object.fromEntries(allModes.map(m => [m.file, m]));
-      return enabled.map(f => byFile[f]).filter(Boolean);
+      return enabled.map(f => byFile[f] || {file: f, name: f.replace(/^mode_/, '').replace(/\.py$/, '')});
     }
 
     // Not needed anymore, replaced by renderDeviceKeys()
@@ -2667,6 +2668,68 @@
       sel.value = _keysConfig.currentBank;
     }
     let _activeKeyIndex = null;
+    let _potDrag = null, _potDragY = 0, _potDragVal = 0, _potDragContext = null;
+
+    function _potAngle(v) { return -135 + (Math.max(0, Math.min(127, v)) / 127) * 270; }
+
+    function renderVisualPots(containerId, potsData, context) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      
+      const isHorizontal = context === 'sim';
+      if (isHorizontal) {
+        container.style.flexDirection = 'row';
+      }
+      
+      container.innerHTML = '';
+      potsData.forEach((p, i) => {
+        if (p.value === undefined) p.value = 0;
+        const div = document.createElement('div');
+        div.className = `pot-wrapper`;
+        div.dataset.pot = i;
+        const potNames = ['X', 'Y', 'Z'];
+        div.innerHTML = `
+          <div class="pot-label-vis">${potNames[i]}</div>
+          <div class="pot-knob" id="pot-knob-${context}-${i}" style="transform: rotate(${_potAngle(p.value)}deg); cursor: ns-resize;"><div class="pot-indicator"></div></div>
+          <div style="font-size: 9px; color: var(--text3); font-family: var(--mono); text-align: center; max-width: 60px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${p.label || ''}">${p.label || 'Pot'}</div>
+          <div style="font-size: 9px; color: var(--accent); font-family: var(--mono); min-height:12px;" id="pot-val-${context}-${i}">${p.value}</div>
+        `;
+        const knobEl = div.querySelector('.pot-knob');
+        knobEl.addEventListener('pointerdown', e => {
+          e.preventDefault(); e.stopPropagation();
+          _potDrag = i; _potDragY = e.clientY; _potDragVal = p.value; _potDragContext = context;
+          knobEl.setPointerCapture(e.pointerId);
+        });
+        knobEl.addEventListener('pointermove', e => {
+          if (_potDrag !== i || _potDragContext !== context) return;
+          const v = Math.max(0, Math.min(127, Math.round(_potDragVal + (_potDragY - e.clientY) * 0.8)));
+          _updateVisualPot(context, i, v, knobEl);
+        });
+        knobEl.addEventListener('pointerup', () => { _potDrag = null; _potDragContext = null; });
+        knobEl.addEventListener('wheel', e => {
+          e.preventDefault(); e.stopPropagation();
+          const v = Math.max(0, Math.min(127, window[`_${context}PotsData`][i].value + (e.deltaY < 0 ? 2 : -2)));
+          _updateVisualPot(context, i, v, knobEl);
+        }, { passive: false });
+        container.appendChild(div);
+      });
+    }
+
+    function _updateVisualPot(context, i, v, knobEl) {
+      const dataArr = window[`_${context}PotsData`];
+      if (dataArr) dataArr[i].value = v;
+      const valEl = document.getElementById(`pot-val-${context}-${i}`);
+      if (valEl) valEl.textContent = v;
+      if (knobEl) knobEl.style.transform = `rotate(${_potAngle(v)}deg)`;
+      
+      if (context === 'sim') {
+        if (typeof isKbMode !== 'undefined' && isKbMode) {
+          if (typeof kbMode !== 'undefined' && kbMode) kbMode.setPot(i, v);
+        } else {
+          if (typeof simulator !== 'undefined' && simulator) simulator.setPot(i, v);
+        }
+      }
+    }
 
     async function renderDeviceKeys() {
       const container = document.getElementById('device-keys');
@@ -2678,6 +2741,16 @@
       const fileToName = Object.fromEntries(enabledModes.map(m => [m.file, m.name]));
       
       container.innerHTML = '';
+      
+      // Render Device Pots
+      const mc = _loadModesConfig();
+      const pt = mc.potentiometer_functions || {};
+      window._devicePotsData = [
+        {value: 0, label: pt['0'] || 'Brillantor'},
+        {value: 0, label: pt['1'] || 'Modulació'},
+        {value: 0, label: pt['2'] || 'Sustain'}
+      ];
+      renderVisualPots('device-pots', window._devicePotsData, 'device');
       
       // Tecles 1-12 (Assignables)
       for (let i = 0; i < 12; i++) {
@@ -4021,14 +4094,12 @@
         simlog(`Error Pyodide: ${e.message}`, 'err');
       }
 
-      document.querySelectorAll('.sim-pot-range').forEach(range => {
-        range.addEventListener('input', () => {
-          const idx = +range.dataset.pot; const val = +range.value;
-          if (isKbMode) kbMode?.setPot(idx, val);
-          else simulator?.setPot(idx, val);
-          document.getElementById(`pot-val-${idx}`).textContent = val;
-        });
-      });
+      if (!window._simPotsData) window._simPotsData = [
+        {value:0, label:'Pot X'},
+        {value:0, label:'Pot Y'},
+        {value:0, label:'Pot Z'}
+      ];
+      renderVisualPots('sim-pots-visual', window._simPotsData, 'sim');
     }
 
     async function loadBuiltinModes() {
@@ -4802,12 +4873,10 @@ body{background:var(--sim-bg,#0a0a0a);color:var(--text,#e0e0e0);font-family:syst
           setTimeout(_syncLabels, 60);
         }
         if (d?.type === 'pot') {
-          const r = document.querySelector(`.sim-pot-range[data-pot="${d.idx}"]`);
-          if (r) { r.value = d.val; r.dispatchEvent(new Event('input')); }
-          else {
-            if (isKbMode) kbMode?.setPot(d.idx, d.val);
-            else simulator?.setPot(d.idx, d.val);
-          }
+          // Actualitzar directament amb la funció _updateVisualPot
+          const knobEl = document.getElementById(`pot-knob-sim-${d.idx}`);
+          if (!window._simPotsData) window._simPotsData = [{value:0},{value:0},{value:0}];
+          _updateVisualPot('sim', d.idx, d.val, knobEl);
         }
         if (d?.type === 'float-closed') {
           clearInterval(_syncInterval); _syncInterval = null;
