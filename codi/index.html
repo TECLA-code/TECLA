@@ -368,53 +368,31 @@
       min-width: 130px
     }
 
-    /* KEYS GRID */
-    .keys-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px
-    }
+    /* KEYS GRID (Interactive) */
+    .device-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 20px 0; }
+    .keys-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 380px; margin: 0 auto; }
+    .key-btn { aspect-ratio: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.1s; position: relative; }
+    .key-btn:hover { border-color: var(--border-h); background: var(--surface3); }
+    .key-btn:active, .key-btn.pressed { transform: scale(.95); }
+    .key-num { position: absolute; top: 5px; left: 6px; font-size: 9px; color: var(--text3); font-family: var(--mono); pointer-events: none; }
+    .key-btn.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .key-label { font-size: 10px; font-weight: 600; color: var(--text); font-family: var(--mono); pointer-events: none; text-align: center; padding: 0 4px; line-height: 1.2; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .key-btn.special { background: rgba(255, 255, 255, 0.02); }
+    .key-btn.special .key-label { color: var(--text2); font-weight: 500; white-space: normal; }
 
-    .key-cell {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--r2);
-      padding: 12px 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-      min-height: 90px
-    }
-
-    .key-cell.special {
-      background: rgba(255, 255, 255, .025);
-      border-color: rgba(255, 255, 255, .1)
-    }
-
-    .key-cell select {
-      width: 100%;
-      font-size: 12px
-    }
-
-    .key-cell-num {
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--accent);
-      font-family: var(--mono);
-      letter-spacing: .04em
-    }
-
-    .key-cell-title {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text)
-    }
-
-    .key-cell-desc {
-      font-size: 10.5px;
-      color: var(--text3);
-      line-height: 1.5
-    }
+    /* Config Drawer */
+    .config-drawer { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border-h); transform: translateY(100%); transition: transform 0.25s cubic-bezier(.4,0,.2,1); z-index: 250; max-height: 75vh; overflow-y: auto; box-shadow: 0 -10px 40px rgba(0,0,0,0.5); }
+    .config-drawer.open { transform: translateY(0); }
+    .drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px 12px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); z-index: 2; }
+    .drawer-title { font-size: 12px; font-weight: 600; color: var(--text); text-transform: uppercase; letter-spacing: .08em; }
+    .drawer-body { padding: 20px 24px 32px; max-width: 600px; margin: 0 auto; }
+    .btn-close { background: none; border: none; color: var(--text2); font-size: 18px; cursor: pointer; line-height: 1; padding: 2px 6px; border-radius: var(--radius); }
+    .btn-close:hover { color: var(--text); background: var(--surface2); }
+    
+    .mode-sel-list { display: grid; gap: 8px; }
+    .mode-sel-item { padding: 10px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; color: var(--text); cursor: pointer; transition: all 0.15s; display: flex; justify-content: space-between; align-items: center; }
+    .mode-sel-item:hover { border-color: var(--border-h); background: var(--surface3); }
+    .mode-sel-item.active { border-color: var(--accent); background: rgba(74,128,240,0.1); }
 
     /* CHECKLIST */
     .checklist {
@@ -1769,117 +1747,10 @@
 
       <div class="section">
         <div class="section-title">Configuració de Tecles</div>
-        <div class="keys-grid" id="keys-grid">
-          <!-- Tecles 1–12: mode assignable -->
-          <div class="key-cell">
-            <div class="key-cell-num">T01</div>
-            <div class="key-cell-title">Tecla 1</div><select id="key-sel-0">
-              <option value="">— carregant… —</option>
-            </select>
-          </div>
-          <div class="key-cell">
-            <div class="key-cell-num">T02</div>
-            <div class="key-cell-title">Tecla 2</div><select id="key-sel-1">
-              <option value="">— carregant… —</option>
-            </select>
-          </div>
-          <div class="key-cell">
-            <div class="key-cell-num">T03</div>
-            <div class="key-cell-title">Tecla 3</div><select id="key-sel-2">
-              <option value="">— carregant… —</option>
-            </select>
-          </div>
-          <div class="key-cell">
-            <div class="key-cell-num">T04</div>
-            <div class="key-cell-title">Tecla 4</div><select id="key-sel-3">
-              <option value="">— carregant… —</option>
-            </select>
-          </div>
-          <div class="key-cell">
-            <div class="key-cell-num">T05</div>
-            <div class="key-cell-title">Tecla 5</div><select id="key-sel-4">
-              <option value="">— carregant… —</option>
-            </select>
-          </div>
-          <div class="key-cell">
-            <div class="key-cell-num">T06</div>
-            <div class="key-cell-title">Tecla 6</div><select id="key-sel-5">
-              <option value="">— carregant… —</option>
-            </select>
-          </div>
-          <div class="key-cell">
-            <div class="key-cell-num">T07</div>
-            <div class="key-cell-title">Tecla 7</div><select id="key-sel-6">
-              <option value="">— carregant… —</option>
-            </select>
-          </div>
-          <div class="key-cell">
-            <div class="key-cell-num">T08</div>
-            <div class="key-cell-title">Tecla 8</div><select id="key-sel-7">
-              <option value="">— carregant… —</option>
-            </select>
-          </div>
-          <div class="key-cell">
-            <div class="key-cell-num">T09</div>
-            <div class="key-cell-title">Tecla 9</div><select id="key-sel-8">
-              <option value="">— carregant… —</option>
-            </select>
-          </div>
-          <div class="key-cell">
-            <div class="key-cell-num">T10</div>
-            <div class="key-cell-title">Tecla 10</div><select id="key-sel-9">
-              <option value="">— carregant… —</option>
-            </select>
-          </div>
-          <div class="key-cell">
-            <div class="key-cell-num">T11</div>
-            <div class="key-cell-title">Tecla 11</div><select id="key-sel-10">
-              <option value="">— carregant… —</option>
-            </select>
-          </div>
-          <div class="key-cell">
-            <div class="key-cell-num">T12</div>
-            <div class="key-cell-title">Tecla 12</div><select id="key-sel-11">
-              <option value="">— carregant… —</option>
-            </select>
-          </div>
-          <!-- Tecla 13: Mode Teclat (fixa) -->
-          <div class="key-cell special">
-            <div class="key-cell-num">T13</div>
-            <div class="key-cell-title">Mode Teclat</div>
-            <div class="key-cell-desc">Canvi de capa</div>
-          </div>
-          <!-- Tecla 14: Efecte / Octava − -->
-          <div class="key-cell special">
-            <div class="key-cell-num">T14</div>
-            <div class="key-cell-title">Efecte / Octava −</div>
-            <select id="key-effect-13">
-              <option>Sustain</option>
-              <option>Pausa</option>
-              <option>Gate</option>
-              <option>Modulation</option>
-              <option>PitchBend</option>
-            </select>
-            <div class="key-cell-desc">Capa Modes: efecte temporal<br>Capa Teclat: baixar octava</div>
-          </div>
-          <!-- Tecla 15: Efecte / Octava + -->
-          <div class="key-cell special">
-            <div class="key-cell-num">T15</div>
-            <div class="key-cell-title">Efecte / Octava +</div>
-            <select id="key-effect-14">
-              <option>Pausa</option>
-              <option>Sustain</option>
-              <option>Gate</option>
-              <option>Modulation</option>
-              <option>PitchBend</option>
-            </select>
-            <div class="key-cell-desc">Capa Modes: efecte temporal<br>Capa Teclat: pujar octava</div>
-          </div>
-          <!-- Tecla 16: Aturar So (fixa) -->
-          <div class="key-cell special">
-            <div class="key-cell-num">T16</div>
-            <div class="key-cell-title">Aturar So</div>
-            <div class="key-cell-desc">All Notes Off</div>
+        <p style="font-size:11.5px;color:var(--text2);margin-bottom:14px">Clica a les tecles 1-12 per assignar-hi un mode. Les tecles 13-16 tenen funcions fixes o ajustables clicant.</p>
+        <div class="device-wrap">
+          <div class="keys-grid" id="device-keys">
+            <!-- JS renders keys here -->
           </div>
         </div>
       </div>
@@ -1902,6 +1773,16 @@
         <div class="log-header"><span>Log</span><button class="btn btn-sm"
             onclick="this.closest('.log-wrap').classList.remove('show')">×</button></div>
         <pre id="log-output"></pre>
+      </div>
+      
+      <div class="config-drawer" id="config-drawer">
+        <div class="drawer-header">
+          <span class="drawer-title" id="drawer-title">Assignar Tecla</span>
+          <button class="btn-close" id="btn-close-drawer">&#x2715;</button>
+        </div>
+        <div class="drawer-body" id="drawer-body">
+          <!-- Modes populated via JS -->
+        </div>
       </div>
     </div>
 
@@ -2769,19 +2650,9 @@
       return enabled.map(f => byFile[f]).filter(Boolean);
     }
 
-    // Rebuilds just the <select> options in keys 0-11 without rebuilding the whole grid.
+    // Not needed anymore, replaced by renderDeviceKeys()
     async function refreshKeyDropdowns() {
-      const enabledModes = await _getEnabledModesForKeys();
-      const optionsHTML = ['<option value="">— sense assignar —</option>',
-        ...enabledModes.map(m => `<option value="${m.file}">${m.name}</option>`)].join('');
-      for (let i = 0; i < 12; i++) {
-        const sel = document.getElementById(`key-sel-${i}`);
-        if (!sel) continue;
-        const current = sel.value;
-        sel.innerHTML = optionsHTML;
-        // Restore previously selected value if it's still in the list
-        if (current && [...sel.options].some(o => o.value === current)) sel.value = current;
-      }
+      renderDeviceKeys();
     }
 
     function _loadKeysConfig() { try { return JSON.parse(localStorage.getItem('tecla-keys-config') || 'null'); } catch { return null; } }
@@ -2795,25 +2666,135 @@
       sel.innerHTML = _keysConfig.banks.map((b, i) => `<option value="${i}">${b.name}</option>`).join('');
       sel.value = _keysConfig.currentBank;
     }
+    let _activeKeyIndex = null;
+
+    async function renderDeviceKeys() {
+      const container = document.getElementById('device-keys');
+      if (!container) return;
+      const bank = _keysConfig.banks[_keysConfig.currentBank];
+      if (!bank) return;
+      
+      const enabledModes = await _getEnabledModesForKeys();
+      const fileToName = Object.fromEntries(enabledModes.map(m => [m.file, m.name]));
+      
+      container.innerHTML = '';
+      
+      // Tecles 1-12 (Assignables)
+      for (let i = 0; i < 12; i++) {
+        const modeFile = bank.modes[i];
+        const modeName = modeFile ? (fileToName[modeFile] || modeFile) : 'Buit';
+        
+        const btn = document.createElement('div');
+        btn.className = 'key-btn';
+        if (modeFile) btn.classList.add('active');
+        btn.innerHTML = `<div class="key-num">T${(i+1).toString().padStart(2,'0')}</div>
+                         <div class="key-label">${modeName}</div>`;
+        btn.onclick = () => openConfigDrawer(i, 'mode');
+        container.appendChild(btn);
+      }
+      
+      // Tecla 13: Mode Teclat
+      const t13 = document.createElement('div');
+      t13.className = 'key-btn special';
+      t13.innerHTML = `<div class="key-num">T13</div><div class="key-label">Mode Teclat<br><span style="font-size:8px;opacity:0.6">Canvi de capa</span></div>`;
+      container.appendChild(t13);
+      
+      // Tecla 14: Efecte / Octava -
+      const e13 = bank.efectos ? bank.efectos['13'] || 'Sustain' : 'Sustain';
+      const t14 = document.createElement('div');
+      t14.className = 'key-btn special';
+      t14.innerHTML = `<div class="key-num">T14</div><div class="key-label">Octava &minus;<br><span style="font-size:8px;opacity:0.6">${e13}</span></div>`;
+      t14.onclick = () => openConfigDrawer(13, 'effect');
+      container.appendChild(t14);
+      
+      // Tecla 15: Efecte / Octava +
+      const e14 = bank.efectos ? bank.efectos['14'] || 'Pausa' : 'Pausa';
+      const t15 = document.createElement('div');
+      t15.className = 'key-btn special';
+      t15.innerHTML = `<div class="key-num">T15</div><div class="key-label">Octava +<br><span style="font-size:8px;opacity:0.6">${e14}</span></div>`;
+      t15.onclick = () => openConfigDrawer(14, 'effect');
+      container.appendChild(t15);
+      
+      // Tecla 16: Aturar So
+      const t16 = document.createElement('div');
+      t16.className = 'key-btn special';
+      t16.innerHTML = `<div class="key-num">T16</div><div class="key-label">Aturar So<br><span style="font-size:8px;opacity:0.6">All Notes Off</span></div>`;
+      container.appendChild(t16);
+    }
+
+    async function openConfigDrawer(index, type) {
+      _activeKeyIndex = index;
+      const drawer = document.getElementById('config-drawer');
+      const drawerBody = document.getElementById('drawer-body');
+      const drawerTitle = document.getElementById('drawer-title');
+      const bank = _keysConfig.banks[_keysConfig.currentBank];
+      
+      drawerBody.innerHTML = '';
+      
+      if (type === 'mode') {
+        drawerTitle.textContent = `Assignar Tecla ${index + 1}`;
+        const enabledModes = await _getEnabledModesForKeys();
+        
+        let html = '<div class="mode-sel-list">';
+        html += `<div class="mode-sel-item ${!bank.modes[index] ? 'active' : ''}" data-val="">— Buit —</div>`;
+        enabledModes.forEach(m => {
+          const isActive = bank.modes[index] === m.file;
+          html += `<div class="mode-sel-item ${isActive ? 'active' : ''}" data-val="${m.file}"><span>${m.name}</span></div>`;
+        });
+        html += '</div>';
+        
+        drawerBody.innerHTML = html;
+        
+        drawerBody.querySelectorAll('.mode-sel-item').forEach(el => {
+          el.onclick = () => {
+            bank.modes[index] = el.dataset.val;
+            closeConfigDrawer();
+            renderDeviceKeys();
+          };
+        });
+      } else if (type === 'effect') {
+        const keyNum = index === 13 ? 14 : 15;
+        drawerTitle.textContent = `Efecte Temporal - Tecla ${keyNum}`;
+        const effects = _availableEffects();
+        const currentEffect = bank.efectos ? bank.efectos[index.toString()] || (index===13 ? 'Sustain' : 'Pausa') : '';
+        
+        let html = '<p style="font-size:12px;color:var(--text2);margin-bottom:12px">Aquest efecte s\'activarà a la capa de modes (doble clic per alternar).</p>';
+        html += '<div class="mode-sel-list">';
+        effects.forEach(eff => {
+          const isActive = currentEffect === eff;
+          html += `<div class="mode-sel-item ${isActive ? 'active' : ''}" data-val="${eff}"><span>${eff}</span></div>`;
+        });
+        html += '</div>';
+        
+        drawerBody.innerHTML = html;
+        
+        drawerBody.querySelectorAll('.mode-sel-item').forEach(el => {
+          el.onclick = () => {
+            if (!bank.efectos) bank.efectos = {};
+            bank.efectos[index.toString()] = el.dataset.val;
+            closeConfigDrawer();
+            renderDeviceKeys();
+          };
+        });
+      }
+      
+      drawer.classList.add('open');
+    }
+
+    function closeConfigDrawer() {
+      document.getElementById('config-drawer').classList.remove('open');
+      _activeKeyIndex = null;
+    }
+    
+    document.getElementById('btn-close-drawer')?.addEventListener('click', closeConfigDrawer);
+
     function _loadBankIntoGrid(bankIdx) {
       const bank = _keysConfig.banks[bankIdx]; if (!bank) return;
-      for (let i = 0; i < 12; i++) {
-        const sel = document.getElementById(`key-sel-${i}`); if (sel) sel.value = bank.modes[i] || '';
-      }
-      const efectos = bank.efectos || {};
-      const e13 = document.getElementById('key-effect-13'); if (e13) e13.value = efectos['13'] || 'Sustain';
-      const e14 = document.getElementById('key-effect-14'); if (e14) e14.value = efectos['14'] || 'Pausa';
+      _keysConfig.currentBank = bankIdx;
+      renderDeviceKeys();
     }
     function _readGridIntoBank(bankIdx) {
-      if (!_keysConfig.banks[bankIdx]) return;
-      const bank = _keysConfig.banks[bankIdx];
-      for (let i = 0; i < 12; i++) {
-        const sel = document.getElementById(`key-sel-${i}`);
-        bank.modes[i] = sel ? sel.value : '';
-      }
-      if (!bank.efectos) bank.efectos = {};
-      const e13 = document.getElementById('key-effect-13'); if (e13) bank.efectos['13'] = e13.value;
-      const e14 = document.getElementById('key-effect-14'); if (e14) bank.efectos['14'] = e14.value;
+      // The grid directly updates the bank object via drawer, so nothing to read from DOM.
     }
     function _availableEffects() {
       const mc = _loadModesConfig();
