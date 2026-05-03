@@ -369,7 +369,7 @@
     }
 
     /* KEYS GRID (Interactive) */
-    .device-wrap { display: flex; flex-direction: row-reverse; align-items: center; justify-content: center; gap: 20px; padding: 20px 0; }
+    .device-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 20px 0; }
     .keys-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 380px; }
     .key-btn { aspect-ratio: 1; background: #dde1eb; border: 1px solid rgba(0,0,0,0.18); border-radius: 7px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.1s; position: relative; box-shadow: 0 3px 0 rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.55); }
     .key-btn:hover { border-color: rgba(0,0,0,0.28); background: #eaecf5; }
@@ -381,7 +381,7 @@
     .key-btn.special .key-label { color: rgba(0,0,0,0.6); font-weight: 600; white-space: normal; }
 
     /* POTS */
-    .pots-row-visual { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+    .pots-row-visual { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 20px; }
     .pot-wrapper { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: ns-resize; opacity: 0.8; transition: opacity 0.2s; }
     .pot-wrapper:hover, .pot-wrapper.active { opacity: 1; }
     .pot-wrapper.active .pot-knob { border-color: var(--accent); box-shadow: 0 3px 0 rgba(0,0,0,0.28), 0 0 0 2px var(--accent); }
@@ -2025,11 +2025,11 @@
             </div>
           </div>
           <div class="sim-content">
-            <div class="device-wrap" style="transform: scale(0.9); transform-origin: top center;">
+            <div style="display: flex; flex-direction: row-reverse; align-items: center; justify-content: center; gap: 28px; padding: 20px 0; transform: scale(0.9); transform-origin: top center;">
               <div class="pots-row-visual" id="sim-pots-visual">
                 <!-- JS renders sim pots here -->
               </div>
-              <div class="keys-grid" id="sim-buttons-grid"></div>
+              <div class="sim-buttons-grid" id="sim-buttons-grid" style="flex-shrink: 0;"></div>
             </div>
           </div>
           <div class="sim-log-wrap">
@@ -2676,8 +2676,10 @@
       const container = document.getElementById(containerId);
       if (!container) return;
       
-      const isHorizontal = context === 'sim';
-      if (isHorizontal) {
+      const isVertical = context === 'sim';
+      if (isVertical) {
+        container.style.flexDirection = 'column';
+      } else {
         container.style.flexDirection = 'row';
       }
       
