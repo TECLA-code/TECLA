@@ -374,7 +374,7 @@
     .key-btn { aspect-ratio: 1; background: #dde1eb; border: 1px solid rgba(0,0,0,0.18); border-radius: 7px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.1s; position: relative; box-shadow: 0 3px 0 rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.55); }
     .key-btn:hover { border-color: rgba(0,0,0,0.28); background: #eaecf5; }
     .key-btn:active, .key-btn.pressed { transform: scale(.95); box-shadow: 0 1px 0 rgba(0,0,0,0.3), inset 0 1px 2px rgba(0,0,0,0.15); }
-    .key-num { position: absolute; top: 5px; left: 6px; font-size: 9px; color: rgba(0,0,0,0.35); font-family: var(--mono); pointer-events: none; }
+    .key-num { position: absolute; top: 6px; left: 6px; font-size: 10px; font-weight: 700; color: var(--text3); font-family: var(--mono); pointer-events: none; }
     .key-btn.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent), 0 3px 0 rgba(0,0,0,0.2); }
     .key-label { font-size: 10px; font-weight: 700; color: rgba(0,0,0,0.72); font-family: var(--mono); pointer-events: none; text-align: center; padding: 0 4px; line-height: 1.2; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .key-btn.special .key-label { color: rgba(0,0,0,0.6); font-weight: 600; white-space: normal; }
@@ -2024,7 +2024,7 @@
             </div>
           </div>
           <div class="sim-content">
-            <div style="display: flex; flex-direction: row-reverse; align-items: center; justify-content: center; gap: 32px; padding: 20px 0;">
+            <div style="flex: 1; display: flex; flex-direction: row-reverse; align-items: center; justify-content: center; gap: 32px; padding: 20px 0;">
               <div class="pots-row-visual" id="sim-pots-visual">
                 <!-- JS renders sim pots here -->
               </div>
@@ -2751,7 +2751,7 @@
         const btn = document.createElement('div');
         btn.className = 'key-btn';
         if (modeFile) btn.classList.add('active');
-        btn.innerHTML = `<div class="key-num">T${(i+1).toString().padStart(2,'0')}</div>
+        btn.innerHTML = `<div class="key-num">${i+1}</div>
                          <div class="key-label">${modeName}</div>`;
         btn.onclick = () => openConfigDrawer(i, 'mode');
         container.appendChild(btn);
@@ -2760,14 +2760,14 @@
       // Tecla 13: Mode Teclat
       const t13 = document.createElement('div');
       t13.className = 'key-btn special';
-      t13.innerHTML = `<div class="key-num">T13</div><div class="key-label">Mode Teclat<br><span style="font-size:8px;opacity:0.6">Canvi de capa</span></div>`;
+      t13.innerHTML = `<div class="key-num">13</div><div class="key-label">Mode Teclat<br><span style="font-size:8px;opacity:0.6">Canvi de capa</span></div>`;
       container.appendChild(t13);
       
       // Tecla 14: Efecte / Octava -
       const e13 = bank.efectos ? bank.efectos['13'] || 'Sustain' : 'Sustain';
       const t14 = document.createElement('div');
       t14.className = 'key-btn special';
-      t14.innerHTML = `<div class="key-num">T14</div><div class="key-label">Octava &minus;<br><span style="font-size:8px;opacity:0.6">${e13}</span></div>`;
+      t14.innerHTML = `<div class="key-num">14</div><div class="key-label">Octava &minus;<br><span style="font-size:8px;opacity:0.6">${e13}</span></div>`;
       t14.onclick = () => openConfigDrawer(13, 'effect');
       container.appendChild(t14);
       
@@ -2775,14 +2775,14 @@
       const e14 = bank.efectos ? bank.efectos['14'] || 'Pausa' : 'Pausa';
       const t15 = document.createElement('div');
       t15.className = 'key-btn special';
-      t15.innerHTML = `<div class="key-num">T15</div><div class="key-label">Octava +<br><span style="font-size:8px;opacity:0.6">${e14}</span></div>`;
+      t15.innerHTML = `<div class="key-num">15</div><div class="key-label">Octava +<br><span style="font-size:8px;opacity:0.6">${e14}</span></div>`;
       t15.onclick = () => openConfigDrawer(14, 'effect');
       container.appendChild(t15);
       
       // Tecla 16: Aturar So
       const t16 = document.createElement('div');
       t16.className = 'key-btn special';
-      t16.innerHTML = `<div class="key-num">T16</div><div class="key-label">Aturar So<br><span style="font-size:8px;opacity:0.6">All Notes Off</span></div>`;
+      t16.innerHTML = `<div class="key-num">16</div><div class="key-label">Aturar So<br><span style="font-size:8px;opacity:0.6">All Notes Off</span></div>`;
       container.appendChild(t16);
     }
 
