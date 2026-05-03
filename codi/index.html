@@ -5,7 +5,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>T E C L A</title>
-  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
   <script src="https://cdn.jsdelivr.net/pyodide/v0.26.3/full/pyodide.js"></script>
   <style>
     * {
@@ -852,7 +851,8 @@
     .sim-content {
       flex: 1;
       display: flex;
-      flex-direction: column
+      flex-direction: row;
+      align-items: stretch
     }
 
     .sim-device {
@@ -947,29 +947,25 @@
 
     .sim-pots {
       display: flex;
-      flex-direction: row;
-      gap: 18px;
-      padding: 14px 20px 10px;
-      border-top: 1px solid var(--border);
+      flex-direction: column;
+      gap: 16px;
+      padding: 20px 16px;
+      border-left: 1px solid var(--border);
       background: var(--sim-bg);
       justify-content: center;
-      align-items: flex-start
+      align-items: stretch;
+      min-width: 110px
     }
 
     .pot-row {
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 5px;
-      flex: 1;
-      min-width: 80px;
-      max-width: 160px
+      gap: 5px
     }
 
     .pot-row>label {
       font-size: 11px;
-      color: var(--sim-pot-lbl);
-      text-align: center
+      color: var(--sim-pot-lbl)
     }
 
     .pot-range {
@@ -1001,43 +997,7 @@
       font-size: 10px;
       color: var(--sim-pot-val);
       font-family: var(--mono);
-      text-align: center
-    }
-
-    .pot-knob {
-      cursor: ns-resize;
-      touch-action: none;
-      -webkit-user-select: none;
-      user-select: none;
-      outline: none
-    }
-
-    .knob-svg {
-      width: 64px;
-      height: 64px;
-      display: block;
-      overflow: visible
-    }
-
-    .knob-track {
-      fill: none;
-      stroke: var(--sim-pot-track);
-      stroke-width: 4;
-      stroke-linecap: round;
-      stroke-dasharray: 103.67 1000
-    }
-
-    .knob-fill {
-      fill: none;
-      stroke: var(--accent);
-      stroke-width: 4;
-      stroke-linecap: round;
-      stroke-dasharray: 0 1000
-    }
-
-    .knob-dot {
-      fill: var(--text);
-      opacity: .55
+      text-align: right
     }
 
     .sim-log-wrap {
@@ -1138,16 +1098,6 @@
       background: var(--accent);
       border-radius: 2px;
       transition: width .25s
-    }
-
-    .fw-dl-secondary {
-      font-size: 11px;
-      color: var(--accent);
-      text-align: center;
-      text-decoration: underline;
-      background: none;
-      border: none;
-      padding: 2px 0;
     }
 
     .fw-msg {
@@ -1310,36 +1260,6 @@
       overflow-x: auto;
       line-height: 1.55;
       margin: 10px 0
-    }
-
-    .guide-key-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 5px;
-      margin: 12px 0;
-      max-width: 320px
-    }
-
-    .guide-key {
-      background: var(--sim-key);
-      border: 1px solid var(--sim-key-bd);
-      border-radius: 7px;
-      aspect-ratio: 1;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      -webkit-user-select: none;
-      user-select: none
-    }
-
-    .guide-key-num {
-      font-size: 9px;
-      color: var(--sim-lbl);
-      font-family: var(--mono);
-      position: absolute;
-      top: 5px;
-      left: 6px
     }
 
     .guide-toc {
@@ -1803,81 +1723,6 @@
       background: var(--surface3);
       border-radius: 3px
     }
-
-    /* TOAST */
-    #toast-container {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 9999;
-      display: flex;
-      flex-direction: column-reverse;
-      align-items: center;
-      gap: 8px;
-      pointer-events: none
-    }
-
-    .toast-msg {
-      background: var(--surface3);
-      border: 1px solid var(--border-h);
-      color: var(--text);
-      padding: 8px 20px;
-      border-radius: var(--r2);
-      font-size: 12.5px;
-      opacity: 0;
-      transform: translateY(10px);
-      transition: opacity .22s, transform .22s;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, .4);
-      white-space: nowrap
-    }
-
-    .toast-msg.toast-show {
-      opacity: 1;
-      transform: none
-    }
-
-    .toast-msg.toast-ok {
-      border-color: rgba(61, 201, 108, .3);
-      color: var(--green);
-      background: rgba(61, 201, 108, .07)
-    }
-
-    .toast-msg.toast-warn {
-      border-color: rgba(240, 180, 41, .28);
-      color: var(--yellow)
-    }
-
-    /* LANG SWITCHER */
-    .lang-switcher {
-      display: flex;
-      gap: 2px
-    }
-
-    .lang-btn {
-      padding: 2px 7px;
-      border-radius: 3px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--text2);
-      font-size: 10.5px;
-      cursor: pointer;
-      font-family: var(--font);
-      letter-spacing: .03em;
-      transition: background .12s, color .12s, border-color .12s
-    }
-
-    .lang-btn:hover {
-      background: var(--surface2);
-      color: var(--text)
-    }
-
-    .lang-btn.active {
-      background: var(--surface2);
-      border-color: var(--border-h);
-      color: var(--text);
-      font-weight: 600
-    }
   </style>
 </head>
 
@@ -1889,11 +1734,6 @@
     </div>
     <span id="not-supported"></span>
     <div class="header-right">
-      <div class="lang-switcher">
-        <button class="lang-btn active" data-lang="ca">CA</button>
-        <button class="lang-btn" data-lang="es">ES</button>
-        <button class="lang-btn" data-lang="en">EN</button>
-      </div>
       <button class="btn btn-sm btn-primary" id="btn-connect" data-i18n="btn_connect">connecta dispositiu</button>
       <button class="btn btn-sm" id="btn-disconnect" style="display:none" data-i18n="btn_disconnect">desconnectar</button>
     </div>
@@ -1915,20 +1755,20 @@
     <!-- ══ TECLES ══════════════════════════════════════════════════ -->
     <div class="tab-panel active" id="tab-keys">
       <div class="bank-bar">
-        <label data-i18n="bank_label">Capa:</label>
+        <label>Capa:</label>
         <select id="bank-select"></select>
-        <button class="btn btn-sm" id="btn-new-bank" data-i18n="btn_new_bank">+ Nova capa</button>
-        <button class="btn btn-sm" id="btn-rename-bank" data-i18n="btn_rename_bank">Reanomenar</button>
-        <button class="btn btn-sm btn-danger" id="btn-del-bank" data-i18n="btn_del_bank">Eliminar</button>
+        <button class="btn btn-sm" id="btn-new-bank">+ Nova capa</button>
+        <button class="btn btn-sm" id="btn-rename-bank">Reanomenar</button>
+        <button class="btn btn-sm btn-danger" id="btn-del-bank">Eliminar</button>
         <div style="margin-left:auto;display:flex;gap:8px">
-          <button class="btn btn-sm" id="btn-import" data-i18n="btn_import_mode">+ importar mode</button>
-          <button class="btn btn-sm" id="btn-refresh" title="Refresca modes del dispositiu" data-i18n="btn_refresh_modes">↻ modes</button>
-          <button class="btn btn-sm btn-primary" id="btn-save-keys" data-i18n="btn_save_keys">Guardar configuració</button>
+          <button class="btn btn-sm" id="btn-import">+ importar mode</button>
+          <button class="btn btn-sm" id="btn-refresh" title="Refresca modes del dispositiu">↻ modes</button>
+          <button class="btn btn-sm btn-primary" id="btn-save-keys">Guardar configuració</button>
         </div>
       </div>
 
       <div class="section">
-        <div class="section-title" data-i18n="section_keys_config">Configuració de Tecles</div>
+        <div class="section-title">Configuració de Tecles</div>
         <div class="keys-grid" id="keys-grid">
           <!-- Tecles 1–12: mode assignable -->
           <div class="key-cell">
@@ -2045,11 +1885,11 @@
       </div>
 
       <div class="modes-section" id="modes-section" style="margin-top:16px">
-        <div class="section-title"><span data-i18n="section_device_modes">Modes al dispositiu</span> &nbsp;<span id="modes-count"
+        <div class="section-title">Modes al dispositiu &nbsp;<span id="modes-count"
             style="font-weight:400;text-transform:none;letter-spacing:0;font-size:12px">—</span></div>
         <div id="modes-toolbar" style="display:none;gap:6px;margin:8px 0 4px;flex-wrap:wrap;align-items:center">
-          <button class="btn btn-sm" id="btn-modes-sel-all" data-i18n="btn_all">Tots</button>
-          <button class="btn btn-sm" id="btn-modes-sel-none" data-i18n="btn_none">Cap</button>
+          <button class="btn btn-sm" id="btn-modes-sel-all">Tots</button>
+          <button class="btn btn-sm" id="btn-modes-sel-none">Cap</button>
           <button class="btn btn-sm btn-danger" id="btn-del-selected" disabled>Eliminar seleccionats (<span
               id="modes-sel-count">0</span>)</button>
         </div>
@@ -2069,7 +1909,7 @@
     <div class="tab-panel" id="tab-modes">
       <div class="panel-grid cols2">
         <div class="card">
-          <div class="card-title" data-i18n="card_modes_install">Modes a instal·lar al dispositiu</div>
+          <div class="card-title">Modes a instal·lar al dispositiu</div>
           <div class="checklist" id="modes-list-check">
             <div class="empty"><span class="spinner"></span></div>
           </div>
@@ -2077,50 +1917,50 @@
             style="display:none;margin-top:8px;font-size:11.5px;color:var(--accent);padding:3px 0">Seleccionat: <strong
               id="mode-selected-name"></strong></div>
           <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
-            <button class="btn btn-sm btn-primary" id="btn-save-modes" data-i18n="btn_save">Guardar</button>
-            <button class="btn btn-sm" id="btn-modes-all" data-i18n="btn_all">Tots</button>
-            <button class="btn btn-sm" id="btn-modes-none" data-i18n="btn_none">Cap</button>
-            <button class="btn btn-sm" id="btn-import-modes" data-i18n="btn_import_modes">+ Afegir Modes</button>
-            <button class="btn btn-sm btn-danger" id="btn-del-mode" disabled data-i18n="btn_delete">Eliminar</button>
+            <button class="btn btn-sm btn-primary" id="btn-save-modes">Guardar</button>
+            <button class="btn btn-sm" id="btn-modes-all">Tots</button>
+            <button class="btn btn-sm" id="btn-modes-none">Cap</button>
+            <button class="btn btn-sm" id="btn-import-modes">+ Afegir Modes</button>
+            <button class="btn btn-sm btn-danger" id="btn-del-mode" disabled>Eliminar</button>
           </div>
         </div>
         <div class="card">
-          <div class="card-title" data-i18n="card_keyboard_scales">Escales del mode teclat</div>
+          <div class="card-title">Escales del mode teclat</div>
           <div class="checklist c3" id="keyboard-scales-list"></div>
           <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
-            <button class="btn btn-sm btn-primary" id="btn-save-scales" data-i18n="btn_save">Guardar</button>
-            <button class="btn btn-sm" id="btn-scales-all" data-i18n="btn_all_f">Totes</button>
-            <button class="btn btn-sm" id="btn-scales-none" data-i18n="btn_none">Cap</button>
+            <button class="btn btn-sm btn-primary" id="btn-save-scales">Guardar</button>
+            <button class="btn btn-sm" id="btn-scales-all">Totes</button>
+            <button class="btn btn-sm" id="btn-scales-none">Cap</button>
           </div>
         </div>
       </div>
 
       <div class="panel-grid cols2" style="margin-top:14px">
         <div class="card">
-          <div class="card-title" data-i18n="card_effects">Efectes temporals — Tecles 14 i 15 (capa modes)</div>
+          <div class="card-title">Efectes temporals — Tecles 14 i 15 (capa modes)</div>
           <p style="font-size:11.5px;color:var(--text2);margin-bottom:10px">Cicla amb doble clic a les tecles 14 i 15
           </p>
           <div class="effects-row" id="effects-list"></div>
           <div style="display:flex;gap:6px;margin-top:12px">
-            <button class="btn btn-sm btn-primary" id="btn-save-effects" data-i18n="btn_save">Guardar</button>
-            <button class="btn btn-sm" id="btn-effects-all" data-i18n="btn_all">Tots</button>
-            <button class="btn btn-sm" id="btn-effects-none" data-i18n="btn_none">Cap</button>
+            <button class="btn btn-sm btn-primary" id="btn-save-effects">Guardar</button>
+            <button class="btn btn-sm" id="btn-effects-all">Tots</button>
+            <button class="btn btn-sm" id="btn-effects-none">Cap</button>
           </div>
         </div>
         <div class="card">
-          <div class="card-title" data-i18n="card_arp">Patrons direccionals de l'arpegiador</div>
+          <div class="card-title">Patrons direccionals de l'arpegiador</div>
           <div class="arp-grid" id="arp-list"></div>
           <div style="display:flex;gap:6px;margin-top:12px">
-            <button class="btn btn-sm btn-primary" id="btn-save-arp" data-i18n="btn_save">Guardar</button>
-            <button class="btn btn-sm" id="btn-arp-all" data-i18n="btn_all">Tots</button>
-            <button class="btn btn-sm" id="btn-arp-none" data-i18n="btn_none">Cap</button>
+            <button class="btn btn-sm btn-primary" id="btn-save-arp">Guardar</button>
+            <button class="btn btn-sm" id="btn-arp-all">Tots</button>
+            <button class="btn btn-sm" id="btn-arp-none">Cap</button>
           </div>
         </div>
       </div>
 
       <div class="panel-grid cols2" style="margin-top:14px">
         <div class="card">
-          <div class="card-title" data-i18n="card_pots_kb">Potenciòmetres — Mode Teclat</div>
+          <div class="card-title">Potenciòmetres — Mode Teclat</div>
           <div class="pots-row">
             <div class="pot-item"><label>X</label>
               <select id="kb-pot-x">
@@ -2155,7 +1995,7 @@
           </div>
         </div>
         <div class="card">
-          <div class="card-title" data-i18n="card_pots_arp">Potenciòmetres — Arpegiador</div>
+          <div class="card-title">Potenciòmetres — Arpegiador</div>
           <div class="pots-row">
             <div class="pot-item"><label>X</label>
               <select id="arp-pot-x">
@@ -2195,18 +2035,18 @@
       </div>
 
       <div style="margin-top:14px;display:flex;justify-content:flex-end">
-        <button class="btn btn-primary" id="btn-save-pots" data-i18n="btn_save_pots">Guardar i aplicar funcions dels potenciòmetres</button>
+        <button class="btn btn-primary" id="btn-save-pots">Guardar i aplicar funcions dels potenciòmetres</button>
       </div>
     </div>
 
     <!-- ══ PROGRESSIONS ══════════════════════════════════════════ -->
     <div class="tab-panel" id="tab-progressions">
       <div class="card" style="max-width:640px">
-          <div class="card-title" data-i18n="card_progressions">Progressions d'Acords</div>
+        <div class="card-title">Progressions d'Acords</div>
         <div class="crud-toolbar">
-          <button class="btn btn-sm btn-primary" id="btn-new-prog" data-i18n="btn_new_prog">+ Nova progressió</button>
-          <button class="btn btn-sm" id="btn-edit-prog" disabled data-i18n="btn_edit">Editar</button>
-          <button class="btn btn-sm btn-danger" id="btn-del-prog" disabled data-i18n="btn_delete">Eliminar</button>
+          <button class="btn btn-sm btn-primary" id="btn-new-prog">+ Nova progressió</button>
+          <button class="btn btn-sm" id="btn-edit-prog" disabled>Editar</button>
+          <button class="btn btn-sm btn-danger" id="btn-del-prog" disabled>Eliminar</button>
         </div>
         <div class="crud-list" id="prog-items"></div>
       </div>
@@ -2215,11 +2055,11 @@
     <!-- ══ ESCALES PERSONALITZADES ═══════════════════════════════ -->
     <div class="tab-panel" id="tab-scales">
       <div class="card" style="max-width:640px">
-          <div class="card-title" data-i18n="card_scales">Escales Personalitzades</div>
+        <div class="card-title">Escales Personalitzades</div>
         <div class="crud-toolbar">
-          <button class="btn btn-sm btn-primary" id="btn-new-scale" data-i18n="btn_new_scale">+ Nova escala</button>
-          <button class="btn btn-sm" id="btn-edit-scale" disabled data-i18n="btn_edit">Editar</button>
-          <button class="btn btn-sm btn-danger" id="btn-del-scale" disabled data-i18n="btn_delete">Eliminar</button>
+          <button class="btn btn-sm btn-primary" id="btn-new-scale">+ Nova escala</button>
+          <button class="btn btn-sm" id="btn-edit-scale" disabled>Editar</button>
+          <button class="btn btn-sm btn-danger" id="btn-del-scale" disabled>Eliminar</button>
         </div>
         <div class="crud-list" id="scale-items"></div>
       </div>
@@ -2235,8 +2075,8 @@
         </div>
         <div class="button-cells-grid" id="prog-cells-grid"></div>
         <div style="display:flex;gap:8px;justify-content:flex-end">
-          <button class="btn btn-sm" id="btn-prog-editor-cancel" data-i18n="btn_cancel">Cancel·lar</button>
-          <button class="btn btn-sm btn-primary" id="btn-prog-editor-save" data-i18n="btn_save">Guardar</button>
+          <button class="btn btn-sm" id="btn-prog-editor-cancel">Cancel·lar</button>
+          <button class="btn btn-sm btn-primary" id="btn-prog-editor-save">Guardar</button>
         </div>
       </div>
     </div>
@@ -2251,8 +2091,8 @@
         </div>
         <div class="button-cells-grid" id="scale-cells-grid"></div>
         <div style="display:flex;gap:8px;justify-content:flex-end">
-          <button class="btn btn-sm" id="btn-scale-editor-cancel" data-i18n="btn_cancel">Cancel·lar</button>
-          <button class="btn btn-sm btn-primary" id="btn-scale-editor-save" data-i18n="btn_save">Guardar</button>
+          <button class="btn btn-sm" id="btn-scale-editor-cancel">Cancel·lar</button>
+          <button class="btn btn-sm btn-primary" id="btn-scale-editor-save">Guardar</button>
         </div>
       </div>
     </div>
@@ -2266,13 +2106,13 @@
         </div>
         <!-- Sidebar -->
         <div class="sim-sidebar">
-          <div class="sim-sidebar-title" data-i18n="sim_modes_title">Modes disponibles</div>
+          <div class="sim-sidebar-title">Modes disponibles</div>
           <div class="sim-modes-list" id="sim-modes-list"></div>
           <div class="sim-sidebar-bottom">
             <select id="sim-mode-select" style="width:100%">
               <option value="">— selecciona mode —</option>
             </select>
-            <button class="btn btn-sm" id="btn-load-py" disabled data-i18n="btn_load_py">Carregar .py local</button>
+            <button class="btn btn-sm" id="btn-load-py" disabled>Carregar .py local</button>
           </div>
         </div>
         <!-- Main -->
@@ -2282,9 +2122,10 @@
             <select id="sim-midi-select">
               <option value="">— sense MIDI —</option>
             </select>
-            <button class="btn btn-sm" id="btn-sim-start" disabled data-i18n="btn_sim_start">▶ Iniciar</button>
-            <button class="btn btn-sm btn-danger" id="btn-sim-stop" disabled data-i18n="btn_sim_stop">■ Aturar</button>
-            <button class="btn btn-sm" id="btn-sim-float" title="Obrir simulador en finestra independent" data-i18n="btn_sim_float">Finestra independent</button>
+            <button class="btn btn-sm" id="btn-sim-start" disabled>▶ Iniciar</button>
+            <button class="btn btn-sm btn-danger" id="btn-sim-stop" disabled>■ Aturar</button>
+            <button class="btn btn-sm" id="btn-sim-float" title="Obrir simulador en finestra independent">Finestra
+              independent</button>
             <div class="sim-status">
               <div class="sim-dot" id="sim-status-dot"></div>
               <span id="sim-status-text">no inicialitzat</span>
@@ -2295,49 +2136,16 @@
               <div class="sim-buttons-grid" id="sim-buttons-grid"></div>
             </div>
             <div class="sim-pots">
-              <div class="pot-row">
-                <label id="pot-lbl-0">X</label>
-                <div class="pot-knob sim-pot-knob" data-pot="0" data-val="0" tabindex="0">
-                  <svg class="knob-svg" viewBox="0 0 60 60">
-                    <g transform="rotate(-225, 30, 30)">
-                      <circle class="knob-track" cx="30" cy="30" r="22"/>
-                      <circle class="knob-fill" cx="30" cy="30" r="22"/>
-                    </g>
-                    <g class="knob-indicator-group" transform="rotate(-135, 30, 30)">
-                      <circle class="knob-dot" cx="30" cy="9" r="2.5"/>
-                    </g>
-                  </svg>
-                </div>
+              <div class="pot-row"><label id="pot-lbl-0">X</label><input type="range" class="pot-range sim-pot-range"
+                  data-pot="0" min="0" max="127" value="0">
                 <div class="pot-val" id="pot-val-0">0</div>
               </div>
-              <div class="pot-row">
-                <label id="pot-lbl-1">Y</label>
-                <div class="pot-knob sim-pot-knob" data-pot="1" data-val="0" tabindex="0">
-                  <svg class="knob-svg" viewBox="0 0 60 60">
-                    <g transform="rotate(-225, 30, 30)">
-                      <circle class="knob-track" cx="30" cy="30" r="22"/>
-                      <circle class="knob-fill" cx="30" cy="30" r="22"/>
-                    </g>
-                    <g class="knob-indicator-group" transform="rotate(-135, 30, 30)">
-                      <circle class="knob-dot" cx="30" cy="9" r="2.5"/>
-                    </g>
-                  </svg>
-                </div>
+              <div class="pot-row"><label id="pot-lbl-1">Y</label><input type="range" class="pot-range sim-pot-range"
+                  data-pot="1" min="0" max="127" value="0">
                 <div class="pot-val" id="pot-val-1">0</div>
               </div>
-              <div class="pot-row">
-                <label id="pot-lbl-2">Z</label>
-                <div class="pot-knob sim-pot-knob" data-pot="2" data-val="0" tabindex="0">
-                  <svg class="knob-svg" viewBox="0 0 60 60">
-                    <g transform="rotate(-225, 30, 30)">
-                      <circle class="knob-track" cx="30" cy="30" r="22"/>
-                      <circle class="knob-fill" cx="30" cy="30" r="22"/>
-                    </g>
-                    <g class="knob-indicator-group" transform="rotate(-135, 30, 30)">
-                      <circle class="knob-dot" cx="30" cy="9" r="2.5"/>
-                    </g>
-                  </svg>
-                </div>
+              <div class="pot-row"><label id="pot-lbl-2">Z</label><input type="range" class="pot-range sim-pot-range"
+                  data-pot="2" min="0" max="127" value="0">
                 <div class="pot-val" id="pot-val-2">0</div>
               </div>
             </div>
@@ -2354,52 +2162,46 @@
     <div class="tab-panel" id="tab-firmware">
       <div class="fw-grid">
         <div class="card">
-          <div class="card-title" data-i18n="card_fw_state">Estat del sistema</div>
-          <div class="fw-status-row"><span class="fw-status-key" data-i18n="fw_bootloader_label">Mode Bootloader</span><span
+          <div class="card-title">Estat del sistema</div>
+          <div class="fw-status-row"><span class="fw-status-key">Mode Bootloader</span><span
               class="fw-status-val fw-unk" id="fw-bootloader">?</span></div>
-          <div class="fw-status-row"><span class="fw-status-key" data-i18n="fw_circuitpy_label">Volum CIRCUITPY</span><span
+          <div class="fw-status-row"><span class="fw-status-key">Volum CIRCUITPY</span><span
               class="fw-status-val fw-unk" id="fw-circuitpy">?</span></div>
-          <div class="fw-status-row"><span class="fw-status-key" data-i18n="fw_cpython_label">CircuitPython</span><span class="fw-status-val fw-unk"
+          <div class="fw-status-row"><span class="fw-status-key">CircuitPython</span><span class="fw-status-val fw-unk"
               id="fw-cpython">?</span></div>
-          <div class="fw-status-row"><span class="fw-status-key" data-i18n="fw_tecla_label">Firmware TECLA</span><span class="fw-status-val fw-unk"
+          <div class="fw-status-row"><span class="fw-status-key">Firmware TECLA</span><span class="fw-status-val fw-unk"
               id="fw-tecla">?</span></div>
-          <div style="margin-top:12px"><button class="btn btn-sm" id="btn-fw-refresh" data-i18n="btn_fw_refresh">↻ Refrescar estat</button></div>
+          <div style="margin-top:12px"><button class="btn btn-sm" id="btn-fw-refresh">↻ Refrescar estat</button></div>
         </div>
         <div class="card">
-          <div class="card-title" data-i18n="card_fw_step1">Pas 1 — Instal·lar CircuitPython</div>
-          <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.65" data-i18n="fw_step1_desc">Descarrega el fitxer i
+          <div class="card-title">Pas 1 — Instal·lar CircuitPython</div>
+          <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.65">Descarrega el fitxer i
             <strong>arrossega'l al volum RPI-RP2</strong> al Finder. El dispositiu es reiniciarà automàticament.
           </p>
           <div style="display:flex;flex-direction:column;gap:8px">
-            <div id="fw-step1-direct" style="display:none;flex-direction:column;gap:6px">
-              <button class="btn btn-sm" id="btn-flash-nuke" data-i18n="btn_dl_nuke">⚠ Instal·lar flash_nuke al RPI-RP2</button>
-              <button class="btn btn-sm btn-primary" id="btn-install-cp" data-i18n="btn_dl_cp">⚡ Instal·lar CircuitPython 10.0.3 al RPI-RP2</button>
-            </div>
-            <div id="fw-step1-manual" style="display:flex;flex-direction:column;gap:6px">
-              <a class="btn btn-sm" href="./firmware/flash_nuke.uf2" download="flash_nuke.uf2" data-i18n="btn_dl_nuke_manual">⬇ Descarregar flash_nuke.uf2</a>
-              <a class="btn btn-sm btn-primary" href="./firmware/adafruit-circuitpython-raspberry_pi_pico-es-10.0.3.uf2" download="circuitpython-pico-10.0.3.uf2" data-i18n="btn_dl_cp_manual">⬇ Descarregar CircuitPython 10.0.3</a>
-            </div>
-            <button class="btn btn-sm" id="btn-fw-instructions" data-i18n="btn_fw_instructions">ℹ Instruccions completes</button>
+            <a class="btn btn-sm" id="btn-flash-nuke" href="/firmware/flash_nuke.uf2" download="flash_nuke.uf2">⚠
+              Descarregar flash_nuke.uf2</a>
+            <a class="btn btn-sm btn-primary" id="btn-install-cp"
+              href="/firmware/adafruit-circuitpython-raspberry_pi_pico-es-10.0.3.uf2"
+              download="circuitpython-pico-10.0.3.uf2">⬇ Descarregar CircuitPython 10.0.3</a>
+            <button class="btn btn-sm" id="btn-fw-instructions">ℹ Instruccions completes</button>
           </div>
-          <p style="font-size:11px;color:var(--text2);margin-top:10px;line-height:1.6" data-i18n="fw_step1_note">
+          <p style="font-size:11px;color:var(--text2);margin-top:10px;line-height:1.6">
             <strong>Per entrar al mode bootloader:</strong><br>Mantén premut BOOTSEL mentre connectes el USB-C.<br>
-            <strong>Instal·lació directa (Chrome/Edge):</strong><br>Prem el botó i selecciona el volum RPI-RP2 al selector de carpetes.
+            <strong>Després de descarregar:</strong><br>Obre el Finder → arrossega el .uf2 al volum RPI-RP2.
           </p>
         </div>
         <div class="card">
-          <div class="card-title" data-i18n="card_fw_step2">Pas 2 — Firmware TECLA</div>
-          <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.65" data-i18n="fw_step2_desc">Quan el dispositiu apareix
+          <div class="card-title">Pas 2 — Firmware TECLA</div>
+          <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.65">Quan el dispositiu apareix
             com <strong>CIRCUITPY</strong>, connecta'l a la pestanya <strong>Tecles</strong> i instal·la el firmware.
           </p>
           <div style="display:flex;flex-direction:column;gap:8px">
-            <label class="cb"><input type="checkbox" id="fw-preserve" checked><span style="font-size:12px" data-i18n="fw_preserve">Preservar
+            <label class="cb"><input type="checkbox" id="fw-preserve" checked><span style="font-size:12px">Preservar
                 configuració existent</span></label>
-            <button class="btn btn-sm btn-primary" id="btn-install-fw" disabled data-i18n="btn_install_fw">Instal·lar / Actualitzar firmware</button>
-            <button class="btn btn-sm" id="btn-verify-fw" disabled data-i18n="btn_verify_fw">Verificar instal·lació</button>
-            <div style="border-top:1px solid var(--border);margin-top:4px;padding-top:8px;display:flex;flex-direction:column;gap:6px">
-              <button class="btn btn-sm" id="btn-download-fw-zip" data-i18n="btn_download_fw_zip">⬇ Descarregar firmware ZIP (sense connexió)</button>
-              <p style="font-size:10px;color:var(--text3);margin:0;line-height:1.5" data-i18n="fw_zip_note">Compatible amb tots els navegadors. Extreu tots els fitxers del ZIP al volum <strong>CIRCUITPY</strong> amb el Finder (Mac) o l'Explorador de Windows.</p>
-            </div>
+            <button class="btn btn-sm btn-primary" id="btn-install-fw" disabled>Instal·lar / Actualitzar
+              firmware</button>
+            <button class="btn btn-sm" id="btn-verify-fw" disabled>Verificar instal·lació</button>
           </div>
         </div>
       </div>
@@ -2413,7 +2215,7 @@
     <div class="tab-panel" id="tab-theme">
       <div style="max-width:620px">
         <div class="card">
-          <div class="card-title" data-i18n="card_theme">Aparença</div>
+          <div class="card-title">Aparença</div>
           <div class="theme-cards" id="theme-cards">
             <div class="theme-card active" data-theme="dark">
               <div class="theme-swatches"><span style="background:#0c0c0c"></span><span
@@ -2526,14 +2328,14 @@
 
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
             <div id="ct-mode-indicator" style="font-size:11px;color:var(--text3);font-weight:500"></div>
-            <button class="btn btn-sm" id="btn-new-theme" style="font-size:11px" data-i18n="btn_new_theme">✚ Nou tema</button>
+            <button class="btn btn-sm" id="btn-new-theme" style="font-size:11px">✚ Nou tema</button>
           </div>
 
           <!-- Name row -->
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-            <label style="font-size:12px;color:var(--text2);white-space:nowrap;min-width:40px" data-i18n="ct_name_label">Nom:</label>
+            <label style="font-size:12px;color:var(--text2);white-space:nowrap;min-width:40px">Nom:</label>
             <input type="text" id="ct-name" placeholder="Ex: El meu tema" style="flex:1;min-width:0">
-            <button class="btn btn-sm" id="btn-random-theme" title="Colors aleatoris" data-i18n="btn_random_theme">🎲 Aleatori</button>
+            <button class="btn btn-sm" id="btn-random-theme" title="Colors aleatoris">🎲 Aleatori</button>
           </div>
 
           <div class="custom-theme-grid">
@@ -2559,8 +2361,8 @@
             </div>
           </div>
           <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
-            <button class="btn btn-sm btn-primary" id="btn-save-custom-theme" data-i18n="btn_save_custom_theme">Desa i aplica</button>
-            <button class="btn btn-sm" id="btn-reset-custom-theme" data-i18n="btn_reset_theme">Restablir</button>
+            <button class="btn btn-sm btn-primary" id="btn-save-custom-theme">Desa i aplica</button>
+            <button class="btn btn-sm" id="btn-reset-custom-theme">Restablir</button>
           </div>
         </div>
       </div>
@@ -2570,7 +2372,7 @@
     <div class="tab-panel" id="tab-guide">
       <div class="guide-wrap">
         <div class="card guide-card">
-          <div class="guide-toc" data-i18n="guide_toc">
+          <div class="guide-toc">
             <a href="#gs-1">1. Instal·lar el CircuitPython</a>
             <a href="#gs-2">2. Instal·lar el firmware</a>
             <a href="#gs-3">3. Funcionament del dispositiu</a>
@@ -2579,7 +2381,7 @@
             <a href="#gs-6">6. Recomanacions</a>
           </div>
 
-          <div id="gs-1" data-i18n="guide_s1">
+          <div id="gs-1">
             <div class="guide-h1">1. Instal·lar el CircuitPython al TECLA</div>
             <p class="guide-li">Connecta el TECLA a l'ordinador via USB.</p>
             <p class="guide-li">Si apareix com a <strong>CIRCUITPY</strong> ves al punt 2.</p>
@@ -2588,7 +2390,7 @@
             <p class="guide-li">El dispositiu apareixerà amb el nom CIRCUITPY.</p>
           </div>
 
-          <div id="gs-2" data-i18n="guide_s2">
+          <div id="gs-2">
             <div class="guide-h1">2. Instal·lar el firmware al TECLA</div>
             <p class="guide-li">Connecta el TECLA a l'ordinador via USB.</p>
             <p class="guide-li">Ves a la pestanya <em>Firmware</em> → clica <strong>Instal·lar / Actualitzar</strong>.
@@ -2599,7 +2401,7 @@
             <div class="guide-note">El TECLA ja està llest per funcionar.</div>
           </div>
 
-          <div id="gs-3" data-i18n="guide_s3">
+          <div id="gs-3">
             <div class="guide-h1">3. Funcionament del TECLA</div>
 
             <div class="guide-h2">Capa 1 · Teclat</div>
@@ -2614,7 +2416,15 @@
             <p class="guide-li">Tecla <strong>14</strong>: baixar d'octava.</p>
             <p class="guide-li">Tecla <strong>15</strong>: pujar d'octava.</p>
             <p class="guide-li">Tecla <strong>16</strong>: aturar el so (All Notes Off).</p>
-            <div class="guide-key-grid"><div class="guide-key"><span class="guide-key-num">1</span></div><div class="guide-key"><span class="guide-key-num">2</span></div><div class="guide-key"><span class="guide-key-num">3</span></div><div class="guide-key"><span class="guide-key-num">4</span></div><div class="guide-key"><span class="guide-key-num">5</span></div><div class="guide-key"><span class="guide-key-num">6</span></div><div class="guide-key"><span class="guide-key-num">7</span></div><div class="guide-key"><span class="guide-key-num">8</span></div><div class="guide-key"><span class="guide-key-num">9</span></div><div class="guide-key"><span class="guide-key-num">10</span></div><div class="guide-key"><span class="guide-key-num">11</span></div><div class="guide-key"><span class="guide-key-num">12</span></div><div class="guide-key"><span class="guide-key-num">13</span></div><div class="guide-key"><span class="guide-key-num">14</span></div><div class="guide-key"><span class="guide-key-num">15</span></div><div class="guide-key"><span class="guide-key-num">16</span></div></div>
+            <pre class="guide-diagram">┌──────────┬──────────┬──────────┬──────────┐
+│    1     │    2     │    3     │    4     │
+├──────────┼──────────┼──────────┼──────────┤
+│    5     │    6     │    7     │    8     │
+├──────────┼──────────┼──────────┼──────────┤
+│    9     │   10     │   11     │   12     │
+├──────────┼──────────┼──────────┼──────────┤
+│   13     │   14     │   15     │   16     │
+└──────────┴──────────┴──────────┴──────────┘</pre>
 
             <div class="guide-h2">Capa 2 · Modes</div>
             <p class="guide-li">S'activa amb la tecla 13. Es configura a la pestanya <em>Tecles</em>.</p>
@@ -2628,7 +2438,7 @@
             <p class="guide-li">Tecla <strong>16</strong>: aturar el so.</p>
           </div>
 
-          <div id="gs-4" data-i18n="guide_s4">
+          <div id="gs-4">
             <div class="guide-h1">4. Configuració del dispositiu</div>
             <p class="guide-li">Ves a <em>Modes i Escales</em> → selecciona els modes, escales i efectes.</p>
             <p class="guide-li">Ves a <em>Tecles</em> → crea una capa i assigna modes a les tecles 1–12.</p>
@@ -2638,7 +2448,7 @@
             <p class="guide-li">Fes un reset al dispositiu.</p>
           </div>
 
-          <div id="gs-5" data-i18n="guide_s5">
+          <div id="gs-5">
             <div class="guide-h1">5. Pestanyes</div>
             <div class="guide-h2">Tecles</div>
             <p class="guide-li">Crear capes de modes i assignar-los a les tecles 1–12.</p>
@@ -2657,7 +2467,7 @@
             <p class="guide-li">Canviar el tema de colors de l'app. Crear un tema personalitzat.</p>
           </div>
 
-          <div id="gs-6" data-i18n="guide_s6">
+          <div id="gs-6">
             <div class="guide-h1">6. Recomanacions</div>
             <p class="guide-li">Guardar sempre la configuració després de realitzar canvis.</p>
             <p class="guide-li">Actualitzar el firmware després de canviar modes o escales.</p>
@@ -2673,9 +2483,6 @@
     </div>
 
   </main>
-
-  <div id="toast-container"></div>
-
   <script type="module">
     import { TECLADevice } from './js/tecla-device.js';
     import { TECLAModes } from './js/tecla-modes.js';
@@ -2719,7 +2526,6 @@
 
     // ── Tab navigation ─────────────────────────────────────────────
     let _builtKeys = false, _builtModes = false;
-    let _modesIndex = [];
     document.querySelectorAll('.nav-tab').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
@@ -2910,9 +2716,10 @@
     // ══════════════════════════════════════════════════════════════
     // TECLES — Grid 4×4
     // ══════════════════════════════════════════════════════════════
+    let _modesIndex = [];
     async function _loadModesIndex() {
       if (_modesIndex.length) return _modesIndex;
-      try { const r = await fetch('./py/modes_index.json'); const d = await r.json(); _modesIndex = d.modes || []; } catch { }
+      try { const r = await fetch('/py/modes_index.json'); const d = await r.json(); _modesIndex = d.modes || []; } catch { }
       return _modesIndex;
     }
     async function _getEffectiveModes() {
@@ -2946,7 +2753,7 @@
       if (device.isConnected()) {
         try { return await device.readFile(`modes/${file}`); } catch { }
       }
-      const res = await fetch(`./py/modes/${file}`);
+      const res = await fetch(`/py/modes/${file}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.text();
     }
@@ -3065,8 +2872,8 @@
       log(`Configuració desada: ${assigned} tecles assignades a '${bank.name}'.`, 'ok');
       if (device.isConnected()) {
         try {
-          await device.writeFile('config/tecla_config.json', JSON.stringify(buildDeviceConfig(), null, 2));
-          log('✓ Sincronitzat al dispositiu (config/tecla_config.json).', 'ok');
+          await device.writeFile('tecla_web_config.json', JSON.stringify(buildDeviceConfig(), null, 2));
+          log('✓ Sincronitzat al dispositiu (tecla_web_config.json).', 'ok');
         } catch (e) { log(`Error sincronitzant: ${e.message}`, 'warn'); }
       }
     });
@@ -3075,28 +2882,19 @@
       const mc = _loadModesConfig();
       // Convert file names ("mode_mandelbrot.py") → display names ("Mandelbrot") that mode_manager.py expects
       const fileToName = Object.fromEntries(_modesIndex.map(m => [m.file, m.name]));
-      // These go inside each bank (firmware reads from bank level via config_manager.get_*)
-      const potFn = mc.potentiometer_functions || {};
-      const arpPotFn = mc.arp_potentiometer_functions || {};
-      const scales = mc.keyboard_scales || [0, 1, 4, 5, 7, 8, 13, 15, 18, 19];
-      const arpModes = mc.arpeggiator_modes || Array.from({ length: 16 }, (_, i) => i);
       return {
         banks: _keysConfig.banks.map(b => ({
           name: b.name,
           modes: b.modes.map(f => f ? (fileToName[f] || f) : ''),
-          efectos_temporales: b.efectos || {},
-          potentiometer_functions: potFn,
-          arp_potentiometer_functions: arpPotFn,
-          keyboard_scales: scales,
-          arpeggiator_modes: arpModes
+          efectos_temporales: b.efectos || {}
         })),
         current_bank: _keysConfig.currentBank,
         enabled_modes: mc.enabled_modes || [],
         available_effects: mc.available_effects || ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend'],
-        keyboard_scales: scales,
-        arpeggiator_modes: arpModes,
-        potentiometer_functions: potFn,
-        arp_potentiometer_functions: arpPotFn
+        keyboard_scales: mc.keyboard_scales || [],
+        arpeggiator_modes: mc.arpeggiator_modes || Array.from({ length: 16 }, (_, i) => i),
+        potentiometer_functions: mc.potentiometer_functions || {},
+        arp_potentiometer_functions: mc.arp_potentiometer_functions || {}
       };
     }
 
@@ -3360,8 +3158,8 @@
       log('Funcions dels potenciòmetres guardades.', 'ok');
       if (device.isConnected()) {
         try {
-          await device.writeFile('config/tecla_config.json', JSON.stringify(buildDeviceConfig(), null, 2));
-          log('✓ Potenciòmetres sincronitzats al dispositiu (config/tecla_config.json).', 'ok');
+          await device.writeFile('tecla_web_config.json', JSON.stringify(buildDeviceConfig(), null, 2));
+          log('✓ Potenciòmetres sincronitzats al dispositiu.', 'ok');
         } catch (e) { log(`Error sincronitzant: ${e.message}`, 'warn'); }
       }
     });
@@ -3670,6 +3468,22 @@
     };
 
     // ══════════════════════════════════════════════════════════════
+    // SYSTEM VOLUME HELPER (via server.py local, macOS only)
+    // ══════════════════════════════════════════════════════════════
+    let _sysVolTimer = 0;
+    function _setSysVol(midiVal) {
+      const now = Date.now();
+      if (now - _sysVolTimer < 80) return; // throttle ~12/s
+      _sysVolTimer = now;
+      const vol = Math.round((midiVal / 127) * 100);
+      fetch('http://127.0.0.1:8080/sys/volume', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value: vol })
+      }).catch(() => {}); // no-op si el servidor no corre
+    }
+
+    // ══════════════════════════════════════════════════════════════
     // KEYBOARD MODE — JavaScript mirror of mode_keyboard.py
     // ══════════════════════════════════════════════════════════════
     class KeyboardMode {
@@ -3836,7 +3650,7 @@
         if (['Brillantor', 'Velocity'].includes(fn)) { this.velocity = Math.max(20, v); }
         else if (['Modulació', 'Modulation', 'Modulation (CC1)'].includes(fn)) { this.webMidi.send('control_change', 1, v, 0); }
         else if (['Sustain', 'Sustain (CC64)'].includes(fn)) { this.webMidi.send('control_change', 64, v, 0); }
-        else if (['Volum', 'Volume', 'Expression (CC11)'].includes(fn)) { this.webMidi.send('control_change', 7, v, 0); }
+        else if (['Volum', 'Volume', 'Expression (CC11)'].includes(fn)) { this.webMidi.send('control_change', 7, v, 0); _setSysVol(v); }
         else if (['Gate', 'Gate Length'].includes(fn)) { if (v < 10) { this.gateEnabled = false; this.webMidi.send('control_change', 11, 127, 0); } else { this.gateEnabled = true; this.gatePeriod = 0.5 - (v / 127) * 0.45; } }
         else if (fn === 'Pitch Bend') { this.webMidi.send('pitchwheel', v < 5 ? 0 : Math.round((v / 127) * 8191), 0, 0); }
         else if (['Velocitat (BPM)', 'Arp Speed (BPM)'].includes(fn)) { this.arpSpeed = 60.0 / (30 + (v / 127) * 1970); }
@@ -4197,27 +4011,6 @@
       _floatLogCallback?.(msg, type);
     }
 
-    // ── Circular knob helpers (module scope – accessible from float handler) ──
-    const _arcFull = 2 * Math.PI * 22 * (270 / 360); // 103.67px
-    let _knobDrag = null, _knobDragY = 0, _knobDragVal = 0;
-
-    function _setKnobValue(knob, val) {
-      const v = Math.max(0, Math.min(127, val | 0));
-      knob.dataset.val = v;
-      const filled = (v / 127) * _arcFull;
-      knob.querySelector('.knob-fill').style.strokeDasharray = `${filled.toFixed(2)} 1000`;
-      const angle = -135 + (v / 127) * 270;
-      knob.querySelector('.knob-indicator-group').setAttribute('transform', `rotate(${angle.toFixed(1)}, 30, 30)`);
-      document.getElementById(`pot-val-${knob.dataset.pot}`).textContent = v;
-    }
-
-    function _potKnobFire(knob, val) {
-      _setKnobValue(knob, val);
-      const idx = +knob.dataset.pot;
-      if (isKbMode) kbMode?.setPot(idx, val);
-      else simulator?.setPot(idx, val);
-    }
-
     async function initSimulator() {
       buildButtonGrid();
       await loadBuiltinModes();
@@ -4247,24 +4040,13 @@
         simlog(`Error Pyodide: ${e.message}`, 'err');
       }
 
-      // Register knob event listeners
-      document.querySelectorAll('.sim-pot-knob').forEach(knob => {
-        knob.addEventListener('pointerdown', e => {
-          e.preventDefault();
-          _knobDrag = knob; _knobDragY = e.clientY; _knobDragVal = +knob.dataset.val;
-          knob.setPointerCapture(e.pointerId);
+      document.querySelectorAll('.sim-pot-range').forEach(range => {
+        range.addEventListener('input', () => {
+          const idx = +range.dataset.pot; const val = +range.value;
+          if (isKbMode) kbMode?.setPot(idx, val);
+          else simulator?.setPot(idx, val);
+          document.getElementById(`pot-val-${idx}`).textContent = val;
         });
-        knob.addEventListener('pointermove', e => {
-          if (_knobDrag !== knob) return;
-          const delta = Math.round((_knobDragY - e.clientY) * 0.8);
-          _potKnobFire(knob, _knobDragVal + delta);
-        });
-        knob.addEventListener('pointerup', () => { _knobDrag = null; });
-        knob.addEventListener('wheel', e => {
-          e.preventDefault();
-          _potKnobFire(knob, +knob.dataset.val + (e.deltaY < 0 ? 2 : -2));
-        }, { passive: false });
-        knob.addEventListener('dblclick', () => _potKnobFire(knob, 64));
       });
     }
 
@@ -4450,141 +4232,20 @@
         `PAS 1 — CircuitPython (mode bootloader RPI-RP2):\n` +
         `  a. Connecta la Pico mantenint premut BOOTSEL\n` +
         `     → Apareix com "RPI-RP2" al Finder\n` +
-        `  b. (Opcional) Prem "Instal·lar flash_nuke" i selecciona\n` +
-        `     el volum RPI-RP2 → esborra el contingut antic\n` +
-        `  c. Prem "Instal·lar CircuitPython 10.0.3" i selecciona\n` +
-        `     el volum RPI-RP2 → el dispositiu es reinicia com CIRCUITPY\n\n` +
+        `  b. (Opcional) Descarrega flash_nuke.uf2 i arrossega'l\n` +
+        `     al volum RPI-RP2 per esborrar tot el contingut\n` +
+        `  c. Descarrega CircuitPython 10.0.3 i arrossega'l\n` +
+        `     al volum RPI-RP2 → el dispositiu es reinicia com CIRCUITPY\n\n` +
         `PAS 2 — Firmware TECLA (volum CIRCUITPY):\n` +
         `  a. A la pestanya "Tecles", prem "Connectar"\n` +
         `     → Selecciona el volum CIRCUITPY\n` +
         `  b. Torna a "Firmware" → prem "Refrescar estat"\n` +
         `  c. Prem "Instal·lar / Actualitzar firmware"\n` +
         `  d. Reinicia el dispositiu per aplicar els canvis\n\n` +
-        `NOTA: La instal·lació directa requereix Chrome o Edge.\n` +
-        `Si no funciona, usa els enllaços de descàrrega manual.`);
+        `NOTA: Els fitxers .uf2 s'han d'arrossegar manualment\n` +
+        `des del Finder al volum RPI-RP2 (no es poden escriure\n` +
+        `via web per limitacions del sistema operatiu).`);
     });
-
-    // ── Instal·lació directa de .uf2 al volum RPI-RP2 ────────────────────────
-    async function _installUF2(url, filename) {
-      if (!('showDirectoryPicker' in window)) {
-        document.getElementById('fw-uf2-dl-fallback').style.display = '';
-        _fwMsg('⚠ El navegador no suporta instal·lació directa. Utilitza els enllaços de descàrrega manual.');
-        return;
-      }
-      try {
-        _fwMsg(`Selecciona el volum RPI-RP2 per instal·lar ${filename}…`);
-        _fwProgress(5);
-        const dirHandle = await window.showDirectoryPicker({ mode: 'readwrite', id: 'rp2', startIn: 'desktop' });
-        if (dirHandle.name !== 'RPI-RP2') {
-          if (!confirm(`La carpeta seleccionada es diu "${dirHandle.name}", no "RPI-RP2".\nEstàs segur/a que és el volum de bootloader correcte?`)) {
-            _fwMsg('Instal·lació cancel·lada.'); _fwProgress(0); return;
-          }
-        }
-        _fwMsg(`Descarregant ${filename}…`); _fwProgress(20);
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const blob = await res.blob();
-        _fwMsg(`Escrivint ${filename} al volum ${dirHandle.name}… (el dispositiu es reiniciarà automàticament)`);
-        _fwProgress(70);
-        const fileHandle = await dirHandle.getFileHandle(filename, { create: true });
-        const writable = await fileHandle.createWritable();
-        try {
-          await writable.write(blob);
-          await writable.close();
-        } catch (writeErr) {
-          console.log('Reboot detectat (comportament esperat):', writeErr);
-        }
-        _fwProgress(100);
-        _fwMsg(`✓ ${filename} enviat! El dispositiu s'hauria de reiniciar ara.`);
-        log(`✓ ${filename} instal·lat al volum ${dirHandle.name}`, 'ok');
-      } catch (e) {
-        if (e.name === 'AbortError') {
-          _fwMsg('Selecció cancel·lada.'); _fwProgress(0);
-        } else {
-          _fwMsg(`Error: ${e.message}`);
-          log(`Error instal·lant ${filename}: ${e.message}`, 'err');
-        }
-      }
-    }
-    document.getElementById('btn-flash-nuke')?.addEventListener('click', () => _installUF2('./firmware/flash_nuke.uf2', 'flash_nuke.uf2'));
-    document.getElementById('btn-install-cp')?.addEventListener('click', () => _installUF2('./firmware/adafruit-circuitpython-raspberry_pi_pico-es-10.0.3.uf2', 'circuitpython.uf2'));
-
-    // Adaptar Step 1 a la compatibilitat del navegador
-    (function () {
-      const hasPicker = 'showDirectoryPicker' in window;
-      const direct = document.getElementById('fw-step1-direct');
-      const manual = document.getElementById('fw-step1-manual');
-      if (direct) direct.style.display = hasPicker ? 'flex' : 'none';
-      if (manual && hasPicker) {
-        manual.querySelectorAll('a').forEach(a => { a.className = 'fw-dl-secondary'; });
-      }
-    })();
-
-    // ── Descarregar firmware ZIP (tots els navegadors) ─────────────────
-    document.getElementById('btn-download-fw-zip')?.addEventListener('click', _downloadFirmwareZip);
-
-    async function _downloadFirmwareZip() {
-      const btn = document.getElementById('btn-download-fw-zip');
-      if (btn) btn.disabled = true;
-      try {
-        _fwMsg('Carregant compressor ZIP…'); _fwProgress(2);
-        if (!window.JSZip) {
-          await new Promise((resolve, reject) => {
-            const s = document.createElement('script');
-            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
-            s.onload = resolve; s.onerror = reject;
-            document.head.appendChild(s);
-          });
-        }
-        _fwMsg('Llegint manifest…'); _fwProgress(5);
-        const manifestRes = await fetch('./device_files_manifest.json');
-        if (!manifestRes.ok) throw new Error('No s\'ha trobat device_files_manifest.json al servidor');
-        const manifest = await manifestRes.json();
-        const mc = _loadModesConfig();
-        const enabledSet = new Set(mc.enabled_modes || []);
-        const ESSENTIAL_MODES = new Set(['base_mode.py', 'mode_manager.py', '__init__.py', 'mode_keyboard.py']);
-        const filesToCopy = manifest.files.filter(relPath => {
-          const fname = relPath.split('/').pop();
-          if (relPath.startsWith('modes/mode_') && relPath.endsWith('.py')) {
-            if (ESSENTIAL_MODES.has(fname)) return true;
-            return enabledSet.has(fname);
-          }
-          return true;
-        });
-        const zip = new window.JSZip();
-        let done = 0;
-        for (const relPath of filesToCopy) {
-          _fwMsg(`Afegint ${relPath}…`);
-          try {
-            const isBinary = relPath.endsWith('.mpy');
-            const res = await fetch(`./device_files/${relPath}`);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const content = isBinary ? await res.arrayBuffer() : await res.text();
-            zip.file(relPath, content);
-          } catch (e) { console.warn('Skipping', relPath, e.message); }
-          done++;
-          _fwProgress(5 + Math.round((done / filesToCopy.length) * 80));
-        }
-        zip.file('config/tecla_config.json', JSON.stringify(buildDeviceConfig(), null, 2));
-        zip.file('tecla_version.txt', 'TECLA v3.0 (web install)');
-        _fwMsg('Generant ZIP…'); _fwProgress(88);
-        const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
-        _fwProgress(96);
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'tecla_firmware.zip';
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        URL.revokeObjectURL(a.href);
-        _fwProgress(100);
-        _fwMsg('✓ ZIP descarregat! Extreu TOTS els fitxers al volum CIRCUITPY i reinicia el dispositiu.');
-        log('✓ Firmware ZIP descarregat.', 'ok');
-      } catch (e) {
-        _fwMsg(`Error generant ZIP: ${e.message}`);
-        log(`Error ZIP: ${e.message}`, 'err');
-      } finally {
-        if (btn) btn.disabled = false;
-      }
-    }
 
     // ── Instal·lar / Actualitzar firmware TECLA ──────────────────────
     document.getElementById('btn-install-fw')?.addEventListener('click', async () => {
@@ -4602,7 +4263,7 @@
 
       try {
         // 1. Load manifest
-        const manifestRes = await fetch('./device_files_manifest.json');
+        const manifestRes = await fetch('/device_files_manifest.json');
         if (!manifestRes.ok) throw new Error('No s\'ha trobat device_files_manifest.json al servidor');
         const manifest = await manifestRes.json();
 
@@ -4660,7 +4321,7 @@
           _fwMsg(`Copiant ${relPath}…`);
           try {
             const isBinary = relPath.endsWith('.mpy');
-            const res = await fetch(`./device_files/${relPath}`);
+            const res = await fetch(`/device_files/${relPath}`);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const content = isBinary ? await res.arrayBuffer() : await res.text();
             await device.writeFile(relPath, content);
@@ -5160,8 +4821,8 @@ body{background:var(--sim-bg,#0a0a0a);color:var(--text,#e0e0e0);font-family:syst
           setTimeout(_syncLabels, 60);
         }
         if (d?.type === 'pot') {
-          const k = document.querySelector(`.sim-pot-knob[data-pot="${d.idx}"]`);
-          if (k) _potKnobFire(k, d.val);
+          const r = document.querySelector(`.sim-pot-range[data-pot="${d.idx}"]`);
+          if (r) { r.value = d.val; r.dispatchEvent(new Event('input')); }
           else {
             if (isKbMode) kbMode?.setPot(d.idx, d.val);
             else simulator?.setPot(d.idx, d.val);
@@ -5183,576 +4844,6 @@ body{background:var(--sim-bg,#0a0a0a);color:var(--text,#e0e0e0);font-family:syst
       _applyCustomVars(_initCustom, true); // populate pickers + swatches always
       applyTheme(_savedTheme, false);
     }
-
-    // ══════════════════════════════════════════════════════════════
-    // TOAST NOTIFICATIONS
-    // ══════════════════════════════════════════════════════════════
-    function showToast(msg, type) {
-      const container = document.getElementById('toast-container');
-      if (!container) return;
-      const el = document.createElement('div');
-      el.className = 'toast-msg' + (type ? ` toast-${type}` : '');
-      el.textContent = msg;
-      container.appendChild(el);
-      requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('toast-show')));
-      setTimeout(() => {
-        el.classList.remove('toast-show');
-        setTimeout(() => el.remove(), 300);
-      }, 2500);
-    }
-
-    // ══════════════════════════════════════════════════════════════
-    // INTERNACIONALITZACIÓ (i18n)
-    // ══════════════════════════════════════════════════════════════
-    const I18N = {
-      ca: {
-        device_disconnected: 'desconnectat',
-        btn_connect: 'connecta dispositiu',
-        btn_disconnect: 'desconnectar',
-        nav_keys: 'Tecles',
-        nav_modes: 'Modes i Escales',
-        nav_progressions: 'Progressions',
-        nav_scales: 'Escales',
-        nav_simulator: 'Simulador',
-        nav_theme: 'Aparença',
-        nav_guide: 'Guia',
-        bank_label: 'Capa:',
-        btn_new_bank: '+ Nova capa',
-        btn_rename_bank: 'Reanomenar',
-        btn_del_bank: 'Eliminar',
-        btn_import_mode: '+ importar mode',
-        btn_refresh_modes: '↻ modes',
-        btn_save_keys: 'Guardar configuració',
-        section_keys_config: 'Configuració de Tecles',
-        section_device_modes: 'Modes al dispositiu',
-        btn_all: 'Tots',
-        btn_all_f: 'Totes',
-        btn_none: 'Cap',
-        btn_save: 'Guardar',
-        btn_edit: 'Editar',
-        btn_delete: 'Eliminar',
-        btn_cancel: 'Cancel·lar',
-        btn_import_modes: '+ Afegir Modes',
-        btn_save_pots: 'Guardar i aplicar funcions dels potenciòmetres',
-        card_modes_install: 'Modes a instal·lar al dispositiu',
-        card_keyboard_scales: 'Escales del mode teclat',
-        card_effects: 'Efectes temporals — Tecles 14 i 15 (capa modes)',
-        card_arp: 'Patrons direccionals de l\'arpegiador',
-        card_pots_kb: 'Potenciòmetres — Mode Teclat',
-        card_pots_arp: 'Potenciòmetres — Arpegiador',
-        card_progressions: 'Progressions d\'Acords',
-        btn_new_prog: '+ Nova progressió',
-        card_scales: 'Escales Personalitzades',
-        btn_new_scale: '+ Nova escala',
-        sim_modes_title: 'Modes disponibles',
-        btn_load_py: 'Carregar .py local',
-        btn_sim_start: '▶ Iniciar',
-        btn_sim_stop: '■ Aturar',
-        btn_sim_float: 'Finestra independent',
-        card_fw_state: 'Estat del sistema',
-        fw_bootloader_label: 'Mode Bootloader',
-        fw_circuitpy_label: 'Volum CIRCUITPY',
-        fw_cpython_label: 'CircuitPython',
-        fw_tecla_label: 'Firmware TECLA',
-        btn_fw_refresh: '↻ Refrescar estat',
-        card_fw_step1: 'Pas 1 — Instal·lar CircuitPython',
-        card_fw_step2: 'Pas 2 — Firmware TECLA',
-        btn_install_fw: 'Instal·lar / Actualitzar firmware',
-        btn_verify_fw: 'Verificar instal·lació',
-        btn_fw_instructions: 'ℹ Instruccions completes',
-        card_theme: 'Aparença',
-        ct_name_label: 'Nom:',
-        btn_save_custom_theme: 'Desa i aplica',
-        btn_reset_theme: 'Restablir',
-        btn_new_theme: '✚ Nou tema',
-        btn_random_theme: '🎲 Aleatori',
-        toast_config_saved: '✓ Configuració desada',
-        toast_modes_saved: '✓ Modes guardats',
-        toast_scales_saved: '✓ Escales guardades',
-        toast_effects_saved: '✓ Efectes guardats',
-        toast_arp_saved: '✓ Patrons guardats',
-        toast_pots_saved: '✓ Potenciòmetres guardats',
-        toast_prog_saved: '✓ Progressió desada',
-                toast_scale_saved: '✓ Escala desada',
-        fw_step1_desc: `<strong>Chrome/Edge/Arc:</strong> instal·la directament amb els botons. <strong>Altres navegadors:</strong> descarrega i arrossega el fitxer al volum <strong>RPI-RP2</strong>.`,
-        btn_dl_nuke: '⚠ Instal·lar flash_nuke al RPI-RP2',
-        btn_dl_cp: '⚡ Instal·lar CircuitPython 10.0.3 al RPI-RP2',
-        btn_dl_nuke_manual: '⬇ Descarregar flash_nuke.uf2',
-        btn_dl_cp_manual: '⬇ Descarregar CircuitPython 10.0.3',
-        fw_step1_note: `<strong>Per entrar al mode bootloader:</strong><br>Mantén premut BOOTSEL mentre connectes el USB-C.<br><strong>Instal·lació directa (Chrome/Edge):</strong> Prem el botó → selecciona el volum RPI-RP2.<br><strong>Descàrrega manual:</strong> Obre el Finder (Mac) o l'Explorador de Windows → arrossega el .uf2 al volum RPI-RP2.`,
-        fw_step2_desc: `Quan el dispositiu apareix com <strong>CIRCUITPY</strong>, connecta'l a la pestanya <strong>Tecles</strong> i instal·la el firmware.`,
-        btn_download_fw_zip: '⬇ Descarregar firmware ZIP (sense connexió)',
-        fw_zip_note: `Compatible amb tots els navegadors. Extreu tots els fitxers del ZIP directament al volum <strong>CIRCUITPY</strong> amb el Finder (Mac) o l'Explorador de Windows, i reinicia el dispositiu.`,
-        fw_preserve: 'Preservar configuració existent',
-        guide_toc: `
-            <a href="#gs-1">1. Instal·lar el CircuitPython</a>
-            <a href="#gs-2">2. Instal·lar el firmware</a>
-            <a href="#gs-3">3. Funcionament del dispositiu</a>
-            <a href="#gs-4">4. Configuració</a>
-            <a href="#gs-5">5. Pestanyes</a>
-            <a href="#gs-6">6. Recomanacions</a>
-        `,
-        guide_s1: `
-            <div class="guide-h1">1. Instal·lar el CircuitPython al TECLA</div>
-            <p class="guide-li">Connecta el TECLA a l'ordinador via USB.</p>
-            <p class="guide-li">Si apareix com a <strong>CIRCUITPY</strong> ves al punt 2.</p>
-            <p class="guide-li">Si apareix com a <strong>RPI-RP2</strong> cal instal·lar el CircuitPython.</p>
-            <p class="guide-li">Ves a la pestanya <em>Firmware</em> i segueix les instruccions del Pas 1.</p>
-            <p class="guide-li">El dispositiu apareixerà amb el nom CIRCUITPY.</p>
-        `,
-        guide_s2: `
-            <div class="guide-h1">2. Instal·lar el firmware al TECLA</div>
-            <p class="guide-li">Connecta el TECLA a l'ordinador via USB.</p>
-            <p class="guide-li">Ves a la pestanya <em>Firmware</em> → clica <strong>Instal·lar / Actualitzar</strong>.</p>
-            <p class="guide-li">Espera que la barra de progrés arribi al 100%.</p>
-            <p class="guide-li">Clica <strong>Verificar instal·lació</strong> (opcional).</p>
-            <p class="guide-li">Fes un reset al dispositiu (botó físic de reset).</p>
-            <div class="guide-note">El TECLA ja està llest per funcionar.</div>
-        `,
-        guide_s3: `
-            <div class="guide-h1">3. Funcionament del TECLA</div>
-            <div class="guide-h2">Capa 1 · Teclat</div>
-            <p class="guide-li">Tecles <strong>1–8</strong>: notes / acords.</p>
-            <p class="guide-li">Tecla <strong>9</strong>: canvi d'escala / progressió (cíclic).</p>
-            <p class="guide-li">Tecla <strong>10</strong>: canvi de tonalitat (cercle de quintes).</p>
-            <p class="guide-li">Tecla <strong>11</strong>: activar / desactivar mode acords.</p>
-            <p class="guide-li">Tecla <strong>12</strong>: 1 clic → arpegiador + canvi de patró · 2 clics → desactivar arpegiador.</p>
-            <p class="guide-li">Tecla <strong>13</strong>: 1 clic → capa 2 (Modes) · 2 clics → capa 1 (Teclat) · 2 s mantingut → canvi de capa de modes.</p>
-            <p class="guide-li">Tecla <strong>14</strong>: baixar d'octava.</p>
-            <p class="guide-li">Tecla <strong>15</strong>: pujar d'octava.</p>
-            <p class="guide-li">Tecla <strong>16</strong>: aturar el so (All Notes Off).</p>
-            <div class="guide-key-grid"><div class="guide-key"><span class="guide-key-num">1</span></div><div class="guide-key"><span class="guide-key-num">2</span></div><div class="guide-key"><span class="guide-key-num">3</span></div><div class="guide-key"><span class="guide-key-num">4</span></div><div class="guide-key"><span class="guide-key-num">5</span></div><div class="guide-key"><span class="guide-key-num">6</span></div><div class="guide-key"><span class="guide-key-num">7</span></div><div class="guide-key"><span class="guide-key-num">8</span></div><div class="guide-key"><span class="guide-key-num">9</span></div><div class="guide-key"><span class="guide-key-num">10</span></div><div class="guide-key"><span class="guide-key-num">11</span></div><div class="guide-key"><span class="guide-key-num">12</span></div><div class="guide-key"><span class="guide-key-num">13</span></div><div class="guide-key"><span class="guide-key-num">14</span></div><div class="guide-key"><span class="guide-key-num">15</span></div><div class="guide-key"><span class="guide-key-num">16</span></div></div>
-            <div class="guide-h2">Capa 2 · Modes</div>
-            <p class="guide-li">S'activa amb la tecla 13. Es configura a la pestanya <em>Tecles</em>.</p>
-            <p class="guide-li">Tecles <strong>1–12</strong>: modes assignats.</p>
-            <p class="guide-li">Tecla <strong>13</strong>: torna a la capa teclat · 2 s mantingut → canvi de capa de modes.</p>
-            <p class="guide-li">Tecla <strong>14</strong>: efecte temporal 1 (mantenir premuda) · 2 clics → canvia efecte (rotatiu).</p>
-            <p class="guide-li">Tecla <strong>15</strong>: efecte temporal 2 (mantenir premuda) · 2 clics → canvia efecte (rotatiu).</p>
-            <p class="guide-li">Tecla <strong>16</strong>: aturar el so.</p>
-        `,
-        guide_s4: `
-            <div class="guide-h1">4. Configuració del dispositiu</div>
-            <p class="guide-li">Ves a <em>Modes i Escales</em> → selecciona els modes, escales i efectes.</p>
-            <p class="guide-li">Ves a <em>Tecles</em> → crea una capa i assigna modes a les tecles 1–12.</p>
-            <p class="guide-li">Clica <strong>Guardar configuració</strong>.</p>
-            <p class="guide-li">Ves a <em>Firmware</em> → <strong>Instal·lar / Actualitzar</strong> per sincronitzar el dispositiu.</p>
-            <p class="guide-li">Fes un reset al dispositiu.</p>
-        `,
-        guide_s5: `
-            <div class="guide-h1">5. Pestanyes</div>
-            <div class="guide-h2">Tecles</div>
-            <p class="guide-li">Crear capes de modes i assignar-los a les tecles 1–12.</p>
-            <p class="guide-li">Seleccionar efectes temporals a les tecles 14 i 15.</p>
-            <div class="guide-h2">Modes i Escales</div>
-            <p class="guide-li">Seleccionar modes, escales, efectes temporals i patrons de l'arpegiador.</p>
-            <p class="guide-li">Configurar els potenciòmetres del mode teclat i de l'arpegiador.</p>
-            <div class="guide-h2">Progressions</div>
-            <p class="guide-li">Crear progressions d'acords personalitzades.</p>
-            <div class="guide-h2">Simulador</div>
-            <p class="guide-li">Testejar modes sense el dispositiu físic. Requereix un DAW obert amb MIDI actiu.</p>
-            <p class="guide-li">La tecla 13 canvia entre capa teclat i capa modes.</p>
-            <div class="guide-h2">Firmware</div>
-            <p class="guide-li">Instal·lar CircuitPython i el firmware del TECLA.</p>
-            <div class="guide-h2">Aparença</div>
-            <p class="guide-li">Canviar el tema de colors de l'app. Crear un tema personalitzat.</p>
-        `,
-        guide_s6: `
-            <div class="guide-h1">6. Recomanacions</div>
-            <p class="guide-li">Guardar sempre la configuració després de realitzar canvis.</p>
-            <p class="guide-li">Actualitzar el firmware després de canviar modes o escales.</p>
-            <p class="guide-li">No seleccionar més de 12 modes ni 12 escales/progressions.</p>
-            <p class="guide-li">No crear més d'una capa de modes per evitar problemes de memòria.</p>
-            <p class="guide-li">Provar els modes al simulador abans d'instal·lar-los al dispositiu.</p>
-            <p class="guide-li">Tancar i obrir l'app si has afegit nous modes per actualitzar el simulador.</p>
-            <div class="guide-note">Afegir més de 12 modes o dues capes al dispositiu pot generar problemes de memòria.</div>
-        `
-      },
-      es: {
-        device_disconnected: 'desconectado',
-        btn_connect: 'conectar dispositivo',
-        btn_disconnect: 'desconectar',
-        nav_keys: 'Teclas',
-        nav_modes: 'Modos y Escalas',
-        nav_progressions: 'Progresiones',
-        nav_scales: 'Escalas',
-        nav_simulator: 'Simulador',
-        nav_theme: 'Apariencia',
-        nav_guide: 'Guía',
-        bank_label: 'Capa:',
-        btn_new_bank: '+ Nueva capa',
-        btn_rename_bank: 'Renombrar',
-        btn_del_bank: 'Eliminar',
-        btn_import_mode: '+ importar modo',
-        btn_refresh_modes: '↻ modos',
-        btn_save_keys: 'Guardar configuración',
-        section_keys_config: 'Configuración de Teclas',
-        section_device_modes: 'Modos en el dispositivo',
-        btn_all: 'Todos',
-        btn_all_f: 'Todas',
-        btn_none: 'Ninguno',
-        btn_save: 'Guardar',
-        btn_edit: 'Editar',
-        btn_delete: 'Eliminar',
-        btn_cancel: 'Cancelar',
-        btn_import_modes: '+ Añadir Modos',
-        btn_save_pots: 'Guardar y aplicar funciones de los potenciómetros',
-        card_modes_install: 'Modos a instalar en el dispositivo',
-        card_keyboard_scales: 'Escalas del modo teclado',
-        card_effects: 'Efectos temporales — Teclas 14 y 15 (capa modos)',
-        card_arp: 'Patrones direccionales del arpegiador',
-        card_pots_kb: 'Potenciómetros — Modo Teclado',
-        card_pots_arp: 'Potenciómetros — Arpegiador',
-        card_progressions: 'Progresiones de Acordes',
-        btn_new_prog: '+ Nueva progresión',
-        card_scales: 'Escalas Personalizadas',
-        btn_new_scale: '+ Nueva escala',
-        sim_modes_title: 'Modos disponibles',
-        btn_load_py: 'Cargar .py local',
-        btn_sim_start: '▶ Iniciar',
-        btn_sim_stop: '■ Detener',
-        btn_sim_float: 'Ventana independiente',
-        card_fw_state: 'Estado del sistema',
-        fw_bootloader_label: 'Modo Bootloader',
-        fw_circuitpy_label: 'Volumen CIRCUITPY',
-        fw_cpython_label: 'CircuitPython',
-        fw_tecla_label: 'Firmware TECLA',
-        btn_fw_refresh: '↻ Actualizar estado',
-        card_fw_step1: 'Paso 1 — Instalar CircuitPython',
-        card_fw_step2: 'Paso 2 — Firmware TECLA',
-        btn_install_fw: 'Instalar / Actualizar firmware',
-        btn_verify_fw: 'Verificar instalación',
-        btn_fw_instructions: 'ℹ Instrucciones completas',
-        card_theme: 'Apariencia',
-        ct_name_label: 'Nombre:',
-        btn_save_custom_theme: 'Guardar y aplicar',
-        btn_reset_theme: 'Restablecer',
-        btn_new_theme: '✚ Nuevo tema',
-        btn_random_theme: '🎲 Aleatorio',
-        toast_config_saved: '✓ Configuración guardada',
-        toast_modes_saved: '✓ Modos guardados',
-        toast_scales_saved: '✓ Escalas guardadas',
-        toast_effects_saved: '✓ Efectos guardados',
-        toast_arp_saved: '✓ Patrones guardados',
-        toast_pots_saved: '✓ Potenciómetros guardados',
-        toast_prog_saved: '✓ Progresión guardada',
-                toast_scale_saved: '✓ Escala guardada',
-        fw_step1_desc: `<strong>Chrome/Edge/Arc:</strong> instala directamente con los botones. <strong>Otros navegadores:</strong> descarga y arrastra el archivo al volumen <strong>RPI-RP2</strong>.`,
-        btn_dl_nuke: '⚠ Instalar flash_nuke en RPI-RP2',
-        btn_dl_cp: '⚡ Instalar CircuitPython 10.0.3 en RPI-RP2',
-        btn_dl_nuke_manual: '⬇ Descargar flash_nuke.uf2',
-        btn_dl_cp_manual: '⬇ Descargar CircuitPython 10.0.3',
-        fw_step1_note: `<strong>Para entrar en modo bootloader:</strong><br>Mantén pulsado BOOTSEL mientras conectas el USB-C.<br><strong>Instalación directa (Chrome/Edge):</strong> Pulsa el botón → selecciona el volumen RPI-RP2.<br><strong>Descarga manual:</strong> Abre Finder (Mac) o el Explorador de Windows → arrastra el .uf2 al volumen RPI-RP2.`,
-        fw_step2_desc: `Cuando el dispositivo aparezca como <strong>CIRCUITPY</strong>, conéctalo en la pestaña <strong>Teclas</strong> e instala el firmware.`,
-        btn_download_fw_zip: '⬇ Descargar firmware ZIP (sin conexión)',
-        fw_zip_note: `Compatible con todos los navegadores. Extrae todos los archivos del ZIP directamente en el volumen <strong>CIRCUITPY</strong> con Finder (Mac) o el Explorador de Windows, y reinicia el dispositivo.`,
-        fw_preserve: 'Preservar configuración existente',
-        guide_toc: `
-            <a href="#gs-1">1. Instalar CircuitPython</a>
-            <a href="#gs-2">2. Instalar el firmware</a>
-            <a href="#gs-3">3. Funcionamiento del dispositivo</a>
-            <a href="#gs-4">4. Configuración</a>
-            <a href="#gs-5">5. Pestañas</a>
-            <a href="#gs-6">6. Recomendaciones</a>
-        `,
-        guide_s1: `
-            <div class="guide-h1">1. Instalar CircuitPython en el TECLA</div>
-            <p class="guide-li">Conecta el TECLA al ordenador vía USB.</p>
-            <p class="guide-li">Si aparece como <strong>CIRCUITPY</strong> ve al punto 2.</p>
-            <p class="guide-li">Si aparece como <strong>RPI-RP2</strong> hay que instalar CircuitPython.</p>
-            <p class="guide-li">Ve a la pestaña <em>Firmware</em> y sigue las instrucciones del Paso 1.</p>
-            <p class="guide-li">El dispositivo aparecerá con el nombre CIRCUITPY.</p>
-        `,
-        guide_s2: `
-            <div class="guide-h1">2. Instalar el firmware en el TECLA</div>
-            <p class="guide-li">Conecta el TECLA al ordenador vía USB.</p>
-            <p class="guide-li">Ve a la pestaña <em>Firmware</em> → haz clic en <strong>Instalar / Actualizar</strong>.</p>
-            <p class="guide-li">Espera a que la barra de progreso llegue al 100%.</p>
-            <p class="guide-li">Haz clic en <strong>Verificar instalación</strong> (opcional).</p>
-            <p class="guide-li">Haz un reset al dispositivo (botón físico de reset).</p>
-            <div class="guide-note">El TECLA ya está listo para funcionar.</div>
-        `,
-        guide_s3: `
-            <div class="guide-h1">3. Funcionamiento del TECLA</div>
-            <div class="guide-h2">Capa 1 · Teclado</div>
-            <p class="guide-li">Teclas <strong>1–8</strong>: notas / acordes.</p>
-            <p class="guide-li">Tecla <strong>9</strong>: cambio de escala / progresión (cíclico).</p>
-            <p class="guide-li">Tecla <strong>10</strong>: cambio de tonalidad (círculo de quintas).</p>
-            <p class="guide-li">Tecla <strong>11</strong>: activar / desactivar modo acordes.</p>
-            <p class="guide-li">Tecla <strong>12</strong>: 1 clic → arpegiador + cambio de patrón · 2 clics → desactivar arpegiador.</p>
-            <p class="guide-li">Tecla <strong>13</strong>: 1 clic → capa 2 (Modos) · 2 clics → capa 1 (Teclado) · 2 s mantenido → cambio de capa de modos.</p>
-            <p class="guide-li">Tecla <strong>14</strong>: bajar de octava.</p>
-            <p class="guide-li">Tecla <strong>15</strong>: subir de octava.</p>
-            <p class="guide-li">Tecla <strong>16</strong>: detener el sonido (All Notes Off).</p>
-            <div class="guide-key-grid"><div class="guide-key"><span class="guide-key-num">1</span></div><div class="guide-key"><span class="guide-key-num">2</span></div><div class="guide-key"><span class="guide-key-num">3</span></div><div class="guide-key"><span class="guide-key-num">4</span></div><div class="guide-key"><span class="guide-key-num">5</span></div><div class="guide-key"><span class="guide-key-num">6</span></div><div class="guide-key"><span class="guide-key-num">7</span></div><div class="guide-key"><span class="guide-key-num">8</span></div><div class="guide-key"><span class="guide-key-num">9</span></div><div class="guide-key"><span class="guide-key-num">10</span></div><div class="guide-key"><span class="guide-key-num">11</span></div><div class="guide-key"><span class="guide-key-num">12</span></div><div class="guide-key"><span class="guide-key-num">13</span></div><div class="guide-key"><span class="guide-key-num">14</span></div><div class="guide-key"><span class="guide-key-num">15</span></div><div class="guide-key"><span class="guide-key-num">16</span></div></div>
-            <div class="guide-h2">Capa 2 · Modos</div>
-            <p class="guide-li">Se activa con la tecla 13. Se configura en la pestaña <em>Teclas</em>.</p>
-            <p class="guide-li">Teclas <strong>1–12</strong>: modos asignados.</p>
-            <p class="guide-li">Tecla <strong>13</strong>: vuelve a la capa teclado · 2 s mantenido → cambio de capa de modos.</p>
-            <p class="guide-li">Tecla <strong>14</strong>: efecto temporal 1 (mantener pulsada) · 2 clics → cambia efecto (rotativo).</p>
-            <p class="guide-li">Tecla <strong>15</strong>: efecto temporal 2 (mantener pulsada) · 2 clics → cambia efecto (rotativo).</p>
-            <p class="guide-li">Tecla <strong>16</strong>: detener el sonido.</p>
-        `,
-        guide_s4: `
-            <div class="guide-h1">4. Configuración del dispositivo</div>
-            <p class="guide-li">Ve a <em>Modos y Escalas</em> → selecciona los modos, escalas y efectos.</p>
-            <p class="guide-li">Ve a <em>Teclas</em> → crea una capa y asigna modos a las teclas 1–12.</p>
-            <p class="guide-li">Haz clic en <strong>Guardar configuración</strong>.</p>
-            <p class="guide-li">Ve a <em>Firmware</em> → <strong>Instalar / Actualizar</strong> para sincronizar el dispositivo.</p>
-            <p class="guide-li">Haz un reset al dispositivo.</p>
-        `,
-        guide_s5: `
-            <div class="guide-h1">5. Pestañas</div>
-            <div class="guide-h2">Teclas</div>
-            <p class="guide-li">Crear capas de modos y asignarlos a las teclas 1–12.</p>
-            <p class="guide-li">Seleccionar efectos temporales en las teclas 14 y 15.</p>
-            <div class="guide-h2">Modos y Escalas</div>
-            <p class="guide-li">Seleccionar modos, escalas, efectos temporales y patrones del arpegiador.</p>
-            <p class="guide-li">Configurar los potenciómetros del modo teclado y del arpegiador.</p>
-            <div class="guide-h2">Progresiones</div>
-            <p class="guide-li">Crear progresiones de acordes personalizadas.</p>
-            <div class="guide-h2">Simulador</div>
-            <p class="guide-li">Testear modos sin el dispositivo físico. Requiere un DAW abierto con MIDI activo.</p>
-            <p class="guide-li">La tecla 13 cambia entre capa teclado y capa modos.</p>
-            <div class="guide-h2">Firmware</div>
-            <p class="guide-li">Instalar CircuitPython y el firmware del TECLA.</p>
-            <div class="guide-h2">Apariencia</div>
-            <p class="guide-li">Cambiar el tema de colores de la app. Crear un tema personalizado.</p>
-        `,
-        guide_s6: `
-            <div class="guide-h1">6. Recomendaciones</div>
-            <p class="guide-li">Guardar siempre la configuración después de realizar cambios.</p>
-            <p class="guide-li">Actualizar el firmware después de cambiar modos o escalas.</p>
-            <p class="guide-li">No seleccionar más de 12 modos ni 12 escalas/progresiones.</p>
-            <p class="guide-li">No crear más de una capa de modos para evitar problemas de memoria.</p>
-            <p class="guide-li">Probar los modos en el simulador antes de instalarlos en el dispositivo.</p>
-            <p class="guide-li">Cerrar y abrir la app si has añadido nuevos modos para actualizar el simulador.</p>
-            <div class="guide-note">Añadir más de 12 modos o dos capas al dispositivo puede generar problemas de memoria.</div>
-        `
-      },
-      en: {
-        device_disconnected: 'disconnected',
-        btn_connect: 'connect device',
-        btn_disconnect: 'disconnect',
-        nav_keys: 'Keys',
-        nav_modes: 'Modes & Scales',
-        nav_progressions: 'Progressions',
-        nav_scales: 'Scales',
-        nav_simulator: 'Simulator',
-        nav_theme: 'Appearance',
-        nav_guide: 'Guide',
-        bank_label: 'Layer:',
-        btn_new_bank: '+ New layer',
-        btn_rename_bank: 'Rename',
-        btn_del_bank: 'Delete',
-        btn_import_mode: '+ import mode',
-        btn_refresh_modes: '↻ modes',
-        btn_save_keys: 'Save configuration',
-        section_keys_config: 'Key Configuration',
-        section_device_modes: 'Device modes',
-        btn_all: 'All',
-        btn_all_f: 'All',
-        btn_none: 'None',
-        btn_save: 'Save',
-        btn_edit: 'Edit',
-        btn_delete: 'Delete',
-        btn_cancel: 'Cancel',
-        btn_import_modes: '+ Add Modes',
-        btn_save_pots: 'Save and apply potentiometer functions',
-        card_modes_install: 'Modes to install on device',
-        card_keyboard_scales: 'Keyboard mode scales',
-        card_effects: 'Temporary effects — Keys 14 and 15 (modes layer)',
-        card_arp: 'Arpeggiator directional patterns',
-        card_pots_kb: 'Potentiometers — Keyboard Mode',
-        card_pots_arp: 'Potentiometers — Arpeggiator',
-        card_progressions: 'Chord Progressions',
-        btn_new_prog: '+ New progression',
-        card_scales: 'Custom Scales',
-        btn_new_scale: '+ New scale',
-        sim_modes_title: 'Available modes',
-        btn_load_py: 'Load local .py',
-        btn_sim_start: '▶ Start',
-        btn_sim_stop: '■ Stop',
-        btn_sim_float: 'Independent window',
-        card_fw_state: 'System status',
-        fw_bootloader_label: 'Bootloader Mode',
-        fw_circuitpy_label: 'CIRCUITPY Volume',
-        fw_cpython_label: 'CircuitPython',
-        fw_tecla_label: 'TECLA Firmware',
-        btn_fw_refresh: '↻ Refresh status',
-        card_fw_step1: 'Step 1 — Install CircuitPython',
-        card_fw_step2: 'Step 2 — TECLA Firmware',
-        btn_install_fw: 'Install / Update firmware',
-        btn_verify_fw: 'Verify installation',
-        btn_fw_instructions: 'ℹ Full instructions',
-        card_theme: 'Appearance',
-        ct_name_label: 'Name:',
-        btn_save_custom_theme: 'Save and apply',
-        btn_reset_theme: 'Reset',
-        btn_new_theme: '✚ New theme',
-        btn_random_theme: '🎲 Random',
-        toast_config_saved: '✓ Configuration saved',
-        toast_modes_saved: '✓ Modes saved',
-        toast_scales_saved: '✓ Scales saved',
-        toast_effects_saved: '✓ Effects saved',
-        toast_arp_saved: '✓ Patterns saved',
-        toast_pots_saved: '✓ Potentiometers saved',
-        toast_prog_saved: '✓ Progression saved',
-                toast_scale_saved: '✓ Scale saved',
-        fw_step1_desc: `<strong>Chrome/Edge/Arc:</strong> install directly using the buttons. <strong>Other browsers:</strong> download and drag the file to the <strong>RPI-RP2</strong> volume.`,
-        btn_dl_nuke: '⚠ Install flash_nuke to RPI-RP2',
-        btn_dl_cp: '⚡ Install CircuitPython 10.0.3 to RPI-RP2',
-        btn_dl_nuke_manual: '⬇ Download flash_nuke.uf2',
-        btn_dl_cp_manual: '⬇ Download CircuitPython 10.0.3',
-        fw_step1_note: `<strong>To enter bootloader mode:</strong><br>Press and hold BOOTSEL while plugging in the USB-C cable.<br><strong>Direct install (Chrome/Edge):</strong> Click the button → select the RPI-RP2 volume.<br><strong>Manual download:</strong> Open Finder (Mac) or Windows Explorer → drag the .uf2 to the RPI-RP2 volume.`,
-        fw_step2_desc: `When the device appears as <strong>CIRCUITPY</strong>, connect to it in the <strong>Keys</strong> tab and install the firmware.`,
-        btn_download_fw_zip: '⬇ Download firmware ZIP (no connection needed)',
-        fw_zip_note: `Works with any browser. Extract all files from the ZIP directly to the <strong>CIRCUITPY</strong> volume using Finder (Mac) or Windows Explorer, then restart the device.`,
-        fw_preserve: 'Preserve existing configuration',
-        guide_toc: `
-            <a href="#gs-1">1. Install CircuitPython</a>
-            <a href="#gs-2">2. Install firmware</a>
-            <a href="#gs-3">3. Device operation</a>
-            <a href="#gs-4">4. Configuration</a>
-            <a href="#gs-5">5. Tabs</a>
-            <a href="#gs-6">6. Recommendations</a>
-        `,
-        guide_s1: `
-            <div class="guide-h1">1. Install CircuitPython on TECLA</div>
-            <p class="guide-li">Connect TECLA to your computer via USB.</p>
-            <p class="guide-li">If it appears as <strong>CIRCUITPY</strong>, skip to step 2.</p>
-            <p class="guide-li">If it appears as <strong>RPI-RP2</strong>, you need to install CircuitPython.</p>
-            <p class="guide-li">Go to the <em>Firmware</em> tab and follow Step 1 instructions.</p>
-            <p class="guide-li">The device will then appear with the name CIRCUITPY.</p>
-        `,
-        guide_s2: `
-            <div class="guide-h1">2. Install TECLA firmware</div>
-            <p class="guide-li">Connect TECLA to your computer via USB.</p>
-            <p class="guide-li">Go to the <em>Firmware</em> tab → click <strong>Install / Update</strong>.</p>
-            <p class="guide-li">Wait for the progress bar to reach 100%.</p>
-            <p class="guide-li">Click <strong>Verify installation</strong> (optional).</p>
-            <p class="guide-li">Reset the device (physical reset button).</p>
-            <div class="guide-note">The TECLA is now ready to use.</div>
-        `,
-        guide_s3: `
-            <div class="guide-h1">3. TECLA Operation</div>
-            <div class="guide-h2">Layer 1 · Keyboard</div>
-            <p class="guide-li">Keys <strong>1–8</strong>: notes / chords.</p>
-            <p class="guide-li">Key <strong>9</strong>: scale / progression change (cyclic).</p>
-            <p class="guide-li">Key <strong>10</strong>: key change (circle of fifths).</p>
-            <p class="guide-li">Key <strong>11</strong>: toggle chords mode.</p>
-            <p class="guide-li">Key <strong>12</strong>: 1 click → arpeggiator + pattern change · 2 clicks → disable arpeggiator.</p>
-            <p class="guide-li">Key <strong>13</strong>: 1 click → layer 2 (Modes) · 2 clicks → layer 1 (Keyboard) · Hold 2s → change modes layer.</p>
-            <p class="guide-li">Key <strong>14</strong>: octave down.</p>
-            <p class="guide-li">Key <strong>15</strong>: octave up.</p>
-            <p class="guide-li">Key <strong>16</strong>: stop sound (All Notes Off).</p>
-            <div class="guide-key-grid"><div class="guide-key"><span class="guide-key-num">1</span></div><div class="guide-key"><span class="guide-key-num">2</span></div><div class="guide-key"><span class="guide-key-num">3</span></div><div class="guide-key"><span class="guide-key-num">4</span></div><div class="guide-key"><span class="guide-key-num">5</span></div><div class="guide-key"><span class="guide-key-num">6</span></div><div class="guide-key"><span class="guide-key-num">7</span></div><div class="guide-key"><span class="guide-key-num">8</span></div><div class="guide-key"><span class="guide-key-num">9</span></div><div class="guide-key"><span class="guide-key-num">10</span></div><div class="guide-key"><span class="guide-key-num">11</span></div><div class="guide-key"><span class="guide-key-num">12</span></div><div class="guide-key"><span class="guide-key-num">13</span></div><div class="guide-key"><span class="guide-key-num">14</span></div><div class="guide-key"><span class="guide-key-num">15</span></div><div class="guide-key"><span class="guide-key-num">16</span></div></div>
-            <div class="guide-h2">Layer 2 · Modes</div>
-            <p class="guide-li">Activated with key 13. Configured in the <em>Keys</em> tab.</p>
-            <p class="guide-li">Keys <strong>1–12</strong>: assigned modes.</p>
-            <p class="guide-li">Key <strong>13</strong>: back to keyboard layer · Hold 2s → change modes layer.</p>
-            <p class="guide-li">Key <strong>14</strong>: temporary effect 1 (hold down) · 2 clicks → change effect (cyclic).</p>
-            <p class="guide-li">Key <strong>15</strong>: temporary effect 2 (hold down) · 2 clicks → change effect (cyclic).</p>
-            <p class="guide-li">Key <strong>16</strong>: stop sound.</p>
-        `,
-        guide_s4: `
-            <div class="guide-h1">4. Device Configuration</div>
-            <p class="guide-li">Go to <em>Modes & Scales</em> → select modes, scales, and effects.</p>
-            <p class="guide-li">Go to <em>Keys</em> → create a layer and assign modes to keys 1–12.</p>
-            <p class="guide-li">Click <strong>Save configuration</strong>.</p>
-            <p class="guide-li">Go to <em>Firmware</em> → <strong>Install / Update</strong> to sync the device.</p>
-            <p class="guide-li">Reset the device.</p>
-        `,
-        guide_s5: `
-            <div class="guide-h1">5. Tabs</div>
-            <div class="guide-h2">Keys</div>
-            <p class="guide-li">Create modes layers and assign them to keys 1–12.</p>
-            <p class="guide-li">Select temporary effects for keys 14 and 15.</p>
-            <div class="guide-h2">Modes & Scales</div>
-            <p class="guide-li">Select modes, scales, temporary effects, and arpeggiator patterns.</p>
-            <p class="guide-li">Configure potentiometers for keyboard mode and arpeggiator.</p>
-            <div class="guide-h2">Progressions</div>
-            <p class="guide-li">Create custom chord progressions.</p>
-            <div class="guide-h2">Simulator</div>
-            <p class="guide-li">Test modes without physical device. Requires an open DAW with active MIDI.</p>
-            <p class="guide-li">Key 13 switches between keyboard and modes layers.</p>
-            <div class="guide-h2">Firmware</div>
-            <p class="guide-li">Install CircuitPython and TECLA firmware.</p>
-            <div class="guide-h2">Appearance</div>
-            <p class="guide-li">Change app color theme. Create a custom theme.</p>
-        `,
-        guide_s6: `
-            <div class="guide-h1">6. Recommendations</div>
-            <p class="guide-li">Always save configuration after making changes.</p>
-            <p class="guide-li">Update firmware after changing modes or scales.</p>
-            <p class="guide-li">Do not select more than 12 modes or 12 scales/progressions.</p>
-            <p class="guide-li">Do not create more than one modes layer to avoid memory issues.</p>
-            <p class="guide-li">Test modes in the simulator before installing them on the device.</p>
-            <p class="guide-li">Close and reopen the app if you added new modes to update the simulator.</p>
-            <div class="guide-note">Adding more than 12 modes or two layers to the device may cause memory problems.</div>
-        `
-      }
-    };
-
-    let _lang = localStorage.getItem('tecla-lang') || 'ca';
-
-    function t(key) {
-      return (I18N[_lang] || I18N.ca)[key] || I18N.ca[key] || key;
-    }
-
-    function applyLang(lang, save = true) {
-      _lang = lang;
-      if (save) localStorage.setItem('tecla-lang', lang);
-      document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.dataset.i18n;
-        const val = t(key);
-        if (val) el.innerHTML = val;
-      });
-      document.querySelectorAll('.lang-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.lang === lang);
-      });
-      document.documentElement.lang = lang;
-    }
-
-    document.querySelectorAll('.lang-btn').forEach(btn => {
-      btn.addEventListener('click', () => applyLang(btn.dataset.lang));
-    });
-
-    // ── Hook save buttons → showToast ────────────────────────────
-    document.getElementById('btn-save-keys')?.addEventListener('click', () => {
-      showToast(t('toast_config_saved'), 'ok');
-    }, true);
-
-    document.getElementById('btn-save-modes')?.addEventListener('click', () => {
-      showToast(t('toast_modes_saved'), 'ok');
-    }, true);
-
-    document.getElementById('btn-save-scales')?.addEventListener('click', () => {
-      showToast(t('toast_scales_saved'), 'ok');
-    }, true);
-
-    document.getElementById('btn-save-effects')?.addEventListener('click', () => {
-      showToast(t('toast_effects_saved'), 'ok');
-    }, true);
-
-    document.getElementById('btn-save-arp')?.addEventListener('click', () => {
-      showToast(t('toast_arp_saved'), 'ok');
-    }, true);
-
-    document.getElementById('btn-save-pots')?.addEventListener('click', () => {
-      showToast(t('toast_pots_saved'), 'ok');
-    }, true);
-
-    document.getElementById('btn-prog-editor-save')?.addEventListener('click', () => {
-      showToast(t('toast_prog_saved'), 'ok');
-    }, true);
-
-    document.getElementById('btn-scale-editor-save')?.addEventListener('click', () => {
-      showToast(t('toast_scale_saved'), 'ok');
-    }, true);
-
-    // ── Init language ────────────────────────────────────────────
-    applyLang(_lang, false);
-
   </script>
 </body>
 
