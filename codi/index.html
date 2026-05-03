@@ -2881,25 +2881,46 @@
       log(`Capa reanomenada a '${bank.name}'.`, 'ok');
     });
 
-    function showButtonSuccess(btn) {
-      if (!btn) return;
-      const overlay = document.createElement('div');
-      overlay.textContent = 'Guardat correctament';
-      Object.assign(overlay.style, {
-        position: 'absolute', top: '0', left: '0', right: '0', bottom: '0',
-        background: 'rgba(34, 197, 94, 0.92)', color: '#fff',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontWeight: '600', fontSize: '11px', zIndex: '10',
-        opacity: '0', transition: 'opacity 0.2s', pointerEvents: 'none'
-      });
-      btn.style.position = 'relative'; btn.style.overflow = 'hidden';
-      btn.appendChild(overlay);
-      void overlay.offsetWidth;
-      overlay.style.opacity = '1';
-      setTimeout(() => {
-        overlay.style.opacity = '0';
-        setTimeout(() => overlay.remove(), 200);
-      }, 1500);
+    function showGlobalToast(msg, type = 'success') {
+      let toast = document.getElementById('global-toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'global-toast';
+        document.body.appendChild(toast);
+        const style = document.createElement('style');
+        style.textContent = `
+          #global-toast {
+            position: fixed; top: 30px; left: 50%; transform: translateX(-50%) translateY(-20px);
+            background: rgba(25, 25, 25, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            color: #fff; padding: 12px 28px; border-radius: 40px; font-size: 13.5px; font-weight: 500;
+            box-shadow: 0 14px 40px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.15);
+            display: flex; align-items: center; gap: 10px; z-index: 9999;
+            opacity: 0; pointer-events: none; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          }
+          html.dark-mode #global-toast {
+            background: rgba(235, 235, 235, 0.85); color: #111;
+            box-shadow: 0 14px 40px rgba(0,0,0,0.15), inset 0 1px 1px rgba(255,255,255,0.8);
+          }
+          #global-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+          #global-toast .icon { font-size: 16px; }
+          #global-toast.success .icon { color: #4ade80; }
+          html.dark-mode #global-toast.success .icon { color: #16a34a; }
+          #global-toast.error .icon { color: #f87171; }
+        `;
+        document.head.appendChild(style);
+      }
+      
+      toast.className = type;
+      const icon = type === 'success' ? '✓' : '✗';
+      toast.innerHTML = `<span class="icon">${icon}</span> <span>${msg}</span>`;
+      
+      void toast.offsetWidth;
+      toast.classList.add('show');
+      
+      if (toast._timeout) clearTimeout(toast._timeout);
+      toast._timeout = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
     }
 
     document.getElementById('btn-save-keys')?.addEventListener('click', async (e) => {
@@ -2908,7 +2929,7 @@
       const bank = _keysConfig.banks[_keysConfig.currentBank];
       const assigned = bank.modes.filter(Boolean).length;
       log(`Configuració desada: ${assigned} tecles assignades a '${bank.name}'.`, 'ok');
-      showButtonSuccess(e.currentTarget);
+      showGlobalToast('Guardat correctament');
       if (device.isConnected()) {
         try {
           await device.writeFile('tecla_web_config.json', JSON.stringify(buildDeviceConfig(), null, 2));
@@ -3070,7 +3091,7 @@
       const mc = _loadModesConfig(); mc.enabled_modes = enabled; _saveModesConfig(mc);
       log(`${enabled.length} modes guardats. Actualitzant desplegables de tecles…`, 'ok');
       refreshKeyDropdowns();
-      showButtonSuccess(e.currentTarget);
+      showGlobalToast('Guardat correctament');
     });
     document.getElementById('btn-modes-all')?.addEventListener('click', () => document.querySelectorAll('#modes-list-check input').forEach(c => c.checked = true));
     document.getElementById('btn-modes-none')?.addEventListener('click', () => document.querySelectorAll('#modes-list-check input').forEach(c => c.checked = false));
@@ -3162,6 +3183,7 @@
       if (!enabled.length) { alert('Selecciona almenys una escala.'); return; }
       const mc = _loadModesConfig(); mc.keyboard_scales = enabled.sort((a, b) => a - b); _saveModesConfig(mc);
       log(`${enabled.length} escales guardades.`, 'ok');
+      showGlobalToast('Guardat correctament');
     });
     document.getElementById('btn-scales-all')?.addEventListener('click', () => document.querySelectorAll('.kb-scale-chk').forEach(c => c.checked = true));
     document.getElementById('btn-scales-none')?.addEventListener('click', () => document.querySelectorAll('.kb-scale-chk').forEach(c => c.checked = false));
@@ -3170,6 +3192,7 @@
       const enabled = [...document.querySelectorAll('.effect-chk:checked')].map(c => c.value);
       const mc = _loadModesConfig(); mc.available_effects = enabled; _saveModesConfig(mc);
       log(`Efectes guardats: ${enabled.join(', ')}`, 'ok');
+      showGlobalToast('Guardat correctament');
     });
     document.getElementById('btn-effects-all')?.addEventListener('click', () => document.querySelectorAll('.effect-chk').forEach(c => c.checked = true));
     document.getElementById('btn-effects-none')?.addEventListener('click', () => document.querySelectorAll('.effect-chk').forEach(c => c.checked = false));
@@ -3178,6 +3201,7 @@
       const enabled = [...document.querySelectorAll('.arp-chk:checked')].map(c => +c.value);
       const mc = _loadModesConfig(); mc.arpeggiator_modes = enabled.sort((a, b) => a - b); _saveModesConfig(mc);
       log(`${enabled.length} patrons d'arpegiador guardats.`, 'ok');
+      showGlobalToast('Guardat correctament');
     });
     document.getElementById('btn-arp-all')?.addEventListener('click', () => document.querySelectorAll('.arp-chk').forEach(c => c.checked = true));
     document.getElementById('btn-arp-none')?.addEventListener('click', () => document.querySelectorAll('.arp-chk').forEach(c => c.checked = false));
@@ -3196,6 +3220,7 @@
       };
       _saveModesConfig(mc);
       log('Funcions dels potenciòmetres guardades.', 'ok');
+      showGlobalToast('Guardat correctament');
       if (device.isConnected()) {
         try {
           await device.writeFile('tecla_web_config.json', JSON.stringify(buildDeviceConfig(), null, 2));
@@ -4568,7 +4593,7 @@
           }
           _renderSavedThemes();
           _updateModeIndicator();
-          showToast('Tema eliminat', null);
+          showGlobalToast('Tema eliminat');
         });
 
         container.appendChild(card);
@@ -4638,7 +4663,7 @@
           applyTheme('custom');
           _renderSavedThemes();
           _updateModeIndicator();
-          showToast(`✓ Tema "${themes[idx].name}" actualitzat`, 'ok');
+          showGlobalToast(`✓ Tema "${themes[idx].name}" actualitzat`);
           return;
         }
       }
@@ -4653,7 +4678,7 @@
       applyTheme('custom');
       _renderSavedThemes();
       _updateModeIndicator();
-      showToast(`✓ Tema "${name}" creat i desat`, 'ok');
+      showGlobalToast(`✓ Tema "${name}" creat i desat`);
     });
 
     document.getElementById('btn-reset-custom-theme')?.addEventListener('click', () => {
@@ -4680,7 +4705,7 @@
       });
       _renderSavedThemes();
       _updateModeIndicator();
-      showToast('Editor preparat per crear un nou tema', null);
+      showGlobalToast('Editor preparat per crear un nou tema');
     });
 
     // Init on load
