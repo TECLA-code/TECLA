@@ -1756,8 +1756,6 @@
         <button class="btn btn-sm" id="btn-rename-bank">Reanomenar</button>
         <button class="btn btn-sm btn-danger" id="btn-del-bank">Eliminar</button>
         <div style="margin-left:auto;display:flex;gap:8px">
-          <button class="btn btn-sm" id="btn-import">+ importar mode</button>
-          <button class="btn btn-sm" id="btn-refresh" title="Refresca modes del dispositiu">↻ modes</button>
           <button class="btn btn-sm btn-primary" id="btn-save-keys">Guardar configuració</button>
         </div>
       </div>
@@ -2385,8 +2383,6 @@
     // ── Elements ──────────────────────────────────────────────────
     const btnConnect = document.getElementById('btn-connect');
     const btnDisconnect = document.getElementById('btn-disconnect');
-    const btnImport = document.getElementById('btn-import');
-    const btnRefresh = document.getElementById('btn-refresh');
     const deviceBadge = document.getElementById('device-badge');
     const deviceName = document.getElementById('device-name');
     const modesList = document.getElementById('modes-list');
@@ -2536,34 +2532,6 @@
     btnDisconnect.addEventListener('click', () => {
       device.disconnect(); modes = null; setDisconnected();
       log('Dispositiu desconnectat.', 'info');
-    });
-
-    btnRefresh?.addEventListener('click', async () => {
-      if (!device.isConnected()) return;
-      btnRefresh.disabled = true;
-      await loadModes();
-      btnRefresh.disabled = false;
-      log('Llista actualitzada.', 'info');
-    });
-
-    // ── Import mode ────────────────────────────────────────────────
-    btnImport.addEventListener('click', () => {
-      if (!device.isConnected()) return;
-      const input = document.createElement('input');
-      input.type = 'file'; input.accept = '.py'; input.style.display = 'none';
-      document.body.appendChild(input);
-      input.addEventListener('change', async () => {
-        const file = input.files[0]; if (!file) { input.remove(); return; }
-        btnImport.disabled = true;
-        btnImport.innerHTML = '<span class="spinner"></span> important…';
-        try {
-          const result = await modes.installMode(await file.text(), file.name);
-          if (result.success) { log(`✓ Mode '${result.modeName}' instal·lat.`, 'ok'); await loadModes(); }
-          else log(`✗ ${result.error}`, 'err');
-        } catch (e) { log(`✗ Error: ${e.message}`, 'err'); }
-        finally { btnImport.disabled = false; btnImport.textContent = '+ importar mode'; input.remove(); }
-      });
-      input.click();
     });
 
     async function onDeleteSelected() {
@@ -2919,6 +2887,7 @@
       const bank = _keysConfig.banks[_keysConfig.currentBank];
       const assigned = bank.modes.filter(Boolean).length;
       log(`Configuració desada: ${assigned} tecles assignades a '${bank.name}'.`, 'ok');
+      alert('Guardat correctament');
       if (device.isConnected()) {
         try {
           await device.writeFile('tecla_web_config.json', JSON.stringify(buildDeviceConfig(), null, 2));
@@ -3080,6 +3049,7 @@
       const mc = _loadModesConfig(); mc.enabled_modes = enabled; _saveModesConfig(mc);
       log(`${enabled.length} modes guardats. Actualitzant desplegables de tecles…`, 'ok');
       refreshKeyDropdowns();
+      alert('Guardat correctament');
     });
     document.getElementById('btn-modes-all')?.addEventListener('click', () => document.querySelectorAll('#modes-list-check input').forEach(c => c.checked = true));
     document.getElementById('btn-modes-none')?.addEventListener('click', () => document.querySelectorAll('#modes-list-check input').forEach(c => c.checked = false));
