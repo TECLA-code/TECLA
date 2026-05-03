@@ -377,7 +377,6 @@
     .key-num { position: absolute; top: 5px; left: 6px; font-size: 9px; color: rgba(0,0,0,0.35); font-family: var(--mono); pointer-events: none; }
     .key-btn.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent), 0 3px 0 rgba(0,0,0,0.2); }
     .key-label { font-size: 10px; font-weight: 700; color: rgba(0,0,0,0.72); font-family: var(--mono); pointer-events: none; text-align: center; padding: 0 4px; line-height: 1.2; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .key-btn.special { background: rgba(0, 0, 0, 0.05); }
     .key-btn.special .key-label { color: rgba(0,0,0,0.6); font-weight: 600; white-space: normal; }
 
     /* POTS */
@@ -388,6 +387,11 @@
     .pot-knob { width: 50px; height: 50px; border-radius: 50%; border: 2px solid rgba(0,0,0,0.2); background: #dde1eb; position: relative; box-shadow: 0 3px 0 rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.6); }
     .pot-indicator { position: absolute; top: 4px; left: 50%; transform: translateX(-50%); width: 2px; height: 10px; background: rgba(0,0,0,0.45); border-radius: 2px; }
     .pot-label-vis { font-size: 11px; font-weight: 600; color: var(--text); }
+    
+    .sim-content .pot-knob { width: 42px; height: 42px; border-width: 1.5px; }
+    .sim-content .pot-indicator { height: 8px; }
+    .sim-content .pot-label-vis { font-size: 10px; }
+    .sim-content .pots-row-visual { gap: 14px; }
 
     /* Config Drawer */
     .config-drawer { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border-h); transform: translateY(100%); transition: transform 0.25s cubic-bezier(.4,0,.2,1); z-index: 250; max-height: 75vh; overflow-y: auto; box-shadow: 0 -10px 40px rgba(0,0,0,0.5); }
@@ -1755,12 +1759,7 @@
       </div>
 
       <div class="section">
-        <div class="section-title">Configuració de Tecles</div>
-        <p style="font-size:11.5px;color:var(--text2);margin-bottom:14px">Clica a les tecles 1-12 per assignar-hi un mode. Les tecles 13-16 tenen funcions fixes o ajustables clicant.</p>
         <div class="device-wrap">
-          <div class="pots-row-visual" id="device-pots">
-            <!-- JS renders pots here -->
-          </div>
           <div class="keys-grid" id="device-keys">
             <!-- JS renders keys here -->
           </div>
@@ -2025,7 +2024,7 @@
             </div>
           </div>
           <div class="sim-content">
-            <div style="display: flex; flex-direction: row-reverse; align-items: center; justify-content: center; gap: 28px; padding: 20px 0; transform: scale(0.9); transform-origin: top center;">
+            <div style="display: flex; flex-direction: row-reverse; align-items: center; justify-content: center; gap: 32px; padding: 20px 0;">
               <div class="pots-row-visual" id="sim-pots-visual">
                 <!-- JS renders sim pots here -->
               </div>
@@ -2743,16 +2742,6 @@
       const fileToName = Object.fromEntries(enabledModes.map(m => [m.file, m.name]));
       
       container.innerHTML = '';
-      
-      // Render Device Pots
-      const mc = _loadModesConfig();
-      const pt = mc.potentiometer_functions || {};
-      window._devicePotsData = [
-        {value: 0, label: pt['0'] || 'Brillantor'},
-        {value: 0, label: pt['1'] || 'Modulació'},
-        {value: 0, label: pt['2'] || 'Sustain'}
-      ];
-      renderVisualPots('device-pots', window._devicePotsData, 'device');
       
       // Tecles 1-12 (Assignables)
       for (let i = 0; i < 12; i++) {
