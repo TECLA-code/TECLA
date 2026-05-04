@@ -58,11 +58,17 @@ function initBlockly() {
   workspace = Blockly.inject('blocklyDiv', {
     toolbox: document.getElementById('toolbox'),
     theme,
-    grid: { spacing: 20, length: 3, colour: '#1e1e1e', snap: true },
-    zoom: { controls: true, wheel: true, startScale: 1.0, maxScale: 3, minScale: 0.3, scaleSpeed: 1.2 },
+    renderer: 'zelos',
+    grid: { spacing: 22, length: 4, colour: '#1a1a1a', snap: true },
+    zoom: { controls: true, wheel: true, startScale: 1.1, maxScale: 3, minScale: 0.3, scaleSpeed: 1.2 },
     trashcan: true,
     move: { scrollbars: true, drag: true, wheel: true }
   });
+
+  try {
+    const flyout = workspace.getFlyout?.();
+    if (flyout?.setWidth) flyout.setWidth(248);
+  } catch (_) {}
 
   workspace.addChangeListener(debounce(onWorkspaceChange, 300));
 }

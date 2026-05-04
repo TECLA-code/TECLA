@@ -18,7 +18,7 @@ Blockly.Blocks['tecla_play_note'] = {
       .appendField("durada");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#E91E63');
+    this.setColour('#ff1a6c');
     this.setTooltip("Toca una nota musical (número MIDI) durant un temps determinat");
     this.setHelpUrl("");
     // Inputs inline per estalviar espai
@@ -42,7 +42,7 @@ Blockly.Blocks['tecla_play_chord'] = {
       .appendField(new Blockly.FieldNumber(1.0, 0.1, 10, 0.1), "DURATION");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#E91E63');
+    this.setColour('#ff1a6c');
     this.setTooltip("Toca un acord (vàries notes al mateix temps)");
     this.setHelpUrl("");
   }
@@ -64,7 +64,7 @@ Blockly.Blocks['tecla_play_scale'] = {
       ]), "ROOT");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#E91E63');
+    this.setColour('#ff1a6c');
     this.setTooltip("Toca una escala musical completa");
     this.setHelpUrl("");
   }
@@ -89,7 +89,7 @@ Blockly.Blocks['tecla_get_random_scale_note'] = {
       .setCheck("Number")
       .appendField("Octava");
     this.setOutput(true, "Number");
-    this.setColour('#E91E63');
+    this.setColour('#ff1a6c');
     this.setTooltip("Retorna una nota MIDI aleatòria dins de l'escala triada");
     this.setInputsInline(true);
   }
@@ -102,7 +102,7 @@ Blockly.Blocks['tecla_set_octave'] = {
       .appendField(new Blockly.FieldNumber(4, 1, 7), "OCTAVE");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#E91E63');
+    this.setColour('#ff1a6c');
     this.setTooltip("Canvia l'octava per les següents notes");
     this.setHelpUrl("");
   }
@@ -117,7 +117,7 @@ Blockly.Blocks['tecla_read_button'] = {
       .appendField(new Blockly.FieldNumber(1, 1, 16), "BUTTON")
       .appendField("premut?");
     this.setOutput(true, "Boolean");
-    this.setColour('#2196F3');
+    this.setColour('#2979ff');
     this.setTooltip("Comprova si un botó està premut");
     this.setHelpUrl("");
   }
@@ -131,7 +131,7 @@ Blockly.Blocks['tecla_read_pot'] = {
         ["X (ADC0)", "0"], ["Y (ADC1)", "1"], ["Z (ADC2)", "2"]
       ]), "POT");
     this.setOutput(true, "Number");
-    this.setColour('#2196F3');
+    this.setColour('#2979ff');
     this.setTooltip("Llegeix el valor d'un potenciòmetre (0-127)");
     this.setHelpUrl("");
   }
@@ -147,7 +147,7 @@ Blockly.Blocks['tecla_on_button_press'] = {
       .appendField("fer");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#2196F3');
+    this.setColour('#2979ff');
     this.setTooltip("Executa accions quan es prem un botó");
     this.setHelpUrl("");
   }
@@ -175,7 +175,7 @@ Blockly.Blocks['tecla_set_instrument'] = {
       ]), "INSTRUMENT");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#9C27B0');
+    this.setColour('#e040fb');
     this.setTooltip("Canvia el so de l'instrument (Program Change)");
     this.setHelpUrl("");
   }
@@ -188,7 +188,7 @@ Blockly.Blocks['tecla_set_pan'] = {
       .appendField("🎧 Panning (L-R)");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#9C27B0');
+    this.setColour('#e040fb');
     this.setTooltip("Controla el balanç esquerra/dreta (0-127, 64 = Centre)");
     this.setHelpUrl("");
   }
@@ -201,7 +201,7 @@ Blockly.Blocks['tecla_set_volume'] = {
       .appendField("🔊 Volum");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#9C27B0');
+    this.setColour('#e040fb');
     this.setTooltip("Controla el volum del canal MIDI (CC 7)");
     this.setHelpUrl("");
   }
@@ -218,7 +218,7 @@ Blockly.Blocks['tecla_effect_delay'] = {
       .appendField("feedback");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#9C27B0');
+    this.setColour('#e040fb');
     this.setTooltip("Afegeix efecte de delay (eco) amb paràmetres dinàmics");
     this.setHelpUrl("");
     this.setInputsInline(true);
@@ -233,7 +233,7 @@ Blockly.Blocks['tecla_effect_reverb'] = {
       .appendField("quantitat");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#9C27B0');
+    this.setColour('#e040fb');
     this.setTooltip("Afegeix efecte de reverberació (dinàmic)");
     this.setHelpUrl("");
     this.setInputsInline(true);
@@ -254,7 +254,7 @@ Blockly.Blocks['tecla_effect_filter'] = {
       .appendField("freqüència");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#9C27B0');
+    this.setColour('#e040fb');
     this.setTooltip("Aplica un filtre de freqüència controlable");
     this.setHelpUrl("");
     this.setInputsInline(true);
@@ -270,7 +270,7 @@ Blockly.Blocks['tecla_set_bpm'] = {
       .appendField("⏱️ Fixar BPM (Ritme)");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#FF9800');
+    this.setColour('#ff9100');
     this.setTooltip("Defineix la velocitat global del programa (Beats Per Minute)");
     this.setHelpUrl("");
   }
@@ -289,7 +289,7 @@ Blockly.Blocks['tecla_wait_beat'] = {
       ]), "BEATS");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#FF9800');
+    this.setColour('#ff9100');
     this.setTooltip("Espera un temps musical basat en el BPM");
     this.setHelpUrl("");
   }
@@ -304,7 +304,7 @@ Blockly.Blocks['tecla_wait'] = {
       .appendField("segons");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#FF9800');
+    this.setColour('#ff9100');
     this.setTooltip("Espera un temps determinat (pot ser variable) abans de continuar");
     this.setHelpUrl("");
     this.setInputsInline(true);
@@ -319,7 +319,7 @@ Blockly.Blocks['tecla_repeat_forever'] = {
       .setCheck(null)
       .appendField("fer");
     this.setPreviousStatement(true, null);
-    this.setColour('#FF9800');
+    this.setColour('#ff9100');
     this.setTooltip("Repeteix les accions indefinidament");
     this.setHelpUrl("");
   }
@@ -347,7 +347,7 @@ Blockly.Blocks['tecla_oscillator'] = {
       .appendField("amplitud");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#673AB7');
+    this.setColour('#d500f9');
     this.setTooltip("Configura un oscil·lador amb forma d'ona, freqüència i amplitud");
     this.setHelpUrl("");
   }
@@ -379,7 +379,7 @@ Blockly.Blocks['tecla_lfo'] = {
       .appendField("profunditat");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#673AB7');
+    this.setColour('#d500f9');
     this.setTooltip("LFO per modular paràmetres automàticament");
     this.setHelpUrl("");
   }
@@ -403,7 +403,7 @@ Blockly.Blocks['tecla_envelope'] = {
       .appendField("Release (ms)");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#673AB7');
+    this.setColour('#d500f9');
     this.setTooltip("Configura envolvent ADSR per controlar l'evolució del so");
     this.setHelpUrl("");
   }
@@ -430,7 +430,7 @@ Blockly.Blocks['tecla_modulation'] = {
       .appendField("Profunditat");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#673AB7');
+    this.setColour('#d500f9');
     this.setTooltip("Síntesi per modulació (FM, AM, PM, Ring)");
     this.setHelpUrl("");
   }
@@ -452,7 +452,7 @@ Blockly.Blocks['tecla_waveshaper'] = {
       .appendField("quantitat");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#673AB7');
+    this.setColour('#d500f9');
     this.setTooltip("Afegeix distorsió o waveshaping al senyal");
     this.setHelpUrl("");
   }
@@ -472,7 +472,7 @@ Blockly.Blocks['tecla_digital_write'] = {
       ]), "VALUE");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#00BCD4');
+    this.setColour('#00f0ff');
     this.setTooltip("Escriu un valor digital a un pin GPIO");
     this.setHelpUrl("");
   }
@@ -484,7 +484,7 @@ Blockly.Blocks['tecla_digital_read'] = {
       .appendField("📥 Llegir pin digital")
       .appendField(new Blockly.FieldNumber(0, 0, 29), "PIN");
     this.setOutput(true, "Boolean");
-    this.setColour('#00BCD4');
+    this.setColour('#00f0ff');
     this.setTooltip("Llegeix el valor d'un pin digital");
     this.setHelpUrl("");
   }
@@ -500,7 +500,7 @@ Blockly.Blocks['tecla_analog_write'] = {
       .appendField("escriure PWM");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#00BCD4');
+    this.setColour('#00f0ff');
     this.setTooltip("Escriu un valor PWM (0-65535) a un pin");
     this.setHelpUrl("");
   }
@@ -514,7 +514,7 @@ Blockly.Blocks['tecla_analog_read'] = {
         ["A0", "0"], ["A1", "1"], ["A2", "2"]
       ]), "PIN");
     this.setOutput(true, "Number");
-    this.setColour('#00BCD4');
+    this.setColour('#00f0ff');
     this.setTooltip("Llegeix valor analògic (0-65535)");
     this.setHelpUrl("");
   }
@@ -527,7 +527,7 @@ Blockly.Blocks['tecla_sensor_temperature'] = {
     this.appendDummyInput()
       .appendField("🌡️ Temperatura interna (CPU)");
     this.setOutput(true, "Number");
-    this.setColour('#03A9F4');
+    this.setColour('#40c8ff');
     this.setTooltip("Llegeix la temperatura del microcontrolador");
     this.setHelpUrl("");
   }
@@ -542,7 +542,7 @@ Blockly.Blocks['tecla_sensor_accelerometer'] = {
         ["Magnitud", "magnitude"]
       ]), "AXIS");
     this.setOutput(true, "Number");
-    this.setColour('#03A9F4');
+    this.setColour('#40c8ff');
     this.setTooltip("Llegeix valors d'acceleròmetre (si està connectat)");
     this.setHelpUrl("");
   }
@@ -557,7 +557,7 @@ Blockly.Blocks['tecla_sensor_distance'] = {
       .appendField("Echo")
       .appendField(new Blockly.FieldNumber(17, 0, 29), "ECHO");
     this.setOutput(true, "Number");
-    this.setColour('#03A9F4');
+    this.setColour('#40c8ff');
     this.setTooltip("Mesura distància amb sensor ultrasònic HC-SR04");
     this.setHelpUrl("");
   }
@@ -571,7 +571,7 @@ Blockly.Blocks['tecla_text_length'] = {
       .setCheck("String")
       .appendField("📏 longitud de");
     this.setOutput(true, "Number");
-    this.setColour('#FFC107');
+    this.setColour('#ffe500');
     this.setTooltip("Retorna la longitud d'un text");
     this.setHelpUrl("");
   }
@@ -586,7 +586,7 @@ Blockly.Blocks['tecla_text_join'] = {
       .setCheck("String")
       .appendField("amb");
     this.setOutput(true, "String");
-    this.setColour('#FFC107');
+    this.setColour('#ffe500');
     this.setTooltip("Uneix dos textos");
     this.setHelpUrl("");
   }
@@ -601,7 +601,7 @@ Blockly.Blocks['tecla_text_contains'] = {
       .setCheck("String")
       .appendField("conté");
     this.setOutput(true, "Boolean");
-    this.setColour('#FFC107');
+    this.setColour('#ffe500');
     this.setTooltip("Comprova si un text conté un altre");
     this.setHelpUrl("");
   }
@@ -614,7 +614,7 @@ Blockly.Blocks['tecla_list_create'] = {
     this.appendDummyInput()
       .appendField("📋 Crear llista buida");
     this.setOutput(true, "Array");
-    this.setColour('#795548');
+    this.setColour('#ff6e40');
     this.setTooltip("Crea una llista buida");
     this.setHelpUrl("");
   }
@@ -630,7 +630,7 @@ Blockly.Blocks['tecla_list_add'] = {
       .appendField("element");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#795548');
+    this.setColour('#ff6e40');
     this.setTooltip("Afegeix un element al final de la llista");
     this.setHelpUrl("");
   }
@@ -645,7 +645,7 @@ Blockly.Blocks['tecla_list_get'] = {
       .setCheck("Number")
       .appendField("posició");
     this.setOutput(true, null);
-    this.setColour('#795548');
+    this.setColour('#ff6e40');
     this.setTooltip("Obté un element d'una posició de la llista");
     this.setHelpUrl("");
   }
@@ -657,7 +657,7 @@ Blockly.Blocks['tecla_list_length'] = {
       .setCheck("Array")
       .appendField("📏 longitud de llista");
     this.setOutput(true, "Number");
-    this.setColour('#795548');
+    this.setColour('#ff6e40');
     this.setTooltip("Retorna el nombre d'elements de la llista");
     this.setHelpUrl("");
   }
@@ -672,7 +672,7 @@ Blockly.Blocks['tecla_serial_print'] = {
       .appendField("📡 Serial print");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#009688');
+    this.setColour('#00ffc8');
     this.setTooltip("Envia dades pel port sèrie");
     this.setHelpUrl("");
   }
@@ -683,7 +683,7 @@ Blockly.Blocks['tecla_serial_read'] = {
     this.appendDummyInput()
       .appendField("📨 Serial llegir");
     this.setOutput(true, "String");
-    this.setColour('#009688');
+    this.setColour('#00ffc8');
     this.setTooltip("Llegeix dades del port sèrie");
     this.setHelpUrl("");
   }
@@ -699,7 +699,7 @@ Blockly.Blocks['tecla_i2c_write'] = {
       .appendField("dades");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#009688');
+    this.setColour('#00ffc8');
     this.setTooltip("Envia dades per I2C a un dispositiu");
     this.setHelpUrl("");
   }
@@ -714,7 +714,7 @@ Blockly.Blocks['tecla_i2c_read'] = {
       .setCheck("Number")
       .appendField("bytes");
     this.setOutput(true, "Array");
-    this.setColour('#009688');
+    this.setColour('#00ffc8');
     this.setTooltip("Llegeix dades per I2C d'un dispositiu");
     this.setHelpUrl("");
   }
@@ -731,7 +731,7 @@ Blockly.Blocks['tecla_math_random_int'] = {
       .setCheck("Number")
       .appendField("i");
     this.setOutput(true, "Number");
-    this.setColour('#4CAF50');
+    this.setColour('#00e676');
     this.setTooltip("Genera un número enter aleatori entre dos valors");
     this.setHelpUrl("");
   }
@@ -755,7 +755,7 @@ Blockly.Blocks['tecla_math_map'] = {
       .setCheck("Number")
       .appendField("-");
     this.setOutput(true, "Number");
-    this.setColour('#4CAF50');
+    this.setColour('#00e676');
     this.setTooltip("Escala un valor d'un rang a un altre (com map() d'Arduino)");
     this.setHelpUrl("");
   }
@@ -773,7 +773,7 @@ Blockly.Blocks['tecla_math_constrain'] = {
       .setCheck("Number")
       .appendField("màxim");
     this.setOutput(true, "Number");
-    this.setColour('#4CAF50');
+    this.setColour('#00e676');
     this.setTooltip("Limita un valor entre un mínim i màxim");
     this.setHelpUrl("");
   }
@@ -788,7 +788,7 @@ Blockly.Blocks['tecla_math_trig'] = {
         ["asin", "asin"], ["acos", "acos"], ["atan", "atan"]
       ]), "OP");
     this.setOutput(true, "Number");
-    this.setColour('#4CAF50');
+    this.setColour('#00e676');
     this.setTooltip("Funcions trigonomètriques");
     this.setHelpUrl("");
   }
@@ -804,7 +804,7 @@ Blockly.Blocks['tecla_function_define'] = {
     this.appendStatementInput("BODY")
       .setCheck(null)
       .appendField("fer");
-    this.setColour('#8BC34A');
+    this.setColour('#76ff03');
     this.setTooltip("Defineix una funció reutilitzable");
     this.setHelpUrl("");
   }
@@ -817,7 +817,7 @@ Blockly.Blocks['tecla_function_call'] = {
       .appendField(new Blockly.FieldTextInput("la_meva_funcio"), "NAME");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#8BC34A');
+    this.setColour('#76ff03');
     this.setTooltip("Crida una funció definida");
     this.setHelpUrl("");
   }
@@ -836,7 +836,7 @@ Blockly.Blocks['tecla_switch'] = {
       .appendField("Per defecte");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#FF9800');
+    this.setColour('#ff9100');
     this.setTooltip("Estructura switch/case per múltiples condicions");
     this.setMutator(new Blockly.Mutator(['tecla_switch_case']));
     this.caseCount_ = 1;
@@ -848,7 +848,7 @@ Blockly.Blocks['tecla_break'] = {
     this.appendDummyInput()
       .appendField("🛑 Break");
     this.setPreviousStatement(true, null);
-    this.setColour('#FF9800');
+    this.setColour('#ff9100');
     this.setTooltip("Surt del bucle actual");
   }
 };
@@ -858,7 +858,7 @@ Blockly.Blocks['tecla_continue'] = {
     this.appendDummyInput()
       .appendField("⏭️ Continue");
     this.setPreviousStatement(true, null);
-    this.setColour('#FF9800');
+    this.setColour('#ff9100');
     this.setTooltip("Salta a la següent iteració del bucle");
   }
 };
@@ -875,7 +875,7 @@ Blockly.Blocks['tecla_try_except'] = {
       .setCheck(null);
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#FF9800');
+    this.setColour('#ff9100');
     this.setTooltip("Gestió d'errors try/except");
   }
 };
@@ -887,7 +887,7 @@ Blockly.Blocks['tecla_time_now'] = {
     this.appendDummyInput()
       .appendField("⏰ Temps actual (s)");
     this.setOutput(true, "Number");
-    this.setColour('#607D8B');
+    this.setColour('#78909c');
     this.setTooltip("Retorna el temps en segons des de l'inici");
   }
 };
@@ -897,7 +897,7 @@ Blockly.Blocks['tecla_time_millis'] = {
     this.appendDummyInput()
       .appendField("⏱️ Mil·lisegons");
     this.setOutput(true, "Number");
-    this.setColour('#607D8B');
+    this.setColour('#78909c');
     this.setTooltip("Temps en mil·lisegons des de l'inici");
   }
 };
@@ -909,7 +909,7 @@ Blockly.Blocks['tecla_timer_start'] = {
       .appendField(new Blockly.FieldVariable("timer"), "VAR");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#607D8B');
+    this.setColour('#78909c');
     this.setTooltip("Inicia un temporitzador");
   }
 };
@@ -920,7 +920,7 @@ Blockly.Blocks['tecla_timer_elapsed'] = {
       .appendField("⏲️ Temps transcorregut")
       .appendField(new Blockly.FieldVariable("timer"), "VAR");
     this.setOutput(true, "Number");
-    this.setColour('#607D8B');
+    this.setColour('#78909c');
     this.setTooltip("Temps transcorregut des de l'inici del temporitzador");
   }
 };
@@ -932,7 +932,7 @@ Blockly.Blocks['tecla_sleep_ms'] = {
       .appendField("💤 Dormir (ms)");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#607D8B');
+    this.setColour('#78909c');
     this.setTooltip("Pausa en mil·lisegons");
   }
 };
@@ -951,7 +951,7 @@ Blockly.Blocks['tecla_string_replace'] = {
       .setCheck("String")
       .appendField("per");
     this.setOutput(true, "String");
-    this.setColour('#4CAF50');
+    this.setColour('#00e676');
     this.setTooltip("Reemplaça text dins un string");
   }
 };
@@ -965,7 +965,7 @@ Blockly.Blocks['tecla_string_split'] = {
       .setCheck("String")
       .appendField("per");
     this.setOutput(true, "Array");
-    this.setColour('#4CAF50');
+    this.setColour('#00e676');
     this.setTooltip("Divideix un string en una llista");
   }
 };
@@ -979,7 +979,7 @@ Blockly.Blocks['tecla_string_join'] = {
       .setCheck("String")
       .appendField("amb");
     this.setOutput(true, "String");
-    this.setColour('#4CAF50');
+    this.setColour('#00e676');
     this.setTooltip("Uneix elements d'una llista amb un separador");
   }
 };
@@ -993,7 +993,7 @@ Blockly.Blocks['tecla_string_format'] = {
       .setCheck(null)
       .appendField("valor");
     this.setOutput(true, "String");
-    this.setColour('#4CAF50');
+    this.setColour('#00e676');
     this.setTooltip("Formata un string amb valors");
   }
 };
@@ -1007,7 +1007,7 @@ Blockly.Blocks['tecla_string_contains'] = {
       .setCheck("String")
       .appendField("el text");
     this.setOutput(true, "Boolean");
-    this.setColour('#4CAF50');
+    this.setColour('#00e676');
     this.setTooltip("Comprova si un string conté un text");
   }
 };
@@ -1020,7 +1020,7 @@ Blockly.Blocks['tecla_string_startswith'] = {
     this.appendValueInput("PREFIX")
       .setCheck("String");
     this.setOutput(true, "Boolean");
-    this.setColour('#4CAF50');
+    this.setColour('#00e676');
     this.setTooltip("Comprova si comença amb un prefix");
   }
 };
@@ -1033,7 +1033,7 @@ Blockly.Blocks['tecla_string_endswith'] = {
     this.appendValueInput("SUFFIX")
       .setCheck("String");
     this.setOutput(true, "Boolean");
-    this.setColour('#4CAF50');
+    this.setColour('#00e676');
     this.setTooltip("Comprova si acaba amb un sufix");
   }
 };
@@ -1046,7 +1046,7 @@ Blockly.Blocks['tecla_math_sin'] = {
       .setCheck("Number")
       .appendField("📐 sin");
     this.setOutput(true, "Number");
-    this.setColour('#2196F3');
+    this.setColour('#2979ff');
     this.setTooltip("Sinus d'un angle (en radians)");
   }
 };
@@ -1057,7 +1057,7 @@ Blockly.Blocks['tecla_math_cos'] = {
       .setCheck("Number")
       .appendField("📐 cos");
     this.setOutput(true, "Number");
-    this.setColour('#2196F3');
+    this.setColour('#2979ff');
     this.setTooltip("Cosinus d'un angle (en radians)");
   }
 };
@@ -1068,7 +1068,7 @@ Blockly.Blocks['tecla_math_tan'] = {
       .setCheck("Number")
       .appendField("📐 tan");
     this.setOutput(true, "Number");
-    this.setColour('#2196F3');
+    this.setColour('#2979ff');
     this.setTooltip("Tangent d'un angle (en radians)");
   }
 };
@@ -1079,7 +1079,7 @@ Blockly.Blocks['tecla_math_log'] = {
       .setCheck("Number")
       .appendField("📊 log");
     this.setOutput(true, "Number");
-    this.setColour('#2196F3');
+    this.setColour('#2979ff');
     this.setTooltip("Logaritme natural");
   }
 };
@@ -1090,7 +1090,7 @@ Blockly.Blocks['tecla_math_exp'] = {
       .setCheck("Number")
       .appendField("📈 exp");
     this.setOutput(true, "Number");
-    this.setColour('#2196F3');
+    this.setColour('#2979ff');
     this.setTooltip("Exponencial (e^x)");
   }
 };
@@ -1101,7 +1101,7 @@ Blockly.Blocks['tecla_math_degrees'] = {
       .setCheck("Number")
       .appendField("🔄 Radians a graus");
     this.setOutput(true, "Number");
-    this.setColour('#2196F3');
+    this.setColour('#2979ff');
     this.setTooltip("Converteix radians a graus");
   }
 };
@@ -1112,7 +1112,7 @@ Blockly.Blocks['tecla_math_radians'] = {
       .setCheck("Number")
       .appendField("🔄 Graus a radians");
     this.setOutput(true, "Number");
-    this.setColour('#2196F3');
+    this.setColour('#2979ff');
     this.setTooltip("Converteix graus a radians");
   }
 };
@@ -1132,7 +1132,7 @@ Blockly.Blocks['tecla_math_bitwise'] = {
         ["RIGHT SHIFT >>", "RSHIFT"]
       ]), "OP");
     this.setOutput(true, "Number");
-    this.setColour('#2196F3');
+    this.setColour('#2979ff');
     this.setTooltip("Operacions bitwise");
   }
 };
@@ -1149,7 +1149,7 @@ Blockly.Blocks['tecla_neopixel_setup'] = {
       .appendField("quantitat");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#E91E63');
+    this.setColour('#ff1a6c');
     this.setTooltip("Configura tira de LEDs NeoPixel");
   }
 };
@@ -1170,7 +1170,7 @@ Blockly.Blocks['tecla_neopixel_set'] = {
       .appendField("B");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#E91E63');
+    this.setColour('#ff1a6c');
     this.setTooltip("Estableix color d'un LED NeoPixel (RGB 0-255)");
   }
 };
@@ -1181,7 +1181,7 @@ Blockly.Blocks['tecla_neopixel_show'] = {
       .appendField("💡 Actualitzar NeoPixels");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#E91E63');
+    this.setColour('#ff1a6c');
     this.setTooltip("Actualitza els LEDs amb els colors establerts");
   }
 };
@@ -1192,7 +1192,7 @@ Blockly.Blocks['tecla_neopixel_clear'] = {
       .appendField("💡 Apagar NeoPixels");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#E91E63');
+    this.setColour('#ff1a6c');
     this.setTooltip("Apaga tots els LEDs");
   }
 };
@@ -1204,7 +1204,7 @@ Blockly.Blocks['tecla_neopixel_rainbow'] = {
       .appendField("🌈 Arc de Sant Martí offset");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#E91E63');
+    this.setColour('#ff1a6c');
     this.setTooltip("Efecte arc de Sant Martí");
   }
 };
@@ -1221,7 +1221,7 @@ Blockly.Blocks['tecla_display_setup'] = {
       ]), "TYPE");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#00BCD4');
+    this.setColour('#00f0ff');
     this.setTooltip("Configura display OLED o LCD");
   }
 };
@@ -1239,7 +1239,7 @@ Blockly.Blocks['tecla_display_text'] = {
       .appendField("Y");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#00BCD4');
+    this.setColour('#00f0ff');
     this.setTooltip("Mostra text a posició X,Y");
   }
 };
@@ -1250,7 +1250,7 @@ Blockly.Blocks['tecla_display_clear'] = {
       .appendField("🖥️ Netejar display");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#00BCD4');
+    this.setColour('#00f0ff');
     this.setTooltip("Neteja la pantalla");
   }
 };
@@ -1270,7 +1270,7 @@ Blockly.Blocks['tecla_display_pixel'] = {
       ]), "STATE");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#00BCD4');
+    this.setColour('#00f0ff');
     this.setTooltip("Dibuixa un pixel");
   }
 };
@@ -1291,7 +1291,7 @@ Blockly.Blocks['tecla_display_line'] = {
       .appendField("Y2");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#00BCD4');
+    this.setColour('#00f0ff');
     this.setTooltip("Dibuixa una línia");
   }
 };
@@ -1317,7 +1317,7 @@ Blockly.Blocks['tecla_display_rect'] = {
       ]), "FILL");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#00BCD4');
+    this.setColour('#00f0ff');
     this.setTooltip("Dibuixa un rectangle");
   }
 };
@@ -1331,7 +1331,7 @@ Blockly.Blocks['tecla_servo_setup'] = {
       .appendField("🎛️ Configurar Servo pin");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#795548');
+    this.setColour('#ff6e40');
     this.setTooltip("Configura un servomotor");
   }
 };
@@ -1346,7 +1346,7 @@ Blockly.Blocks['tecla_servo_angle'] = {
       .appendField("angle");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#795548');
+    this.setColour('#ff6e40');
     this.setTooltip("Mou el servo a un angle (0-180 graus)");
   }
 };
@@ -1361,7 +1361,7 @@ Blockly.Blocks['tecla_motor_setup'] = {
       .appendField(",");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#795548');
+    this.setColour('#ff6e40');
     this.setTooltip("Configura un motor DC");
   }
 };
@@ -1379,7 +1379,7 @@ Blockly.Blocks['tecla_motor_speed'] = {
       ]), "DIRECTION");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#795548');
+    this.setColour('#ff6e40');
     this.setTooltip("Controla velocitat i direcció del motor (-100 a 100)");
   }
 };
@@ -1392,7 +1392,7 @@ Blockly.Blocks['tecla_sensor_light'] = {
       .setCheck("Number")
       .appendField("☀️ Sensor de llum pin");
     this.setOutput(true, "Number");
-    this.setColour('#9C27B0');
+    this.setColour('#e040fb');
     this.setTooltip("Llegeix sensor de llum (0-100)");
   }
 };
@@ -1403,7 +1403,7 @@ Blockly.Blocks['tecla_sensor_sound'] = {
       .setCheck("Number")
       .appendField("🔊 Sensor de so pin");
     this.setOutput(true, "Number");
-    this.setColour('#9C27B0');
+    this.setColour('#e040fb');
     this.setTooltip("Llegeix nivell de so (0-100)");
   }
 };
@@ -1414,7 +1414,7 @@ Blockly.Blocks['tecla_sensor_moisture'] = {
       .setCheck("Number")
       .appendField("💧 Sensor humitat pin");
     this.setOutput(true, "Number");
-    this.setColour('#9C27B0');
+    this.setColour('#e040fb');
     this.setTooltip("Llegeix humitat (0-100)");
   }
 };
@@ -1425,7 +1425,7 @@ Blockly.Blocks['tecla_sensor_pir'] = {
       .setCheck("Number")
       .appendField("👁️ Sensor PIR (moviment) pin");
     this.setOutput(true, "Boolean");
-    this.setColour('#9C27B0');
+    this.setColour('#e040fb');
     this.setTooltip("Detecta moviment (True/False)");
   }
 };
@@ -1441,7 +1441,7 @@ Blockly.Blocks['tecla_sensor_button_external'] = {
         ["Pull Down", "PULLDOWN"]
       ]), "PULL");
     this.setOutput(true, "Boolean");
-    this.setColour('#9C27B0');
+    this.setColour('#e040fb');
     this.setTooltip("Llegeix botó extern");
   }
 };
@@ -1458,7 +1458,7 @@ Blockly.Blocks['tecla_pwm_setup'] = {
       .appendField("freqüència");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#FF5722');
+    this.setColour('#ff3d00');
     this.setTooltip("Configura sortida PWM amb freqüència");
   }
 };
@@ -1473,7 +1473,7 @@ Blockly.Blocks['tecla_pwm_duty'] = {
       .appendField("duty cycle");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#FF5722');
+    this.setColour('#ff3d00');
     this.setTooltip("Estableix duty cycle (0-100%)");
   }
 };
@@ -1490,7 +1490,7 @@ Blockly.Blocks['tecla_storage_write'] = {
       .appendField("valor");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#9E9E9E');
+    this.setColour('#90a4ae');
     this.setTooltip("Guarda un valor a memòria persistent");
   }
 };
@@ -1501,7 +1501,7 @@ Blockly.Blocks['tecla_storage_read'] = {
       .setCheck("String")
       .appendField("💾 Llegir clau");
     this.setOutput(true, null);
-    this.setColour('#9E9E9E');
+    this.setColour('#90a4ae');
     this.setTooltip("Llegeix un valor de memòria");
   }
 };
@@ -1512,7 +1512,7 @@ Blockly.Blocks['tecla_storage_exists'] = {
       .setCheck("String")
       .appendField("💾 Existeix clau");
     this.setOutput(true, "Boolean");
-    this.setColour('#9E9E9E');
+    this.setColour('#90a4ae');
     this.setTooltip("Comprova si existeix una clau");
   }
 };
@@ -1524,7 +1524,7 @@ Blockly.Blocks['tecla_storage_delete'] = {
       .appendField("💾 Eliminar clau");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour('#9E9E9E');
+    this.setColour('#90a4ae');
     this.setTooltip("Elimina una clau de memòria");
   }
 };
@@ -1536,7 +1536,7 @@ Blockly.Blocks['tecla_system_reset'] = {
     this.appendDummyInput()
       .appendField("🔄 Reiniciar sistema");
     this.setPreviousStatement(true, null);
-    this.setColour('#424242');
+    this.setColour('#37474f');
     this.setTooltip("Reinicia el dispositiu");
   }
 };
@@ -1546,7 +1546,7 @@ Blockly.Blocks['tecla_system_memory'] = {
     this.appendDummyInput()
       .appendField("🧠 Memòria lliure");
     this.setOutput(true, "Number");
-    this.setColour('#424242');
+    this.setColour('#37474f');
     this.setTooltip("Retorna memòria lliure en bytes");
   }
 };
@@ -1556,7 +1556,7 @@ Blockly.Blocks['tecla_system_cpu_temp'] = {
     this.appendDummyInput()
       .appendField("🌡️ Temperatura CPU");
     this.setOutput(true, "Number");
-    this.setColour('#424242');
+    this.setColour('#37474f');
     this.setTooltip("Temperatura del processador");
   }
 };
@@ -1566,7 +1566,7 @@ Blockly.Blocks['tecla_system_voltage'] = {
     this.appendDummyInput()
       .appendField("⚡ Voltatge bateria");
     this.setOutput(true, "Number");
-    this.setColour('#424242');
+    this.setColour('#37474f');
     this.setTooltip("Voltatge d'alimentació");
   }
 };
@@ -1585,7 +1585,7 @@ Blockly.Blocks['tecla_probability'] = {
             .appendField("fer");
         this.setPreviousStatement(true, null);
         this.setNextStatement(true, null);
-        this.setColour('#E91E63');
+        this.setColour('#ff1a6c');
         this.setTooltip("Executa els blocs interiors només un % de les vegades");
         this.setHelpUrl("");
     }
@@ -1605,7 +1605,7 @@ Blockly.Blocks['tecla_software_lfo'] = {
             .setCheck("Number")
             .appendField("max");
         this.setOutput(true, "Number");
-        this.setColour('#673AB7');
+        this.setColour('#d500f9');
         this.setTooltip("Oscil·lador sinusoidal que retorna un valor entre min i max");
         this.setHelpUrl("");
         this.setInputsInline(true);
@@ -1630,7 +1630,7 @@ Blockly.Blocks['tecla_scale_quantize'] = {
                 ["G", "G"], ["A", "A"], ["B", "B"]
             ]), "ROOT");
         this.setOutput(true, "Number");
-        this.setColour('#E91E63');
+        this.setColour('#ff1a6c');
         this.setTooltip("Ajusta un número a la nota més propera de l'escala triada");
         this.setHelpUrl("");
     }
@@ -1650,7 +1650,7 @@ Blockly.Blocks['tecla_euclidean_rhythm'] = {
             .setCheck("Number")
             .appendField("total passos");
         this.setOutput(true, "Boolean");
-        this.setColour('#FF9800');
+        this.setColour('#ff9100');
         this.setTooltip("Retorna cert si toca un cop en el pas actual (generador de ritmes)");
         this.setHelpUrl("");
         this.setInputsInline(true);

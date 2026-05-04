@@ -208,9 +208,15 @@
     #midi-status-text { font-size: 11px; color: var(--text3); white-space: nowrap; }
 
     /* ── Blockly override ────────────────────────────────────── */
-    .blocklyToolboxDiv { border-right: 1px solid var(--border) !important; }
-    .blocklyTreeLabel { font-family: var(--font) !important; font-size: 12px !important; }
+    .blocklyToolboxDiv { border-right: 1px solid var(--border) !important; width: 180px !important; }
+    .blocklyTreeLabel { font-family: var(--font) !important; font-size: 13px !important; font-weight: 500 !important; letter-spacing: .01em !important; }
     .blocklyScrollbarHandle { opacity: .5 !important; }
+    .blocklyTreeRow { padding: 6px 8px !important; border-radius: 6px !important; margin: 1px 6px !important; }
+    .blocklyTreeRow:hover:not(.blocklyTreeSelected) { background: rgba(255,255,255,.05) !important; }
+    .blocklyTreeSelected { border-radius: 6px !important; }
+    .blocklyDraggable .blocklyPath { filter: drop-shadow(0 0 5px rgba(255,255,255,.12)) !important; }
+    .blocklyDraggable:hover .blocklyPath { filter: drop-shadow(0 0 10px rgba(255,255,255,.25)) brightness(1.1) !important; }
+    .blocklyFlyout .blocklyPath { filter: drop-shadow(0 0 4px rgba(255,255,255,.1)) !important; }
 
     /* ── Toast ───────────────────────────────────────────────── */
     .toast {
@@ -482,7 +488,7 @@
 
   <!-- Toolbox XML -->
   <xml id="toolbox" style="display:none">
-    <category name="Música Bàsica" colour="#E91E63">
+    <category name="Música Bàsica" colour="#ff1a6c">
       <block type="tecla_play_note">
         <value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value>
         <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
@@ -492,7 +498,7 @@
       <block type="tecla_play_scale"></block>
       <block type="tecla_set_octave"></block>
     </category>
-    <category name="Síntesi Avançada" colour="#673AB7">
+    <category name="Síntesi Avançada" colour="#d500f9">
       <block type="tecla_oscillator">
         <value name="FREQUENCY"><shadow type="math_number"><field name="NUM">440</field></shadow></value>
         <value name="AMPLITUDE"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
@@ -516,29 +522,29 @@
         <value name="AMOUNT"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
       </block>
     </category>
-    <category name="Control Hardware" colour="#2196F3">
+    <category name="Control Hardware" colour="#2979ff">
       <block type="tecla_read_button"></block>
       <block type="tecla_read_pot"></block>
       <block type="tecla_on_button_press"></block>
     </category>
-    <category name="Efectes Àudio" colour="#9C27B0">
+    <category name="Efectes Àudio" colour="#e040fb">
       <block type="tecla_effect_delay"></block>
       <block type="tecla_effect_reverb"></block>
       <block type="tecla_effect_filter"></block>
     </category>
-    <category name="GPIO (Pins)" colour="#00BCD4">
+    <category name="GPIO (Pins)" colour="#00f0ff">
       <block type="tecla_digital_write"></block>
       <block type="tecla_digital_read"></block>
       <block type="tecla_analog_write"><value name="VALUE"><shadow type="math_number"><field name="NUM">32768</field></shadow></value></block>
       <block type="tecla_analog_read"></block>
     </category>
-    <category name="Temps i Bucles" colour="#FF9800">
+    <category name="Temps i Bucles" colour="#ff9100">
       <block type="tecla_wait"><value name="TIME"><shadow type="math_number"><field name="NUM">1.0</field></shadow></value></block>
       <block type="tecla_repeat_forever"></block>
       <block type="controls_repeat_ext"><value name="TIMES"><shadow type="math_number"><field name="NUM">10</field></shadow></value></block>
       <block type="controls_whileUntil"></block>
     </category>
-    <category name="Generatiu" colour="#E91E63">
+    <category name="Generatiu" colour="#ff1a6c">
       <block type="tecla_probability"><value name="PERCENT"><shadow type="math_number"><field name="NUM">50</field></shadow></value></block>
       <block type="tecla_software_lfo">
         <value name="RATE"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
@@ -547,7 +553,7 @@
       </block>
       <block type="tecla_scale_quantize"><value name="VALUE"><shadow type="math_number"><field name="NUM">60</field></shadow></value></block>
     </category>
-    <category name="Lògica" colour="#4CAF50">
+    <category name="Lògica" colour="#00e676">
       <block type="controls_if"></block>
       <block type="controls_ifelse"></block>
       <block type="logic_compare"></block>
@@ -555,7 +561,7 @@
       <block type="logic_negate"></block>
       <block type="logic_boolean"></block>
     </category>
-    <category name="Matemàtiques" colour="#4CAF50">
+    <category name="Matemàtiques" colour="#00e676">
       <block type="math_number"></block>
       <block type="math_arithmetic">
         <value name="A"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
@@ -574,7 +580,7 @@
       </block>
     </category>
     <category name="Variables" colour="#FF6F00" custom="VARIABLE"></category>
-    <category name="Funcions" colour="#8BC34A">
+    <category name="Funcions" colour="#76ff03">
       <block type="tecla_function_define"></block>
       <block type="tecla_function_call"></block>
     </category>
