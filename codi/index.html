@@ -1407,6 +1407,44 @@
       border-radius: var(--r2)
     }
 
+    /* ARP MATRIX */
+    .arp-matrix-cell {
+      width: 24px;
+      height: 24px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--surface2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+    .arp-matrix-cell:hover {
+      border-color: var(--border-h);
+      background: var(--surface3);
+    }
+    .arp-matrix-cell.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 6px var(--border-h);
+    }
+    .arp-matrix-header {
+      font-size: 9px;
+      color: var(--text3);
+      text-align: center;
+      margin-bottom: 2px;
+    }
+    .arp-matrix-row-label {
+      font-size: 10px;
+      color: var(--text2);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 8px;
+      white-space: nowrap;
+    }
+
     #pyodide-loader.show {
       display: flex
     }
@@ -1844,10 +1882,13 @@
         <div class="card">
           <div class="card-title">Patrons direccionals de l'arpegiador</div>
           <div class="arp-grid" id="arp-list"></div>
-          <div style="margin-top: 12px; display: flex; align-items: center; gap: 10px;">
-            <label style="font-size: 11.5px; font-weight: 600; color: var(--text2); white-space: nowrap;">Patró Personalitzat:</label>
-            <input type="text" id="custom-arp-input" placeholder="ex: 1, 3, 2, 4" style="flex: 1; padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface2); color: var(--text); font-size: 12px; font-family: monospace;">
+          <div class="card-title" style="margin-top: 16px; font-size: 11px;">Patrons Personalitzats</div>
+          <div class="crud-toolbar" style="margin-bottom: 6px;">
+            <button class="btn btn-sm btn-primary" id="btn-new-arp">+ Nou Patró</button>
+            <button class="btn btn-sm" id="btn-edit-arp" disabled>Editar</button>
+            <button class="btn btn-sm btn-danger" id="btn-del-arp" disabled>Eliminar</button>
           </div>
+          <div class="crud-list" id="custom-arp-items" style="max-height: 120px; margin-bottom: 12px;"></div>
           <div style="display:flex;gap:6px;margin-top:12px">
             <button class="btn btn-sm btn-primary" id="btn-save-arp">Guardar</button>
             <button class="btn btn-sm" id="btn-arp-all">Tots</button>
@@ -1991,6 +2032,37 @@
         <div style="display:flex;gap:8px;justify-content:flex-end">
           <button class="btn btn-sm" id="btn-scale-editor-cancel">Cancel·lar</button>
           <button class="btn btn-sm btn-primary" id="btn-scale-editor-save">Guardar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ EDITOR OVERLAY: ARPEGIADOR ════════════════════════════ -->
+    <div class="editor-overlay" id="arp-editor-overlay">
+      <div class="editor-panel" style="max-width: 640px; width: 95%;">
+        <div class="editor-panel-title">Nou Patró d'Arpegiador</div>
+        <div class="editor-name-row">
+          <label>Nom</label>
+          <input type="text" id="arp-edit-name" placeholder="ex: Patró Rítmic 1">
+        </div>
+        <div class="editor-name-row" style="margin-top: 10px; margin-bottom: 16px;">
+          <label>Passos</label>
+          <select id="arp-edit-steps" style="width: 80px;">
+            <option value="4">4</option>
+            <option value="8">8</option>
+            <option value="12">12</option>
+            <option value="16" selected>16</option>
+          </select>
+        </div>
+        
+        <div class="arp-matrix-container" style="overflow-x: auto; margin-bottom: 20px; padding-bottom: 8px;">
+          <div class="arp-matrix" id="arp-matrix" style="display: grid; gap: 4px;">
+            <!-- Generated via JS -->
+          </div>
+        </div>
+        
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn btn-sm" id="btn-arp-editor-cancel">Cancel·lar</button>
+          <button class="btn btn-sm btn-primary" id="btn-arp-editor-save">Guardar</button>
         </div>
       </div>
     </div>
@@ -2966,7 +3038,7 @@
         available_effects: mc.available_effects || ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend'],
         keyboard_scales: mc.keyboard_scales || [],
         arpeggiator_modes: mc.arpeggiator_modes || Array.from({ length: 16 }, (_, i) => i),
-        custom_arp_pattern: mc.custom_arp_pattern || [0],
+        custom_arpeggiator_patterns: _customArps,
         potentiometer_functions: mc.potentiometer_functions || {},
         arp_potentiometer_functions: mc.arp_potentiometer_functions || {}
       };
@@ -2991,8 +3063,7 @@
     const ARP_PATTERNS = [
       [0, "Amunt"], [1, "Avall"], [2, "Ping-Pong"], [3, "Aleatori"], [4, "Ordre"],
       [5, "Alberti"], [6, "Alberti Alt"], [7, "Vals"], [8, "Broken"], [9, "Trèmolo"],
-      [10, "Zig-Zag"], [11, "Block"], [12, "Rolled"], [13, "Octaves"], [14, "Contrari"], [15, "Spread"],
-      [16, "Personalitzat"]
+      [10, "Zig-Zag"], [11, "Block"], [12, "Rolled"], [13, "Octaves"], [14, "Contrari"], [15, "Spread"]
     ];
     const AVAILABLE_EFFECTS = ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend'];
 
@@ -3084,18 +3155,7 @@
       // Arp patterns
       const arpCont = document.getElementById('arp-list');
       if (arpCont) {
-        const enabledArp = new Set(mc.arpeggiator_modes ?? ARP_PATTERNS.map(([id]) => id));
-        arpCont.innerHTML = ARP_PATTERNS.map(([id, name]) =>
-          `<label class="cb"><input type="checkbox" class="arp-chk" value="${id}" ${enabledArp.has(id) ? 'checked' : ''}>
-       <span>${name}</span></label>`).join('');
-       
-        // Load custom arp pattern
-        const customArpInput = document.getElementById('custom-arp-input');
-        if (customArpInput) {
-          const customPattern = mc.custom_arp_pattern || [0];
-          // map 0-based indices to 1-based indices for user display
-          customArpInput.value = customPattern.map(n => n + 1).join(', ');
-        }
+        _rebuildArpCheckboxes();
       }
 
       // Pots
@@ -3223,25 +3283,8 @@
     document.getElementById('btn-save-arp')?.addEventListener('click', () => {
       const enabled = [...document.querySelectorAll('.arp-chk:checked')].map(c => +c.value);
       
-      // Parse custom arp input
-      let customPattern = [0];
-      const customInputStr = document.getElementById('custom-arp-input')?.value || '';
-      if (customInputStr.trim()) {
-        try {
-          // Parse string like "1, 3, 2, 4" into 0-based indices [0, 2, 1, 3]
-          customPattern = customInputStr.split(/[, \s]+/).filter(Boolean).map(s => {
-            const num = parseInt(s, 10);
-            return isNaN(num) ? 0 : Math.max(0, num - 1);
-          });
-          if (customPattern.length === 0) customPattern = [0];
-        } catch (e) {
-          console.error("Invalid custom pattern", e);
-        }
-      }
-      
       const mc = _loadModesConfig(); 
       mc.arpeggiator_modes = enabled.sort((a, b) => a - b); 
-      mc.custom_arp_pattern = customPattern;
       _saveModesConfig(mc);
       log(`${enabled.length} patrons d'arpegiador guardats.`, 'ok');
       showGlobalToast('Guardat correctament');
@@ -3545,6 +3588,207 @@
     _buildScaleCells();
     _loadCustomScales();
     _renderScaleList();
+
+    // ══════════════════════════════════════════════════════════════
+    // CUSTOM ARPEGGIATOR PATTERNS
+    // ══════════════════════════════════════════════════════════════
+    let _customArps = [];
+    function _loadCustomArps() {
+      try { _customArps = JSON.parse(localStorage.getItem('tecla-custom-arps') || '[]'); } catch { _customArps = []; }
+    }
+    function _saveCustomArps() { localStorage.setItem('tecla-custom-arps', JSON.stringify(_customArps)); }
+    
+    let _selectedArpIdx = -1;
+    let _editingArp = null;
+
+    function _buildArpMatrix(steps = 8, sequence = []) {
+      const grid = document.getElementById('arp-matrix');
+      if (!grid) return;
+      grid.innerHTML = '';
+      grid.style.gridTemplateColumns = `auto repeat(${steps}, 1fr)`;
+      
+      // Header row
+      grid.appendChild(document.createElement('div')); // Empty corner
+      for (let c = 0; c < steps; c++) {
+        const h = document.createElement('div');
+        h.className = 'arp-matrix-header';
+        h.textContent = String(c + 1);
+        grid.appendChild(h);
+      }
+      
+      const rows = ['Nota 1', 'Nota 2', 'Nota 3', 'Nota 4', 'Nota 5', 'Nota 6', 'Nota 7', 'Nota 8', 'Silenci'];
+      const rowValues = [0, 1, 2, 3, 4, 5, 6, 7, -1];
+      
+      for (let r = 0; r < rows.length; r++) {
+        const label = document.createElement('div');
+        label.className = 'arp-matrix-row-label';
+        label.textContent = rows[r];
+        grid.appendChild(label);
+        
+        for (let c = 0; c < steps; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'arp-matrix-cell';
+          cell.dataset.step = c;
+          cell.dataset.val = rowValues[r];
+          
+          // If this step in the sequence matches this row value
+          const stepVal = sequence[c] !== undefined ? sequence[c] : -1;
+          if (stepVal === rowValues[r]) {
+            cell.classList.add('active');
+          }
+          
+          cell.addEventListener('click', () => {
+            // Remove active from all cells in this column
+            grid.querySelectorAll(`.arp-matrix-cell[data-step="${c}"]`).forEach(el => el.classList.remove('active'));
+            cell.classList.add('active');
+          });
+          
+          grid.appendChild(cell);
+        }
+      }
+    }
+
+    function _renderArpList() {
+      const list = document.getElementById('custom-arp-items');
+      if (!list) return;
+      if (!_customArps.length) {
+        list.innerHTML = '<div class="empty" style="padding:10px;">Cap patró creat encara.</div>';
+      } else {
+        list.innerHTML = '';
+        _customArps.forEach((p, i) => {
+          const item = document.createElement('div');
+          item.className = `crud-item ${i === _selectedArpIdx ? 'active' : ''}`;
+          item.innerHTML = `<span class="crud-item-name">${p.name}</span><span class="crud-item-meta">${p.sequence.length} passos</span>`;
+          item.addEventListener('click', () => { _selectedArpIdx = i; _renderArpList(); });
+          list.appendChild(item);
+        });
+      }
+      const has = _selectedArpIdx >= 0 && _selectedArpIdx < _customArps.length;
+      document.getElementById('btn-edit-arp')?.toggleAttribute('disabled', !has);
+      document.getElementById('btn-del-arp')?.toggleAttribute('disabled', !has);
+      _rebuildArpCheckboxes();
+    }
+
+    function _rebuildArpCheckboxes() {
+      const arpCont = document.getElementById('arp-list');
+      if (!arpCont) return;
+      const mc = _loadModesConfig();
+      const enabledArp = new Set(mc.arpeggiator_modes ?? ARP_PATTERNS.map(([id]) => id));
+      
+      let html = ARP_PATTERNS.map(([id, name]) =>
+          `<label class="cb"><input type="checkbox" class="arp-chk" value="${id}" ${enabledArp.has(id) ? 'checked' : ''}>
+       <span>${name}</span></label>`).join('');
+       
+      _customArps.forEach((p, i) => {
+        const id = 2000 + i;
+        html += `<label class="cb"><input type="checkbox" class="arp-chk custom-arp-chk" value="${id}" ${enabledArp.has(id) ? 'checked' : ''}>
+       <span style="color:var(--accent)">${p.name}</span></label>`;
+      });
+      
+      arpCont.innerHTML = html;
+    }
+
+    function _openArpEditor(arp = null) {
+      _editingArp = arp;
+      const overlay = document.getElementById('arp-editor-overlay');
+      overlay.querySelector('.editor-panel-title').textContent = arp ? `Editar: ${arp.name}` : 'Nou Patró';
+      document.getElementById('arp-edit-name').value = arp?.name || '';
+      
+      const stepsSelect = document.getElementById('arp-edit-steps');
+      let steps = 8;
+      let sequence = [];
+      if (arp) {
+        steps = arp.sequence.length;
+        sequence = arp.sequence;
+        stepsSelect.value = String(steps);
+      } else {
+        stepsSelect.value = "8";
+      }
+      
+      _buildArpMatrix(steps, sequence);
+      overlay.classList.add('open');
+      document.getElementById('arp-edit-name').focus();
+    }
+
+    function _closeArpEditor() {
+      document.getElementById('arp-editor-overlay')?.classList.remove('open');
+      _editingArp = null;
+    }
+
+    function _saveArpEditor() {
+      const name = document.getElementById('arp-edit-name')?.value.trim();
+      if (!name) { alert('El nom no pot estar buit.'); return; }
+      
+      const stepsSelect = document.getElementById('arp-edit-steps');
+      const steps = parseInt(stepsSelect.value, 10);
+      
+      const sequence = [];
+      const grid = document.getElementById('arp-matrix');
+      for (let c = 0; c < steps; c++) {
+        const activeCell = grid.querySelector(`.arp-matrix-cell.active[data-step="${c}"]`);
+        if (activeCell) {
+          sequence.push(parseInt(activeCell.dataset.val, 10));
+        } else {
+          sequence.push(-1); // Default to rest
+        }
+      }
+      
+      if (_editingArp) {
+        const idx = _customArps.findIndex(a => a.id === _editingArp.id);
+        if (idx >= 0) _customArps[idx] = { ..._customArps[idx], name, sequence };
+      } else {
+        _customArps.push({ id: 2000 + _customArps.length, name, sequence });
+        _selectedArpIdx = _customArps.length - 1;
+      }
+      
+      // Update IDs to ensure they are sequential from 2000
+      _customArps.forEach((arp, i) => { arp.id = 2000 + i; });
+      
+      _saveCustomArps();
+      _renderArpList();
+      _closeArpEditor();
+      
+      // Also automatically save the new configuration to the device config
+      document.getElementById('btn-save-arp')?.click();
+    }
+
+    document.getElementById('arp-edit-steps')?.addEventListener('change', (e) => {
+      const steps = parseInt(e.target.value, 10);
+      const grid = document.getElementById('arp-matrix');
+      const currentSequence = [];
+      for (let c = 0; c < steps; c++) {
+        const activeCell = grid?.querySelector(`.arp-matrix-cell.active[data-step="${c}"]`);
+        if (activeCell) currentSequence.push(parseInt(activeCell.dataset.val, 10));
+      }
+      _buildArpMatrix(steps, currentSequence);
+    });
+
+    document.getElementById('btn-new-arp')?.addEventListener('click', () => _openArpEditor(null));
+    document.getElementById('btn-edit-arp')?.addEventListener('click', () => {
+      if (_selectedArpIdx >= 0) _openArpEditor(_customArps[_selectedArpIdx]);
+    });
+    document.getElementById('btn-del-arp')?.addEventListener('click', () => {
+      if (_selectedArpIdx < 0) return;
+      if (!confirm(`Eliminar el patró "${_customArps[_selectedArpIdx].name}"?`)) return;
+      _customArps.splice(_selectedArpIdx, 1);
+      _selectedArpIdx = Math.min(_selectedArpIdx, _customArps.length - 1);
+      
+      // Re-index IDs to prevent gaps
+      _customArps.forEach((arp, i) => { arp.id = 2000 + i; });
+      
+      _saveCustomArps();
+      _renderArpList();
+      document.getElementById('btn-save-arp')?.click();
+    });
+    document.getElementById('btn-arp-editor-save')?.addEventListener('click', _saveArpEditor);
+    document.getElementById('btn-arp-editor-cancel')?.addEventListener('click', _closeArpEditor);
+    document.getElementById('arp-editor-overlay')?.addEventListener('click', e => {
+      if (e.target === document.getElementById('arp-editor-overlay')) _closeArpEditor();
+    });
+
+    _loadCustomArps();
+    _renderArpList();
+
 
     // (firmware handlers → FIRMWARE section below)
 

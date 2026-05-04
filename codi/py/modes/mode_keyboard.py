@@ -578,8 +578,12 @@ class KeyboardMode:
                             if self.arp_mode_index not in self.available_arp_modes:
                                 self.arp_mode_index = self.available_arp_modes[0] if self.available_arp_modes else 2
                             # Noms dels modes d'arpegiador
-                            arp_names = {0: 'Amunt', 1: 'Avall', 2: 'Ping-Pong', 3: 'Aleatori', 4: 'Ordre Premut'}
-                            arp_name = arp_names.get(self.arp_mode_index, f'Mode {self.arp_mode_index}')
+                            if self.arp_mode_index >= 2000:
+                                custom = self.config_manager.get_custom_arp_by_id(self.arp_mode_index) if hasattr(self.config_manager, 'get_custom_arp_by_id') else None
+                                arp_name = custom.get('name', 'Custom') if custom else 'Custom'
+                            else:
+                                arp_names = {0: 'Amunt', 1: 'Avall', 2: 'Ping-Pong', 3: 'Aleatori', 4: 'Ordre Premut'}
+                                arp_name = arp_names.get(self.arp_mode_index, f'Mode {self.arp_mode_index}')
                             print(f"Arpeggiador: {arp_name}")
                         else:
                             # CLICK SIMPLE: Ciclar només entre modes disponibles per aquest banc
@@ -598,8 +602,12 @@ class KeyboardMode:
                                 self.arp_direction = 1
                                 self.arp_button_order = []
                                 # Noms dels modes d'arpegiador
-                                arp_names = {0: 'Amunt', 1: 'Avall', 2: 'Ping-Pong', 3: 'Aleatori', 4: 'Ordre Premut'}
-                                arp_name = arp_names.get(self.arp_mode_index, f'Mode {self.arp_mode_index}')
+                                if self.arp_mode_index >= 2000:
+                                    custom = self.config_manager.get_custom_arp_by_id(self.arp_mode_index) if hasattr(self.config_manager, 'get_custom_arp_by_id') else None
+                                    arp_name = custom.get('name', 'Custom') if custom else 'Custom'
+                                else:
+                                    arp_names = {0: 'Amunt', 1: 'Avall', 2: 'Ping-Pong', 3: 'Aleatori', 4: 'Ordre Premut'}
+                                    arp_name = arp_names.get(self.arp_mode_index, f'Mode {self.arp_mode_index}')
                                 print(f"Arpeggiador: {arp_name}")
         
         # Processar botons de notes 1-8 (índexs 0-7)
@@ -899,7 +907,8 @@ class KeyboardMode:
             return
         
         # Mode 'Ordre': Detectar canvis en botons premuts per actualitzar ordre
-        if ARP_DIRS[self.arp_mode_index] == 'order':
+        arp_direction_check = 'custom' if self.arp_mode_index >= 2000 else ARP_DIRS[self.arp_mode_index]
+        if arp_direction_check == 'order':
             # Afegir nous botons a l'ordre
             for btn in pressed_buttons:
                 if btn not in self.arp_button_order:
@@ -1014,7 +1023,10 @@ class KeyboardMode:
                     all_notes.append(note)
         
         # Processar notes segons el mode d'arpegiador
-        arp_direction = ARP_DIRS[self.arp_mode_index]
+        if self.arp_mode_index >= 2000:
+            arp_direction = 'custom'
+        else:
+            arp_direction = ARP_DIRS[self.arp_mode_index]
         
         if arp_direction == 'order':
             # Mode 'Ordre': Mantenir ordre de pulsació dels botons
@@ -1231,14 +1243,19 @@ class KeyboardMode:
             
         elif direction == 'custom':
             # Custom: llegir patró de config_manager
-            custom_pattern = self.config_manager.get_custom_arp_pattern() if hasattr(self.config_manager, 'get_custom_arp_pattern') else [0]
-            if not custom_pattern: 
-                custom_pattern = [0]
+            custom_pattern = self.config_manager.get_custom_arp_by_id(self.arp_mode_index) if hasattr(self.config_manager, 'get_custom_arp_by_id') else None
+            sequence = custom_pattern.get('sequence', [0]) if custom_pattern else [0]
+            if not sequence: 
+                sequence = [0]
             
-            idx = custom_pattern[self.arp_index % len(custom_pattern)]
-            current_note = self.arp_notes[min(idx, num_notes - 1)]
-            self._note_on(current_note, -1)
-            self.arp_index = (self.arp_index + 1) % len(custom_pattern)
+            idx = sequence[self.arp_index % len(sequence)]
+            if idx == -1 or idx is None:
+                pass # Silenci
+            else:
+                current_note = self.arp_notes[min(idx, num_notes - 1)]
+                self._note_on(current_note, -1)
+            
+            self.arp_index = (self.arp_index + 1) % len(sequence)
         
         else:
             # Fallback: mode up
