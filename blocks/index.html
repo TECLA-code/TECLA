@@ -198,6 +198,42 @@
 
     /* File input hidden */
     #file-open-input { display: none; }
+
+    /* ── Theme tab ───────────────────────────────────────────── */
+    .theme-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px; }
+    .theme-card { border: 1.5px solid var(--border); border-radius: var(--radius); padding: 9px 8px 8px; cursor: pointer; transition: border-color .15s, transform .1s; user-select: none; text-align: center; position: relative; }
+    .theme-card:hover { border-color: var(--border-h); transform: translateY(-1px); }
+    .theme-card.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .theme-swatches { display: flex; gap: 3px; margin-bottom: 8px; height: 12px; }
+    .theme-swatches span { flex: 1; border-radius: 3px; display: block; }
+    .theme-card-name { font-size: 11px; color: var(--text3); }
+    .theme-card.active .theme-card-name { color: var(--text); font-weight: 600; }
+    .custom-theme-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px 8px; }
+    .ct-field { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+    .ct-field input[type=color] { width: 100%; min-width: 36px; height: 36px; border-radius: var(--radius); border: 1.5px solid var(--border); background: var(--surface2); cursor: pointer; padding: 2px 3px; }
+    .ct-field label { font-size: 10.5px; color: var(--text2); white-space: nowrap; }
+    .card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; }
+    .card-title { font-size: 10.5px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 12px; }
+    input[type=text] { width: 100%; padding: 6px 10px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: 12px; font-family: var(--font); }
+    input[type=text]:focus { outline: none; border-color: var(--accent); }
+
+    /* ── Theme body classes ──────────────────────────────────── */
+    body.theme-light { --bg:#f2f2f2; --surface:#ffffff; --surface2:#ebebeb; --surface3:#e0e0e0; --accent:#4a80f0; --accent-d:#2d5cd9; --border:rgba(0,0,0,.1); --border-h:rgba(0,0,0,.2); --text:#111; --text2:rgba(0,0,0,.5); --text3:rgba(0,0,0,.3); }
+    body.theme-neon { --bg:#080808; --surface:#0d0d0d; --surface2:#121212; --surface3:#1a1a1a; --accent:#00ffe0; --accent-d:#00ccb4; --border:rgba(0,255,224,.08); --border-h:rgba(0,255,224,.16); }
+    body.theme-warm { --bg:#100c08; --surface:#1a1410; --surface2:#231c16; --surface3:#2e2520; --accent:#e08030; --accent-d:#b86020; --border:rgba(224,128,48,.09); --border-h:rgba(224,128,48,.18); }
+    body.theme-purple { --bg:#0d0b14; --surface:#14101e; --surface2:#1e1830; --surface3:#28224a; --accent:#a070f0; --accent-d:#8050d0; --border:rgba(160,112,240,.09); --border-h:rgba(160,112,240,.18); }
+    body.theme-ocean { --bg:#07101a; --surface:#0d1824; --surface2:#132030; --surface3:#1a2a3e; --accent:#20c8f8; --accent-d:#10a0cc; --border:rgba(32,200,248,.08); --border-h:rgba(32,200,248,.16); }
+    body.theme-forest { --bg:#07100a; --surface:#0d1a10; --surface2:#152018; --surface3:#1c2a20; --accent:#22c55e; --accent-d:#16a348; --border:rgba(34,197,94,.09); --border-h:rgba(34,197,94,.18); }
+    body.theme-rose { --bg:#120a0e; --surface:#1e1016; --surface2:#281520; --surface3:#34202a; --accent:#f472b6; --accent-d:#d44090; --border:rgba(244,114,182,.09); --border-h:rgba(244,114,182,.18); }
+    body.theme-ice { --bg:#eff5ff; --surface:#ffffff; --surface2:#e4eeff; --surface3:#d4e2ff; --accent:#0ea5e9; --accent-d:#0870b0; --border:rgba(14,165,233,.12); --border-h:rgba(14,165,233,.24); --text:#0a1a2e; --text2:rgba(10,26,46,.5); --text3:rgba(10,26,46,.3); }
+    body.theme-carbon { --bg:#080808; --surface:#111111; --surface2:#181818; --surface3:#222222; --accent:#ef4444; --accent-d:#c02020; --border:rgba(239,68,68,.08); --border-h:rgba(239,68,68,.16); }
+    body.theme-hc { --bg:#000000; --surface:#0d0d0d; --surface2:#1a1a1a; --surface3:#282828; --accent:#ffe000; --accent-d:#ccaa00; --border:rgba(255,224,0,.12); --border-h:rgba(255,224,0,.25); }
+    body.theme-crepuscle { --bg:#100808; --surface:#1a100a; --surface2:#24160c; --surface3:#301e14; --accent:#f97316; --accent-d:#c05010; --border:rgba(249,115,22,.09); --border-h:rgba(249,115,22,.18); }
+    body.theme-cosmic { --bg:#06050f; --surface:#0c0b1c; --surface2:#13112c; --surface3:#1c1840; --accent:#818cf8; --accent-d:#5560d0; --border:rgba(129,140,248,.09); --border-h:rgba(129,140,248,.18); }
+    body.theme-mint { --bg:#f0faf5; --surface:#ffffff; --surface2:#dff2e9; --surface3:#c8e8d8; --accent:#059669; --accent-d:#047050; --border:rgba(5,150,105,.12); --border-h:rgba(5,150,105,.24); --text:#0a2e1e; --text2:rgba(10,46,30,.5); --text3:rgba(10,46,30,.3); }
+    body.theme-slate { --bg:#0a0e14; --surface:#111820; --surface2:#18222e; --surface3:#202c3c; --accent:#94a3b8; --accent-d:#7c8fa6; --border:rgba(148,163,184,.09); --border-h:rgba(148,163,184,.18); }
+    body.theme-acid { --bg:#060900; --surface:#0b1100; --surface2:#131a00; --surface3:#1c2600; --accent:#a3e635; --accent-d:#84cc16; --border:rgba(163,230,53,.09); --border-h:rgba(163,230,53,.18); }
+    body.theme-sand { --bg:#fef7e8; --surface:#fffcf2; --surface2:#fdefc5; --surface3:#fae3a5; --accent:#b45309; --accent-d:#92400e; --border:rgba(180,83,9,.12); --border-h:rgba(180,83,9,.24); --text:#3a1800; --text2:#854d0e; --text3:#c08030; }
   </style>
 </head>
 <body>
@@ -238,6 +274,7 @@
         <button class="tab-btn active" data-tab="code">Codi Python</button>
         <button class="tab-btn" data-tab="simulator">Simulador</button>
         <button class="tab-btn" data-tab="help">Ajuda</button>
+        <button class="tab-btn" data-tab="theme">Aparença</button>
       </div>
       <div class="panel-body">
 
@@ -307,6 +344,55 @@
               <li><strong>GPIO:</strong> Pins, PWM, I2C</li>
               <li><strong>Scratch:</strong> Events, lògica compatible</li>
             </ul>
+          </div>
+        </div>
+
+        <!-- Theme panel -->
+        <div id="panel-theme" class="panel-content">
+          <div class="card">
+            <div class="card-title">Aparença</div>
+            <div class="theme-cards" id="theme-cards">
+              <div class="theme-card active" data-theme="dark"><div class="theme-swatches"><span style="background:#0c0c0c"></span><span style="background:#141414"></span><span style="background:#1c1c1c"></span><span style="background:#4a80f0"></span></div><div class="theme-card-name">Fosc</div></div>
+              <div class="theme-card" data-theme="light"><div class="theme-swatches"><span style="background:#f2f2f2"></span><span style="background:#fff"></span><span style="background:#ebebeb"></span><span style="background:#4a80f0"></span></div><div class="theme-card-name">Clar</div></div>
+              <div class="theme-card" data-theme="neon"><div class="theme-swatches"><span style="background:#080808"></span><span style="background:#0d0d0d"></span><span style="background:#121212"></span><span style="background:#00ffe0"></span></div><div class="theme-card-name">Neó</div></div>
+              <div class="theme-card" data-theme="warm"><div class="theme-swatches"><span style="background:#100c08"></span><span style="background:#1a1410"></span><span style="background:#231c16"></span><span style="background:#e08030"></span></div><div class="theme-card-name">Càlid</div></div>
+              <div class="theme-card" data-theme="purple"><div class="theme-swatches"><span style="background:#0d0b14"></span><span style="background:#14101e"></span><span style="background:#1e1830"></span><span style="background:#a070f0"></span></div><div class="theme-card-name">Lila</div></div>
+              <div class="theme-card" data-theme="ocean"><div class="theme-swatches"><span style="background:#07101a"></span><span style="background:#0d1824"></span><span style="background:#132030"></span><span style="background:#20c8f8"></span></div><div class="theme-card-name">Oceà</div></div>
+              <div class="theme-card" data-theme="forest"><div class="theme-swatches"><span style="background:#07100a"></span><span style="background:#0d1a10"></span><span style="background:#152018"></span><span style="background:#22c55e"></span></div><div class="theme-card-name">Bosc</div></div>
+              <div class="theme-card" data-theme="rose"><div class="theme-swatches"><span style="background:#120a0e"></span><span style="background:#1e1016"></span><span style="background:#281520"></span><span style="background:#f472b6"></span></div><div class="theme-card-name">Rosa</div></div>
+              <div class="theme-card" data-theme="ice"><div class="theme-swatches"><span style="background:#eff5ff"></span><span style="background:#fff"></span><span style="background:#e4eeff"></span><span style="background:#0ea5e9"></span></div><div class="theme-card-name">Gel</div></div>
+              <div class="theme-card" data-theme="carbon"><div class="theme-swatches"><span style="background:#080808"></span><span style="background:#111"></span><span style="background:#181818"></span><span style="background:#ef4444"></span></div><div class="theme-card-name">Carbó</div></div>
+              <div class="theme-card" data-theme="hc"><div class="theme-swatches"><span style="background:#000"></span><span style="background:#0d0d0d"></span><span style="background:#1a1a1a"></span><span style="background:#ffe000"></span></div><div class="theme-card-name">Alt Contrast</div></div>
+              <div class="theme-card" data-theme="crepuscle"><div class="theme-swatches"><span style="background:#100808"></span><span style="background:#1a100a"></span><span style="background:#24160c"></span><span style="background:#f97316"></span></div><div class="theme-card-name">Crepuscle</div></div>
+              <div class="theme-card" data-theme="cosmic"><div class="theme-swatches"><span style="background:#06050f"></span><span style="background:#0c0b1c"></span><span style="background:#13112c"></span><span style="background:#818cf8"></span></div><div class="theme-card-name">Còsmic</div></div>
+              <div class="theme-card" data-theme="mint"><div class="theme-swatches"><span style="background:#f0faf5"></span><span style="background:#fff"></span><span style="background:#dff2e9"></span><span style="background:#059669"></span></div><div class="theme-card-name">Menta</div></div>
+              <div class="theme-card" data-theme="slate"><div class="theme-swatches"><span style="background:#0a0e14"></span><span style="background:#111820"></span><span style="background:#18222e"></span><span style="background:#94a3b8"></span></div><div class="theme-card-name">Pissarra</div></div>
+              <div class="theme-card" data-theme="acid"><div class="theme-swatches"><span style="background:#060900"></span><span style="background:#0b1100"></span><span style="background:#131a00"></span><span style="background:#a3e635"></span></div><div class="theme-card-name">Àcid</div></div>
+              <div class="theme-card" data-theme="sand"><div class="theme-swatches"><span style="background:#fef7e8"></span><span style="background:#fffcf2"></span><span style="background:#fdefc5"></span><span style="background:#b45309"></span></div><div class="theme-card-name">Sorra</div></div>
+            </div>
+            <div style="border-top:1px solid var(--border);margin:20px 0 16px;position:relative">
+              <span style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--surface2);padding:0 12px;font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase">Editor de temes</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <div id="ct-mode-indicator" style="font-size:11px;color:var(--text3);font-weight:500"></div>
+              <button class="btn" id="btn-new-theme" style="font-size:11px">+ Nou tema</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+              <label style="font-size:12px;color:var(--text2);white-space:nowrap;min-width:36px">Nom:</label>
+              <input type="text" id="ct-name" placeholder="Ex: El meu tema">
+              <button class="btn" id="btn-random-theme">&#127922; Aleatori</button>
+            </div>
+            <div class="custom-theme-grid">
+              <div class="ct-field"><input type="color" id="ct-bg" value="#0c0c0c"><label>Fons</label></div>
+              <div class="ct-field"><input type="color" id="ct-surface" value="#141414"><label>Superfície</label></div>
+              <div class="ct-field"><input type="color" id="ct-surface2" value="#1c1c1c"><label>Superf. 2</label></div>
+              <div class="ct-field"><input type="color" id="ct-text" value="#e0e0e0"><label>Text</label></div>
+              <div class="ct-field"><input type="color" id="ct-accent" value="#4a80f0"><label>Accent</label></div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+              <button class="btn btn-primary" id="btn-save-custom-theme">Desa i aplica</button>
+              <button class="btn" id="btn-reset-custom-theme">Restablir</button>
+            </div>
           </div>
         </div>
 

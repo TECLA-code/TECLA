@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupTabs();
   setupButtons();
   setupFileOpen();
+  initThemeSystem();
   updateStatusBar();
 });
 
@@ -408,6 +409,117 @@ function setStatus(msg, type = '') {
   const el = document.getElementById('status-message');
   el.textContent = msg;
   el.className = type || '';
+}
+
+// ── Theme system (identical to MacroPad, key: tecla-blk-*) ───
+const _THEMES = ['light','neon','warm','purple','ocean','forest','rose','ice','carbon','hc','crepuscle','cosmic','mint','slate','acid','sand'];
+const _CUSTOM_KEY = 'tecla-blk-custom-themes';
+const _CDEF = { bg:'#0c0c0c', surface:'#141414', surface2:'#1c1c1c', text:'#e0e0e0', accent:'#4a80f0' };
+let _activeCustomId = null;
+
+function _darken(hex, f) {
+  if (!hex || hex.length < 7) return hex;
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  const d = v => Math.round(Math.max(0,Math.min(255,v*f))).toString(16).padStart(2,'0');
+  return '#'+d(r)+d(g)+d(b);
+}
+function _clearVars() {
+  ['bg','surface','surface2','surface3','text','text2','text3','accent','accent-d'].forEach(v => document.documentElement.style.removeProperty('--'+v));
+}
+function _applyVars(v, up=true) {
+  const R = document.documentElement;
+  R.style.setProperty('--bg', v.bg); R.style.setProperty('--surface', v.surface);
+  R.style.setProperty('--surface2', v.surface2); R.style.setProperty('--surface3', _darken(v.surface2,1.15));
+  R.style.setProperty('--text', v.text); R.style.setProperty('--text2', _darken(v.text,0.53));
+  R.style.setProperty('--text3', _darken(v.text,0.27));
+  R.style.setProperty('--accent', v.accent); R.style.setProperty('--accent-d', _darken(v.accent,0.82));
+  if (up) for (const k of ['bg','surface','surface2','text','accent']) { const el=document.getElementById('ct-'+k); if(el) el.value=v[k]||''; }
+}
+function _readPickers() { return Object.fromEntries(['bg','surface','surface2','text','accent'].map(k => [k, document.getElementById('ct-'+k)?.value || _CDEF[k]])); }
+function _loadCT() { try { return JSON.parse(localStorage.getItem(_CUSTOM_KEY)||'[]'); } catch { return []; } }
+function _saveCT(l) { localStorage.setItem(_CUSTOM_KEY, JSON.stringify(l)); }
+function _updateModeIndicator() {
+  const ind = document.getElementById('ct-mode-indicator'); if (!ind) return;
+  if (_activeCustomId) { const t=_loadCT().find(x=>x.id===_activeCustomId); ind.textContent=t?`Editant: ${t.name}`:'Mode: Nou tema'; ind.style.color='var(--accent)'; }
+  else { ind.textContent='Mode: Nou tema'; ind.style.color='var(--text3)'; }
+}
+function _renderSavedThemes() {
+  const container = document.getElementById('theme-cards'); if (!container) return;
+  container.querySelectorAll('[data-custom-id]').forEach(el => el.remove());
+  _loadCT().forEach(t => {
+    const card = document.createElement('div');
+    card.className = 'theme-card' + (_activeCustomId===t.id?' active':'');
+    card.dataset.customId = t.id;
+    card.innerHTML = `<div class="theme-swatches"><span style="background:${t.vars.bg}"></span><span style="background:${t.vars.surface}"></span><span style="background:${t.vars.surface2}"></span><span style="background:${t.vars.accent}"></span></div><div class="theme-card-name">${t.name}</div><span data-del="${t.id}" title="Eliminar" style="position:absolute;top:2px;right:3px;font-size:13px;opacity:0;cursor:pointer;transition:opacity .12s">×</span>`;
+    card.addEventListener('mouseenter', () => { card.querySelector('[data-del]').style.opacity='0.7'; });
+    card.addEventListener('mouseleave', () => { card.querySelector('[data-del]').style.opacity='0'; });
+    card.addEventListener('click', e => {
+      if (e.target.dataset.del) {
+        const updated = _loadCT().filter(x => x.id !== e.target.dataset.del);
+        _saveCT(updated);
+        if (_activeCustomId === e.target.dataset.del) { _activeCustomId=null; applyTheme('dark'); }
+        _renderSavedThemes(); _updateModeIndicator(); return;
+      }
+      _activeCustomId = t.id; localStorage.setItem('tecla-blk-custom-active', t.id);
+      applyTheme('custom'); _applyVars(t.vars);
+      document.getElementById('ct-name').value = t.name;
+      _renderSavedThemes(); _updateModeIndicator();
+    });
+    container.appendChild(card);
+  });
+}
+function applyTheme(name, save=true) {
+  _THEMES.forEach(t => document.body.classList.remove('theme-'+t));
+  _clearVars();
+  if (name === 'custom') {
+    const themes = _loadCT(); const t = _activeCustomId ? themes.find(x=>x.id===_activeCustomId) : themes[themes.length-1];
+    if (t) _applyVars(t.vars); else _applyVars(_CDEF);
+  } else if (name !== 'dark') {
+    document.body.classList.add('theme-'+name);
+  }
+  if (save) localStorage.setItem('tecla-blk-theme', name);
+  document.querySelectorAll('.theme-card:not([data-custom-id])').forEach(b => b.classList.toggle('active', b.dataset.theme===name && name!=='custom'));
+  if (name !== 'custom') { _activeCustomId=null; _renderSavedThemes(); }
+  _updateModeIndicator();
+}
+function initThemeSystem() {
+  document.querySelectorAll('.theme-card').forEach(btn => {
+    if (!btn.dataset.customId) btn.addEventListener('click', () => applyTheme(btn.dataset.theme));
+  });
+  ['bg','surface','surface2','text','accent'].forEach(f => {
+    document.getElementById('ct-'+f)?.addEventListener('input', () => { _applyVars(_readPickers(),false); _THEMES.forEach(t => document.body.classList.remove('theme-'+t)); });
+  });
+  document.getElementById('btn-random-theme')?.addEventListener('click', () => {
+    const rand = () => '#'+Math.floor(Math.random()*0xFFFFFF).toString(16).padStart(6,'0');
+    const v = { bg:rand(), surface:rand(), surface2:rand(), text:rand(), accent:rand() };
+    for (const k of ['bg','surface','surface2','text','accent']) { const el=document.getElementById('ct-'+k); if(el) el.value=v[k]; }
+    _applyVars(v,false); _THEMES.forEach(t => document.body.classList.remove('theme-'+t));
+  });
+  document.getElementById('btn-save-custom-theme')?.addEventListener('click', () => {
+    const vars=_readPickers(); const rawName=document.getElementById('ct-name')?.value?.trim()||''; const themes=_loadCT();
+    if (_activeCustomId) {
+      const idx=themes.findIndex(x=>x.id===_activeCustomId);
+      if (idx>=0) { themes[idx].vars=vars; if(rawName) themes[idx].name=rawName; _saveCT(themes); applyTheme('custom'); _renderSavedThemes(); _updateModeIndicator(); return; }
+    }
+    const name=rawName||`Tema ${themes.length+1}`; const id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+    themes.push({id,name,vars}); _saveCT(themes); _activeCustomId=id; localStorage.setItem('tecla-blk-custom-active',id);
+    applyTheme('custom'); _renderSavedThemes(); _updateModeIndicator();
+  });
+  document.getElementById('btn-reset-custom-theme')?.addEventListener('click', () => {
+    _applyVars(_CDEF); document.getElementById('ct-name').value=''; _activeCustomId=null; localStorage.removeItem('tecla-blk-custom-active');
+    for (const k of ['bg','surface','surface2','text','accent']) { const el=document.getElementById('ct-'+k); if(el) el.value=_CDEF[k]||''; }
+    _updateModeIndicator();
+  });
+  document.getElementById('btn-new-theme')?.addEventListener('click', () => {
+    _activeCustomId=null; localStorage.removeItem('tecla-blk-custom-active');
+    _applyVars(_CDEF); document.getElementById('ct-name').value='';
+    for (const k of ['bg','surface','surface2','text','accent']) { const el=document.getElementById('ct-'+k); if(el) el.value=_CDEF[k]||''; }
+    _renderSavedThemes(); _updateModeIndicator();
+  });
+  const _st=localStorage.getItem('tecla-blk-theme')||'dark';
+  const _sci=localStorage.getItem('tecla-blk-custom-active');
+  if (_sci) _activeCustomId=_sci;
+  applyTheme(_st,false); _renderSavedThemes(); _updateModeIndicator();
 }
 
 // ── Python code generator (depends on generators/*.js) ────────
