@@ -18,6 +18,7 @@
       --logo-icon-bg: #fff;
       --accent: #4a80f0;
       --midi-accent: #a855f7;
+      --blocks-accent: #10b981;
       --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
     }
     [data-theme="light"] {
@@ -89,7 +90,7 @@
 
     .cards {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       gap: 16px;
       width: 100%;
     }
@@ -116,6 +117,7 @@
     }
     .card.macropad:hover { border-color: rgba(74,128,240,.28); }
     .card.midi:hover     { border-color: rgba(168,85,247,.28); }
+    .card.blocks:hover   { border-color: rgba(16,185,129,.28); }
 
     .card-top {
       display: flex;
@@ -133,6 +135,7 @@
     }
     .card.macropad .card-sub { color: var(--accent); }
     .card.midi     .card-sub { color: var(--midi-accent); }
+    .card.blocks   .card-sub { color: var(--blocks-accent); }
 
     .card-name {
       font-size: 18px;
@@ -156,6 +159,7 @@
     }
     .card.macropad:hover .card-arrow { color: var(--accent); }
     .card.midi:hover     .card-arrow { color: var(--midi-accent); }
+    .card.blocks:hover   .card-arrow { color: var(--blocks-accent); }
 
     /* Top bar */
     .top-bar {
@@ -238,6 +242,16 @@
         <div class="card-top">
           <div class="card-sub" id="sub-macropad">Utilitats</div>
           <div class="card-name">MacroPad</div>
+        </div>
+        <svg class="card-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 8h10M9 4l4 4-4 4"/>
+        </svg>
+      </a>
+
+      <a class="card blocks" href="blocks/index.html">
+        <div class="card-top">
+          <div class="card-sub">Programació</div>
+          <div class="card-name">Blocks</div>
         </div>
         <svg class="card-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 8h10M9 4l4 4-4 4"/>

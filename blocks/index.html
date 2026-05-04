@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TECLA Blocks</title>
+  <script src="https://unpkg.com/blockly@10.4.3/blockly_compressed.js"></script>
+  <script src="https://unpkg.com/blockly@10.4.3/blocks_compressed.js"></script>
+  <script src="https://unpkg.com/blockly@10.4.3/python_compressed.js"></script>
+  <script src="https://unpkg.com/blockly@10.4.3/msg/ca.js"></script>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111;
+      --surface2: #1a1a1a;
+      --surface3: #222;
+      --border: rgba(255,255,255,.09);
+      --border-h: rgba(255,255,255,.17);
+      --text: #e0e0e0;
+      --text2: rgba(255,255,255,.38);
+      --text3: rgba(255,255,255,.22);
+      --accent: #4a80f0;
+      --accent-d: #2d5cd9;
+      --green: #3dc96c;
+      --radius: 6px;
+      --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+      --mono: "SF Mono", Menlo, Monaco, Consolas, monospace;
+      --sidebar: 420px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 14px; height: 44px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface); flex-shrink: 0;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11px; color: var(--text2); text-decoration: none;
+      padding: 4px 8px; border-radius: var(--radius);
+      border: 1px solid var(--border); background: var(--surface2);
+      transition: color .15s, border-color .15s;
+    }
+    .back-btn:hover { color: var(--text); border-color: var(--border-h); }
+    .logo { font-size: 13px; font-weight: 600; letter-spacing: .2em; user-select: none; }
+    .logo-sub { font-size: 10px; color: var(--text3); letter-spacing: .06em; }
+    .header-right { display: flex; align-items: center; gap: 6px; }
+
+    /* ── Buttons ─────────────────────────────────────────────── */
+    .btn {
+      padding: 5px 10px; border-radius: var(--radius);
+      border: 1px solid var(--border); background: var(--surface2);
+      color: var(--text); font-size: 11.5px; cursor: pointer;
+      transition: all .15s; display: inline-flex; align-items: center; gap: 5px;
+      font-family: var(--font);
+    }
+    .btn:hover { background: var(--surface3); border-color: var(--border-h); }
+    .btn:active { opacity: .8; }
+    .btn-primary { background: rgba(74,128,240,.15); border-color: var(--accent); color: var(--accent); }
+    .btn-primary:hover { background: rgba(74,128,240,.25); }
+    .btn-success { background: rgba(61,201,108,.13); border-color: rgba(61,201,108,.5); color: var(--green); }
+    .btn-success:hover { background: rgba(61,201,108,.22); }
+    .btn-danger { background: rgba(240,82,82,.1); border-color: rgba(240,82,82,.4); color: #f05252; }
+    .sep { width: 1px; height: 16px; background: var(--border); margin: 0 2px; }
+
+    /* ── Device badge ────────────────────────────────────────── */
+    .device-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 3px 10px; border-radius: 20px;
+      border: 1px solid var(--border); background: var(--surface2);
+      font-size: 11px; color: var(--text2);
+    }
+    .device-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); flex-shrink: 0; }
+    .device-badge.connected .dot { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .device-badge.connected { color: var(--text); border-color: var(--border-h); }
+
+    /* ── Layout ──────────────────────────────────────────────── */
+    .main { display: flex; flex: 1; min-height: 0; }
+    .workspace-container { flex: 1; position: relative; }
+    #blocklyDiv { width: 100%; height: 100%; }
+
+    /* ── Side panel ──────────────────────────────────────────── */
+    .side-panel {
+      width: var(--sidebar); background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex; flex-direction: column; flex-shrink: 0;
+    }
+    .panel-tabs {
+      display: flex; border-bottom: 1px solid var(--border);
+      background: var(--surface); flex-shrink: 0;
+    }
+    .tab-btn {
+      flex: 1; padding: 10px 8px;
+      background: transparent; border: none; border-bottom: 2px solid transparent;
+      color: var(--text2); cursor: pointer; font-size: 11.5px;
+      font-family: var(--font); font-weight: 500;
+      transition: color .15s, border-color .15s; margin-bottom: -1px;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
+    .panel-body { flex: 1; overflow: hidden; position: relative; }
+    .panel-content { display: none; flex-direction: column; height: 100%; overflow-y: auto; padding: 16px; }
+    .panel-content.active { display: flex; }
+
+    /* ── Code panel ──────────────────────────────────────────── */
+    .code-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-shrink: 0; }
+    .code-header h3 { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; }
+    .code-display {
+      flex: 1; background: #000; border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px;
+      font-family: var(--mono); font-size: 11.5px; color: #a5b4fc;
+      overflow: auto; line-height: 1.5; min-height: 200px;
+      white-space: pre;
+    }
+
+    /* ── Simulator panel ─────────────────────────────────────── */
+    .sim-section { margin-bottom: 14px; }
+    .sim-label { font-size: 10.5px; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; display: block; }
+    .sim-canvas-wrap {
+      background: #000; border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+      display: flex; justify-content: center; align-items: center;
+    }
+    #simulatorCanvas { display: block; }
+    .sim-controls { display: flex; gap: 6px; flex-wrap: wrap; }
+    .sim-terminal {
+      background: #000; border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 12px;
+      font-family: var(--mono); font-size: 11px; color: var(--text2);
+      height: 150px; overflow-y: auto;
+    }
+    .sim-line { margin-bottom: 3px; line-height: 1.4; }
+    .sim-line.note { color: #f472b6; }
+    .sim-line.cc { color: #60a5fa; }
+    .sim-line.sys { color: var(--green); }
+
+    /* ── Help panel ──────────────────────────────────────────── */
+    .help-section {
+      background: var(--surface2); padding: 12px 14px;
+      border-radius: var(--radius); border-left: 2px solid var(--accent);
+      margin-bottom: 12px;
+    }
+    .help-section h4 { font-size: 11.5px; font-weight: 600; color: var(--accent); margin-bottom: 8px; }
+    .help-section ul, .help-section ol { margin-left: 16px; color: var(--text2); font-size: 12px; line-height: 1.75; }
+    .help-section .ex-btns { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; }
+    .card-title { font-size: 10.5px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+
+    /* ── Status bar ──────────────────────────────────────────── */
+    footer {
+      height: 32px; background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px; font-size: 11px; color: var(--text3); flex-shrink: 0;
+    }
+    .status-left { display: flex; gap: 20px; align-items: center; }
+    #status-message { color: var(--text2); }
+    #status-message.ok { color: var(--green); }
+    #status-message.err { color: #f05252; }
+
+    /* ── Upload modal ────────────────────────────────────────── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.6); backdrop-filter: blur(4px);
+      z-index: 200; justify-content: center; align-items: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border-h);
+      border-radius: 12px; padding: 24px; width: 420px; max-width: 90vw;
+    }
+    .modal h2 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+    .modal p { font-size: 12.5px; color: var(--text2); line-height: 1.65; margin-bottom: 16px; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+    /* ── Blockly override ────────────────────────────────────── */
+    .blocklySvg { background-color: #0e0e0e !important; }
+    .blocklyToolboxDiv { background-color: #111 !important; border-right: 1px solid var(--border) !important; }
+    .blocklyTreeLabel { color: #ccc !important; font-family: var(--font) !important; font-size: 12px !important; }
+    .blocklyFlyoutBackground { fill: #141414 !important; }
+    .blocklyScrollbarHandle { fill: #333 !important; }
+
+    /* ── Toast ───────────────────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 48px; left: 50%; transform: translateX(-50%);
+      background: var(--surface2); border: 1px solid var(--border-h);
+      color: var(--text); padding: 8px 18px; border-radius: 20px;
+      font-size: 12px; z-index: 300; opacity: 0;
+      transition: opacity .2s; pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+    .toast.ok { border-color: rgba(61,201,108,.5); color: var(--green); }
+    .toast.err { border-color: rgba(240,82,82,.4); color: #f05252; }
+
+    /* File input hidden */
+    #file-open-input { display: none; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-left">
+      <a href="../index.html" class="back-btn">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H3M7 4l-4 4 4 4"/></svg>
+        Inici
+      </a>
+      <div>
+        <div class="logo">T E C L A</div>
+        <div class="logo-sub">BLOCKS</div>
+      </div>
+      <div class="device-badge" id="device-badge">
+        <span class="dot"></span><span id="device-name">desconnectat</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="btn" id="btn-new" title="Nou projecte">Nou</button>
+      <button class="btn" id="btn-open" title="Obrir projecte">Obrir</button>
+      <button class="btn btn-primary" id="btn-save" title="Guardar projecte">Guardar</button>
+      <button class="btn" id="btn-export" title="Exportar codi Python">Exportar .py</button>
+      <div class="sep"></div>
+      <button class="btn btn-success" id="btn-upload" title="Pujar al dispositiu TECLA">Pujar a TECLA</button>
+    </div>
+  </header>
+
+  <div class="main">
+    <!-- Blockly workspace -->
+    <div class="workspace-container">
+      <div id="blocklyDiv"></div>
+    </div>
+
+    <!-- Side panel -->
+    <div class="side-panel">
+      <div class="panel-tabs">
+        <button class="tab-btn active" data-tab="code">Codi Python</button>
+        <button class="tab-btn" data-tab="simulator">Simulador</button>
+        <button class="tab-btn" data-tab="help">Ajuda</button>
+      </div>
+      <div class="panel-body">
+
+        <!-- Code panel -->
+        <div id="panel-code" class="panel-content active">
+          <div class="code-header">
+            <h3>Codi Python generat</h3>
+            <button class="btn" id="btn-copy-code" title="Copiar codi">Copiar</button>
+          </div>
+          <pre id="generatedCode" class="code-display"># El teu codi apareixerà aquí...</pre>
+        </div>
+
+        <!-- Simulator panel -->
+        <div id="panel-simulator" class="panel-content">
+          <span class="sim-label">Visualitzador</span>
+          <div class="sim-section">
+            <div class="sim-canvas-wrap">
+              <canvas id="simulatorCanvas" width="388" height="200"></canvas>
+            </div>
+          </div>
+          <div class="sim-section">
+            <div class="sim-controls">
+              <button class="btn btn-primary" id="btn-simulate">Executar</button>
+              <button class="btn" id="btn-stop-sim" disabled>Aturar</button>
+            </div>
+          </div>
+          <span class="sim-label">Sortida</span>
+          <div id="simulatorOutput" class="sim-terminal"></div>
+        </div>
+
+        <!-- Help panel -->
+        <div id="panel-help" class="panel-content">
+          <div class="help-section">
+            <h4>Com començar</h4>
+            <ol>
+              <li>Arrossega blocs de la caixa d'eines</li>
+              <li>Connecta'ls per crear el teu programa</li>
+              <li>Veu el codi generat a la pestanya Python</li>
+              <li>Puja'l al dispositiu TECLA</li>
+            </ol>
+          </div>
+          <div class="help-section">
+            <h4>Pujar al dispositiu</h4>
+            <ol>
+              <li>Connecta el TECLA per USB-C</li>
+              <li>Prem <strong>Pujar a TECLA</strong></li>
+              <li>Selecciona el volum <strong>CIRCUITPY</strong></li>
+              <li>El codi s'hi copia automàticament</li>
+            </ol>
+          </div>
+          <div class="help-section">
+            <h4>Exemples</h4>
+            <div class="ex-btns">
+              <button class="btn" id="btn-ex-melody">Melodia simple</button>
+              <button class="btn" id="btn-ex-sequencer">Seqüenciador</button>
+              <button class="btn" id="btn-ex-buttons">Control botons</button>
+              <button class="btn" id="btn-ex-complex">Sintetitzador</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Blocs disponibles</div>
+            <ul style="color:var(--text2);font-size:12px;line-height:1.8;margin-left:14px">
+              <li><strong>Música:</strong> Notes, acords, escales</li>
+              <li><strong>Control:</strong> Botons i potenciòmetres</li>
+              <li><strong>Efectes:</strong> Delay, reverb, filtres</li>
+              <li><strong>Temps:</strong> Esperar, repetir, bucles</li>
+              <li><strong>GPIO:</strong> Pins, PWM, I2C</li>
+              <li><strong>Scratch:</strong> Events, lògica compatible</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="status-left">
+      <span id="status-blocks">Blocs: 0</span>
+    </div>
+    <span id="status-message">Llest per programar</span>
+  </footer>
+
+  <!-- Upload modal -->
+  <div class="modal-overlay" id="upload-modal">
+    <div class="modal">
+      <h2>Pujar a TECLA</h2>
+      <p>Selecciona el volum <strong>CIRCUITPY</strong> del teu dispositiu TECLA. El fitxer <strong>code.py</strong> es copiarà automàticament i el dispositiu s'executarà de nou.</p>
+      <p style="font-size:11.5px;color:var(--text3)">Nota: Requereix Chrome o Edge (File System Access API).</p>
+      <div class="modal-actions">
+        <button class="btn" id="btn-upload-cancel">Cancel·lar</button>
+        <button class="btn btn-success" id="btn-upload-confirm">Seleccionar CIRCUITPY</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Hidden file input for open -->
+  <input type="file" id="file-open-input" accept=".tblocks,.py,.json">
+
+  <!-- Toolbox XML -->
+  <xml id="toolbox" style="display:none">
+    <category name="Música Bàsica" colour="#E91E63">
+      <block type="tecla_play_note">
+        <value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value>
+        <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+        <value name="DURATION"><shadow type="math_number"><field name="NUM">1.0</field></shadow></value>
+      </block>
+      <block type="tecla_play_chord"></block>
+      <block type="tecla_play_scale"></block>
+      <block type="tecla_set_octave"></block>
+    </category>
+    <category name="Síntesi Avançada" colour="#673AB7">
+      <block type="tecla_oscillator">
+        <value name="FREQUENCY"><shadow type="math_number"><field name="NUM">440</field></shadow></value>
+        <value name="AMPLITUDE"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+      </block>
+      <block type="tecla_lfo">
+        <value name="RATE"><shadow type="math_number"><field name="NUM">2</field></shadow></value>
+        <value name="DEPTH"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
+      </block>
+      <block type="tecla_envelope">
+        <value name="ATTACK"><shadow type="math_number"><field name="NUM">10</field></shadow></value>
+        <value name="DECAY"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
+        <value name="SUSTAIN"><shadow type="math_number"><field name="NUM">70</field></shadow></value>
+        <value name="RELEASE"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+      </block>
+      <block type="tecla_modulation">
+        <value name="CARRIER"><shadow type="math_number"><field name="NUM">440</field></shadow></value>
+        <value name="MODULATOR"><shadow type="math_number"><field name="NUM">220</field></shadow></value>
+        <value name="DEPTH"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
+      </block>
+      <block type="tecla_waveshaper">
+        <value name="AMOUNT"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
+      </block>
+    </category>
+    <category name="Control Hardware" colour="#2196F3">
+      <block type="tecla_read_button"></block>
+      <block type="tecla_read_pot"></block>
+      <block type="tecla_on_button_press"></block>
+    </category>
+    <category name="Efectes Àudio" colour="#9C27B0">
+      <block type="tecla_effect_delay"></block>
+      <block type="tecla_effect_reverb"></block>
+      <block type="tecla_effect_filter"></block>
+    </category>
+    <category name="GPIO (Pins)" colour="#00BCD4">
+      <block type="tecla_digital_write"></block>
+      <block type="tecla_digital_read"></block>
+      <block type="tecla_analog_write"><value name="VALUE"><shadow type="math_number"><field name="NUM">32768</field></shadow></value></block>
+      <block type="tecla_analog_read"></block>
+    </category>
+    <category name="Temps i Bucles" colour="#FF9800">
+      <block type="tecla_wait"><value name="TIME"><shadow type="math_number"><field name="NUM">1.0</field></shadow></value></block>
+      <block type="tecla_repeat_forever"></block>
+      <block type="controls_repeat_ext"><value name="TIMES"><shadow type="math_number"><field name="NUM">10</field></shadow></value></block>
+      <block type="controls_whileUntil"></block>
+    </category>
+    <category name="Generatiu" colour="#E91E63">
+      <block type="tecla_probability"><value name="PERCENT"><shadow type="math_number"><field name="NUM">50</field></shadow></value></block>
+      <block type="tecla_software_lfo">
+        <value name="RATE"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+        <value name="MIN"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="MAX"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+      </block>
+      <block type="tecla_scale_quantize"><value name="VALUE"><shadow type="math_number"><field name="NUM">60</field></shadow></value></block>
+    </category>
+    <category name="Lògica" colour="#4CAF50">
+      <block type="controls_if"></block>
+      <block type="controls_ifelse"></block>
+      <block type="logic_compare"></block>
+      <block type="logic_operation"></block>
+      <block type="logic_negate"></block>
+      <block type="logic_boolean"></block>
+    </category>
+    <category name="Matemàtiques" colour="#4CAF50">
+      <block type="math_number"></block>
+      <block type="math_arithmetic">
+        <value name="A"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+        <value name="B"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+      </block>
+      <block type="tecla_math_random_int">
+        <value name="FROM"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="TO"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+      </block>
+      <block type="tecla_math_map">
+        <value name="VALUE"><shadow type="math_number"><field name="NUM">512</field></shadow></value>
+        <value name="FROM_MIN"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="FROM_MAX"><shadow type="math_number"><field name="NUM">1023</field></shadow></value>
+        <value name="TO_MIN"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="TO_MAX"><shadow type="math_number"><field name="NUM">127</field></shadow></value>
+      </block>
+    </category>
+    <category name="Variables" colour="#FF6F00" custom="VARIABLE"></category>
+    <category name="Funcions" colour="#8BC34A">
+      <block type="tecla_function_define"></block>
+      <block type="tecla_function_call"></block>
+    </category>
+    <sep></sep>
+    <category name="Events Scratch" colour="#FFBF00">
+      <block type="scratch_when_flag_clicked"></block>
+      <block type="scratch_when_key_pressed"></block>
+      <block type="scratch_broadcast"><field name="MESSAGE">missatge1</field></block>
+      <block type="scratch_when_receive"><field name="MESSAGE">missatge1</field></block>
+    </category>
+    <category name="Control Scratch" colour="#FFAB19">
+      <block type="scratch_stop"></block>
+    </category>
+  </xml>
+
+  <!-- Block definitions & generators -->
+  <script src="blocks/tecla_blocks.js"></script>
+  <script src="blocks/scratch_compatible.js"></script>
+  <script src="generators/tecla_python.js"></script>
+  <script src="generators/tecla_python_extended.js"></script>
+  <script src="generators/scratch_python.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
