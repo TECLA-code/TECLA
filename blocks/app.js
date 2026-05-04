@@ -46,12 +46,33 @@ function initBlockly() {
     componentStyles: {
       workspaceBackgroundColour: '#0e0e0e',
       toolboxBackgroundColour: '#111',
-      toolboxForegroundColour: '#ccc',
+      toolboxForegroundColour: '#d0d0d0',
       flyoutBackgroundColour: '#141414',
-      flyoutForegroundColour: '#ccc',
+      flyoutForegroundColour: '#d0d0d0',
       flyoutOpacity: 0.97,
       scrollbarColour: '#333',
       scrollbarOpacity: 0.6
+    },
+    blockStyles: {
+      logic_blocks:  { colourPrimary: '#00e676', colourSecondary: '#00b84e', colourTertiary: '#007a33' },
+      loop_blocks:   { colourPrimary: '#ff9100', colourSecondary: '#c87200', colourTertiary: '#9e5800' },
+      math_blocks:   { colourPrimary: '#40c8ff', colourSecondary: '#2899c0', colourTertiary: '#1a6e90' },
+      text_blocks:   { colourPrimary: '#ffe500', colourSecondary: '#c8b400', colourTertiary: '#9e8e00' },
+      list_blocks:   { colourPrimary: '#ff6e40', colourSecondary: '#c24a20', colourTertiary: '#902e10' },
+      colour_blocks: { colourPrimary: '#e040fb', colourSecondary: '#a000b8', colourTertiary: '#700080' },
+      variable_blocks: { colourPrimary: '#ff6e40', colourSecondary: '#c24a20', colourTertiary: '#902e10' },
+      variable_dynamic_blocks: { colourPrimary: '#ff9100', colourSecondary: '#c87200', colourTertiary: '#9e5800' },
+      procedure_blocks: { colourPrimary: '#76ff03', colourSecondary: '#4ec200', colourTertiary: '#308e00' }
+    },
+    categoryStyles: {
+      logic_category:     { colour: '#00e676' },
+      loop_category:      { colour: '#ff9100' },
+      math_category:      { colour: '#40c8ff' },
+      text_category:      { colour: '#ffe500' },
+      list_category:      { colour: '#ff6e40' },
+      colour_category:    { colour: '#e040fb' },
+      variable_category:  { colour: '#ff6e40' },
+      procedure_category: { colour: '#76ff03' }
     }
   });
 
@@ -60,7 +81,7 @@ function initBlockly() {
     theme,
     renderer: 'zelos',
     grid: { spacing: 22, length: 4, colour: '#1a1a1a', snap: true },
-    zoom: { controls: true, wheel: true, startScale: 1.1, maxScale: 3, minScale: 0.3, scaleSpeed: 1.2 },
+    zoom: { controls: true, wheel: true, startScale: 0.9, maxScale: 3, minScale: 0.3, scaleSpeed: 1.2 },
     trashcan: true,
     move: { scrollbars: true, drag: true, wheel: true }
   });
