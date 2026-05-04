@@ -86,8 +86,14 @@
       display: block;
       filter: drop-shadow(0 0 20px rgba(255,255,255,.08));
     }
+    .logo-img-blue {
+      height: 80px;
+      width: auto;
+      display: none;
+    }
     [data-theme="light"] .logo-img-white { display: none; }
-    [data-theme="light"] .logo-icon { display: flex; }
+    [data-theme="light"] .logo-img-blue  { display: block; }
+    [data-theme="light"] .logo-icon { display: none; }
     :not([data-theme="light"]) .logo-icon { display: none; }
 
     .logo {
@@ -241,9 +247,7 @@
   <div class="wrap">
     <div class="header">
       <img class="logo-img-white" src="logo-white.png" alt="TECLA">
-      <div class="logo-icon">
-        <img src="codi/favicon.svg" class="tecla-logo-img" alt="TECLA">
-      </div>
+      <img class="logo-img-blue"  src="codi/AppIcon.png" alt="TECLA">
       <div class="logo">T E C L A</div>
     </div>
 
