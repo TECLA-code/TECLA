@@ -84,10 +84,13 @@
     /* Capes — checklist */
     label.cb { display:flex; align-items:center; gap:7px; cursor:pointer; font-size:12.5px; padding:3px 0; line-height:1.4; }
     label.cb input[type=checkbox] { width:13px; height:13px; accent-color:var(--accent); cursor:pointer; flex-shrink:0; }
-    .checklist { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; }
-    .checklist label.cb { padding:4px 6px; border-radius:3px; }
-    .checklist label.cb:hover { background:var(--surface2); }
     .preset-desc { font-size:10.5px; color:var(--text3); }
+    /* Mode-row (igual que MIDI app) */
+    .mode-row { display:flex; align-items:center; gap:8px; padding:5px 10px; border-radius:var(--radius); background:var(--surface2); cursor:pointer; transition:background .15s; }
+    .mode-row:hover { background:var(--surface3); }
+    .mode-row input[type=checkbox] { width:13px; height:13px; accent-color:var(--accent); cursor:pointer; flex-shrink:0; }
+    .mode-name { flex:1; font-size:12.5px; color:var(--text); user-select:none; }
+    .modes-list { display:flex; flex-direction:column; gap:3px; }
     .profile-row { display:flex; justify-content:space-between; align-items:center; background:var(--surface2); padding:10px 14px; border-radius:var(--radius); border:1px solid var(--border); }
     .profile-row.profile-row-active { border-color:var(--accent); background:rgba(74,128,240,.08); }
     .profile-row-name { font-size:12px; font-weight:600; color:var(--text); }
@@ -245,7 +248,7 @@
       <div class="card">
         <div class="card-title">Configuracions</div>
         <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.65" data-th="profiles_config_desc">Marca les que vols usar i prem <strong>Afegir al dispositiu</strong> per incloure-les com a capes.</p>
-        <div class="checklist" id="preset-grid" style="margin-bottom:14px"></div>
+        <div class="modes-list" id="preset-grid" style="margin-bottom:14px"></div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn btn-sm btn-primary" id="btn-add-presets" data-t="profiles_add">+ Afegir al dispositiu</button>
           <button class="btn btn-sm" id="btn-presets-all" data-t="profiles_all">Totes</button>
@@ -1027,8 +1030,15 @@
     function _renderPresetsGrid() {
       const grid = document.getElementById('preset-grid'); if (!grid) return;
       grid.innerHTML = _PRESETS.map((p, i) =>
-        `<label class="cb"><input type="checkbox" class="preset-chk" value="${i}"><span title="${p.desc}">${p.name}</span></label>`
+        `<div class="mode-row"><input type="checkbox" class="preset-chk" value="${i}"><span class="mode-name" title="${p.desc}">${p.name}</span></div>`
       ).join('');
+      grid.querySelectorAll('.mode-row').forEach(row => {
+        row.addEventListener('click', e => {
+          if (e.target.type === 'checkbox') return;
+          const chk = row.querySelector('.preset-chk');
+          chk.checked = !chk.checked;
+        });
+      });
     }
 
     document.getElementById('btn-add-presets')?.addEventListener('click', () => {
