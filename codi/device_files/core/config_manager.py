@@ -372,6 +372,10 @@ class ConfigManager:
                 print("Error: No s'ha pogut desar la configuració de modes d'arpegiador")
         return False
     
+    def get_custom_arp_pattern(self):
+        """Retorna el patró d'arpegiador personalitzat"""
+        return self.config.get('custom_arp_pattern', [0])
+    
     # ========== GESTIÓ DE PROGRESSIONS D'ACORDS CUSTOM ==========
     
     def get_all_progressions(self):

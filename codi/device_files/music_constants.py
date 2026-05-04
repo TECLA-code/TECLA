@@ -65,7 +65,7 @@ SCALE_NAMES = (
 ARP_DIRS = (
     'up', 'down', 'pingpong', 'random', 'order',
     'alberti', 'alberti_alt', 'waltz', 'broken', 'tremolo',
-    'zigzag', 'block', 'rolled', 'octaves', 'contrary', 'spread'
+    'zigzag', 'block', 'rolled', 'octaves', 'contrary', 'spread', 'custom'
 )
 
 # Tonalitats
