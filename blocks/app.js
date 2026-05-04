@@ -112,6 +112,8 @@ function setupButtons() {
   document.getElementById('btn-connect').addEventListener('click', connectDevice);
   document.getElementById('btn-upload').addEventListener('click', uploadToDevice);
   document.getElementById('btn-fw-upload').addEventListener('click', uploadToDevice);
+  document.getElementById('btn-midi-connect').addEventListener('click', connectMIDI);
+  document.getElementById('midi-port-select').addEventListener('change', selectMIDIPort);
   document.getElementById('btn-copy-code').addEventListener('click', copyCode);
   document.getElementById('btn-simulate').addEventListener('click', runSimulation);
   document.getElementById('btn-stop-sim').addEventListener('click', stopSimulation);
@@ -313,8 +315,221 @@ function copyCode() {
   navigator.clipboard.writeText(code).then(() => toast('Codi copiat', 'ok')).catch(() => toast('Error copiant', 'err'));
 }
 
-// ── Simulator (canvas visualizer, no Python proxy) ────────────
-function runSimulation() {
+// ── Web MIDI ──────────────────────────────────────────────────
+let midiAccess = null;
+let midiOutput = null;
+
+async function connectMIDI() {
+  if (!navigator.requestMIDIAccess) {
+    simLog('Web MIDI no disponible. Usa Chrome o Edge.', 'sys'); return;
+  }
+  try {
+    midiAccess = await navigator.requestMIDIAccess({ sysex: false });
+    midiAccess.onstatechange = updateMIDIPortList;
+    updateMIDIPortList();
+  } catch(e) {
+    simLog('MIDI: ' + e.message, 'sys');
+  }
+}
+
+function updateMIDIPortList() {
+  const sel = document.getElementById('midi-port-select');
+  if (!sel || !midiAccess) return;
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">— port MIDI —</option>';
+  midiAccess.outputs.forEach((port, id) => {
+    const opt = document.createElement('option');
+    opt.value = id; opt.textContent = port.name;
+    if (port.state === 'connected') sel.appendChild(opt);
+  });
+  if (prev && sel.querySelector(`[value="${prev}"]`)) sel.value = prev;
+  else if (midiAccess.outputs.size > 0) sel.value = [...midiAccess.outputs.keys()][0];
+  selectMIDIPort();
+}
+
+function selectMIDIPort() {
+  const sel = document.getElementById('midi-port-select');
+  const id = sel?.value;
+  midiOutput = (id && midiAccess) ? midiAccess.outputs.get(id) : null;
+  const dot = document.getElementById('midi-status-dot');
+  const txt = document.getElementById('midi-status-text');
+  if (midiOutput) {
+    if (dot) dot.style.background = 'var(--green)';
+    if (txt) txt.textContent = midiOutput.name;
+  } else {
+    if (dot) dot.style.background = 'var(--border-h)';
+    if (txt) txt.textContent = midiAccess ? 'selecciona port' : 'MIDI: desconnectat';
+  }
+}
+
+function midiNoteOn(ch, note, vel) {
+  if (!midiOutput) return;
+  note = Math.max(0, Math.min(127, Math.round(note)));
+  vel  = Math.max(0, Math.min(127, Math.round(vel)));
+  midiOutput.send([0x90 | (ch - 1), note, vel]);
+}
+function midiNoteOff(ch, note) {
+  if (!midiOutput) return;
+  midiOutput.send([0x80 | (ch - 1), Math.max(0, Math.min(127, Math.round(note))), 0]);
+}
+function midiCC(ch, cc, val) {
+  if (!midiOutput) return;
+  midiOutput.send([0xB0 | (ch - 1), cc & 127, val & 127]);
+}
+function midiPC(ch, prog) {
+  if (!midiOutput) return;
+  midiOutput.send([0xC0 | (ch - 1), prog & 127]);
+}
+function midiPB(ch, val) {
+  if (!midiOutput) return;
+  const v = Math.max(0, Math.min(16383, Math.round((val + 1) * 8192)));
+  midiOutput.send([0xE0 | (ch - 1), v & 127, (v >> 7) & 127]);
+}
+
+const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+function noteToName(n) { return NOTE_NAMES[((n % 12) + 12) % 12] + (Math.floor(n / 12) - 1); }
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function evalValue(block) {
+  if (!block) return 0;
+  switch (block.type) {
+    case 'math_number': return parseFloat(block.getFieldValue('NUM')) || 0;
+    case 'math_arithmetic': {
+      const a = await evalValue(block.getInputTargetBlock('A'));
+      const b = await evalValue(block.getInputTargetBlock('B'));
+      const op = block.getFieldValue('OP');
+      return op==='ADD'?a+b: op==='MINUS'?a-b: op==='MULTIPLY'?a*b: op==='DIVIDE'&&b?a/b: op==='POWER'?Math.pow(a,b): a;
+    }
+    case 'math_random_int': {
+      const a = await evalValue(block.getInputTargetBlock('FROM'));
+      const b = await evalValue(block.getInputTargetBlock('TO'));
+      return Math.floor(Math.random() * (b - a + 1)) + a;
+    }
+    default: {
+      const f = block.getFieldValue('NUM') ?? block.getFieldValue('VALUE') ?? block.getFieldValue('A') ?? '0';
+      return parseFloat(f) || 0;
+    }
+  }
+}
+
+async function getVal(block, name, def) {
+  const ib = block.getInputTargetBlock(name);
+  if (ib) return await evalValue(ib);
+  const fv = block.getFieldValue(name);
+  return fv !== null ? parseFloat(fv) || 0 : def;
+}
+
+function simLog(text, cls = 'note') {
+  const out = document.getElementById('simulatorOutput');
+  if (!out) return;
+  const el = document.createElement('div');
+  el.className = `sim-line ${cls}`;
+  el.textContent = text;
+  out.appendChild(el);
+  out.scrollTop = out.scrollHeight;
+}
+
+function getChordNotes(name) {
+  const R={C:60,D:62,E:64,F:65,G:67,A:69,B:71};
+  const m = name.endsWith('m'), root = (R[name[0]]||60) + (m?0:0);
+  return m ? [root,root+3,root+7] : [root,root+4,root+7];
+}
+
+async function execChain(block) {
+  let cur = block;
+  while (cur && simulationRunning) {
+    await execBlock(cur);
+    cur = cur.getNextBlock();
+  }
+}
+
+async function execBlock(block) {
+  if (!block || !simulationRunning) return;
+  const ctx = document.getElementById('simulatorCanvas')?.getContext('2d');
+
+  switch (block.type) {
+    case 'tecla_play_note': {
+      const note = await getVal(block,'NOTE',60);
+      const vel  = await getVal(block,'VELOCITY',100);
+      const dur  = await getVal(block,'DURATION',0.5);
+      midiNoteOn(1, note, vel);
+      if (ctx) visualizeNote(ctx, note, vel);
+      simLog(`♪ ${noteToName(note)} (${Math.round(note)}) vel:${Math.round(vel)} dur:${dur}s`);
+      await sleep(dur * 1000);
+      midiNoteOff(1, note);
+      break;
+    }
+    case 'tecla_play_chord': {
+      const chord = block.getFieldValue('CHORD') || 'C';
+      const dur   = parseFloat(block.getFieldValue('DURATION')) || 1;
+      const notes = getChordNotes(chord);
+      notes.forEach(n => { midiNoteOn(1,n,90); if(ctx) visualizeNote(ctx,n,90); });
+      simLog(`♪ Acord ${chord} (${notes.map(noteToName).join(' ')})`);
+      await sleep(dur * 1000);
+      notes.forEach(n => midiNoteOff(1,n));
+      break;
+    }
+    case 'tecla_wait': {
+      const dur = await getVal(block,'DURATION',1);
+      simLog(`⏱ Espera ${dur}s`, 'sys');
+      await sleep(dur * 1000);
+      break;
+    }
+    case 'tecla_cc_message': {
+      const ch  = parseFloat(block.getFieldValue('CHANNEL'))||1;
+      const cc  = parseFloat(block.getFieldValue('CC'))||1;
+      const val = parseFloat(block.getFieldValue('VALUE'))||0;
+      midiCC(ch, cc, val);
+      simLog(`CC${cc}=${val} ch${ch}`, 'sys');
+      break;
+    }
+    case 'tecla_program_change': {
+      const ch   = parseFloat(block.getFieldValue('CHANNEL'))||1;
+      const prog = parseFloat(block.getFieldValue('PROGRAM'))||0;
+      midiPC(ch, prog);
+      simLog(`PC:${prog} ch${ch}`, 'sys');
+      break;
+    }
+    case 'tecla_pitch_bend': {
+      const ch  = parseFloat(block.getFieldValue('CHANNEL'))||1;
+      const val = await getVal(block,'VALUE',0);
+      midiPB(ch, val);
+      simLog(`PB:${val} ch${ch}`, 'sys');
+      break;
+    }
+    case 'controls_repeat':
+    case 'controls_repeat_ext': {
+      const times = await getVal(block,'TIMES',1);
+      const inner = block.getInputTargetBlock('DO');
+      for (let i=0; i<Math.min(times,128) && simulationRunning; i++) await execChain(inner);
+      break;
+    }
+    case 'controls_forEach':
+    case 'controls_for': {
+      const from_ = await getVal(block,'FROM',0);
+      const to_   = await getVal(block,'TO',10);
+      const by_   = await getVal(block,'BY',1) || 1;
+      const inner = block.getInputTargetBlock('DO');
+      for (let i=from_; i<=to_ && simulationRunning; i+=by_) await execChain(inner);
+      break;
+    }
+    case 'controls_whileUntil': {
+      const inner = block.getInputTargetBlock('DO');
+      let guard = 0;
+      while (simulationRunning && guard++ < 64) { await execChain(inner); }
+      break;
+    }
+    default: {
+      const inner = block.getInputTargetBlock('DO') || block.getInputTargetBlock('BODY') || block.getInputTargetBlock('STACK');
+      if (inner) await execChain(inner);
+      break;
+    }
+  }
+}
+
+// ── Simulator ─────────────────────────────────────────────────
+async function runSimulation() {
   if (simulationRunning) return;
   simulationRunning = true;
   document.getElementById('btn-simulate').disabled = true;
@@ -323,53 +538,52 @@ function runSimulation() {
   const canvas = document.getElementById('simulatorCanvas');
   const ctx = canvas.getContext('2d');
   activeVisuals = [];
+  document.getElementById('simulatorOutput').innerHTML = '';
 
-  const output = document.getElementById('simulatorOutput');
-  output.innerHTML = '<div class="sim-line sys">Simulació iniciada (visualitzador local)</div>';
-
-  const code = updateGeneratedCode() || '';
-  const noteMatches = [...code.matchAll(/NoteOn\((\d+)/g)];
-  noteMatches.forEach((m, i) => {
-    setTimeout(() => {
-      if (!simulationRunning) return;
-      const note = parseInt(m[1]);
-      visualizeNote(ctx, note, 100);
-      const line = document.createElement('div');
-      line.className = 'sim-line note';
-      line.textContent = `♪ Note ${note}`;
-      output.appendChild(line);
-      output.scrollTop = output.scrollHeight;
-    }, i * 400);
-  });
+  simLog('▶ Inici', 'sys');
+  if (midiOutput) simLog(`MIDI → ${midiOutput.name}`, 'sys');
+  else simLog('Sense MIDI (connecta un port al panell)', 'sys');
 
   initVisualizer(ctx);
-  setStatus('Simulació en curs…');
+
+  const topBlocks = workspace.getTopBlocks(true);
+  if (topBlocks.length === 0) { simLog('Cap bloc al workspace', 'sys'); }
+  for (const block of topBlocks) {
+    if (!simulationRunning) break;
+    await execChain(block);
+  }
+
+  if (simulationRunning) {
+    simLog('▣ Completat', 'sys');
+    stopSimulation();
+  }
 }
 
 function stopSimulation() {
   simulationRunning = false;
   document.getElementById('btn-simulate').disabled = false;
   document.getElementById('btn-stop-sim').disabled = true;
-  const output = document.getElementById('simulatorOutput');
-  const line = document.createElement('div');
-  line.className = 'sim-line';
-  line.textContent = 'Simulació aturada';
-  output.appendChild(line);
+  simLog('■ Aturat', 'sys');
   setStatus('Llest per programar');
 }
 
 function initVisualizer(ctx) {
   const canvas = ctx.canvas;
+  const bg = getComputedStyle(document.body).getPropertyValue('--bg').trim() || '#0a0a0a';
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   function render() {
     if (!simulationRunning) return;
-    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.fillStyle = 'rgba(0,0,0,0.12)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     activeVisuals.forEach((v, i) => {
       ctx.beginPath();
       ctx.arc(v.x, v.y, v.life * 1.5, 0, Math.PI * 2);
       ctx.fillStyle = v.color;
+      ctx.globalAlpha = v.life / 25;
       ctx.fill();
-      v.life -= 0.8;
+      ctx.globalAlpha = 1;
+      v.life -= 0.6;
       if (v.life <= 0) activeVisuals.splice(i, 1);
     });
     requestAnimationFrame(render);
@@ -378,7 +592,7 @@ function initVisualizer(ctx) {
 }
 
 function visualizeNote(ctx, note, vel) {
-  const colors = ['#f472b6', '#a78bfa', '#60a5fa', '#34d399', '#fbbf24', '#fb923c', '#e879f9', '#2dd4bf'];
+  const colors = ['#f472b6','#a78bfa','#60a5fa','#34d399','#fbbf24','#fb923c','#e879f9','#2dd4bf'];
   const canvas = ctx.canvas;
   const x = ((note - 21) / 87) * (canvas.width - 40) + 20;
   const y = Math.random() * (canvas.height - 40) + 20;

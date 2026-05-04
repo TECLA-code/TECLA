@@ -80,6 +80,16 @@
       display: block;
     }
 
+    .logo-img-white {
+      height: 80px;
+      width: auto;
+      display: block;
+      filter: drop-shadow(0 0 20px rgba(255,255,255,.08));
+    }
+    [data-theme="light"] .logo-img-white { display: none; }
+    [data-theme="light"] .logo-icon { display: flex; }
+    :not([data-theme="light"]) .logo-icon { display: none; }
+
     .logo {
       font-size: 20px;
       font-weight: 700;
@@ -230,6 +240,7 @@
 
   <div class="wrap">
     <div class="header">
+      <img class="logo-img-white" src="logo-white.png" alt="TECLA">
       <div class="logo-icon">
         <img src="codi/favicon.svg" class="tecla-logo-img" alt="TECLA">
       </div>
