@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>T E C L A - MacroPad</title>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111;
+      --surface2: #1a1a1a;
+      --surface3: #222;
+      --border: rgba(255, 255, 255, 0.09);
+      --border-h: rgba(255, 255, 255, 0.17);
+      --text: #e0e0e0;
+      --text2: rgba(255, 255, 255, 0.38);
+      --text3: rgba(255, 255, 255, 0.28);
+      --accent: #4a80f0;
+      --accent-d: #2d5cd9;
+      --green: #3dc96c;
+      --radius: 6px;
+      --r2: 8px;
+      --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+      --mono: "SF Mono", Menlo, Monaco, Consolas, monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+    
+    /* Header */
+    header { display: flex; align-items: center; justify-content: space-between; padding: 0 16px; height: 44px; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
+    .logo { font-size: 13px; font-weight: 600; letter-spacing: 0.2em; user-select: none; }
+    .badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface2); font-size: 10.5px; color: var(--text2); }
+    .btn { padding: 5px 10px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: 11.5px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 5px;}
+    .btn:hover { background: var(--surface3); border-color: var(--border-h); }
+    .btn-primary { background: rgba(74, 128, 240, 0.15); border-color: var(--accent); color: var(--accent); }
+    .btn-primary:hover { background: rgba(74, 128, 240, 0.25); }
+
+    /* Layout */
+    .device-wrap { flex: 1; display: flex; flex-direction: row-reverse; align-items: center; justify-content: center; gap: 20px; padding: 20px 20px 140px; overflow-y: auto; }
+
+    /* Config Drawer */
+    .config-drawer { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 2px solid var(--border-h); transform: translateY(100%); transition: transform 0.25s cubic-bezier(.4,0,.2,1); z-index: 100; max-height: 75vh; overflow-y: auto; }
+    .config-drawer.open { transform: translateY(0); }
+    .drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px 12px; border-bottom: 1px solid var(--border); }
+    .drawer-title { font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: .08em; }
+    .drawer-body { padding: 20px 24px 32px; max-width: 600px; }
+    .btn-close { background: none; border: none; color: var(--text2); font-size: 18px; cursor: pointer; line-height: 1; padding: 2px 6px; border-radius: var(--radius); }
+    .btn-close:hover { color: var(--text); background: var(--surface2); }
+    
+    /* Pots */
+    .pots-row { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+    .pot-wrapper { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; opacity: 0.8; transition: opacity 0.2s; }
+    .pot-wrapper:hover, .pot-wrapper.active { opacity: 1; }
+    .pot-wrapper.active .pot-knob { border-color: var(--accent); box-shadow: 0 3px 0 rgba(0,0,0,0.28), 0 0 0 2px var(--accent); }
+    .pot-knob { width: 50px; height: 50px; border-radius: 50%; border: 2px solid rgba(0,0,0,0.2); background: #dde1eb; position: relative; box-shadow: 0 3px 0 rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.6); }
+    .pot-indicator { position: absolute; top: 4px; left: 50%; transform: translateX(-50%); width: 2px; height: 10px; background: rgba(0,0,0,0.45); border-radius: 2px; }
+    .pot-label { font-size: 11px; font-weight: 600; color: var(--text); }
+    
+    /* Tecles */
+    .keys-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 380px; }
+    .key-btn { aspect-ratio: 1; background: #dde1eb; border: 1px solid rgba(0,0,0,0.18); border-radius: 7px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.1s; position: relative; box-shadow: 0 3px 0 rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.55); }
+    .key-btn:hover { border-color: rgba(0,0,0,0.28); background: #eaecf5; }
+    .key-btn:active, .key-btn.pressed { transform: scale(.95); box-shadow: 0 1px 0 rgba(0,0,0,0.3), inset 0 1px 2px rgba(0,0,0,0.15); }
+    .key-num { position: absolute; top: 5px; left: 6px; font-size: 9px; color: rgba(0,0,0,0.35); font-family: var(--mono); pointer-events: none; }
+    .key-btn.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent), 0 3px 0 rgba(0,0,0,0.2); }
+    .key-label { font-size: 10px; font-weight: 700; color: rgba(0,0,0,0.72); font-family: var(--mono); pointer-events: none; text-align: center; padding: 0 4px; line-height: 1.2; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* Key type colours */
+    .key-btn.key-type-key     { background: rgba(110,85,220,.22); border-color: rgba(110,85,220,.6);  box-shadow: 0 3px 0 rgba(110,85,220,.25); }
+    .key-btn.key-type-string  { background: rgba(61,201,108,.2);  border-color: rgba(61,201,108,.55); box-shadow: 0 3px 0 rgba(61,201,108,.2); }
+    .key-btn.key-type-consumer{ background: rgba(255,180,0,.2);   border-color: rgba(255,180,0,.55);  box-shadow: 0 3px 0 rgba(255,180,0,.2); }
+    .key-btn.key-type-mouse   { background: rgba(0,200,200,.2);   border-color: rgba(0,200,200,.55);  box-shadow: 0 3px 0 rgba(0,200,200,.2); }
+    .key-btn.key-type-layer_change { background: rgba(255,140,0,.22); border-color: rgba(255,140,0,.6); box-shadow: 0 3px 0 rgba(255,140,0,.25); }
+    .key-btn.key-type-key.active      { border-color: rgba(110,85,220,.9);  box-shadow: 0 0 0 2px rgba(110,85,220,.6); }
+    .key-btn.key-type-string.active   { border-color: rgba(61,201,108,.9);  box-shadow: 0 0 0 2px rgba(61,201,108,.5); }
+    .key-btn.key-type-consumer.active { border-color: rgba(255,180,0,.9);   box-shadow: 0 0 0 2px rgba(255,180,0,.5); }
+    .key-btn.key-type-mouse.active    { border-color: rgba(0,200,200,.9);   box-shadow: 0 0 0 2px rgba(0,200,200,.5); }
+    .key-btn.key-type-layer_change.active { border-color: rgba(255,140,0,.9); box-shadow: 0 0 0 2px rgba(255,140,0,.5); }
+    .key-btn.key-type-hold_mod { background: rgba(30,180,220,.22); border-color: rgba(30,180,220,.6); box-shadow: 0 3px 0 rgba(30,180,220,.25); }
+    .key-btn.key-type-hold_mod.active { border-color: rgba(30,180,220,.9); box-shadow: 0 0 0 2px rgba(30,180,220,.5); }
+    .lang-btn.active { border-color: var(--accent); color: var(--accent); }
+    .hlang-btn { font-size: 10px; padding: 3px 7px; border-radius: 5px; border: 1px solid var(--border); background: transparent; color: var(--text3); cursor: pointer; font-family: var(--font); letter-spacing: .04em; transition: color .15s, border-color .15s; }
+    .hlang-btn:hover { color: var(--text2); border-color: var(--border-h); }
+    .hlang-btn.lang-btn.active { border-color: var(--border-h); color: var(--text); background: transparent; }
+    /* Capes — checklist */
+    label.cb { display:flex; align-items:center; gap:7px; cursor:pointer; font-size:12.5px; padding:3px 0; line-height:1.4; }
+    label.cb input[type=checkbox] { width:13px; height:13px; accent-color:var(--accent); cursor:pointer; flex-shrink:0; }
+    .checklist { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; }
+    .checklist label.cb { padding:4px 6px; border-radius:3px; }
+    .checklist label.cb:hover { background:var(--surface2); }
+    .preset-desc { font-size:10.5px; color:var(--text3); }
+    .profile-row { display:flex; justify-content:space-between; align-items:center; background:var(--surface2); padding:10px 14px; border-radius:var(--radius); border:1px solid var(--border); }
+    .profile-row.profile-row-active { border-color:var(--accent); background:rgba(74,128,240,.08); }
+    .profile-row-name { font-size:12px; font-weight:600; color:var(--text); }
+    /* Colour legend */
+    .key-legend { display: flex; gap: 14px; align-items: center; justify-content: center; flex-wrap: wrap; padding: 8px 0 0; }
+    .key-legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text3); }
+    .key-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    
+    
+    /* Forms */
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 11px; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;}
+    input[type="text"], select { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); padding: 8px 10px; font-size: 12.5px; font-family: var(--font); outline: none; }
+    input[type="text"]:focus, select:focus { border-color: var(--accent); }
+    .checkbox-group { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; cursor: pointer; font-size: 12.5px; color: var(--text); }
+    .checkbox-group input { accent-color: var(--accent); width: 14px; height: 14px; }
+    .checkbox-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    
+    /* Simulador Log */
+    .sim-terminal { background: #000; border: 1px solid var(--border); border-radius: var(--r2); padding: 15px; font-family: var(--mono); font-size: 11.5px; color: #a5b4fc; height: 300px; overflow-y: auto; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+    .sim-line { margin-bottom: 5px; line-height: 1.4; }
+    .sim-line .timestamp { color: var(--text3); margin-right: 10px; }
+    .sim-line .source { color: var(--green); margin-right: 10px; }
+    
+    /* Code Viewer */
+    pre { background: #000; padding: 15px; border-radius: var(--r2); border: 1px solid var(--border); font-family: var(--mono); font-size: 11px; overflow-x: auto; color: #e0e0e0; }
+    .keyword { color: #ff7b72; } .string { color: #a5d6ff; } .comment { color: #8b949e; }
+
+    /* Nav Tabs */
+    nav { display: flex; padding: 0 16px; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; overflow-x: auto; }
+    .nav-tab { padding: 10px 14px; font-size: 12px; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; transition: color .15s, border-color .15s; user-select: none; flex-shrink: 0; }
+    .nav-tab:hover { color: var(--text); }
+    .nav-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+    /* Tab Panels */
+    .tab-panel { display: none; flex: 1; min-height: 0; }
+    .tab-panel.active { display: flex; flex-direction: column; }
+    #tab-config.active { overflow: hidden; }
+    #tab-profiles.active { overflow-y: auto; }
+    #tab-firmware.active, #tab-guide.active, #tab-theme.active { overflow-y: auto; }
+    /* Card */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r2); padding: 18px; }
+    .card-title { font-size: 11px; font-weight: 600; color: var(--text2); margin-bottom: 12px; letter-spacing: .06em; text-transform: uppercase; }
+    /* Firmware */
+    .fw-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; padding: 20px; }
+    .fw-status-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); }
+    .fw-status-row:last-child { border-bottom: none; }
+    .fw-status-key { font-size: 12px; color: var(--text2); }
+    .fw-status-val { font-size: 12px; font-weight: 500; }
+    .fw-ok { color: var(--green); } .fw-err { color: #f05252; } .fw-unk { color: var(--text3); }
+    progress { width: 100%; height: 4px; appearance: none; display: block; border-radius: 2px; overflow: hidden; }
+    progress::-webkit-progress-bar { background: var(--surface2); border-radius: 2px; }
+    progress::-webkit-progress-value { background: var(--accent); border-radius: 2px; transition: width .25s; }
+    .fw-msg { font-size: 11.5px; color: var(--text2); margin-top: 7px; min-height: 18px; }
+    /* Guide */
+    .guide-wrap { max-width: 680px; padding: 20px; }
+    .guide-h1 { font-size: 13px; font-weight: 600; color: var(--text); margin: 20px 0 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .guide-h1:first-child { margin-top: 0; }
+    .guide-h2 { font-size: 12px; font-weight: 600; color: var(--text); margin: 14px 0 5px; }
+    .guide-li { font-size: 12.5px; color: var(--text2); line-height: 1.75; padding-left: 14px; position: relative; margin-bottom: 2px; }
+    .guide-li::before { content: "–"; position: absolute; left: 0; color: var(--text3); }
+    .guide-note { font-size: 11.5px; color: var(--text3); background: var(--surface2); border-left: 2px solid var(--border-h); padding: 8px 12px; border-radius: 0 var(--radius) var(--radius) 0; margin: 8px 0; }
+    .guide-toc { display: flex; flex-direction: column; gap: 3px; padding: 10px 14px; background: var(--surface2); border-radius: var(--radius); margin-bottom: 16px; }
+    .guide-toc a { font-size: 12px; color: var(--accent); text-decoration: none; opacity: .8; }
+    .guide-toc a:hover { opacity: 1; }
+    /* Device badge */
+    .device-badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface2); font-size: 11px; color: var(--text2); }
+    .device-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); flex-shrink: 0; }
+    .device-badge.connected .dot { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .device-badge.connected { color: var(--text); border-color: var(--border-h); }
+    /* Bank bar */
+    .bank-bar { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; overflow-x: auto; }
+    .bank-bar span { font-size: 11.5px; color: var(--text2); white-space: nowrap; }
+    .bank-bar select { min-width: 120px; padding: 4px 8px; font-size: 11.5px; }
+    .btn-sm { font-size: 11px; padding: 3px 8px; }
+    .btn-danger { background: rgba(240,82,82,.12); border-color: rgba(240,82,82,.4); color: #f05252; }
+    .btn-danger:hover { background: rgba(240,82,82,.22); }
+    /* Theme tab */
+    #tab-theme.active { overflow-y: auto; }
+    .theme-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px; }
+    .theme-card { border: 1.5px solid var(--border); border-radius: var(--r2); padding: 9px 8px 8px; cursor: pointer; transition: border-color .15s, transform .1s; user-select: none; text-align: center; position: relative; }
+    .theme-card:hover { border-color: var(--border-h); transform: translateY(-1px); }
+    .theme-card.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .theme-swatches { display: flex; gap: 3px; margin-bottom: 8px; height: 12px; }
+    .theme-swatches span { flex: 1; border-radius: 3px; display: block; }
+    .theme-card-name { font-size: 11px; color: var(--text3); }
+    .theme-card.active .theme-card-name { color: var(--text); font-weight: 600; }
+    .custom-theme-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px 8px; }
+    @media(max-width:480px) { .custom-theme-grid { grid-template-columns: repeat(3, 1fr); } }
+    .ct-field { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+    .ct-field input[type=color] { width: 100%; min-width: 36px; height: 36px; border-radius: var(--radius); border: 1.5px solid var(--border); background: var(--surface2); cursor: pointer; padding: 2px 3px; }
+    .ct-field label { font-size: 10.5px; color: var(--text2); white-space: nowrap; }
+    /* Theme body classes */
+    body.theme-light { --bg:#f2f2f2; --surface:#ffffff; --surface2:#ebebeb; --surface3:#e0e0e0; --accent:#4a80f0; --accent-d:#2d5cd9; --border:rgba(0,0,0,.1); --border-h:rgba(0,0,0,.2); --text:#111; --text2:rgba(0,0,0,.5); --text3:rgba(0,0,0,.3); }
+    body.theme-neon { --bg:#080808; --surface:#0d0d0d; --surface2:#121212; --surface3:#1a1a1a; --accent:#00ffe0; --accent-d:#00ccb4; --border:rgba(0,255,224,.08); --border-h:rgba(0,255,224,.16); }
+    body.theme-warm { --bg:#100c08; --surface:#1a1410; --surface2:#231c16; --surface3:#2e2520; --accent:#e08030; --accent-d:#b86020; --border:rgba(224,128,48,.09); --border-h:rgba(224,128,48,.18); }
+    body.theme-purple { --bg:#0d0b14; --surface:#14101e; --surface2:#1e1830; --surface3:#28224a; --accent:#a070f0; --accent-d:#8050d0; --border:rgba(160,112,240,.09); --border-h:rgba(160,112,240,.18); }
+    body.theme-ocean { --bg:#07101a; --surface:#0d1824; --surface2:#132030; --surface3:#1a2a3e; --accent:#20c8f8; --accent-d:#10a0cc; --border:rgba(32,200,248,.08); --border-h:rgba(32,200,248,.16); }
+    body.theme-forest { --bg:#07100a; --surface:#0d1a10; --surface2:#152018; --surface3:#1c2a20; --accent:#22c55e; --accent-d:#16a348; --border:rgba(34,197,94,.09); --border-h:rgba(34,197,94,.18); }
+    body.theme-rose { --bg:#120a0e; --surface:#1e1016; --surface2:#281520; --surface3:#34202a; --accent:#f472b6; --accent-d:#d44090; --border:rgba(244,114,182,.09); --border-h:rgba(244,114,182,.18); }
+    body.theme-ice { --bg:#eff5ff; --surface:#ffffff; --surface2:#e4eeff; --surface3:#d4e2ff; --accent:#0ea5e9; --accent-d:#0870b0; --border:rgba(14,165,233,.12); --border-h:rgba(14,165,233,.24); --text:#0a1a2e; --text2:rgba(10,26,46,.5); --text3:rgba(10,26,46,.3); }
+    body.theme-carbon { --bg:#080808; --surface:#111111; --surface2:#181818; --surface3:#222222; --accent:#ef4444; --accent-d:#c02020; --border:rgba(239,68,68,.08); --border-h:rgba(239,68,68,.16); }
+    body.theme-hc { --bg:#000000; --surface:#0d0d0d; --surface2:#1a1a1a; --surface3:#282828; --accent:#ffe000; --accent-d:#ccaa00; --border:rgba(255,224,0,.12); --border-h:rgba(255,224,0,.25); }
+    body.theme-crepuscle { --bg:#100808; --surface:#1a100a; --surface2:#24160c; --surface3:#301e14; --accent:#f97316; --accent-d:#c05010; --border:rgba(249,115,22,.09); --border-h:rgba(249,115,22,.18); }
+    body.theme-cosmic { --bg:#06050f; --surface:#0c0b1c; --surface2:#13112c; --surface3:#1c1840; --accent:#818cf8; --accent-d:#5560d0; --border:rgba(129,140,248,.09); --border-h:rgba(129,140,248,.18); }
+    body.theme-mint { --bg:#f0faf5; --surface:#ffffff; --surface2:#dff2e9; --surface3:#c8e8d8; --accent:#059669; --accent-d:#047050; --border:rgba(5,150,105,.12); --border-h:rgba(5,150,105,.24); --text:#0a2e1e; --text2:rgba(10,46,30,.5); --text3:rgba(10,46,30,.3); }
+    body.theme-slate { --bg:#0a0e14; --surface:#111820; --surface2:#18222e; --surface3:#202c3c; --accent:#94a3b8; --accent-d:#7c8fa6; --border:rgba(148,163,184,.09); --border-h:rgba(148,163,184,.18); }
+    body.theme-acid { --bg:#060900; --surface:#0b1100; --surface2:#131a00; --surface3:#1c2600; --accent:#a3e635; --accent-d:#84cc16; --border:rgba(163,230,53,.09); --border-h:rgba(163,230,53,.18); }
+    body.theme-sand { --bg:#fef7e8; --surface:#fffcf2; --surface2:#fdefc5; --surface3:#fae3a5; --accent:#b45309; --accent-d:#92400e; --border:rgba(180,83,9,.12); --border-h:rgba(180,83,9,.24); --text:#3a1800; --text2:#854d0e; --text3:#c08030; }
+  </style>
+</head>
+<body>
+  <header>
+    <div style="display: flex; align-items: center; gap: 15px;">
+      <a href="../index.html" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);text-decoration:none;padding:4px 8px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);transition:color .15s,border-color .15s;" onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--border-h)'" onmouseout="this.style.color='var(--text2)';this.style.borderColor='var(--border)'"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H3M7 4l-4 4 4 4"/></svg> Inici</a>
+      <div class="logo">T E C L A</div>
+      <div class="device-badge" id="device-badge"><span class="dot"></span><span id="device-name">desconnectat</span></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="hlang-btn lang-btn active" data-lang="ca">CA</button>
+      <button class="hlang-btn lang-btn" data-lang="es">ES</button>
+      <button class="hlang-btn lang-btn" data-lang="en">EN</button>
+      <div style="width:1px;height:14px;background:var(--border);margin:0 2px"></div>
+      <button class="btn" id="btn-connect" data-t="btn_connect">Connecta</button>
+      <button class="btn" id="btn-disconnect" style="display:none" data-t="btn_disconnect">Desconnectar</button>
+    </div>
+  </header>
+
+  <nav>
+    <span class="nav-tab active" data-tab="config">Configuraci&oacute;</span>
+    <span class="nav-tab" data-tab="profiles">Capes</span>
+    <span class="nav-tab" data-tab="firmware">Firmware</span>
+    <span class="nav-tab" data-tab="guide">Guia d'&uacute;s</span>
+    <span class="nav-tab" data-tab="theme">Aparen&ccedil;a</span>
+  </nav>
+
+  <div class="tab-panel active" id="tab-config">
+  <div class="bank-bar">
+    <span>Capa:</span>
+    <select id="layer-select"></select>
+    <button class="btn btn-sm" id="btn-prev-layer">&larr;</button>
+    <button class="btn btn-sm" id="btn-next-layer">&rarr;</button>
+    <button class="btn btn-sm" id="btn-new-layer">+ Nova</button>
+    <button class="btn btn-sm" id="btn-rename-layer">Reanomenar</button>
+    <button class="btn btn-sm btn-danger" id="btn-del-layer">Eliminar</button>
+  </div>
+  <div class="device-wrap">
+    <div class="pots-row" id="device-pots"></div>
+    <div class="keys-grid" id="device-keys"></div>
+  </div>
+  </div><!-- #tab-config -->
+
+  <!-- CAPES -->
+  <div class="tab-panel" id="tab-profiles">
+    <div style="max-width:720px;padding:20px;display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <div class="card-title">Configuracions</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.65" data-th="profiles_config_desc">Marca les que vols usar i prem <strong>Afegir al dispositiu</strong> per incloure-les com a capes.</p>
+        <div class="checklist" id="preset-grid" style="margin-bottom:14px"></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-sm btn-primary" id="btn-add-presets" data-t="profiles_add">+ Afegir al dispositiu</button>
+          <button class="btn btn-sm" id="btn-presets-all" data-t="profiles_all">Totes</button>
+          <button class="btn btn-sm" id="btn-presets-none" data-t="profiles_none">Cap</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Les meves capes</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.65" data-th="profiles_my_desc">Totes les capes del dispositiu en ordre. La tecla <em>Canviar de capa</em> les recorre seq&uuml;encialment. La capa activa apareix ressaltada.</p>
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+          <button class="btn btn-sm btn-primary" id="btn-new-layer-tab" data-t="profiles_new">+ Nova capa</button>
+          <button class="btn btn-sm" id="btn-export-all" data-t="profiles_export">&darr; Exportar</button>
+          <button class="btn btn-sm" id="btn-import-profile" data-t="profiles_import">&uarr; Importar</button>
+          <input type="file" id="import-profile-file" accept=".json" style="display:none">
+        </div>
+        <div id="profiles-list" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FIRMWARE -->
+  <div class="tab-panel" id="tab-firmware">
+    <div class="fw-grid">
+      <div class="card">
+        <div class="card-title" data-t="fw_status_title">Estat del sistema</div>
+        <div class="fw-status-row"><span class="fw-status-key" data-t="fw_status_vol">Volum CIRCUITPY</span><span class="fw-status-val fw-unk" id="fw-circuitpy">?</span></div>
+        <div class="fw-status-row"><span class="fw-status-key">CircuitPython</span><span class="fw-status-val fw-unk" id="fw-cpython">?</span></div>
+        <div style="margin-top:12px"><button class="btn" id="btn-fw-refresh" data-t="fw_refresh">↺ Refrescar estat</button></div>
+      </div>
+      <div class="card">
+        <div class="card-title" data-t="fw_step1_title">Pas 1 &mdash; Instal&middot;lar CircuitPython</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.65" data-th="fw_step1_desc">Entra al mode bootloader mantenint <strong>BOOTSEL</strong> mentre connectes el USB-C. El dispositiu apareixerà com <strong>RPI-RP2</strong>.</p>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <a class="btn btn-primary" href="https://circuitpython.org/board/raspberry_pi_pico/" target="_blank">&darr; Descarregar CircuitPython (circuitpython.org)</a>
+        </div>
+        <p style="font-size:11px;color:var(--text2);margin-top:10px;line-height:1.6" data-th="fw_step1_sub">Obre el Finder &rarr; arrossega el fitxer <strong>.uf2</strong> al volum <strong>RPI-RP2</strong>. El dispositiu es reiniciarà com <strong>CIRCUITPY</strong>.</p>
+      </div>
+      <div class="card">
+        <div class="card-title" data-t="fw_step2_title">Pas 2 &mdash; Instal&middot;lar les llibreries</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.65" data-th="fw_step2_desc">Descarrega el bundle de llibreries de CircuitPython i copia la carpeta <strong>adafruit_hid</strong> dins la carpeta <strong>lib/</strong> del CIRCUITPY.</p>
+        <a class="btn btn-primary" href="https://circuitpython.org/libraries" target="_blank">&darr; Descarregar Bundle de Llibreries</a>
+        <p style="font-size:11px;color:var(--text2);margin-top:10px;line-height:1.6" data-th="fw_step2_sub">Cerca <strong>adafruit-circuitpython-bundle</strong> &rarr; descomprimeix &rarr; copia la carpeta <strong>adafruit_hid</strong> a <strong>CIRCUITPY/lib/</strong>.</p>
+      </div>
+      <div class="card">
+        <div class="card-title" data-t="fw_step3_title">Pas 3 &mdash; Actualitzar el firmware</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.65" data-th="fw_step3_desc">Un cop el CIRCUITPY &eacute;s visible, genera i exporta el fitxer <strong>code.py</strong> amb la teva configuraci&oacute; al dispositiu.</p>
+        <button class="btn btn-primary" id="btn-fw-export" data-t="btn_fw_update">Actualitzar firmware</button>
+        <div style="margin-top:12px">
+          <progress id="fw-progress" value="0" max="100"></progress>
+          <div class="fw-msg" id="fw-progress-msg"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GUIA -->
+  <div class="tab-panel" id="tab-guide">
+    <div class="guide-wrap">
+      <div class="card" id="guide-card">
+        <div class="guide-toc">
+          <a href="#g1">1. Primers passos</a>
+          <a href="#g2">2. Configuraci&oacute; de tecles</a>
+          <a href="#g3">3. Configuraci&oacute; de potenci&ograve;metres</a>
+          <a href="#g4">4. Exportar al dispositiu</a>
+          <a href="#g5">5. Capes</a>
+        </div>
+        <div id="g1">
+          <div class="guide-h1">1. Primers passos</div>
+          <p class="guide-li">Connecta el TECLA a l'ordinador via USB-C.</p>
+          <p class="guide-li">Si &eacute;s la primera vegada, instal&middot;la CircuitPython (pestanya <em>Firmware</em> &rarr; Pas 1).</p>
+          <p class="guide-li">Instal&middot;la la carpeta <strong>adafruit_hid</strong> a <strong>CIRCUITPY/lib/</strong> (Pas 2).</p>
+          <p class="guide-li">Configura les tecles i potenci&ograve;metres a la pestanya <em>Configuraci&oacute;</em> i exporta (Pas 3).</p>
+          <div class="guide-note">El TECLA funciona com un dispositiu HID: teclat, ratol&iacute; i control multim&egrave;dia. No cal cap driver addicional.</div>
+        </div>
+        <div id="g2">
+          <div class="guide-h1">2. Configuraci&oacute; de tecles</div>
+          <p class="guide-li">Clica qualsevol de les <strong>16 tecles</strong> per obrir el panell de configuraci&oacute;.</p>
+          <div class="guide-h2">Tipus de funci&oacute; disponibles</div>
+          <p class="guide-li"><strong>Tecla / Drecera</strong>: envia una combinaci&oacute; de tecles (Ctrl+C, Cmd+S, F5…).</p>
+          <p class="guide-li"><strong>Escriure text</strong>: escriu una cadena de text autom&agrave;ticament.</p>
+          <p class="guide-li"><strong>Control multim&egrave;dia</strong>: reproduir, pausa, volum, brillantor, etc.</p>
+          <p class="guide-li"><strong>Ratol&iacute;</strong>: clic esquerre, dret o central.</p>
+          <p class="guide-li"><strong>Cap</strong>: tecla desactivada.</p>
+          <div class="guide-h2">Colors de les tecles</div>
+          <p class="guide-li">Les tecles configurades mostren un color indicant el tipus de funci&oacute; assignada.</p>
+          <p class="guide-li"><span style="color:rgba(110,85,220,.9)">&#9632;</span> Lila = Tecla/Drecera &nbsp; <span style="color:rgba(61,201,108,.9)">&#9632;</span> Verd = Text &nbsp; <span style="color:rgba(255,180,0,.9)">&#9632;</span> Groc = Multim&egrave;dia &nbsp; <span style="color:rgba(0,200,200,.9)">&#9632;</span> Cian = Ratol&iacute;</p>
+        </div>
+        <div id="g3">
+          <div class="guide-h1">3. Configuraci&oacute; de potenci&ograve;metres</div>
+          <p class="guide-li">El TECLA t&eacute; <strong>3 potenci&ograve;metres</strong> (X, Y, Z). Clica'ls per configurar la seva funci&oacute;.</p>
+          <p class="guide-li"><strong>Volum</strong>: controla el volum de l'ordinador.</p>
+          <p class="guide-li"><strong>Brillantor</strong>: controla la brillantor de la pantalla.</p>
+          <p class="guide-li"><strong>Scroll vertical/horitzontal</strong>: fa scroll amb el ratol&iacute;.</p>
+          <p class="guide-li"><strong>Ratol&iacute; X/Y</strong>: mou el cursor del ratol&iacute;.</p>
+          <div class="guide-note">A l'app pots girar el knob (arrossega amunt/avall) o fer scroll per simular el valor del potenci&ograve;metre.</div>
+        </div>
+        <div id="g4">
+          <div class="guide-h1">4. Exportar al dispositiu</div>
+          <p class="guide-li">Clica <strong>Exportar al Dispositiu</strong> a la cap&ccedil;alera o a la pestanya <em>Firmware</em>.</p>
+          <p class="guide-li">Selecciona el volum <strong>CIRCUITPY</strong> al di&agrave;leg del Finder.</p>
+          <p class="guide-li">El fitxer <strong>code.py</strong> es copia autom&agrave;ticament al dispositiu.</p>
+          <p class="guide-li">El TECLA es reinicia i aplica la nova configuraci&oacute; immediatament.</p>
+          <div class="guide-note">Cal Chrome o Edge per a l'acc&eacute;s directe al sistema de fitxers (File System Access API). A Safari, es descarrega <strong>code.py</strong> manualment i cal copiar-lo a CIRCUITPY.</div>
+        </div>
+        <div id="g5">
+          <div class="guide-h1">5. Capes</div>
+          <p class="guide-li">Prem <strong>Desar capa</strong> a la pestanya <em>Configuraci&oacute;</em> per guardar la capa activa a la biblioteca amb un nom.</p>
+          <p class="guide-li">A la pestanya <em>Capes</em>, clica <strong>+ Capa</strong> per afegir una capa desada al dispositiu. Pots tenir fins a 8 capes actives.</p>
+          <p class="guide-li">La secci&oacute; <em>Capes del dispositiu</em> mostra l&rsquo;ordre que tindr&agrave; el firmware. Reordena-les amb ↑↓ i elimina-les amb ✕.</p>
+          <p class="guide-li">Afegeix una tecla de tipus <em>Canviar de capa</em> per alternar entre capes des del dispositiu.</p>
+          <div class="guide-note">Les capes es guarden al localStorage del navegador. No es perdran en tancar l'app, per&ograve; s'esborraran si s'esborra la mem&ograve;ria del navegador.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APARENÇA -->
+  <div class="tab-panel" id="tab-theme">
+    <div style="max-width:640px;padding:20px">
+      <div class="card">
+        <div class="card-title" data-t="theme_title">Aparen&ccedil;a</div>
+        <div class="theme-cards" id="theme-cards">
+          <div class="theme-card active" data-theme="dark"><div class="theme-swatches"><span style="background:#0c0c0c"></span><span style="background:#141414"></span><span style="background:#1c1c1c"></span><span style="background:#4a80f0"></span></div><div class="theme-card-name">Fosc</div></div>
+          <div class="theme-card" data-theme="light"><div class="theme-swatches"><span style="background:#f2f2f2"></span><span style="background:#fff"></span><span style="background:#ebebeb"></span><span style="background:#4a80f0"></span></div><div class="theme-card-name">Clar</div></div>
+          <div class="theme-card" data-theme="neon"><div class="theme-swatches"><span style="background:#080808"></span><span style="background:#0d0d0d"></span><span style="background:#121212"></span><span style="background:#00ffe0"></span></div><div class="theme-card-name">Ne&oacute;</div></div>
+          <div class="theme-card" data-theme="warm"><div class="theme-swatches"><span style="background:#100c08"></span><span style="background:#1a1410"></span><span style="background:#231c16"></span><span style="background:#e08030"></span></div><div class="theme-card-name">C&agrave;lid</div></div>
+          <div class="theme-card" data-theme="purple"><div class="theme-swatches"><span style="background:#0d0b14"></span><span style="background:#14101e"></span><span style="background:#1e1830"></span><span style="background:#a070f0"></span></div><div class="theme-card-name">Lila</div></div>
+          <div class="theme-card" data-theme="ocean"><div class="theme-swatches"><span style="background:#07101a"></span><span style="background:#0d1824"></span><span style="background:#132030"></span><span style="background:#20c8f8"></span></div><div class="theme-card-name">Oce&agrave;</div></div>
+          <div class="theme-card" data-theme="forest"><div class="theme-swatches"><span style="background:#07100a"></span><span style="background:#0d1a10"></span><span style="background:#152018"></span><span style="background:#22c55e"></span></div><div class="theme-card-name">Bosc</div></div>
+          <div class="theme-card" data-theme="rose"><div class="theme-swatches"><span style="background:#120a0e"></span><span style="background:#1e1016"></span><span style="background:#281520"></span><span style="background:#f472b6"></span></div><div class="theme-card-name">Rosa</div></div>
+          <div class="theme-card" data-theme="ice"><div class="theme-swatches"><span style="background:#eff5ff"></span><span style="background:#fff"></span><span style="background:#e4eeff"></span><span style="background:#0ea5e9"></span></div><div class="theme-card-name">Gel</div></div>
+          <div class="theme-card" data-theme="carbon"><div class="theme-swatches"><span style="background:#080808"></span><span style="background:#111"></span><span style="background:#181818"></span><span style="background:#ef4444"></span></div><div class="theme-card-name">Carb&oacute;</div></div>
+          <div class="theme-card" data-theme="hc"><div class="theme-swatches"><span style="background:#000"></span><span style="background:#0d0d0d"></span><span style="background:#1a1a1a"></span><span style="background:#ffe000"></span></div><div class="theme-card-name">Alt Contrast</div></div>
+          <div class="theme-card" data-theme="crepuscle"><div class="theme-swatches"><span style="background:#100808"></span><span style="background:#1a100a"></span><span style="background:#24160c"></span><span style="background:#f97316"></span></div><div class="theme-card-name">Crepuscle</div></div>
+          <div class="theme-card" data-theme="cosmic"><div class="theme-swatches"><span style="background:#06050f"></span><span style="background:#0c0b1c"></span><span style="background:#13112c"></span><span style="background:#818cf8"></span></div><div class="theme-card-name">C&ograve;smic</div></div>
+          <div class="theme-card" data-theme="mint"><div class="theme-swatches"><span style="background:#f0faf5"></span><span style="background:#fff"></span><span style="background:#dff2e9"></span><span style="background:#059669"></span></div><div class="theme-card-name">Menta</div></div>
+          <div class="theme-card" data-theme="slate"><div class="theme-swatches"><span style="background:#0a0e14"></span><span style="background:#111820"></span><span style="background:#18222e"></span><span style="background:#94a3b8"></span></div><div class="theme-card-name">Pissarra</div></div>
+          <div class="theme-card" data-theme="acid"><div class="theme-swatches"><span style="background:#060900"></span><span style="background:#0b1100"></span><span style="background:#131a00"></span><span style="background:#a3e635"></span></div><div class="theme-card-name">&Agrave;cid</div></div>
+          <div class="theme-card" data-theme="sand"><div class="theme-swatches"><span style="background:#fef7e8"></span><span style="background:#fffcf2"></span><span style="background:#fdefc5"></span><span style="background:#b45309"></span></div><div class="theme-card-name">Sorra</div></div>
+        </div>
+        <div style="border-top:1px solid var(--border);margin:22px 0 18px;position:relative"><span style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--surface);padding:0 12px;font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase" data-t="theme_editor">Editor de temes</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div id="ct-mode-indicator" style="font-size:11px;color:var(--text3);font-weight:500"></div>
+          <button class="btn" id="btn-new-theme" style="font-size:11px" data-t="theme_new">&plus; Nou tema</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <label style="font-size:12px;color:var(--text2);white-space:nowrap;min-width:40px" data-t="theme_name_lbl">Nom:</label>
+          <input type="text" id="ct-name" placeholder="Ex: El meu tema" style="flex:1;min-width:0">
+          <button class="btn" id="btn-random-theme" data-t="theme_random">&#127922; Aleatori</button>
+        </div>
+        <div class="custom-theme-grid">
+          <div class="ct-field"><input type="color" id="ct-bg" value="#0c0c0c"><label data-t="ct_bg">Fons</label></div>
+          <div class="ct-field"><input type="color" id="ct-surface" value="#141414"><label data-t="ct_surface">Superf&iacute;cie</label></div>
+          <div class="ct-field"><input type="color" id="ct-surface2" value="#1c1c1c"><label data-t="ct_surface2">Superf&iacute;cie 2</label></div>
+          <div class="ct-field"><input type="color" id="ct-text" value="#e0e0e0"><label data-t="ct_text">Text</label></div>
+          <div class="ct-field"><input type="color" id="ct-accent" value="#4a80f0"><label data-t="ct_accent">Accent</label></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+          <button class="btn btn-primary" id="btn-save-custom-theme" data-t="theme_save">Desa i aplica</button>
+          <button class="btn" id="btn-reset-custom-theme" data-t="theme_reset">Restablir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="config-drawer" id="config-drawer">
+    <div class="drawer-header">
+      <span class="drawer-title" id="form-element-title">&#8212;</span>
+      <button class="btn-close" id="btn-close-drawer">&#x2715;</button>
+    </div>
+    <div class="drawer-body">
+      <div class="form-group">
+        <label data-t="drawer_label">Nom de l'acci&oacute; (Etiqueta opcional)</label>
+        <input type="text" id="elem-label" placeholder="Ex: Guardar, Copiar...">
+      </div>
+      <div class="form-group">
+        <label data-t="drawer_type">Funci&oacute; Principal</label>
+        <select id="elem-type"><!-- Opcions per JS --></select>
+      </div>
+      <!-- Drecera (Keys) -->
+      <div id="settings-key" style="display: none; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px;">
+        <div class="form-group">
+          <label data-t="drawer_key_label">Tecla Principal</label>
+          <select id="key-keycode">
+            <optgroup label="Lletres">
+              <option value="Keycode.A">A</option><option value="Keycode.B">B</option><option value="Keycode.C">C</option><option value="Keycode.D">D</option><option value="Keycode.E">E</option>
+              <option value="Keycode.F">F</option><option value="Keycode.G">G</option><option value="Keycode.H">H</option><option value="Keycode.I">I</option><option value="Keycode.J">J</option>
+              <option value="Keycode.K">K</option><option value="Keycode.L">L</option><option value="Keycode.M">M</option><option value="Keycode.N">N</option><option value="Keycode.O">O</option>
+              <option value="Keycode.P">P</option><option value="Keycode.Q">Q</option><option value="Keycode.R">R</option><option value="Keycode.S">S</option><option value="Keycode.T">T</option>
+              <option value="Keycode.U">U</option><option value="Keycode.V">V</option><option value="Keycode.W">W</option><option value="Keycode.X">X</option><option value="Keycode.Y">Y</option><option value="Keycode.Z">Z</option>
+            </optgroup>
+            <optgroup label="N&uacute;meros">
+              <option value="Keycode.ONE">1</option><option value="Keycode.TWO">2</option><option value="Keycode.THREE">3</option><option value="Keycode.FOUR">4</option><option value="Keycode.FIVE">5</option>
+              <option value="Keycode.SIX">6</option><option value="Keycode.SEVEN">7</option><option value="Keycode.EIGHT">8</option><option value="Keycode.NINE">9</option><option value="Keycode.ZERO">0</option>
+            </optgroup>
+            <optgroup label="Especials">
+              <option value="Keycode.SPACE">Espai</option><option value="Keycode.ENTER">Enter / Intro</option><option value="Keycode.ESCAPE">Escape</option>
+              <option value="Keycode.BACKSPACE">Esborrar (Backspace)</option><option value="Keycode.TAB">Tabulador</option>
+            </optgroup>
+            <optgroup label="Fletxes">
+              <option value="Keycode.UP_ARROW">Fletxa Amunt</option><option value="Keycode.DOWN_ARROW">Fletxa Avall</option>
+              <option value="Keycode.LEFT_ARROW">Fletxa Esquerra</option><option value="Keycode.RIGHT_ARROW">Fletxa Dreta</option>
+            </optgroup>
+            <optgroup label="F1-F12">
+              <option value="Keycode.F1">F1</option><option value="Keycode.F2">F2</option><option value="Keycode.F3">F3</option><option value="Keycode.F4">F4</option>
+              <option value="Keycode.F5">F5</option><option value="Keycode.F6">F6</option><option value="Keycode.F7">F7</option><option value="Keycode.F8">F8</option>
+              <option value="Keycode.F9">F9</option><option value="Keycode.F10">F10</option><option value="Keycode.F11">F11</option><option value="Keycode.F12">F12</option>
+            </optgroup>
+          </select>
+        </div>
+        <label data-t="drawer_mods_label">Modificadors (Drecera)</label>
+        <div class="checkbox-grid">
+          <label class="checkbox-group"><input type="checkbox" id="mod-ctrl"> Ctrl</label>
+          <label class="checkbox-group"><input type="checkbox" id="mod-shift"> Shift</label>
+          <label class="checkbox-group"><input type="checkbox" id="mod-alt"> Alt / Opt</label>
+          <label class="checkbox-group"><input type="checkbox" id="mod-cmd"> Cmd / Win</label>
+        </div>
+      </div>
+      <!-- Text (Keys) -->
+      <div id="settings-string" style="display: none; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px;">
+        <div class="form-group">
+          <label data-t="drawer_text_label">Escriu el text exacte</label>
+          <input type="text" id="key-string" placeholder="hola m&oacute;n">
+        </div>
+      </div>
+      <!-- Multim&egrave;dia (Keys) -->
+      <div id="settings-consumer" style="display: none; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px;">
+        <div class="form-group">
+          <label data-t="drawer_consumer_label">Acci&oacute; Multim&egrave;dia</label>
+          <select id="key-consumer">
+            <option value="ConsumerControlCode.PLAY_PAUSE">Reproduir / Pausa</option>
+            <option value="ConsumerControlCode.SCAN_NEXT_TRACK">Pista Seg&uuml;ent</option>
+            <option value="ConsumerControlCode.SCAN_PREVIOUS_TRACK">Pista Anterior</option>
+            <option value="ConsumerControlCode.STOP">Aturar</option>
+            <option value="ConsumerControlCode.MUTE">Silenci / Unmute</option>
+            <option value="ConsumerControlCode.VOLUME_INCREMENT">Volum +</option>
+            <option value="ConsumerControlCode.VOLUME_DECREMENT">Volum -</option>
+            <option value="ConsumerControlCode.FAST_FORWARD">Avan&ccedil;ar r&agrave;pid</option>
+            <option value="ConsumerControlCode.REWIND">Retrocedir</option>
+            <option value="ConsumerControlCode.BRIGHTNESS_INCREMENT">Brillantor +</option>
+            <option value="ConsumerControlCode.BRIGHTNESS_DECREMENT">Brillantor -</option>
+          </select>
+        </div>
+      </div>
+      <!-- Ratol&iacute; (Keys) -->
+      <div id="settings-mouse" style="display: none; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px;">
+        <div class="form-group">
+          <label data-t="drawer_mouse_label">Acci&oacute; Ratol&iacute;</label>
+          <select id="key-mouse">
+            <option value="Mouse.LEFT_BUTTON">Clic Esquerre</option>
+            <option value="Mouse.RIGHT_BUTTON">Clic Dret</option>
+            <option value="Mouse.MIDDLE_BUTTON">Clic Mig</option>
+          </select>
+        </div>
+      </div>
+      <!-- Modificador Mantingut (Keys) -->
+      <div id="settings-hold_mod" style="display: none; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px;">
+        <p style="font-size:12px;color:var(--text2);line-height:1.65;margin-bottom:12px" data-th="drawer_hold_mod_desc">Mentre aquesta tecla &eacute;s premuda, el modificador queda actiu. Permet combinar-lo amb qualsevol altra tecla (ex: &oplus; + &darr; per rotar en un RPG).</p>
+        <div class="form-group">
+          <label data-t="drawer_hold_mod_label">Modificador a mantenir</label>
+          <select id="key-hold-mod">
+            <option value="Keycode.COMMAND">&oplus; Command (Mac)</option>
+            <option value="Keycode.CONTROL">&otimes; Control (Ctrl)</option>
+            <option value="Keycode.ALT">&oslash; Alt / Option</option>
+            <option value="Keycode.SHIFT">&uArr; Shift</option>
+            <option value="Keycode.LEFT_GUI">&oplus; Win / Super</option>
+          </select>
+        </div>
+      </div>
+      <!-- Clic per pas (Pots) -->
+      <div id="settings-pot-click_step" style="display: none; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px;">
+        <p style="font-size:12px;color:var(--text2);line-height:1.65;margin-bottom:12px" data-th="drawer_click_step_desc">Envia un clic esquerre cada vegada que el potenci&ograve;metre canvia N unitats (rang 0&ndash;127).</p>
+        <div class="form-group">
+          <label data-t="drawer_click_step_label">Densitat (1 clic cada N unitats)</label>
+          <select id="pot-step-size">
+            <option value="2">1 clic cada 2 unitats (molt dens)</option>
+            <option value="5">1 clic cada 5 unitats (dens)</option>
+            <option value="10">1 clic cada 10 unitats (normal)</option>
+            <option value="20">1 clic cada 20 unitats (espa&iuml;at)</option>
+            <option value="30">1 clic cada 30 unitats (molt espa&iuml;at)</option>
+          </select>
+        </div>
+      </div>
+      <!-- Canvi de Capa (Keys) -->
+      <div id="settings-layer_change" style="display: none; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px;">
+        <p style="font-size:12px;color:var(--text2);line-height:1.65;margin-bottom:12px" data-t="layer_change_desc">Aquesta tecla canviarà de capa al ser premuda.</p>
+        <div class="form-group">
+          <label data-t="layer_dir_label">Direcció</label>
+          <select id="key-layer-dir">
+            <option value="next" data-t="layer_dir_next">Capa Següent (→)</option>
+            <option value="prev" data-t="layer_dir_prev">Capa Anterior (←)</option>
+          </select>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
+        <button class="btn btn-primary" id="btn-save-element" data-t="btn_save_elem">Aplicar Canvis</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Constants
+    const POT_NAMES = ['X', 'Y', 'Z'];
+    
+    // Estat
+    const _defaultLayer = (n) => ({
+      name: n || 'Capa 1',
+      keys: Array.from({length:16}, (_,i) => ({type:'none', label:`${i+1}`, id:i})),
+      pots: Array.from({length:3}, (_,i) => ({function:'none', label:`Pot ${POT_NAMES[i]}`, id:i, value:0}))
+    });
+    function _normalizeLayer(layer) {
+      if (!Array.isArray(layer.keys)) layer.keys = [];
+      if (!Array.isArray(layer.pots)) layer.pots = [];
+      while (layer.keys.length < 16) layer.keys.push({type:'none', label:'', id: layer.keys.length});
+      layer.keys = layer.keys.slice(0, 16);
+      layer.keys.forEach((k, i) => { k.id = i; if (!k.type) k.type = 'none'; });
+      while (layer.pots.length < 3) layer.pots.push({function:'none', label:`Pot ${POT_NAMES[layer.pots.length]||''}`, id: layer.pots.length, value:0});
+      layer.pots = layer.pots.slice(0, 3);
+      layer.pots.forEach((p, i) => { p.id = i; if (p.value === undefined) p.value = 0; });
+      return layer;
+    }
+    function saveLayers() { localStorage.setItem('tecla_layers_v1', JSON.stringify(layers)); }
+    let layers = (JSON.parse(localStorage.getItem('tecla_layers_v1') || 'null') || [_defaultLayer('Capa 1')]).map(_normalizeLayer);
+    let currentLayerIdx = 0;
+    let config = layers[currentLayerIdx];
+    
+    let currentSelection = { type: null, id: null }; // type: 'key' | 'pot'
+    let _deviceDir = null;
+
+    function closeDrawer() {
+      document.getElementById('config-drawer').classList.remove('open');
+      currentSelection = { type: null, id: null };
+      renderDevice();
+    }
+    document.getElementById('btn-close-drawer').addEventListener('click', closeDrawer);
+
+    // Funcions Auxiliars
+    function formatTime() {
+      const d = new Date();
+      return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}:${d.getSeconds().toString().padStart(2,'0')}`;
+    }
+    
+    function logSim(msg, source = 'MACRO') {
+      const term = document.getElementById('sim-terminal');
+      if (!term) return;
+      const div = document.createElement('div');
+      div.className = 'sim-line';
+      div.innerHTML = `<span class="timestamp">[${formatTime()}]</span> <span class="source" style="color: ${source==='SYS'?'var(--yellow)':'var(--green)'}">[${source}]</span> ${msg}`;
+      term.appendChild(div);
+      term.scrollTop = term.scrollHeight;
+    }
+
+    // Pot drag state
+    let _potDrag = null, _potDragY = 0, _potDragVal = 0;
+    config.pots.forEach(p => { if (p.value === undefined) p.value = 0; });
+
+    function _potAngle(v) { return -135 + (Math.max(0, Math.min(127, v)) / 127) * 270; }
+
+    // Render del Dispositiu (Esquerra)
+    function renderDevice() {
+      // Pots
+      const potsContainer = document.getElementById('device-pots');
+      potsContainer.innerHTML = '';
+      config.pots.forEach((p, i) => {
+        if (p.value === undefined) p.value = 0;
+        const div = document.createElement('div');
+        div.className = `pot-wrapper ${currentSelection.type === 'pot' && currentSelection.id === i ? 'active' : ''}`;
+        div.dataset.pot = i;
+        div.innerHTML = `
+          <div class="pot-label">${POT_NAMES[i]}</div>
+          <div class="pot-knob" style="transform: rotate(${_potAngle(p.value)}deg); cursor: ns-resize;"><div class="pot-indicator"></div></div>
+          <div style="font-size: 9px; color: var(--text3); font-family: var(--mono);">${p.function === 'none' ? 'Buit' : p.function === 'click_step' ? ('Clic/' + (p.step_size||10)) : p.function === 'volume' ? 'Volum' : p.function === 'brightness' ? 'Brill.' : p.function === 'scroll_y' ? 'Scroll Y' : p.function === 'scroll_x' ? 'Scroll X' : p.function === 'mouse_x' ? 'Ratolí X' : p.function === 'mouse_y' ? 'Ratolí Y' : p.function}</div>
+          <div style="font-size: 9px; color: var(--accent); font-family: var(--mono); min-height:12px;">${p.value}</div>
+        `;
+        const knobEl = div.querySelector('.pot-knob');
+        knobEl.addEventListener('pointerdown', e => {
+          e.preventDefault(); e.stopPropagation();
+          _potDrag = i; _potDragY = e.clientY; _potDragVal = p.value;
+          knobEl.setPointerCapture(e.pointerId);
+        });
+        knobEl.addEventListener('pointermove', e => {
+          if (_potDrag !== i) return;
+          const v = Math.max(0, Math.min(127, Math.round(_potDragVal + (_potDragY - e.clientY) * 0.8)));
+          config.pots[i].value = v;
+          knobEl.style.transform = `rotate(${_potAngle(v)}deg)`;
+          const valEl = knobEl.nextElementSibling?.nextElementSibling;
+          if (valEl) valEl.textContent = v;
+        });
+        knobEl.addEventListener('pointerup', () => { _potDrag = null; });
+        knobEl.addEventListener('wheel', e => {
+          e.preventDefault(); e.stopPropagation();
+          const v = Math.max(0, Math.min(127, config.pots[i].value + (e.deltaY < 0 ? 2 : -2)));
+          config.pots[i].value = v;
+          knobEl.style.transform = `rotate(${_potAngle(v)}deg)`;
+          const valEl = knobEl.nextElementSibling?.nextElementSibling;
+          if (valEl) valEl.textContent = v;
+        }, { passive: false });
+        div.addEventListener('click', e => { if (!e.target.closest('.pot-knob')) handleElementClick('pot', i); });
+        potsContainer.appendChild(div);
+      });
+
+      // Tecles
+      const keysGrid = document.getElementById('device-keys');
+      keysGrid.innerHTML = '';
+      config.keys.forEach((k, i) => {
+        const btn = document.createElement('div');
+        let classes = 'key-btn';
+        if (k.type !== 'none') classes += ` key-type-${k.type}`;
+        if (currentSelection.type === 'key' && currentSelection.id === i) classes += ' active';
+        btn.className = classes;
+        let funcShort = '';
+        if (k.type === 'key' && k.keycode) {
+          const mods = (k.mods||[]).map(m=>m==='Ctrl'?'⌃':m==='Shift'?'⇧':m==='Alt'?'⌥':'⌘').join('');
+          funcShort = mods + k.keycode.replace('Keycode.','');
+        } else if (k.type === 'string') {
+          funcShort = k.string ? `"${k.string.substring(0,5)}"` : 'Text';
+        } else if (k.type === 'consumer') {
+          const cc = {'PLAY_PAUSE':'Play','SCAN_NEXT_TRACK':'Next','SCAN_PREVIOUS_TRACK':'Prev','STOP':'Stop','MUTE':'Mut','VOLUME_INCREMENT':'Vol+','VOLUME_DECREMENT':'Vol-','FAST_FORWARD':'FWD','REWIND':'RWD','BRIGHTNESS_INCREMENT':'Bri+','BRIGHTNESS_DECREMENT':'Bri-'};
+          const key = k.consumer ? k.consumer.replace('ConsumerControlCode.','') : '';
+          funcShort = cc[key] || key.substring(0,8);
+        } else if (k.type === 'mouse') {
+          const mc = {'Mouse.LEFT_BUTTON':'L-CLK','Mouse.RIGHT_BUTTON':'R-CLK','Mouse.MIDDLE_BUTTON':'M-CLK'};
+          funcShort = mc[k.mouse] || 'Mouse';
+        } else if (k.type === 'layer_change') {
+          funcShort = k.layer_dir === 'prev' ? '← Capa' : 'Capa →';
+        } else if (k.type === 'hold_mod') {
+          const _ms = {'Keycode.COMMAND':'⌘','Keycode.CONTROL':'⌃','Keycode.ALT':'⌥','Keycode.SHIFT':'⇧','Keycode.LEFT_GUI':'⊞'};
+          funcShort = (_ms[k.modifier] || '?') + ' HOLD';
+        }
+        btn.innerHTML = `<div class="key-num">${i + 1}</div>${funcShort ? `<div class="key-label">${funcShort}</div>` : ''}`;
+        btn.addEventListener('click', () => handleElementClick('key', i));
+        keysGrid.appendChild(btn);
+      });
+    }
+
+    // Gestió del Clic als Elements
+    function handleElementClick(type, id) {
+      currentSelection = { type, id };
+      loadConfigForm();
+      document.getElementById('config-drawer').classList.add('open');
+      renderDevice();
+    }
+
+    // Carregar el formulari de configuració
+    const typeSelect = document.getElementById('elem-type');
+    typeSelect.addEventListener('change', (e) => {
+      ['settings-key','settings-string','settings-consumer','settings-mouse','settings-layer_change','settings-hold_mod','settings-pot-click_step'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.style.display = 'none';
+      });
+      const val = e.target.value;
+      if (val === 'key') document.getElementById('settings-key').style.display = 'block';
+      if (val === 'string') document.getElementById('settings-string').style.display = 'block';
+      if (val === 'consumer') document.getElementById('settings-consumer').style.display = 'block';
+      if (val === 'mouse') document.getElementById('settings-mouse').style.display = 'block';
+      if (val === 'layer_change') document.getElementById('settings-layer_change').style.display = 'block';
+      if (val === 'hold_mod') document.getElementById('settings-hold_mod').style.display = 'block';
+      if (val === 'click_step') document.getElementById('settings-pot-click_step').style.display = 'block';
+    });
+
+    function loadConfigForm() {
+      const { type, id } = currentSelection;
+      const title = document.getElementById('form-element-title');
+      const labelInput = document.getElementById('elem-label');
+      
+      // Neteja general opcions
+      typeSelect.innerHTML = '';
+      
+      if (type === 'key') {
+        const k = config.keys[id];
+        title.innerText = `Configurant Tecla ${id + 1}`;
+        labelInput.value = k.label;
+        
+        typeSelect.innerHTML = `
+          <option value="none" data-t="type_none">${_i('type_none')}</option>
+          <option value="key" data-t="type_key">${_i('type_key')}</option>
+          <option value="string" data-t="type_string">${_i('type_string')}</option>
+          <option value="consumer" data-t="type_consumer">${_i('type_consumer')}</option>
+          <option value="mouse" data-t="type_mouse">${_i('type_mouse')}</option>
+          <option value="layer_change" data-t="type_layer">${_i('type_layer')}</option>
+          <option value="hold_mod" data-t="type_hold_mod">${_i('type_hold_mod')}</option>
+        `;
+        typeSelect.value = k.type;
+        
+        // Reset sub-formularis
+        document.getElementById('mod-ctrl').checked = false;
+        document.getElementById('mod-shift').checked = false;
+        document.getElementById('mod-alt').checked = false;
+        document.getElementById('mod-cmd').checked = false;
+        document.getElementById('key-string').value = '';
+        
+        if (k.type === 'key') {
+          document.getElementById('key-keycode').value = k.keycode || 'Keycode.A';
+          if (k.mods) {
+            if (k.mods.includes('Ctrl')) document.getElementById('mod-ctrl').checked = true;
+            if (k.mods.includes('Shift')) document.getElementById('mod-shift').checked = true;
+            if (k.mods.includes('Alt')) document.getElementById('mod-alt').checked = true;
+            if (k.mods.includes('Cmd')) document.getElementById('mod-cmd').checked = true;
+          }
+        } else if (k.type === 'string') {
+          document.getElementById('key-string').value = k.string || '';
+        } else if (k.type === 'consumer') {
+          document.getElementById('key-consumer').value = k.consumer || 'ConsumerControlCode.PLAY_PAUSE';
+        } else if (k.type === 'mouse') {
+          document.getElementById('key-mouse').value = k.mouse || 'Mouse.LEFT_BUTTON';
+        } else if (k.type === 'layer_change') {
+          document.getElementById('key-layer-dir').value = k.layer_dir || 'next';
+        } else if (k.type === 'hold_mod') {
+          document.getElementById('key-hold-mod').value = k.modifier || 'Keycode.COMMAND';
+        }
+      } else if (type === 'pot') {
+        const p = config.pots[id];
+        title.innerText = `Configurant Potenciòmetre ${POT_NAMES[id]}`;
+        labelInput.value = p.label;
+        
+        typeSelect.innerHTML = `
+          <option value="none">Cap (Desactivat)</option>
+          <option value="volume">Volum de l'ordinador</option>
+          <option value="brightness">Brillantor de la pantalla</option>
+          <option value="scroll_y">Ratolí: Scroll Vertical</option>
+          <option value="scroll_x">Ratolí: Scroll Horitzontal</option>
+          <option value="mouse_x">Ratolí: Moviment X (Esq/Dre)</option>
+          <option value="mouse_y">Ratolí: Moviment Y (Dalt/Baix)</option>
+          <option value="click_step">Clic per moviment (pas configurable)</option>
+        `;
+        typeSelect.value = p.function;
+        if (p.function === 'click_step') {
+          document.getElementById('settings-pot-click_step').style.display = 'block';
+          document.getElementById('pot-step-size').value = p.step_size || 10;
+        }
+      }
+      
+      typeSelect.dispatchEvent(new Event('change'));
+    }
+
+    // Guardar configuració del panell
+    document.getElementById('btn-save-element').addEventListener('click', () => {
+      const { type, id } = currentSelection;
+      const label = document.getElementById('elem-label').value;
+      const fType = document.getElementById('elem-type').value;
+      
+      if (type === 'key') {
+        const k = { type: fType, label: label || `${id + 1}`, id };
+        if (fType === 'key') {
+          k.keycode = document.getElementById('key-keycode').value;
+          k.mods = [];
+          if (document.getElementById('mod-ctrl').checked) k.mods.push('Ctrl');
+          if (document.getElementById('mod-shift').checked) k.mods.push('Shift');
+          if (document.getElementById('mod-alt').checked) k.mods.push('Alt');
+          if (document.getElementById('mod-cmd').checked) k.mods.push('Cmd');
+        } else if (fType === 'string') {
+          k.string = document.getElementById('key-string').value;
+        } else if (fType === 'consumer') {
+          k.consumer = document.getElementById('key-consumer').value;
+        } else if (fType === 'mouse') {
+          k.mouse = document.getElementById('key-mouse').value;
+        } else if (fType === 'layer_change') {
+          k.layer_dir = document.getElementById('key-layer-dir').value;
+        } else if (fType === 'hold_mod') {
+          k.modifier = document.getElementById('key-hold-mod').value;
+        }
+        config.keys[id] = k;
+      } else if (type === 'pot') {
+        const potData = { function: fType, label: label || `Pot ${POT_NAMES[id]}`, id, value: config.pots[id]?.value || 0 };
+        if (fType === 'click_step') potData.step_size = parseInt(document.getElementById('pot-step-size').value) || 10;
+        config.pots[id] = potData;
+      }
+      
+      logSim(`Configuració guardada per a ${type} ${id}`, 'SYS');
+      saveLayers();
+      renderDevice();
+    });
+
+    // Generador Codi CircuitPython (multi-capa)
+    function generateCode() {
+      const hasLayerChange = layers.some(l => l.keys.some(k => k.type === 'layer_change'));
+      const multiLayer = layers.length > 1 || hasLayerChange;
+      const allKeys = layers.map(l => l.keys);
+      const allPots = layers.map(l => l.pots);
+
+      const hasHoldMod   = allKeys.flat().some(k => k.type === 'hold_mod');
+      const needsKeyboard = allKeys.flat().some(k => k.type === 'key' || k.type === 'hold_mod');
+      const needsString   = allKeys.flat().some(k => k.type === 'string');
+      const needsConsumer = allKeys.flat().some(k => k.type === 'consumer') || allPots.flat().some(p => p.function === 'volume' || p.function === 'brightness');
+      const needsMouse    = allKeys.flat().some(k => k.type === 'mouse') || allPots.flat().some(p => p.function.startsWith('mouse') || p.function.startsWith('scroll') || p.function === 'click_step');
+
+      let code = `# TECLA MacroPad - Codi generat autom\u00e0ticament\nimport time\nimport board\nimport digitalio\nimport usb_hid\nimport analogio\n\n`;
+      if (needsKeyboard) code += `from adafruit_hid.keycode import Keycode\nfrom adafruit_hid.keyboard import Keyboard\n`;
+      if (needsString)   code += `from adafruit_hid.keyboard_layout_us import KeyboardLayoutUS\n`;
+      if (needsConsumer) code += `from adafruit_hid.consumer_control import ConsumerControl\nfrom adafruit_hid.consumer_control_code import ConsumerControlCode\n`;
+      if (needsMouse)    code += `from adafruit_hid.mouse import Mouse\n`;
+
+      code += `\n# --- HID Setup ---\n`;
+      if (needsKeyboard || needsString) code += `keyboard = Keyboard(usb_hid.devices)\n`;
+      if (needsString)   code += `layout = KeyboardLayoutUS(keyboard)\n`;
+      if (needsConsumer) code += `cc = ConsumerControl(usb_hid.devices)\n`;
+      if (needsMouse)    code += `mouse = Mouse(usb_hid.devices)\n`;
+
+      code += `\n# --- Hardware Setup ---\n`;
+      code += `btn_pins = [board.GP1, board.GP0, board.GP3, board.GP2, board.GP5, board.GP4, board.GP7, board.GP6, board.GP9, board.GP8, board.GP11, board.GP10, board.GP13, board.GP12, board.GP15, board.GP14]\n`;
+      code += `btns = [digitalio.DigitalInOut(pin) for pin in btn_pins]\nfor b in btns:\n    b.direction = digitalio.Direction.INPUT\n    b.pull = digitalio.Pull.DOWN\n`;
+      code += `\npots = [analogio.AnalogIn(board.A1), analogio.AnalogIn(board.A0), analogio.AnalogIn(board.A2)]\nlast_pot_vals = [p.value // 1000 for p in pots]\n`;
+      code += `last_btn_states = [False] * 16\n`;
+      if (multiLayer) code += `current_layer = 0\nLAYER_COUNT = ${layers.length}\n`;
+      if (hasHoldMod) code += `DEBOUNCE_TIME = 0.02\n`;
+      // Click-step bucket init vars
+      for (let p = 0; p < 3; p++) {
+        const pp = config.pots[p]; if (!pp || pp.function !== 'click_step') continue;
+        const step = pp.step_size || 10;
+        code += `last_click_bucket_p${p} = pots[${p}].value // 512 // ${step}\n`;
+      }
+
+      code += `\n# --- Loop Principal ---\nwhile True:\n    # TECLES\n`;
+
+      function _keyAction(k, indent) {
+        const i2 = indent + '    ';
+        if (k.type === 'hold_mod') return `${indent}keyboard.press(${k.modifier || 'Keycode.COMMAND'})\n`;
+        if (k.type === 'layer_change') {
+          const d = k.layer_dir === 'prev' ? '-1' : '1';
+          return `${indent}current_layer = (current_layer + ${d}) % LAYER_COUNT\n${i2}pass\n`;
+        }
+        if (k.type === 'key') {
+          const pmods = (k.mods||[]).map(m => ({'Ctrl':'Keycode.CONTROL','Shift':'Keycode.SHIFT','Alt':'Keycode.ALT','Cmd':'Keycode.COMMAND'})[m]||'').filter(Boolean);
+          return `${indent}keyboard.press(${pmods.length ? pmods.join(', ') + ', ' : ''}${k.keycode})\n`;
+        }
+        if (k.type === 'string') return `${indent}layout.write("${k.string}")\n`;
+        if (k.type === 'consumer') return `${indent}cc.send(${k.consumer})\n`;
+        if (k.type === 'mouse') return `${indent}mouse.click(${k.mouse})\n`;
+        return `${indent}pass\n`;
+      }
+      function _keyRelease(k, indent) {
+        if (k.type === 'hold_mod') return `${indent}keyboard.release(${k.modifier || 'Keycode.COMMAND'})\n`;
+        if (k.type === 'key') {
+          if (hasHoldMod) {
+            const pmods = (k.mods||[]).map(m => ({'Ctrl':'Keycode.CONTROL','Shift':'Keycode.SHIFT','Alt':'Keycode.ALT','Cmd':'Keycode.COMMAND'})[m]||'').filter(Boolean);
+            return `${indent}keyboard.release(${[...pmods, k.keycode].join(', ')})\n`;
+          }
+          return `${indent}keyboard.release_all()\n`;
+        }
+        return `${indent}pass\n`;
+      }
+      function _keyBlock(k, i, baseIndent) {
+        let c = `${baseIndent}if btns[${i}].value != last_btn_states[${i}]:\n`;
+        if (k.type === 'hold_mod') c += `${baseIndent}    time.sleep(DEBOUNCE_TIME)\n`;
+        c += `${baseIndent}    if btns[${i}].value:\n`;
+        c += _keyAction(k, baseIndent + '        ');
+        c += `${baseIndent}    else:\n`;
+        c += _keyRelease(k, baseIndent + '        ');
+        c += `${baseIndent}    last_btn_states[${i}] = btns[${i}].value\n`;
+        return c;
+      }
+
+      if (multiLayer) {
+        for (let li = 0; li < layers.length; li++) {
+          const keys = layers[li].keys;
+          const hasSomething = keys.some(k => k.type !== 'none');
+          if (!hasSomething) continue;
+          code += `    ${li === 0 ? 'if' : 'elif'} current_layer == ${li}:\n`;
+          for (let i = 0; i < 16; i++) {
+            const k = keys[i]; if (k.type === 'none') continue;
+            code += _keyBlock(k, i, '        ');
+          }
+        }
+      } else {
+        for (let i = 0; i < 16; i++) {
+          const k = config.keys[i]; if (k.type === 'none') continue;
+          code += _keyBlock(k, i, '    ') + '\n';
+        }
+      }
+
+      code += `\n    # POTS\n`;
+      for (let p = 0; p < 3; p++) {
+        const pp = config.pots[p]; if (!pp) continue;
+        const pf = pp.function; if (pf === 'none') continue;
+        if (pf === 'click_step') {
+          const step = pp.step_size || 10;
+          code += `    curr_bucket_p${p} = pots[${p}].value // 512 // ${step}\n`;
+          code += `    if curr_bucket_p${p} != last_click_bucket_p${p}:\n`;
+          code += `        mouse.click(Mouse.LEFT_BUTTON)\n`;
+          code += `        last_click_bucket_p${p} = curr_bucket_p${p}\n\n`;
+        } else {
+          code += `    curr_p${p} = pots[${p}].value // 1000\n    if abs(curr_p${p} - last_pot_vals[${p}]) > 2:\n`;
+          if (pf === 'volume') code += `        cc.send(ConsumerControlCode.VOLUME_INCREMENT if curr_p${p} > last_pot_vals[${p}] else ConsumerControlCode.VOLUME_DECREMENT)\n`;
+          else if (pf === 'scroll_y') code += `        mouse.move(wheel=1 if curr_p${p} > last_pot_vals[${p}] else -1)\n`;
+          else if (pf === 'scroll_x') code += `        mouse.move(wheel=0, x=1 if curr_p${p} > last_pot_vals[${p}] else -1)\n`;
+          else if (pf === 'mouse_x') code += `        mouse.move(x=int((curr_p${p} - 32) * 0.5))\n`;
+          else if (pf === 'mouse_y') code += `        mouse.move(y=int((curr_p${p} - 32) * 0.5))\n`;
+          else if (pf === 'brightness') code += `        cc.send(ConsumerControlCode.BRIGHTNESS_INCREMENT if curr_p${p} > last_pot_vals[${p}] else ConsumerControlCode.BRIGHTNESS_DECREMENT)\n`;
+          else code += `        pass\n`;
+          code += `        last_pot_vals[${p}] = curr_p${p}\n\n`;
+        }
+      }
+      code += `    time.sleep(0.01)\n`;
+      return code;
+    }
+
+    // Exportar al Dispositiu (File System Access API)
+    document.getElementById('btn-export')?.addEventListener('click', async () => {
+      const code = generateCode();
+      if ('showDirectoryPicker' in window) {
+        try {
+          const dir = _deviceDir || await window.showDirectoryPicker({ mode: 'readwrite', startIn: 'desktop' });
+          const fh = await dir.getFileHandle('code.py', { create: true });
+          const w = await fh.createWritable();
+          await w.write(code);
+          await w.close();
+          alert('code.py exportat correctament al dispositiu!');
+        } catch (e) {
+          if (e.name !== 'AbortError') alert('Error exportant: ' + e.message);
+        }
+      } else {
+        const blob = new Blob([code], { type: 'text/x-python' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'code.py';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      }
+    });
+
+    // ── Presets integrats ─────────────────────────────────────────
+    function _k(type, label, extra={}) { return Object.assign({type, label, id:0}, extra); }
+    const _PRESETS = [
+      { id:'calc', name:'Calculadora', desc:'Teclat numèric 4×4 amb operadors aritmètics, Backspace i Enter.',
+        layers:[{ name:'Calculadora',
+          keys:[
+            _k('string','7',{string:'7'}),_k('string','8',{string:'8'}),_k('string','9',{string:'9'}),_k('string','/',{string:'/'}),
+            _k('string','4',{string:'4'}),_k('string','5',{string:'5'}),_k('string','6',{string:'6'}),_k('string','*',{string:'*'}),
+            _k('string','1',{string:'1'}),_k('string','2',{string:'2'}),_k('string','3',{string:'3'}),_k('string','-',{string:'-'}),
+            _k('string','0',{string:'0'}),_k('key','⌫',{keycode:'Keycode.BACKSPACE',mods:[]}),_k('key','↵',{keycode:'Keycode.ENTER',mods:[]}),_k('string','+',{string:'+'})
+          ].map((k,i)=>Object.assign(k,{id:i})),
+          pots:[{function:'none',label:'Pot X',id:0,value:0},{function:'none',label:'Pot Y',id:1,value:0},{function:'none',label:'Pot Z',id:2,value:0}]
+        }]
+      },
+      { id:'mouse', name:'Ratolí + Shortcuts', desc:'Clics de ratolí, navegació per pestanyes i dreceres del navegador.',
+        layers:[{ name:'Ratolí',
+          keys:[
+            _k('mouse','L-CLK',{mouse:'Mouse.LEFT_BUTTON'}),_k('mouse','R-CLK',{mouse:'Mouse.RIGHT_BUTTON'}),_k('mouse','M-CLK',{mouse:'Mouse.MIDDLE_BUTTON'}),_k('consumer','Mute',{consumer:'ConsumerControlCode.MUTE'}),
+            _k('key','⌃Tab',{keycode:'Keycode.TAB',mods:['Ctrl']}),_k('key','⌃⇧Tab',{keycode:'Keycode.TAB',mods:['Ctrl','Shift']}),_k('key','⌃W',{keycode:'Keycode.W',mods:['Ctrl']}),_k('key','⌃T',{keycode:'Keycode.T',mods:['Ctrl']}),
+            _k('key','Enrere',{keycode:'Keycode.LEFT_ARROW',mods:['Alt']}),_k('key','Endavant',{keycode:'Keycode.RIGHT_ARROW',mods:['Alt']}),_k('key','⌃R',{keycode:'Keycode.R',mods:['Ctrl']}),_k('key','⌃S',{keycode:'Keycode.S',mods:['Ctrl']}),
+            _k('key','↑',{keycode:'Keycode.UP_ARROW',mods:[]}),_k('key','↓',{keycode:'Keycode.DOWN_ARROW',mods:[]}),_k('key','←',{keycode:'Keycode.LEFT_ARROW',mods:[]}),_k('key','→',{keycode:'Keycode.RIGHT_ARROW',mods:[]})
+          ].map((k,i)=>Object.assign(k,{id:i})),
+          pots:[{function:'mouse_x',label:'Ratolí X',id:0,value:0},{function:'mouse_y',label:'Ratolí Y',id:1,value:0},{function:'scroll_y',label:'Scroll',id:2,value:0}]
+        }]
+      },
+      { id:'video', name:'Edició de Vídeo', desc:'Dreceres per a Premiere, DaVinci Resolve i similars. JKL jog, tall, punts de tall.',
+        layers:[{ name:'Vídeo',
+          keys:[
+            _k('key','▶/⏸',{keycode:'Keycode.SPACE',mods:[]}),_k('key','In',{keycode:'Keycode.I',mods:[]}),_k('key','Out',{keycode:'Keycode.O',mods:[]}),_k('key','Desa',{keycode:'Keycode.S',mods:['Ctrl']}),
+            _k('key','J ◀◀',{keycode:'Keycode.J',mods:[]}),_k('key','K ⏸',{keycode:'Keycode.K',mods:[]}),_k('key','L ▶▶',{keycode:'Keycode.L',mods:[]}),_k('key','Tallar',{keycode:'Keycode.C',mods:[]}),
+            _k('key','Desfer',{keycode:'Keycode.Z',mods:['Ctrl']}),_k('key','Refer',{keycode:'Keycode.Z',mods:['Ctrl','Shift']}),_k('key','↑Tall',{keycode:'Keycode.UP_ARROW',mods:[]}),_k('key','↓Tall',{keycode:'Keycode.DOWN_ARROW',mods:[]}),
+            _k('key','Sel.',{keycode:'Keycode.V',mods:[]}),_k('key','Full',{keycode:'Keycode.F',mods:[]}),_k('key','Esc',{keycode:'Keycode.ESCAPE',mods:[]}),_k('consumer','▶⏸',{consumer:'ConsumerControlCode.PLAY_PAUSE'})
+          ].map((k,i)=>Object.assign(k,{id:i})),
+          pots:[{function:'none',label:'Pot X',id:0,value:0},{function:'none',label:'Pot Y',id:1,value:0},{function:'volume',label:'Volum',id:2,value:0}]
+        }]
+      },
+      { id:'audio', name:'Edició d\'Audio', desc:'Dreceres per a DAWs com Ableton, Logic o Reaper. Record, mute, loop, navegació.',
+        layers:[{ name:'Àudio',
+          keys:[
+            _k('key','▶/⏸',{keycode:'Keycode.SPACE',mods:[]}),_k('key','● REC',{keycode:'Keycode.R',mods:[]}),_k('key','Desa',{keycode:'Keycode.S',mods:['Ctrl']}),_k('key','Desfer',{keycode:'Keycode.Z',mods:['Ctrl']}),
+            _k('key','Refer',{keycode:'Keycode.Z',mods:['Ctrl','Shift']}),_k('key','Mute',{keycode:'Keycode.M',mods:[]}),_k('key','Solo',{keycode:'Keycode.S',mods:[]}),_k('key','Loop',{keycode:'Keycode.L',mods:[]}),
+            _k('consumer','Mut',{consumer:'ConsumerControlCode.MUTE'}),_k('consumer','Vol+',{consumer:'ConsumerControlCode.VOLUME_INCREMENT'}),_k('consumer','Vol-',{consumer:'ConsumerControlCode.VOLUME_DECREMENT'}),_k('key','Tempo',{keycode:'Keycode.T',mods:[]}),
+            _k('key','↑Pista',{keycode:'Keycode.UP_ARROW',mods:[]}),_k('key','↓Pista',{keycode:'Keycode.DOWN_ARROW',mods:[]}),_k('key','← Pos',{keycode:'Keycode.LEFT_ARROW',mods:[]}),_k('key','→ Pos',{keycode:'Keycode.RIGHT_ARROW',mods:[]})
+          ].map((k,i)=>Object.assign(k,{id:i})),
+          pots:[{function:'volume',label:'Volum Master',id:0,value:0},{function:'scroll_y',label:'Scroll Pistes',id:1,value:0},{function:'none',label:'Pot Z',id:2,value:0}]
+        }]
+      },
+      { id:'produc', name:'Productivitat', desc:'Les dreceres més usades en ofimàtica i navegació: copiar, enganxar, cercar, canviar app.',
+        layers:[{ name:'Productivitat',
+          keys:[
+            _k('key','Desfer',{keycode:'Keycode.Z',mods:['Ctrl']}),_k('key','Refer',{keycode:'Keycode.Y',mods:['Ctrl']}),_k('key','Copiar',{keycode:'Keycode.C',mods:['Ctrl']}),_k('key','Enganxar',{keycode:'Keycode.V',mods:['Ctrl']}),
+            _k('key','Tallar',{keycode:'Keycode.X',mods:['Ctrl']}),_k('key','Desa',{keycode:'Keycode.S',mods:['Ctrl']}),_k('key','Tot',{keycode:'Keycode.A',mods:['Ctrl']}),_k('key','Cercar',{keycode:'Keycode.F',mods:['Ctrl']}),
+            _k('key','Nou',{keycode:'Keycode.N',mods:['Ctrl']}),_k('key','Impr.',{keycode:'Keycode.P',mods:['Ctrl']}),_k('key','Tancar',{keycode:'Keycode.W',mods:['Ctrl']}),_k('key','⌃Tab',{keycode:'Keycode.TAB',mods:['Ctrl']}),
+            _k('key','⌥Tab',{keycode:'Keycode.TAB',mods:['Alt']}),_k('key','F5',{keycode:'Keycode.F5',mods:[]}),_k('key','Esc',{keycode:'Keycode.ESCAPE',mods:[]}),_k('key','Entra',{keycode:'Keycode.ENTER',mods:[]})
+          ].map((k,i)=>Object.assign(k,{id:i})),
+          pots:[{function:'volume',label:'Volum',id:0,value:0},{function:'brightness',label:'Brillantor',id:1,value:0},{function:'scroll_y',label:'Scroll',id:2,value:0}]
+        }]
+      },
+    ];
+
+    function _renderPresetsGrid() {
+      const grid = document.getElementById('preset-grid'); if (!grid) return;
+      grid.innerHTML = _PRESETS.map((p, i) =>
+        `<label class="cb"><input type="checkbox" class="preset-chk" value="${i}"><span title="${p.desc}">${p.name}</span></label>`
+      ).join('');
+    }
+
+    document.getElementById('btn-add-presets')?.addEventListener('click', () => {
+      const checked = [...document.querySelectorAll('.preset-chk:checked')];
+      if (!checked.length) { alert('Selecciona almenys una configuració.'); return; }
+      checked.forEach(chk => {
+        const p = _PRESETS[+chk.value]; if (!p) return;
+        const newLayer = _defaultLayer(p.name);
+        const src = p.layers[0];
+        if (src?.keys) newLayer.keys = JSON.parse(JSON.stringify(src.keys));
+        if (src?.pots) { newLayer.pots = JSON.parse(JSON.stringify(src.pots)); }
+        _normalizeLayer(newLayer);
+        layers.push(newLayer);
+      });
+      currentLayerIdx = layers.length - 1;
+      config = layers[currentLayerIdx];
+      saveLayers(); _syncLayerBar(); renderDevice(); _renderDeviceLayers();
+      logSim(`${checked.length} capa${checked.length!==1?'es':''} afegida${checked.length!==1?'es':''} al dispositiu`, 'SYS');
+      document.querySelectorAll('.preset-chk').forEach(c => c.checked = false);
+      document.querySelector('[data-tab="config"]')?.click();
+    });
+    document.getElementById('btn-presets-all')?.addEventListener('click', () =>
+      document.querySelectorAll('.preset-chk').forEach(c => c.checked = true));
+    document.getElementById('btn-presets-none')?.addEventListener('click', () =>
+      document.querySelectorAll('.preset-chk').forEach(c => c.checked = false));
+
+    // ── Capes de la biblioteca ─────────────────────────────────
+    function loadProfiles() { return JSON.parse(localStorage.getItem('tecla_profiles_v2') || '{}'); }
+    function _saveProfiles(profs) { localStorage.setItem('tecla_profiles_v2', JSON.stringify(profs)); }
+
+    function renderProfiles() {
+      const list = document.getElementById('profiles-list'); if (!list) return;
+      list.innerHTML = '';
+      if (!layers.length) {
+        list.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0">Cap capa. Prem <strong>+ Nova capa</strong> o afegeix-ne des de Configuracions.</div>';
+        return;
+      }
+      layers.forEach((layer, idx) => {
+        const row = document.createElement('div');
+        row.className = 'profile-row' + (idx === currentLayerIdx ? ' profile-row-active' : '');
+        row.innerHTML = `
+          <div><span style="font-size:10px;color:var(--text3);margin-right:6px">${idx+1}</span><span class="profile-row-name">${layer.name || 'Sense nom'}</span></div>
+          <div style="display:flex;gap:5px">
+            <button class="btn btn-sm btn-primary">${_i('profiles_edit')}</button>
+            <button class="btn btn-sm" ${idx===0?'disabled':''}>&#x2191;</button>
+            <button class="btn btn-sm" ${idx===layers.length-1?'disabled':''}>&#x2193;</button>
+            <button class="btn btn-sm" title="Reanomenar">&#x270E;</button>
+            <button class="btn btn-sm btn-danger">&#x2715;</button>
+          </div>`;
+        row.querySelectorAll('button')[0].addEventListener('click', () => {
+          currentLayerIdx = idx; config = layers[idx];
+          _syncLayerBar(); renderDevice();
+          document.querySelector('[data-tab="config"]')?.click();
+        });
+        row.querySelectorAll('button')[1].addEventListener('click', () => _moveDeviceLayer(idx, -1));
+        row.querySelectorAll('button')[2].addEventListener('click', () => _moveDeviceLayer(idx, 1));
+        row.querySelectorAll('button')[3].addEventListener('click', () => {
+          const newName = prompt('Nou nom de la capa:', layer.name || '');
+          if (!newName || !newName.trim()) return;
+          layers[idx].name = newName.trim();
+          if (currentLayerIdx === idx) { config.name = newName.trim(); _syncLayerBar(); }
+          saveLayers(); renderProfiles();
+          logSim(`Capa reanomenada a "${newName.trim()}"`, 'SYS');
+        });
+        row.querySelectorAll('button')[4].addEventListener('click', () => _removeDeviceLayer(idx));
+        list.appendChild(row);
+      });
+    }
+
+    function _loadProfile(name) {
+      const profs = loadProfiles(); if (!profs[name]) return;
+      const p = profs[name];
+      layers = p.layers ? JSON.parse(JSON.stringify(p.layers)) : [Object.assign(_defaultLayer('Capa 1'), {keys: p.keys, pots: p.pots})];
+      currentLayerIdx = p.currentLayerIdx || 0;
+      config = layers[currentLayerIdx];
+      config.pots.forEach(pt => { if (pt.value === undefined) pt.value = 0; });
+      saveLayers(); _syncLayerBar(); renderDevice(); closeDrawer();
+      logSim(`Capa "${name}" carregada`, 'SYS');
+      document.querySelector('[data-tab="config"]')?.click();
+    }
+    window.loadConfig = _loadProfile;
+    window.deleteConfig = (name) => { const p=loadProfiles(); delete p[name]; _saveProfiles(p); renderProfiles(); };
+
+    function _addLayerFromLibrary(name) {
+      const profs = loadProfiles();
+      const p = profs[name]; if (!p) return;
+      const newLayer = _defaultLayer(name);
+      const src = p.layers ? p.layers[0] : p;
+      if (src?.keys) newLayer.keys = JSON.parse(JSON.stringify(src.keys));
+      if (src?.pots) { newLayer.pots = JSON.parse(JSON.stringify(src.pots)); }
+      _normalizeLayer(newLayer);
+      layers.push(newLayer);
+      currentLayerIdx = layers.length - 1;
+      config = layers[currentLayerIdx];
+      saveLayers(); _syncLayerBar(); renderDevice(); _renderDeviceLayers();
+      logSim(`Capa "${name}" afegida al dispositiu`, 'SYS');
+      document.querySelector('[data-tab="config"]')?.click();
+    }
+
+    function _renderDeviceLayers() { renderProfiles(); }
+
+    function _moveDeviceLayer(idx, dir) {
+      const ni = idx + dir;
+      if (ni < 0 || ni >= layers.length) return;
+      [layers[idx], layers[ni]] = [layers[ni], layers[idx]];
+      if (currentLayerIdx === idx) currentLayerIdx = ni;
+      else if (currentLayerIdx === ni) currentLayerIdx = idx;
+      config = layers[currentLayerIdx];
+      saveLayers(); _syncLayerBar(); renderProfiles();
+    }
+
+    function _removeDeviceLayer(idx) {
+      if (layers.length <= 1) { alert('Cal tenir almenys una capa al dispositiu.'); return; }
+      if (!confirm(`Eliminar "${layers[idx].name}" del dispositiu?`)) return;
+      layers.splice(idx, 1);
+      if (currentLayerIdx >= layers.length) currentLayerIdx = layers.length - 1;
+      config = layers[currentLayerIdx];
+      saveLayers(); _syncLayerBar(); renderDevice(); renderProfiles();
+    }
+
+    function _exportProfileJSON() {
+      const data = {};
+      layers.forEach((l, i) => { data[l.name || `Capa ${i+1}`] = { keys: l.keys, pots: l.pots }; });
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'tecla-capes.json';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
+
+    document.getElementById('btn-save-to-library')?.addEventListener('click', () => {
+      const newName = prompt('Nou nom de la capa:', config.name || 'Nova capa');
+      if (!newName || !newName.trim()) return;
+      config.name = newName.trim();
+      layers[currentLayerIdx].name = newName.trim();
+      saveLayers(); _syncLayerBar(); renderProfiles();
+      logSim(`Capa reanomenada a "${newName.trim()}"`, 'SYS');
+    });
+    document.getElementById('btn-new-layer-tab')?.addEventListener('click', () => {
+      const name = prompt('Nom de la nova capa:', `Capa ${layers.length + 1}`); if (!name) return;
+      layers.push(_defaultLayer(name.trim())); currentLayerIdx = layers.length - 1;
+      config = layers[currentLayerIdx]; renderDevice(); _syncLayerBar(); saveLayers(); renderProfiles();
+      logSim(`Nova capa "${name.trim()}" creada`, 'SYS');
+      document.querySelector('[data-tab="config"]')?.click();
+    });
+    document.getElementById('btn-export-all')?.addEventListener('click', () => _exportProfileJSON());
+    document.getElementById('btn-import-profile')?.addEventListener('click', () => document.getElementById('import-profile-file')?.click());
+    document.getElementById('import-profile-file')?.addEventListener('change', e => {
+      const file = e.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          const entries = Array.isArray(data) ? data.map((l,i) => [l.name||`Importada ${i+1}`,l]) : Object.entries(data);
+          let count = 0;
+          for (const [k,v] of entries) {
+            const src = v?.layers ? v.layers[0] : v;
+            if (!src?.keys) continue;
+            const nl = _defaultLayer(k);
+            nl.keys = JSON.parse(JSON.stringify(src.keys));
+            if (src.pots) { nl.pots = JSON.parse(JSON.stringify(src.pots)); }
+            _normalizeLayer(nl);
+            layers.push(nl); count++;
+          }
+          if (count) { currentLayerIdx = layers.length-1; config = layers[currentLayerIdx]; saveLayers(); _syncLayerBar(); renderDevice(); renderProfiles(); }
+          alert(`${count} capa${count!==1?'es':''} importada${count!==1?'es':''} correctament.`);
+        } catch { alert('Error: fitxer JSON inv\u00e0lid.'); }
+        e.target.value = '';
+      };
+      reader.readAsText(file);
+    });
+
+    // Tab navigation
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+        document.getElementById('config-drawer').classList.remove('open');
+        currentSelection = { type: null, id: null };
+        if (tab.dataset.tab === 'profiles') { _renderPresetsGrid(); renderProfiles(); _renderDeviceLayers(); }
+      });
+    });
+
+    // Firmware: exportar
+    const _fwExport = document.getElementById('btn-fw-export');
+    if (_fwExport) _fwExport.addEventListener('click', async () => {
+      const msgEl = document.getElementById('fw-progress-msg');
+      const progEl = document.getElementById('fw-progress');
+      const code = generateCode();
+      if ('showDirectoryPicker' in window) {
+        try {
+          if (!_deviceDir) msgEl.textContent = 'Selecciona el volum CIRCUITPY…';
+          const dir = _deviceDir || await window.showDirectoryPicker({ mode: 'readwrite', startIn: 'desktop' });
+          progEl.value = 50; msgEl.textContent = 'Escrivint code.py…';
+          const fh = await dir.getFileHandle('code.py', { create: true });
+          const w = await fh.createWritable();
+          await w.write(code); await w.close();
+          progEl.value = 100; msgEl.textContent = '✓ code.py exportat correctament!';
+          setTimeout(() => { progEl.value = 0; msgEl.textContent = ''; }, 4000);
+        } catch (e) {
+          progEl.value = 0;
+          if (e.name !== 'AbortError') { msgEl.textContent = 'Error: ' + e.message; }
+          else { msgEl.textContent = ''; }
+        }
+      } else {
+        const blob = new Blob([code], { type: 'text/x-python' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = 'code.py';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        msgEl.textContent = "code.py descarregat. Copia'l manualment a CIRCUITPY.";
+      }
+    });
+
+    // Firmware: refrescar estat
+    const _fwRefresh = document.getElementById('btn-fw-refresh');
+    if (_fwRefresh) _fwRefresh.addEventListener('click', async () => {
+      const cpEl = document.getElementById('fw-circuitpy');
+      const pyEl = document.getElementById('fw-cpython');
+      if (!_deviceDir && !('showDirectoryPicker' in window)) {
+        cpEl.textContent = 'No suportat'; cpEl.className = 'fw-status-val fw-err';
+        pyEl.textContent = 'Cal Chrome/Edge'; pyEl.className = 'fw-status-val fw-err';
+        return;
+      }
+      try {
+        const dir = _deviceDir || await window.showDirectoryPicker({ startIn: 'desktop' });
+        const name = dir.name;
+        const isCP = name === 'CIRCUITPY';
+        cpEl.textContent = isCP ? '✓ Detectat' : name + ' (no és CIRCUITPY)';
+        cpEl.className = 'fw-status-val ' + (isCP ? 'fw-ok' : 'fw-err');
+        if (isCP) {
+          try {
+            const fh = await dir.getFileHandle('boot_out.txt');
+            const f = await fh.getFile();
+            const txt = await f.text();
+            const m = txt.match(/CircuitPython ([\d.]+)/);
+            pyEl.textContent = m ? '✓ ' + m[1] : '✓ Detectat';
+            pyEl.className = 'fw-status-val fw-ok';
+          } catch { pyEl.textContent = '?'; pyEl.className = 'fw-status-val fw-unk'; }
+        } else {
+          pyEl.textContent = '—'; pyEl.className = 'fw-status-val fw-unk';
+        }
+      } catch (e) {
+        if (e.name !== 'AbortError') {
+          cpEl.textContent = 'Error'; cpEl.className = 'fw-status-val fw-err';
+        }
+      }
+    });
+
+    // ══ DISPOSITIU CONNECTAT ══════════════════════════════════════
+    function setConnected(name) {
+      document.getElementById('device-badge').classList.add('connected');
+      document.getElementById('device-name').textContent = name;
+      document.getElementById('btn-connect').style.display = 'none';
+      document.getElementById('btn-disconnect').style.display = '';
+    }
+    function setDisconnected() {
+      _deviceDir = null;
+      document.getElementById('device-badge').classList.remove('connected');
+      document.getElementById('device-name').textContent = _i('device_off');
+      document.getElementById('btn-connect').style.display = '';
+      document.getElementById('btn-disconnect').style.display = 'none';
+    }
+    document.getElementById('btn-connect')?.addEventListener('click', async () => {
+      if (!('showDirectoryPicker' in window)) { alert('Cal Chrome o Edge per connectar el dispositiu.'); return; }
+      try {
+        const dir = await window.showDirectoryPicker({ mode: 'readwrite', startIn: 'desktop' });
+        _deviceDir = dir; setConnected(dir.name);
+      } catch(e) { if (e.name !== 'AbortError') alert('Error: ' + e.message); }
+    });
+    document.getElementById('btn-disconnect')?.addEventListener('click', setDisconnected);
+
+    // ══ CAPES (LAYERS) ══════════════════════════════════════════════
+    function _syncLayerBar() {
+      const sel = document.getElementById('layer-select'); if (!sel) return;
+      sel.innerHTML = layers.map((l,i) => `<option value="${i}">${l.name}</option>`).join('');
+      sel.value = currentLayerIdx;
+      const d = document.getElementById('btn-del-layer'); if (d) d.disabled = layers.length <= 1;
+    }
+    document.getElementById('layer-select')?.addEventListener('change', e => {
+      currentLayerIdx = +e.target.value; config = layers[currentLayerIdx];
+      config.pots.forEach(p => { if (p.value === undefined) p.value = 0; });
+      closeDrawer(); renderDevice();
+    });
+    document.getElementById('btn-prev-layer')?.addEventListener('click', () => {
+      currentLayerIdx = (currentLayerIdx - 1 + layers.length) % layers.length;
+      config = layers[currentLayerIdx]; config.pots.forEach(p => { if (p.value === undefined) p.value = 0; });
+      closeDrawer(); renderDevice(); _syncLayerBar();
+    });
+    document.getElementById('btn-next-layer')?.addEventListener('click', () => {
+      currentLayerIdx = (currentLayerIdx + 1) % layers.length;
+      config = layers[currentLayerIdx]; config.pots.forEach(p => { if (p.value === undefined) p.value = 0; });
+      closeDrawer(); renderDevice(); _syncLayerBar();
+    });
+    document.getElementById('btn-new-layer')?.addEventListener('click', () => {
+      const name = prompt('Nom de la nova capa:', `Capa ${layers.length + 1}`); if (!name) return;
+      layers.push(_defaultLayer(name)); currentLayerIdx = layers.length - 1;
+      config = layers[currentLayerIdx]; closeDrawer(); renderDevice(); _syncLayerBar(); saveLayers();
+    });
+    document.getElementById('btn-rename-layer')?.addEventListener('click', () => {
+      const name = prompt('Nou nom de la capa:', layers[currentLayerIdx].name); if (!name) return;
+      layers[currentLayerIdx].name = name; _syncLayerBar(); saveLayers(); renderProfiles();
+    });
+    document.getElementById('btn-del-layer')?.addEventListener('click', () => {
+      if (layers.length <= 1) return;
+      if (!confirm(`Eliminar la capa "${layers[currentLayerIdx].name}"?`)) return;
+      layers.splice(currentLayerIdx, 1); currentLayerIdx = Math.min(currentLayerIdx, layers.length - 1);
+      config = layers[currentLayerIdx]; config.pots.forEach(p => { if (p.value === undefined) p.value = 0; });
+      closeDrawer(); renderDevice(); _syncLayerBar(); saveLayers();
+    });
+
+    // ══ TEMA ════════════════════════════════════════════════════════
+    const _THEMES = ['light','neon','warm','purple','ocean','forest','rose','ice','carbon','hc','crepuscle','cosmic','mint','slate','acid','sand'];
+    const _CUSTOM_KEY = 'tecla-mp-custom-themes';
+    const _CDEF = { bg:'#0c0c0c', surface:'#141414', surface2:'#1c1c1c', text:'#e0e0e0', accent:'#4a80f0' };
+    let _activeCustomId = null;
+    function _darken(hex, f) {
+      if (!hex || hex.length < 7) return hex;
+      const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+      const d = v => Math.round(Math.max(0, Math.min(255, v*f))).toString(16).padStart(2,'0');
+      return '#'+d(r)+d(g)+d(b);
+    }
+    function _clearVars() {
+      ['bg','surface','surface2','surface3','text','text2','text3','accent','accent-d'].forEach(v => document.documentElement.style.removeProperty('--'+v));
+    }
+    function _applyVars(v, up=true) {
+      const R = document.documentElement;
+      R.style.setProperty('--bg', v.bg); R.style.setProperty('--surface', v.surface);
+      R.style.setProperty('--surface2', v.surface2); R.style.setProperty('--surface3', _darken(v.surface2, 1.15));
+      R.style.setProperty('--text', v.text); R.style.setProperty('--text2', _darken(v.text, 0.53));
+      R.style.setProperty('--text3', _darken(v.text, 0.27));
+      R.style.setProperty('--accent', v.accent); R.style.setProperty('--accent-d', _darken(v.accent, 0.82));
+      if (up) for (const k of ['bg','surface','surface2','text','accent']) { const el=document.getElementById('ct-'+k); if(el) el.value=v[k]||''; }
+    }
+    function _readPickers() { return Object.fromEntries(['bg','surface','surface2','text','accent'].map(k => [k, document.getElementById('ct-'+k)?.value || _CDEF[k]])); }
+    function _loadCT() { try { return JSON.parse(localStorage.getItem(_CUSTOM_KEY)||'[]'); } catch { return []; } }
+    function _saveCT(l) { localStorage.setItem(_CUSTOM_KEY, JSON.stringify(l)); }
+    function _updateModeIndicator() {
+      const ind = document.getElementById('ct-mode-indicator'); if (!ind) return;
+      if (_activeCustomId) { const t=_loadCT().find(x=>x.id===_activeCustomId); ind.textContent=t?`Editant: ${t.name}`:'Mode: Nou tema'; ind.style.color='var(--accent)'; }
+      else { ind.textContent='Mode: Nou tema'; ind.style.color='var(--text3)'; }
+    }
+    function _renderSavedThemes() {
+      const container = document.getElementById('theme-cards'); if (!container) return;
+      container.querySelectorAll('[data-custom-id]').forEach(el => el.remove());
+      _loadCT().forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'theme-card' + (_activeCustomId===t.id?' active':'');
+        card.dataset.customId = t.id;
+        card.innerHTML = `<div class="theme-swatches"><span style="background:${t.vars.bg}"></span><span style="background:${t.vars.surface}"></span><span style="background:${t.vars.surface2}"></span><span style="background:${t.vars.accent}"></span></div><div class="theme-card-name">${t.name}</div><span data-del="${t.id}" title="Eliminar" style="position:absolute;top:2px;right:3px;font-size:13px;opacity:0;cursor:pointer;transition:opacity .12s">×</span>`;
+        card.addEventListener('mouseenter', () => { card.querySelector('[data-del]').style.opacity='0.7'; });
+        card.addEventListener('mouseleave', () => { card.querySelector('[data-del]').style.opacity='0'; });
+        card.addEventListener('click', e => {
+          if (e.target.dataset.del) {
+            const updated = _loadCT().filter(x => x.id !== e.target.dataset.del);
+            _saveCT(updated);
+            if (_activeCustomId === e.target.dataset.del) { _activeCustomId=null; applyTheme('dark'); }
+            _renderSavedThemes(); _updateModeIndicator(); return;
+          }
+          _activeCustomId = t.id; localStorage.setItem('tecla-mp-custom-active', t.id);
+          applyTheme('custom'); _applyVars(t.vars);
+          document.getElementById('ct-name').value = t.name;
+          _renderSavedThemes(); _updateModeIndicator();
+        });
+        container.appendChild(card);
+      });
+    }
+    function applyTheme(name, save=true) {
+      _THEMES.forEach(t => document.body.classList.remove('theme-'+t));
+      _clearVars();
+      if (name === 'custom') {
+        const themes = _loadCT(); const t = _activeCustomId ? themes.find(x=>x.id===_activeCustomId) : themes[themes.length-1];
+        if (t) _applyVars(t.vars); else _applyVars(_CDEF);
+      } else if (name !== 'dark') {
+        document.body.classList.add('theme-'+name);
+      }
+      if (save) localStorage.setItem('tecla-mp-theme', name);
+      document.querySelectorAll('.theme-card:not([data-custom-id])').forEach(b => b.classList.toggle('active', b.dataset.theme===name && name!=='custom'));
+      if (name !== 'custom') { _activeCustomId = null; _renderSavedThemes(); }
+      _updateModeIndicator();
+    }
+    document.querySelectorAll('.theme-card').forEach(btn => { if (!btn.dataset.customId) btn.addEventListener('click', () => applyTheme(btn.dataset.theme)); });
+    ['bg','surface','surface2','text','accent'].forEach(f => {
+      document.getElementById('ct-'+f)?.addEventListener('input', () => { _applyVars(_readPickers(), false); _THEMES.forEach(t => document.body.classList.remove('theme-'+t)); });
+    });
+    document.getElementById('btn-random-theme')?.addEventListener('click', () => {
+      const rand = () => '#'+Math.floor(Math.random()*0xFFFFFF).toString(16).padStart(6,'0');
+      const v = { bg:rand(), surface:rand(), surface2:rand(), text:rand(), accent:rand() };
+      for (const k of ['bg','surface','surface2','text','accent']) { const el=document.getElementById('ct-'+k); if(el) el.value=v[k]; }
+      _applyVars(v, false); _THEMES.forEach(t => document.body.classList.remove('theme-'+t));
+    });
+    document.getElementById('btn-save-custom-theme')?.addEventListener('click', () => {
+      const vars = _readPickers(); const rawName = document.getElementById('ct-name')?.value?.trim()||''; const themes = _loadCT();
+      if (_activeCustomId) {
+        const idx = themes.findIndex(x => x.id===_activeCustomId);
+        if (idx >= 0) { themes[idx].vars=vars; if(rawName) themes[idx].name=rawName; _saveCT(themes); applyTheme('custom'); _renderSavedThemes(); _updateModeIndicator(); return; }
+      }
+      const name = rawName||`Tema ${themes.length+1}`; const id = Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+      themes.push({id, name, vars}); _saveCT(themes); _activeCustomId=id; localStorage.setItem('tecla-mp-custom-active', id);
+      applyTheme('custom'); _renderSavedThemes(); _updateModeIndicator();
+    });
+    document.getElementById('btn-reset-custom-theme')?.addEventListener('click', () => {
+      _applyVars(_CDEF); document.getElementById('ct-name').value=''; _activeCustomId=null; localStorage.removeItem('tecla-mp-custom-active');
+      for (const k of ['bg','surface','surface2','text','accent']) { const el=document.getElementById('ct-'+k); if(el) el.value=_CDEF[k]||''; }
+      _updateModeIndicator();
+    });
+    document.getElementById('btn-new-theme')?.addEventListener('click', () => {
+      _activeCustomId=null; localStorage.removeItem('tecla-mp-custom-active');
+      _applyVars(_CDEF); document.getElementById('ct-name').value='';
+      for (const k of ['bg','surface','surface2','text','accent']) { const el=document.getElementById('ct-'+k); if(el) el.value=_CDEF[k]||''; }
+      _renderSavedThemes(); _updateModeIndicator();
+    });
+    { const _st=localStorage.getItem('tecla-mp-theme')||'dark'; const _sci=localStorage.getItem('tecla-mp-custom-active'); if(_sci) _activeCustomId=_sci; applyTheme(_st,false); _renderSavedThemes(); _updateModeIndicator(); }
+
+    // ══ I18N ══════════════════════════════════════════════════════════
+    const _GUIDE = {
+      ca: `<div class="guide-toc"><a href="#g1">1. Primers passos</a><a href="#g2">2. Configuració de tecles</a><a href="#g3">3. Potenciòmetres</a><a href="#g4">4. Actualitzar el firmware</a><a href="#g5">5. Capes</a></div><div id="g1"><div class="guide-h1">1. Primers passos</div><p class="guide-li">Connecta el TECLA a l'ordinador via USB-C.</p><p class="guide-li">Si és la primera vegada, instal·la CircuitPython (pestanya <em>Firmware</em> &rarr; Pas 1).</p><p class="guide-li">Instal·la la carpeta <strong>adafruit_hid</strong> a <strong>CIRCUITPY/lib/</strong> (Pas 2).</p><p class="guide-li">Configura les tecles i potenciòmetres a la pestanya <em>Configuració</em> i actualitza el firmware (Pas 3).</p><div class="guide-note">El TECLA funciona com un dispositiu HID: teclat, ratolí i control multimèdia. No cal cap driver addicional.</div></div><div id="g2"><div class="guide-h1">2. Configuració de tecles</div><p class="guide-li">Clica qualsevol de les <strong>16 tecles</strong> per obrir el panell de configuració.</p><div class="guide-h2">Tipus de funció disponibles</div><p class="guide-li"><strong>Tecla / Drecera</strong>: envia una combinació de tecles (Ctrl+C, Cmd+S, F5…).</p><p class="guide-li"><strong>Escriure text</strong>: escriu una cadena de text automàticament.</p><p class="guide-li"><strong>Control multimèdia</strong>: reproduir, pausa, volum, brillantor, etc.</p><p class="guide-li"><strong>Ratolí</strong>: clic esquerre, dret o central.</p><p class="guide-li"><strong>Cap</strong>: tecla desactivada.</p><div class="guide-h2">Colors de les tecles</div><p class="guide-li">Les tecles configurades mostren un color indicant el tipus de funció assignada.</p><p class="guide-li"><span style="color:rgba(110,85,220,.9)">■</span> Lila = Tecla/Drecera &nbsp; <span style="color:rgba(61,201,108,.9)">■</span> Verd = Text &nbsp; <span style="color:rgba(255,180,0,.9)">■</span> Groc = Multimèdia &nbsp; <span style="color:rgba(0,200,200,.9)">■</span> Cian = Ratolí</p></div><div id="g3"><div class="guide-h1">3. Potenciòmetres</div><p class="guide-li">El TECLA té <strong>3 potenciòmetres</strong> (X, Y, Z). Clica'ls per configurar la seva funció.</p><p class="guide-li"><strong>Volum</strong>: controla el volum de l'ordinador.</p><p class="guide-li"><strong>Brillantor</strong>: controla la brillantor de la pantalla.</p><p class="guide-li"><strong>Scroll vertical/horitzontal</strong>: fa scroll amb el ratolí.</p><p class="guide-li"><strong>Ratolí X/Y</strong>: mou el cursor del ratolí.</p><div class="guide-note">A l'app pots girar el knob (arrossega amunt/avall) o fer scroll per simular el valor del potenciòmetre.</div></div><div id="g4"><div class="guide-h1">4. Actualitzar el firmware</div><p class="guide-li">Ves a la pestanya <em>Firmware</em> i clica <strong>Actualitzar firmware</strong>.</p><p class="guide-li">Selecciona el volum <strong>CIRCUITPY</strong> al diàleg del Finder.</p><p class="guide-li">El fitxer <strong>code.py</strong> es copia automàticament al dispositiu.</p><p class="guide-li">El TECLA es reinicia i aplica la nova configuració immediatament.</p><div class="guide-note">Cal Chrome o Edge per a l'accés directe al sistema de fitxers. A Safari, es descarrega <strong>code.py</strong> manualment i cal copiar-lo a CIRCUITPY.</div></div><div id="g5"><div class="guide-h1">5. Capes</div><p class="guide-li">Usa <strong>+ Nova</strong> a la barra de capes per crear una nova capa de configuració.</p><p class="guide-li">A la pestanya <em>Capes</em>, gestiona totes les capes: edita, reordena (↑↓) i elimina (✕).</p><p class="guide-li">Des de <em>Configuracions</em>, afegeix presets directament com a noves capes.</p><p class="guide-li">Afegeix una tecla de tipus <em>Canviar de capa</em> per alternar entre capes des del dispositiu.</p><div class="guide-note">Les capes es guarden al localStorage del navegador. No es perdran en tancar l'app, però s'esborraran si s'esborra la memòria del navegador.</div></div>`,
+      es: `<div class="guide-toc"><a href="#g1">1. Primeros pasos</a><a href="#g2">2. Configuración de teclas</a><a href="#g3">3. Potenciómetros</a><a href="#g4">4. Actualizar firmware</a><a href="#g5">5. Capas</a></div><div id="g1"><div class="guide-h1">1. Primeros pasos</div><p class="guide-li">Conecta el TECLA al ordenador vía USB-C.</p><p class="guide-li">Si es la primera vez, instala CircuitPython (pestaña <em>Firmware</em> &rarr; Paso 1).</p><p class="guide-li">Instala la carpeta <strong>adafruit_hid</strong> en <strong>CIRCUITPY/lib/</strong> (Paso 2).</p><p class="guide-li">Configura las teclas y potenciómetros en la pestaña <em>Configuración</em> y actualiza el firmware (Paso 3).</p><div class="guide-note">El TECLA funciona como dispositivo HID: teclado, ratón y control multimedia. No se necesita ningún driver adicional.</div></div><div id="g2"><div class="guide-h1">2. Configuración de teclas</div><p class="guide-li">Haz clic en cualquiera de las <strong>16 teclas</strong> para abrir el panel de configuración.</p><div class="guide-h2">Tipos de función disponibles</div><p class="guide-li"><strong>Tecla / Atajo</strong>: envía una combinación de teclas (Ctrl+C, Cmd+S, F5…).</p><p class="guide-li"><strong>Escribir texto</strong>: escribe una cadena de texto automáticamente.</p><p class="guide-li"><strong>Control multimedia</strong>: reproducir, pausa, volumen, brillo, etc.</p><p class="guide-li"><strong>Ratón</strong>: clic izquierdo, derecho o central.</p><p class="guide-li"><strong>Ninguna</strong>: tecla desactivada.</p><div class="guide-h2">Colores de las teclas</div><p class="guide-li">Las teclas configuradas muestran un color que indica el tipo de función asignada.</p><p class="guide-li"><span style="color:rgba(110,85,220,.9)">■</span> Lila = Tecla/Atajo &nbsp; <span style="color:rgba(61,201,108,.9)">■</span> Verde = Texto &nbsp; <span style="color:rgba(255,180,0,.9)">■</span> Amarillo = Multimedia &nbsp; <span style="color:rgba(0,200,200,.9)">■</span> Cian = Ratón</p></div><div id="g3"><div class="guide-h1">3. Potenciómetros</div><p class="guide-li">El TECLA tiene <strong>3 potenciómetros</strong> (X, Y, Z). Haz clic para configurar su función.</p><p class="guide-li"><strong>Volumen</strong>: controla el volumen del ordenador.</p><p class="guide-li"><strong>Brillo</strong>: controla el brillo de la pantalla.</p><p class="guide-li"><strong>Scroll vertical/horizontal</strong>: hace scroll con el ratón.</p><p class="guide-li"><strong>Ratón X/Y</strong>: mueve el cursor del ratón.</p><div class="guide-note">En la app puedes girar el knob (arrastra arriba/abajo) o hacer scroll para simular el valor del potenciómetro.</div></div><div id="g4"><div class="guide-h1">4. Actualizar el firmware</div><p class="guide-li">Ve a la pestaña <em>Firmware</em> y haz clic en <strong>Actualizar firmware</strong>.</p><p class="guide-li">Selecciona el volumen <strong>CIRCUITPY</strong> en el diálogo del sistema.</p><p class="guide-li">El archivo <strong>code.py</strong> se copia automáticamente al dispositivo.</p><p class="guide-li">El TECLA se reinicia y aplica la nueva configuración de inmediato.</p><div class="guide-note">Se requiere Chrome o Edge para el acceso directo al sistema de archivos. En Safari, se descarga <strong>code.py</strong> manualmente y hay que copiarlo a CIRCUITPY.</div></div><div id="g5"><div class="guide-h1">5. Capas</div><p class="guide-li">Usa <strong>+ Nueva</strong> en la barra de capas para crear una nueva capa de configuración.</p><p class="guide-li">En la pestaña <em>Capas</em>, gestiona todas las capas: edita, reordena (↑↓) y elimina (✕).</p><p class="guide-li">Desde <em>Configuraciones</em>, añade presets directamente como nuevas capas.</p><p class="guide-li">Añade una tecla de tipo <em>Cambiar de capa</em> para alternar entre capas desde el dispositivo.</p><div class="guide-note">Las capas se guardan en el localStorage del navegador. No se perderán al cerrar la app, pero se borrarán si se borra la memoria del navegador.</div></div>`,
+      en: `<div class="guide-toc"><a href="#g1">1. Getting started</a><a href="#g2">2. Key configuration</a><a href="#g3">3. Potentiometers</a><a href="#g4">4. Update firmware</a><a href="#g5">5. Layers</a></div><div id="g1"><div class="guide-h1">1. Getting started</div><p class="guide-li">Connect TECLA to your computer via USB-C.</p><p class="guide-li">First time? Install CircuitPython (<em>Firmware</em> tab &rarr; Step 1).</p><p class="guide-li">Copy the <strong>adafruit_hid</strong> folder to <strong>CIRCUITPY/lib/</strong> (Step 2).</p><p class="guide-li">Configure keys and potentiometers in the <em>Configuration</em> tab and update the firmware (Step 3).</p><div class="guide-note">TECLA works as an HID device: keyboard, mouse and media control. No additional drivers needed.</div></div><div id="g2"><div class="guide-h1">2. Key configuration</div><p class="guide-li">Click any of the <strong>16 keys</strong> to open the configuration panel.</p><div class="guide-h2">Available function types</div><p class="guide-li"><strong>Key / Shortcut</strong>: sends a key combination (Ctrl+C, Cmd+S, F5…).</p><p class="guide-li"><strong>Type text</strong>: automatically types a text string.</p><p class="guide-li"><strong>Media control</strong>: play, pause, volume, brightness, etc.</p><p class="guide-li"><strong>Mouse</strong>: left, right or middle click.</p><p class="guide-li"><strong>None</strong>: key disabled.</p><div class="guide-h2">Key colours</div><p class="guide-li">Configured keys show a colour indicating the assigned function type.</p><p class="guide-li"><span style="color:rgba(110,85,220,.9)">■</span> Purple = Key/Shortcut &nbsp; <span style="color:rgba(61,201,108,.9)">■</span> Green = Text &nbsp; <span style="color:rgba(255,180,0,.9)">■</span> Yellow = Media &nbsp; <span style="color:rgba(0,200,200,.9)">■</span> Cyan = Mouse</p></div><div id="g3"><div class="guide-h1">3. Potentiometers</div><p class="guide-li">TECLA has <strong>3 potentiometers</strong> (X, Y, Z). Click them to configure their function.</p><p class="guide-li"><strong>Volume</strong>: controls the computer's volume.</p><p class="guide-li"><strong>Brightness</strong>: controls the screen brightness.</p><p class="guide-li"><strong>Vertical / horizontal scroll</strong>: scrolls with the mouse.</p><p class="guide-li"><strong>Mouse X/Y</strong>: moves the mouse cursor.</p><div class="guide-note">In the app you can turn the knob (drag up/down) or scroll to simulate the potentiometer value.</div></div><div id="g4"><div class="guide-h1">4. Update firmware</div><p class="guide-li">Go to the <em>Firmware</em> tab and click <strong>Update firmware</strong>.</p><p class="guide-li">Select the <strong>CIRCUITPY</strong> volume in the system dialog.</p><p class="guide-li">The <strong>code.py</strong> file is copied automatically to the device.</p><p class="guide-li">TECLA restarts and applies the new configuration immediately.</p><div class="guide-note">Chrome or Edge is required for direct file system access. In Safari, <strong>code.py</strong> is downloaded manually and must be copied to CIRCUITPY.</div></div><div id="g5"><div class="guide-h1">5. Layers</div><p class="guide-li">Use <strong>+ New</strong> in the layer bar to create a new configuration layer.</p><p class="guide-li">In the <em>Layers</em> tab, manage all layers: edit, reorder (↑↓) and delete (✕).</p><p class="guide-li">From <em>Configurations</em>, add presets directly as new layers.</p><p class="guide-li">Add a <em>Switch layer</em> key to cycle through layers from the device.</p><div class="guide-note">Layers are saved in the browser's localStorage. They won't be lost on closing the app, but will be deleted if the browser storage is cleared.</div></div>`,
+    };
+    const _DICT = {
+      ca: {
+        nav_config:'Configuració', nav_profiles:'Capes', nav_fw:'Firmware', nav_guide:"Guia d'ús", nav_theme:'Aparença',
+        btn_connect:'Connecta', btn_disconnect:'Desconnectar',
+        device_off:'desconnectat',
+        layer_lbl:'Capa:', btn_new_layer:'+ Nova', btn_rename:'Reanomenar', btn_del:'Eliminar',
+        btn_fw_update:'Actualitzar firmware',
+        fw_status_title:'Estat del sistema', fw_status_vol:'Volum CIRCUITPY', fw_refresh:'↺ Refrescar estat',
+        fw_step1_title:'Pas 1 — Instal·lar CircuitPython',
+        fw_step1_desc:'Entra al mode bootloader mantenint <strong>BOOTSEL</strong> mentre connectes el USB-C. El dispositiu apareixerà com <strong>RPI-RP2</strong>.',
+        fw_step1_sub:'Obre el Finder &rarr; arrossega el fitxer <strong>.uf2</strong> al volum <strong>RPI-RP2</strong>. El dispositiu es reiniciarà com <strong>CIRCUITPY</strong>.',
+        fw_step2_title:'Pas 2 — Instal·lar les llibreries',
+        fw_step2_desc:'Descarrega el bundle de llibreries de CircuitPython i copia la carpeta <strong>adafruit_hid</strong> dins la carpeta <strong>lib/</strong> del CIRCUITPY.',
+        fw_step2_sub:'Cerca <strong>adafruit-circuitpython-bundle</strong> &rarr; descomprimeix &rarr; copia la carpeta <strong>adafruit_hid</strong> a <strong>CIRCUITPY/lib/</strong>.',
+        fw_step3_title:'Pas 3 — Actualitzar el firmware',
+        fw_step3_desc:'Un cop el CIRCUITPY és visible, genera i exporta el fitxer <strong>code.py</strong> amb la teva configuració al dispositiu.',
+        profiles_new:'+ Nova capa', profiles_export:'↓ Exportar', profiles_import:'↑ Importar',
+        profiles_add:'+ Afegir al dispositiu', profiles_all:'Totes', profiles_none:'Cap',
+        profiles_edit:'Editar',
+        profiles_config_desc:'Marca les que vols usar i prem <strong>Afegir al dispositiu</strong> per incloure-les com a capes.',
+        profiles_my_desc:'Totes les capes del dispositiu en ordre. La tecla <em>Canviar de capa</em> les recorre seqüencialment. La capa activa apareix ressaltada.',
+        drawer_label:"Nom de l'acció (Etiqueta opcional)", drawer_type:'Funció Principal', btn_save_elem:'Aplicar Canvis',
+        drawer_key_label:'Tecla Principal', drawer_mods_label:'Modificadors (Drecera)',
+        drawer_text_label:'Escriu el text exacte', drawer_consumer_label:'Acció Multimèdia',
+        drawer_mouse_label:'Acció Ratolí', drawer_hold_mod_label:'Modificador a mantenir',
+        drawer_hold_mod_desc:'Mentre aquesta tecla és premuda, el modificador queda actiu. Permet combinar-lo amb qualsevol altra tecla (ex: ⊕ + ↓ per rotar en un RPG).',
+        drawer_click_step_label:'Densitat (1 clic cada N unitats)',
+        drawer_click_step_desc:'Envia un clic esquerre cada vegada que el potenciòmetre canvia N unitats (rang 0–127).',
+        type_none:'Cap (Desactivada)', type_key:'Tecla / Drecera', type_string:'Escriure Text',
+        type_consumer:'Control Multimèdia', type_mouse:'Ratolí (Clics)', type_layer:'Canviar de Capa', type_hold_mod:'Modificador Mantingut',
+        layer_change_desc:'Aquesta tecla canviarà de capa al ser premuda.',
+        layer_dir_label:'Direcció', layer_dir_next:'Capa Següent (→)', layer_dir_prev:'Capa Anterior (←)',
+        theme_title:'Aparença', theme_editor:'Editor de temes', theme_new:'+ Nou tema',
+        theme_random:'🎲 Aleatori', theme_save:'Desa i aplica', theme_reset:'Restablir', theme_name_lbl:'Nom:',
+        ct_bg:'Fons', ct_surface:'Superfície', ct_surface2:'Superfície 2', ct_text:'Text', ct_accent:'Accent',
+        lang_title:'Idioma',
+      },
+      es: {
+        nav_config:'Configuración', nav_profiles:'Capas', nav_fw:'Firmware', nav_guide:'Guía de uso', nav_theme:'Apariencia',
+        btn_connect:'Conectar', btn_disconnect:'Desconectar',
+        device_off:'desconectado',
+        layer_lbl:'Capa:', btn_new_layer:'+ Nueva', btn_rename:'Renombrar', btn_del:'Eliminar',
+        btn_fw_update:'Actualizar firmware',
+        fw_status_title:'Estado del sistema', fw_status_vol:'Volumen CIRCUITPY', fw_refresh:'↺ Actualizar estado',
+        fw_step1_title:'Paso 1 — Instalar CircuitPython',
+        fw_step1_desc:'Entra en modo bootloader manteniendo <strong>BOOTSEL</strong> mientras conectas el USB-C. El dispositivo aparecerá como <strong>RPI-RP2</strong>.',
+        fw_step1_sub:'Abre el Finder &rarr; arrastra el archivo <strong>.uf2</strong> al volumen <strong>RPI-RP2</strong>. El dispositivo se reiniciará como <strong>CIRCUITPY</strong>.',
+        fw_step2_title:'Paso 2 — Instalar las librerías',
+        fw_step2_desc:'Descarga el bundle de librerías de CircuitPython y copia la carpeta <strong>adafruit_hid</strong> dentro de <strong>lib/</strong> en CIRCUITPY.',
+        fw_step2_sub:'Busca <strong>adafruit-circuitpython-bundle</strong> &rarr; descomprime &rarr; copia la carpeta <strong>adafruit_hid</strong> a <strong>CIRCUITPY/lib/</strong>.',
+        fw_step3_title:'Paso 3 — Actualizar el firmware',
+        fw_step3_desc:'Una vez CIRCUITPY está visible, genera y exporta el archivo <strong>code.py</strong> con tu configuración al dispositivo.',
+        profiles_new:'+ Nueva capa', profiles_export:'↓ Exportar', profiles_import:'↑ Importar',
+        profiles_add:'+ Añadir al dispositivo', profiles_all:'Todas', profiles_none:'Ninguna',
+        profiles_edit:'Editar',
+        profiles_config_desc:'Marca las que quieras usar y pulsa <strong>Añadir al dispositivo</strong> para incluirlas como capas.',
+        profiles_my_desc:'Todas las capas del dispositivo en orden. La tecla <em>Cambiar de capa</em> las recorre secuencialmente. La capa activa aparece resaltada.',
+        drawer_label:'Nombre de la acción (Etiqueta opcional)', drawer_type:'Función Principal', btn_save_elem:'Aplicar Cambios',
+        drawer_key_label:'Tecla Principal', drawer_mods_label:'Modificadores (Atajo)',
+        drawer_text_label:'Escribe el texto exacto', drawer_consumer_label:'Acción Multimedia',
+        drawer_mouse_label:'Acción Ratón', drawer_hold_mod_label:'Modificador a mantener',
+        drawer_hold_mod_desc:'Mientras esta tecla está pulsada, el modificador queda activo. Permite combinarlo con cualquier otra tecla (ej: ⊕ + ↓ para rotar en un RPG).',
+        drawer_click_step_label:'Densidad (1 clic cada N unidades)',
+        drawer_click_step_desc:'Envía un clic izquierdo cada vez que el potenciómetro cambia N unidades (rango 0–127).',
+        type_none:'Ninguna (Desactivada)', type_key:'Tecla / Atajo', type_string:'Escribir Texto',
+        type_consumer:'Control Multimedia', type_mouse:'Ratón (Clics)', type_layer:'Cambiar de Capa', type_hold_mod:'Modificador Mantenido',
+        layer_change_desc:'Esta tecla cambiará de capa al ser pulsada.',
+        layer_dir_label:'Dirección', layer_dir_next:'Capa Siguiente (→)', layer_dir_prev:'Capa Anterior (←)',
+        theme_title:'Apariencia', theme_editor:'Editor de temas', theme_new:'+ Nuevo tema',
+        theme_random:'🎲 Aleatorio', theme_save:'Guardar y aplicar', theme_reset:'Restablecer', theme_name_lbl:'Nombre:',
+        ct_bg:'Fondo', ct_surface:'Superficie', ct_surface2:'Superficie 2', ct_text:'Texto', ct_accent:'Acento',
+        lang_title:'Idioma',
+      },
+      en: {
+        nav_config:'Configuration', nav_profiles:'Layers', nav_fw:'Firmware', nav_guide:'User Guide', nav_theme:'Appearance',
+        btn_connect:'Connect', btn_disconnect:'Disconnect',
+        device_off:'disconnected',
+        layer_lbl:'Layer:', btn_new_layer:'+ New', btn_rename:'Rename', btn_del:'Delete',
+        btn_fw_update:'Update firmware',
+        fw_status_title:'System status', fw_status_vol:'CIRCUITPY volume', fw_refresh:'↺ Refresh status',
+        fw_step1_title:'Step 1 — Install CircuitPython',
+        fw_step1_desc:'Enter bootloader mode by holding <strong>BOOTSEL</strong> while connecting USB-C. The device will appear as <strong>RPI-RP2</strong>.',
+        fw_step1_sub:'Open Finder &rarr; drag the <strong>.uf2</strong> file to the <strong>RPI-RP2</strong> volume. The device will reboot as <strong>CIRCUITPY</strong>.',
+        fw_step2_title:'Step 2 — Install libraries',
+        fw_step2_desc:'Download the CircuitPython library bundle and copy the <strong>adafruit_hid</strong> folder into <strong>lib/</strong> on CIRCUITPY.',
+        fw_step2_sub:'Find <strong>adafruit-circuitpython-bundle</strong> &rarr; unzip &rarr; copy the <strong>adafruit_hid</strong> folder to <strong>CIRCUITPY/lib/</strong>.',
+        fw_step3_title:'Step 3 — Update firmware',
+        fw_step3_desc:'Once CIRCUITPY is visible, generate and export the <strong>code.py</strong> file with your configuration to the device.',
+        profiles_new:'+ New layer', profiles_export:'↓ Export', profiles_import:'↑ Import',
+        profiles_add:'+ Add to device', profiles_all:'All', profiles_none:'None',
+        profiles_edit:'Edit',
+        profiles_config_desc:'Check the ones you want and press <strong>Add to device</strong> to include them as layers.',
+        profiles_my_desc:'All device layers in order. The <em>Switch layer</em> key cycles through them sequentially. The active layer is highlighted.',
+        drawer_label:'Action name (optional label)', drawer_type:'Main function', btn_save_elem:'Apply Changes',
+        drawer_key_label:'Main key', drawer_mods_label:'Modifiers (Shortcut)',
+        drawer_text_label:'Type exact text', drawer_consumer_label:'Media action',
+        drawer_mouse_label:'Mouse action', drawer_hold_mod_label:'Modifier to hold',
+        drawer_hold_mod_desc:'While this key is pressed, the modifier stays active. Combine it with any other key (e.g. ⊕ + ↓ to rotate in an RPG).',
+        drawer_click_step_label:'Density (1 click every N units)',
+        drawer_click_step_desc:'Sends a left click each time the potentiometer changes by N units (range 0–127).',
+        type_none:'None (Disabled)', type_key:'Key / Shortcut', type_string:'Type Text',
+        type_consumer:'Media Control', type_mouse:'Mouse (Clicks)', type_layer:'Switch Layer', type_hold_mod:'Held Modifier',
+        layer_change_desc:'This key will switch layer when pressed.',
+        layer_dir_label:'Direction', layer_dir_next:'Next Layer (→)', layer_dir_prev:'Previous Layer (←)',
+        theme_title:'Appearance', theme_editor:'Theme editor', theme_new:'+ New theme',
+        theme_random:'🎲 Random', theme_save:'Save and apply', theme_reset:'Reset', theme_name_lbl:'Name:',
+        ct_bg:'Background', ct_surface:'Surface', ct_surface2:'Surface 2', ct_text:'Text', ct_accent:'Accent',
+        lang_title:'Language',
+      },
+    };
+    let _currentLang = localStorage.getItem('tecla-mp-lang') || 'ca';
+    function _i(k) { return (_DICT[_currentLang]||_DICT.ca)[k] || k; }
+    function setLang(lang) {
+      _currentLang = lang; localStorage.setItem('tecla-mp-lang', lang);
+      const t = _DICT[lang] || _DICT.ca;
+      // Nav
+      document.querySelectorAll('.nav-tab').forEach(el => {
+        const map = {config:'nav_config', profiles:'nav_profiles', firmware:'nav_fw', guide:'nav_guide', theme:'nav_theme'};
+        if (map[el.dataset.tab]) el.innerHTML = t[map[el.dataset.tab]];
+      });
+      // Header
+      const _setText = (id, key) => { const el=document.getElementById(id); if(el) el.textContent=t[key]; };
+      _setText('btn-connect','btn_connect'); _setText('btn-disconnect','btn_disconnect');
+      const dn = document.getElementById('device-name');
+      if (dn && ['desconnectat','desconectado','disconnected'].includes(dn.textContent)) dn.textContent = t.device_off;
+      // Layer bar
+      const lbl = document.querySelector('.bank-bar span'); if(lbl) lbl.textContent = t.layer_lbl;
+      _setText('btn-new-layer','btn_new_layer'); _setText('btn-rename-layer','btn_rename'); _setText('btn-del-layer','btn_del');
+      // data-t elements (textContent)
+      document.querySelectorAll('[data-t]').forEach(el => { if (t[el.dataset.t]) el.textContent = t[el.dataset.t]; });
+      document.querySelectorAll('label').forEach(el => { if (el.dataset.t && t[el.dataset.t]) el.textContent = t[el.dataset.t]; });
+      // data-th elements (innerHTML — for rich text with <strong>/<em>)
+      document.querySelectorAll('[data-th]').forEach(el => { if (t[el.dataset.th]) el.innerHTML = t[el.dataset.th]; });
+      // Guide card — full HTML replacement
+      const _gc = document.getElementById('guide-card'); if (_gc) _gc.innerHTML = _GUIDE[lang] || _GUIDE.ca;
+      // Re-render dynamic lists so their buttons use current lang
+      renderProfiles();
+      // Re-render type select if drawer open
+      if (document.getElementById('config-drawer').classList.contains('open')) loadConfigForm();
+      // Lang buttons
+      document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+    }
+    document.querySelectorAll('.lang-btn').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
+
+    // Inici
+    if (_currentLang !== 'ca') setLang(_currentLang);
+    else document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === 'ca'));
+    _syncLayerBar();
+    renderDevice();
+    renderProfiles();
+    _renderPresetsGrid();
+  </script>
+</body>
+</html>
