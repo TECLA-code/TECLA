@@ -109,12 +109,12 @@ function setupButtons() {
   document.getElementById('btn-open').addEventListener('click', openProject);
   document.getElementById('btn-save').addEventListener('click', saveProject);
   document.getElementById('btn-export').addEventListener('click', exportPython);
-  document.getElementById('btn-upload').addEventListener('click', () => openUploadModal());
+  document.getElementById('btn-connect').addEventListener('click', connectDevice);
+  document.getElementById('btn-upload').addEventListener('click', uploadToDevice);
+  document.getElementById('btn-fw-upload').addEventListener('click', uploadToDevice);
   document.getElementById('btn-copy-code').addEventListener('click', copyCode);
   document.getElementById('btn-simulate').addEventListener('click', runSimulation);
   document.getElementById('btn-stop-sim').addEventListener('click', stopSimulation);
-  document.getElementById('btn-upload-cancel').addEventListener('click', closeUploadModal);
-  document.getElementById('btn-upload-confirm').addEventListener('click', uploadToDevice);
   document.getElementById('btn-ex-melody').addEventListener('click', () => loadExample('melody'));
   document.getElementById('btn-ex-sequencer').addEventListener('click', () => loadExample('sequencer'));
   document.getElementById('btn-ex-buttons').addEventListener('click', () => loadExample('buttons'));
@@ -241,49 +241,70 @@ async function exportPython() {
   toast('Codi Python exportat', 'ok');
 }
 
-// ── Upload to device (File System Access API) ─────────────────
-function openUploadModal() {
-  document.getElementById('upload-modal').classList.add('open');
-}
-function closeUploadModal() {
-  document.getElementById('upload-modal').classList.remove('open');
-}
-
-async function uploadToDevice() {
-  closeUploadModal();
-
+// ── Device connection (like MacroPad / MIDI apps) ─────────────
+async function connectDevice() {
   if (!('showDirectoryPicker' in window)) {
-    toast('El teu navegador no suporta File System Access API. Usa Chrome o Edge.', 'err');
+    toast('Requereix Chrome o Edge (File System Access API)', 'err');
     return;
   }
-
   try {
     const dirHandle = await window.showDirectoryPicker({
       mode: 'readwrite',
       id: 'circuitpy',
       startIn: 'desktop'
     });
-
-    const code = updateGeneratedCode() || document.getElementById('generatedCode').textContent;
-
-    const fileHandle = await dirHandle.getFileHandle('code.py', { create: true });
-    const writable = await fileHandle.createWritable();
-    await writable.write(code);
-    await writable.close();
-
     deviceDirHandle = dirHandle;
-    updateDeviceBadge(dirHandle.name);
-    toast(`code.py pujat a ${dirHandle.name}`, 'ok');
-    setStatus(`Pujat a ${dirHandle.name}`, 'ok');
+    updateDeviceBadge(dirHandle.name, true);
+    setStatus(`Connectat a ${dirHandle.name}`, 'ok');
+    toast(`Connectat a ${dirHandle.name}`, 'ok');
   } catch (e) {
-    if (e.name !== 'AbortError') { toast('Error pujant al dispositiu', 'err'); console.error(e); }
+    if (e.name !== 'AbortError') { toast('Error connectant', 'err'); console.error(e); }
   }
 }
 
-function updateDeviceBadge(name) {
+async function uploadToDevice() {
+  if (!deviceDirHandle) {
+    await connectDevice();
+    if (!deviceDirHandle) return;
+  }
+  try {
+    const code = updateGeneratedCode() || document.getElementById('generatedCode').textContent;
+    const fileHandle = await deviceDirHandle.getFileHandle('code.py', { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(code);
+    await writable.close();
+    toast(`code.py pujat a ${deviceDirHandle.name}`, 'ok');
+    setStatus(`Pujat a ${deviceDirHandle.name}`, 'ok');
+  } catch (e) {
+    if (e.name === 'NotAllowedError') {
+      deviceDirHandle = null;
+      updateDeviceBadge(null, false);
+      toast('Accés revocat. Torna a connectar.', 'err');
+    } else {
+      toast('Error pujant al dispositiu', 'err'); console.error(e);
+    }
+  }
+}
+
+function updateDeviceBadge(name, connected) {
   const badge = document.getElementById('device-badge');
   document.getElementById('device-name').textContent = name || 'desconnectat';
-  badge.className = name ? 'device-badge connected' : 'device-badge';
+  badge.className = connected ? 'device-badge connected' : 'device-badge';
+  document.getElementById('btn-upload').disabled = !connected;
+  const connectBtn = document.getElementById('btn-connect');
+  connectBtn.textContent = connected ? 'Desconnectar' : 'Connectar';
+  connectBtn.onclick = connected ? disconnectDevice : connectDevice;
+  const fwName = document.getElementById('fw-device-name');
+  const fwStatus = document.getElementById('fw-device-status');
+  if (fwName) fwName.textContent = name || '—';
+  if (fwStatus) { fwStatus.textContent = connected ? name : 'desconnectat'; fwStatus.className = connected ? 'status-val ok' : 'status-val'; }
+}
+
+function disconnectDevice() {
+  deviceDirHandle = null;
+  updateDeviceBadge(null, false);
+  setStatus('Dispositiu desconnectat');
+  toast('Desconnectat');
 }
 
 // ── Copy code ─────────────────────────────────────────────────
@@ -481,13 +502,46 @@ function applyTheme(name, save=true) {
   document.querySelectorAll('.theme-card:not([data-custom-id])').forEach(b => b.classList.toggle('active', b.dataset.theme===name && name!=='custom'));
   if (name !== 'custom') { _activeCustomId=null; _renderSavedThemes(); }
   _updateModeIndicator();
+  setTimeout(updateBlocklyColors, 0);
+}
+
+function updateBlocklyColors() {
+  if (!workspace) return;
+  const s = getComputedStyle(document.body);
+  const get = v => s.getPropertyValue(v).trim() || getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const bg      = get('--bg')      || '#0a0a0a';
+  const surface  = get('--surface') || '#111';
+  const surface2 = get('--surface2')|| '#1a1a1a';
+  const text     = get('--text')    || '#e0e0e0';
+
+  const newTheme = Blockly.Theme.defineTheme('tecla_dynamic', {
+    base: Blockly.Themes.Classic,
+    componentStyles: {
+      workspaceBackgroundColour: bg,
+      toolboxBackgroundColour:   surface,
+      toolboxForegroundColour:   text,
+      flyoutBackgroundColour:    surface2,
+      flyoutForegroundColour:    text,
+      flyoutOpacity:             0.97,
+      scrollbarColour:           surface2,
+      scrollbarOpacity:          0.6
+    }
+  });
+  workspace.setTheme(newTheme);
+
+  const gridColor = surface2;
+  document.querySelectorAll('#blocklyDiv svg pattern rect').forEach(r => r.setAttribute('fill', gridColor));
 }
 function initThemeSystem() {
   document.querySelectorAll('.theme-card').forEach(btn => {
     if (!btn.dataset.customId) btn.addEventListener('click', () => applyTheme(btn.dataset.theme));
   });
   ['bg','surface','surface2','text','accent'].forEach(f => {
-    document.getElementById('ct-'+f)?.addEventListener('input', () => { _applyVars(_readPickers(),false); _THEMES.forEach(t => document.body.classList.remove('theme-'+t)); });
+    document.getElementById('ct-'+f)?.addEventListener('input', () => {
+      _applyVars(_readPickers(),false);
+      _THEMES.forEach(t => document.body.classList.remove('theme-'+t));
+      setTimeout(updateBlocklyColors, 0);
+    });
   });
   document.getElementById('btn-random-theme')?.addEventListener('click', () => {
     const rand = () => '#'+Math.floor(Math.random()*0xFFFFFF).toString(16).padStart(6,'0');

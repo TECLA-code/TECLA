@@ -177,12 +177,34 @@
     .modal p { font-size: 12.5px; color: var(--text2); line-height: 1.65; margin-bottom: 16px; }
     .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
 
+    /* ── 5 tabs ──────────────────────────────────────────────── */
+    .tab-btn { font-size: 10.5px; }
+
+    /* ── Guide styles ────────────────────────────────────────── */
+    .guide-h1 { font-size: 12.5px; font-weight: 700; color: var(--text); margin: 0 0 8px; }
+    .guide-h2 { font-size: 11px; font-weight: 600; color: var(--accent); margin: 10px 0 5px; text-transform: uppercase; letter-spacing: .05em; }
+    .guide-li { font-size: 12px; color: var(--text2); line-height: 1.7; margin-bottom: 4px; }
+    .guide-note { background: rgba(74,128,240,.07); border-left: 2px solid var(--accent); border-radius: var(--radius); padding: 9px 12px; font-size: 11.5px; color: var(--text2); margin: 10px 0; line-height: 1.55; }
+    .guide-section { margin-bottom: 16px; }
+
+    /* ── Firmware styles ─────────────────────────────────────── */
+    .fw-step { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; background: var(--surface2); }
+    .fw-step-title { font-size: 12px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .fw-step-num { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+    .fw-step-desc { font-size: 11.5px; color: var(--text2); line-height: 1.6; margin-bottom: 6px; }
+    .fw-step-sub { font-size: 11px; color: var(--text3); line-height: 1.55; }
+    .status-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 12px; background: var(--surface2); }
+    .status-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 11.5px; color: var(--text2); }
+    .status-row:last-child { border-bottom: none; }
+    .status-val { color: var(--text2); }
+    .status-val.ok { color: var(--green); font-weight: 500; }
+    .dl-link { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--accent); text-decoration: none; padding: 4px 8px; border-radius: var(--radius); border: 1px solid rgba(74,128,240,.3); background: rgba(74,128,240,.07); transition: background .15s; margin-top: 8px; }
+    .dl-link:hover { background: rgba(74,128,240,.15); }
+
     /* ── Blockly override ────────────────────────────────────── */
-    .blocklySvg { background-color: #0e0e0e !important; }
-    .blocklyToolboxDiv { background-color: #111 !important; border-right: 1px solid var(--border) !important; }
-    .blocklyTreeLabel { color: #ccc !important; font-family: var(--font) !important; font-size: 12px !important; }
-    .blocklyFlyoutBackground { fill: #141414 !important; }
-    .blocklyScrollbarHandle { fill: #333 !important; }
+    .blocklyToolboxDiv { border-right: 1px solid var(--border) !important; }
+    .blocklyTreeLabel { font-family: var(--font) !important; font-size: 12px !important; }
+    .blocklyScrollbarHandle { opacity: .5 !important; }
 
     /* ── Toast ───────────────────────────────────────────────── */
     .toast {
@@ -212,8 +234,6 @@
     .ct-field { display: flex; flex-direction: column; align-items: center; gap: 5px; }
     .ct-field input[type=color] { width: 100%; min-width: 36px; height: 36px; border-radius: var(--radius); border: 1.5px solid var(--border); background: var(--surface2); cursor: pointer; padding: 2px 3px; }
     .ct-field label { font-size: 10.5px; color: var(--text2); white-space: nowrap; }
-    .card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; }
-    .card-title { font-size: 10.5px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 12px; }
     input[type=text] { width: 100%; padding: 6px 10px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: 12px; font-family: var(--font); }
     input[type=text]:focus { outline: none; border-color: var(--accent); }
 
@@ -258,7 +278,8 @@
       <button class="btn btn-primary" id="btn-save" title="Guardar projecte">Guardar</button>
       <button class="btn" id="btn-export" title="Exportar codi Python">Exportar .py</button>
       <div class="sep"></div>
-      <button class="btn btn-success" id="btn-upload" title="Pujar al dispositiu TECLA">Pujar a TECLA</button>
+      <button class="btn" id="btn-connect" title="Connectar dispositiu TECLA">Connectar</button>
+      <button class="btn btn-success" id="btn-upload" title="Pujar codi al dispositiu" disabled>Pujar</button>
     </div>
   </header>
 
@@ -271,9 +292,10 @@
     <!-- Side panel -->
     <div class="side-panel">
       <div class="panel-tabs">
-        <button class="tab-btn active" data-tab="code">Codi Python</button>
+        <button class="tab-btn active" data-tab="code">Codi</button>
         <button class="tab-btn" data-tab="simulator">Simulador</button>
-        <button class="tab-btn" data-tab="help">Ajuda</button>
+        <button class="tab-btn" data-tab="guide">Guia</button>
+        <button class="tab-btn" data-tab="firmware">Firmware</button>
         <button class="tab-btn" data-tab="theme">Aparença</button>
       </div>
       <div class="panel-body">
@@ -305,45 +327,78 @@
           <div id="simulatorOutput" class="sim-terminal"></div>
         </div>
 
-        <!-- Help panel -->
-        <div id="panel-help" class="panel-content">
-          <div class="help-section">
-            <h4>Com començar</h4>
-            <ol>
-              <li>Arrossega blocs de la caixa d'eines</li>
-              <li>Connecta'ls per crear el teu programa</li>
-              <li>Veu el codi generat a la pestanya Python</li>
-              <li>Puja'l al dispositiu TECLA</li>
-            </ol>
+        <!-- Guide panel -->
+        <div id="panel-guide" class="panel-content">
+          <div class="guide-section">
+            <div class="guide-h1">1. Primers passos</div>
+            <p class="guide-li">Connecta el TECLA a l'ordinador via <strong>USB-C</strong>.</p>
+            <p class="guide-li">Si és la primera vegada, instal·la CircuitPython (pestanya <em>Firmware</em> → Pas 1).</p>
+            <p class="guide-li">Instal·la la carpeta <strong>adafruit_midi</strong> a <strong>CIRCUITPY/lib/</strong> (Pas 2).</p>
+            <div class="guide-note">El TECLA funciona com a interfície MIDI USB. No cal cap driver addicional a macOS i Linux.</div>
           </div>
-          <div class="help-section">
-            <h4>Pujar al dispositiu</h4>
-            <ol>
-              <li>Connecta el TECLA per USB-C</li>
-              <li>Prem <strong>Pujar a TECLA</strong></li>
-              <li>Selecciona el volum <strong>CIRCUITPY</strong></li>
-              <li>El codi s'hi copia automàticament</li>
-            </ol>
+          <div class="guide-section">
+            <div class="guide-h1">2. Programar amb blocs</div>
+            <p class="guide-li">Arrossega blocs de la caixa d'eines a l'espai de treball.</p>
+            <p class="guide-li">Encaixa els blocs per crear el teu programa musical.</p>
+            <p class="guide-li">El codi <strong>CircuitPython</strong> es genera automàticament a la pestanya <em>Codi</em>.</p>
+            <div class="guide-h2">Categories de blocs</div>
+            <p class="guide-li"><strong>Música Bàsica:</strong> Notes MIDI, acords, escales</p>
+            <p class="guide-li"><strong>Síntesi Avançada:</strong> Oscil·ladors, LFO, envelops</p>
+            <p class="guide-li"><strong>Control Hardware:</strong> Botons i potenciòmetres del TECLA</p>
+            <p class="guide-li"><strong>Efectes:</strong> Delay, reverb, filtres</p>
+            <p class="guide-li"><strong>GPIO:</strong> Pins digitals, PWM, analògics</p>
+            <p class="guide-li"><strong>Generatiu:</strong> Probabilitat, LFO per software, quantització</p>
+            <p class="guide-li"><strong>Scratch:</strong> Events, missatges, control de flux</p>
           </div>
-          <div class="help-section">
-            <h4>Exemples</h4>
+          <div class="guide-section">
+            <div class="guide-h1">3. Pujar al dispositiu</div>
+            <p class="guide-li">Prem <strong>Connectar</strong> al header i selecciona el volum <strong>CIRCUITPY</strong>.</p>
+            <p class="guide-li">Un cop connectat, prem <strong>Pujar</strong> per copiar el codi al dispositiu.</p>
+            <p class="guide-li">El TECLA s'executa automàticament en reiniciar-se.</p>
+            <div class="guide-note">Requereix Chrome o Edge (File System Access API). A Safari, exporta el <strong>.py</strong> i copia'l manualment a CIRCUITPY.</div>
+          </div>
+          <div class="guide-section">
+            <div class="guide-h1">Exemples</div>
             <div class="ex-btns">
-              <button class="btn" id="btn-ex-melody">Melodia simple</button>
+              <button class="btn" id="btn-ex-melody">Melodia</button>
               <button class="btn" id="btn-ex-sequencer">Seqüenciador</button>
-              <button class="btn" id="btn-ex-buttons">Control botons</button>
+              <button class="btn" id="btn-ex-buttons">Botons</button>
               <button class="btn" id="btn-ex-complex">Sintetitzador</button>
             </div>
           </div>
-          <div class="card">
-            <div class="card-title">Blocs disponibles</div>
-            <ul style="color:var(--text2);font-size:12px;line-height:1.8;margin-left:14px">
-              <li><strong>Música:</strong> Notes, acords, escales</li>
-              <li><strong>Control:</strong> Botons i potenciòmetres</li>
-              <li><strong>Efectes:</strong> Delay, reverb, filtres</li>
-              <li><strong>Temps:</strong> Esperar, repetir, bucles</li>
-              <li><strong>GPIO:</strong> Pins, PWM, I2C</li>
-              <li><strong>Scratch:</strong> Events, lògica compatible</li>
-            </ul>
+        </div>
+
+        <!-- Firmware panel -->
+        <div id="panel-firmware" class="panel-content">
+          <div class="status-card">
+            <div class="card-title">Estat del dispositiu</div>
+            <div class="status-row"><span>Dispositiu</span><span class="status-val" id="fw-device-name">—</span></div>
+            <div class="status-row"><span>Volum CIRCUITPY</span><span class="status-val" id="fw-device-status">desconnectat</span></div>
+          </div>
+          <button class="btn btn-success" id="btn-fw-upload" style="width:100%;margin-bottom:14px;justify-content:center">Pujar codi al dispositiu</button>
+
+          <div class="fw-step">
+            <div class="fw-step-title"><span class="fw-step-num">1</span>Instal·lar CircuitPython</div>
+            <p class="fw-step-desc">Entra al mode bootloader mantenint <strong>BOOTSEL</strong> mentre connectes el USB-C. El dispositiu apareixerà com <strong>RPI-RP2</strong>.</p>
+            <p class="fw-step-sub">Obre el Finder → arrossega el fitxer <strong>.uf2</strong> al volum <strong>RPI-RP2</strong>. El dispositiu es reiniciarà com <strong>CIRCUITPY</strong>.</p>
+            <a class="dl-link" href="https://circuitpython.org/board/raspberry_pi_pico/" target="_blank">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M4 7l4 4 4-4"/><rect x="2" y="11" width="12" height="2" rx="1"/></svg>
+              Descarregar CircuitPython (.uf2)
+            </a>
+          </div>
+          <div class="fw-step">
+            <div class="fw-step-title"><span class="fw-step-num">2</span>Instal·lar les llibreries</div>
+            <p class="fw-step-desc">Descarrega el <strong>bundle de llibreries</strong> de CircuitPython i copia la carpeta <strong>adafruit_midi</strong> dins <strong>CIRCUITPY/lib/</strong>.</p>
+            <p class="fw-step-sub">Cerca <em>adafruit-circuitpython-bundle</em> → descomprimeix → copia <strong>adafruit_midi/</strong> a <strong>CIRCUITPY/lib/</strong>.</p>
+            <a class="dl-link" href="https://github.com/adafruit/Adafruit_CircuitPython_Bundle/releases/latest" target="_blank">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M4 7l4 4 4-4"/><rect x="2" y="11" width="12" height="2" rx="1"/></svg>
+              Descarregar Bundle de Llibreries
+            </a>
+          </div>
+          <div class="fw-step">
+            <div class="fw-step-title"><span class="fw-step-num">3</span>Pujar el codi del projecte</div>
+            <p class="fw-step-desc">Un cop CIRCUITPY és visible, connecta el dispositiu amb el botó <strong>Connectar</strong> del header i prem <strong>Pujar</strong> per copiar el codi.</p>
+            <p class="fw-step-sub">El fitxer <strong>code.py</strong> es copia automàticament i el TECLA s'executa de nou.</p>
           </div>
         </div>
 
@@ -406,19 +461,6 @@
     </div>
     <span id="status-message">Llest per programar</span>
   </footer>
-
-  <!-- Upload modal -->
-  <div class="modal-overlay" id="upload-modal">
-    <div class="modal">
-      <h2>Pujar a TECLA</h2>
-      <p>Selecciona el volum <strong>CIRCUITPY</strong> del teu dispositiu TECLA. El fitxer <strong>code.py</strong> es copiarà automàticament i el dispositiu s'executarà de nou.</p>
-      <p style="font-size:11.5px;color:var(--text3)">Nota: Requereix Chrome o Edge (File System Access API).</p>
-      <div class="modal-actions">
-        <button class="btn" id="btn-upload-cancel">Cancel·lar</button>
-        <button class="btn btn-success" id="btn-upload-confirm">Seleccionar CIRCUITPY</button>
-      </div>
-    </div>
-  </div>
 
   <!-- Toast -->
   <div class="toast" id="toast"></div>
