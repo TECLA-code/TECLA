@@ -40,6 +40,37 @@ document.addEventListener('DOMContentLoaded', () => {
   updateStatusBar();
 });
 
+function fixToolboxAlignment() {
+  requestAnimationFrame(() => {
+    const toolbox = document.querySelector('.blocklyToolboxDiv');
+    if (!toolbox) { setTimeout(fixToolboxAlignment, 200); return; }
+
+    console.log('[TECLA] Toolbox row HTML sample:',
+      toolbox.querySelector('.blocklyTreeRow')?.outerHTML?.slice(0, 400));
+
+    toolbox.querySelectorAll('.blocklyTreeRow').forEach(row => {
+      row.style.setProperty('display', 'flex', 'important');
+      row.style.setProperty('flex-direction', 'row', 'important');
+      row.style.setProperty('align-items', 'center', 'important');
+      row.style.setProperty('min-height', '40px', 'important');
+      row.style.setProperty('padding', '0 10px', 'important');
+    });
+
+    toolbox.querySelectorAll('.blocklyTreeRowContentContainer').forEach(c => {
+      c.style.setProperty('display', 'flex', 'important');
+      c.style.setProperty('flex-direction', 'row', 'important');
+      c.style.setProperty('align-items', 'center', 'important');
+      c.style.setProperty('gap', '8px', 'important');
+      c.style.setProperty('flex', '1', 'important');
+    });
+
+    toolbox.querySelectorAll('.blocklyTreeLabel').forEach(label => {
+      label.style.setProperty('font-size', '15px', 'important');
+      label.style.setProperty('font-weight', '600', 'important');
+    });
+  });
+}
+
 function initBlockly() {
   const theme = Blockly.Theme.defineTheme('tecla_dark', {
     base: Blockly.Themes.Classic,
@@ -91,6 +122,7 @@ function initBlockly() {
     if (flyout?.setWidth) flyout.setWidth(248);
   } catch (_) {}
 
+  fixToolboxAlignment();
   workspace.addChangeListener(debounce(onWorkspaceChange, 300));
 }
 
