@@ -304,35 +304,34 @@
     .proj-divider { height:1px; background:var(--border); margin:12px 0; flex-shrink:0; }
     .btn-sm { font-size:10.5px; padding:3px 8px; }
 
-    /* ── Device config panel ─────────────────────────────────── */
-    .dev-hw-wrap { display: flex; gap: 12px; align-items: stretch; padding: 12px 0 10px; flex-shrink: 0; }
-    .dev-pots-col { display: flex; flex-direction: column; align-items: center; justify-content: space-around; gap: 6px; flex-shrink: 0; width: 52px; }
-    .dev-pot-w { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; opacity: 0.72; transition: opacity .15s; flex: 1; justify-content: center; }
-    .dev-pot-w:hover { opacity: 0.9; }
-    .dev-pot-w.selected { opacity: 1; }
-    .dev-pot-knob { width: 40px; height: 40px; border-radius: 50%; background: #dde1eb; border: 2px solid rgba(0,0,0,.15); position: relative; box-shadow: 0 3px 0 rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.6); transition: border-color .15s, box-shadow .15s; flex-shrink: 0; }
-    .dev-pot-w.selected .dev-pot-knob { border-color: var(--accent); box-shadow: 0 2px 0 rgba(0,0,0,.18), 0 0 0 2px var(--accent); }
-    .dev-pot-indicator { position: absolute; top: 4px; left: 50%; transform: translateX(-50%); width: 2px; height: 8px; background: rgba(0,0,0,.42); border-radius: 2px; }
-    .dev-pot-lbl { font-size: 9.5px; font-weight: 700; color: var(--text2); line-height: 1; }
-    .dev-pot-cc { font-size: 8.5px; color: var(--text3); line-height: 1; }
-    .dev-keys-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; flex: 1; }
+    /* ── Tecles panel (estètica idèntica a TECLA MIDI) ─────────── */
+    .dev-hw-wrap { display: flex; flex-direction: row; gap: 14px; align-items: center; justify-content: center; padding: 12px 0 10px; flex-shrink: 0; }
+    .dev-pots-col { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; flex-shrink: 0; }
+    .dev-pot-w { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; opacity: 0.8; transition: opacity .2s; }
+    .dev-pot-w:hover, .dev-pot-w.selected { opacity: 1; }
+    .dev-pot-knob { width: 50px; height: 50px; border-radius: 50%; border: 2px solid rgba(0,0,0,.2); background: #dde1eb; position: relative; box-shadow: 0 3px 0 rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.6); transition: border-color .15s, box-shadow .15s; }
+    .dev-pot-w.selected .dev-pot-knob { border-color: var(--accent); box-shadow: 0 3px 0 rgba(0,0,0,.28), 0 0 0 2px var(--accent); }
+    .dev-pot-indicator { position: absolute; top: 4px; left: 50%; transform: translateX(-50%); width: 2px; height: 10px; background: rgba(0,0,0,.45); border-radius: 2px; }
+    .dev-pot-lbl { font-size: 11px; font-weight: 600; color: var(--text); }
+    .dev-pot-cc { font-size: 9px; color: var(--text2); }
+    .dev-keys-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 320px; }
     .dev-key-btn {
-      aspect-ratio: 1; background: #dde1eb; border: 1.5px solid rgba(0,0,0,.16);
+      aspect-ratio: 1; background: #dde1eb; border: 1px solid rgba(0,0,0,.18);
       border-radius: 7px; display: flex; flex-direction: column;
-      align-items: flex-start; justify-content: flex-end;
+      align-items: center; justify-content: center;
       cursor: pointer; position: relative;
-      box-shadow: 0 3px 0 rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.55);
-      transition: all .1s; padding: 5px 5px 4px; overflow: hidden;
+      box-shadow: 0 3px 0 rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.55);
+      transition: all .1s; padding: 2px; overflow: hidden;
     }
-    .dev-key-btn:hover { background: #eaecf5; border-color: rgba(0,0,0,.26); }
-    .dev-key-btn:active { transform: scale(.95); box-shadow: 0 1px 0 rgba(0,0,0,.28), inset 0 1px 2px rgba(0,0,0,.12); }
-    .dev-key-btn.selected { border-color: var(--accent) !important; box-shadow: 0 0 0 2px var(--accent), 0 2px 0 rgba(0,0,0,.12) !important; }
-    .dev-key-btn.assigned { background: rgba(61,201,108,.2); border-color: rgba(61,201,108,.5); box-shadow: 0 3px 0 rgba(61,201,108,.25), inset 0 1px 0 rgba(255,255,255,.3); }
-    .dev-key-num { position: absolute; top: 4px; left: 5px; font-size: 8px; color: rgba(0,0,0,.3); font-family: var(--mono); pointer-events: none; font-weight: 700; }
-    .dev-key-name { font-size: 8.5px; font-weight: 700; color: rgba(0,0,0,.62); font-family: var(--mono); pointer-events: none; line-height: 1.2; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .dev-key-proj { font-size: 7.5px; color: rgba(0,0,0,.38); pointer-events: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; line-height: 1.2; }
-    .dev-key-btn.assigned .dev-key-name { color: rgba(15,80,40,.85); }
-    .dev-key-btn.assigned .dev-key-proj { color: rgba(15,80,40,.55); }
+    .dev-key-btn:hover { border-color: rgba(0,0,0,.28); background: #eaecf5; }
+    .dev-key-btn:active { transform: scale(.95); box-shadow: 0 1px 0 rgba(0,0,0,.3), inset 0 1px 2px rgba(0,0,0,.15); }
+    .dev-key-btn.selected { border-color: var(--accent) !important; box-shadow: 0 0 0 2px var(--accent), 0 3px 0 rgba(0,0,0,.2) !important; }
+    .dev-key-btn.assigned { background: rgba(61,201,108,.2); border-color: rgba(61,201,108,.55); box-shadow: 0 3px 0 rgba(61,201,108,.25), inset 0 1px 0 rgba(255,255,255,.4); }
+    .dev-key-num { position: absolute; top: 3px; left: 4px; font-size: 7px; color: rgba(0,0,0,.3); font-family: var(--mono); pointer-events: none; font-weight: 700; }
+    .dev-key-name { font-size: 8px; font-weight: 700; color: rgba(0,0,0,.72); font-family: var(--mono); pointer-events: none; line-height: 1.2; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 3px; text-align: center; }
+    .dev-key-proj { font-size: 7px; color: rgba(0,0,0,.4); pointer-events: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; line-height: 1.2; text-align: center; padding: 0 2px; }
+    .dev-key-btn.assigned .dev-key-name { color: rgba(10,70,35,.9); }
+    .dev-key-btn.assigned .dev-key-proj { color: rgba(10,70,35,.6); }
     .dev-cfg-area { flex-shrink: 0; border-top: 1px solid var(--border); padding: 10px 0 8px; }
     .dev-cfg-hint { display: flex; align-items: center; justify-content: center; min-height: 56px; font-size: 11px; color: var(--text3); }
     .dev-cfg-head { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
@@ -413,7 +412,7 @@
         <button class="tab-btn" data-tab="firmware">Firmware</button>
         <button class="tab-btn" data-tab="theme">Aparença</button>
         <button class="tab-btn" data-tab="projects">Projectes</button>
-        <button class="tab-btn" data-tab="device">Dispositiu</button>
+        <button class="tab-btn" data-tab="device">Tecles</button>
       </div>
       <div class="panel-body">
 

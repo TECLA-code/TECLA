@@ -1104,9 +1104,9 @@ let deviceConfig = null;
 
 function _defaultDeviceCfg() {
   return {
-    numButtons: 8,
-    buttons: Array.from({ length: 8 }, (_, i) => ({
-      id: i + 1, name: `Botó ${i + 1}`, project: null
+    numButtons: 16,
+    buttons: Array.from({ length: 16 }, (_, i) => ({
+      id: i + 1, name: `Tecla ${i + 1}`, project: null
     })),
     pots: [
       { id: 0, name: 'X', cc: 74, channel: 1, min: 0, max: 127 },
@@ -1119,6 +1119,12 @@ function _defaultDeviceCfg() {
 function initDeviceConfig() {
   try { deviceConfig = JSON.parse(localStorage.getItem(_DC_KEY)) || _defaultDeviceCfg(); }
   catch { deviceConfig = _defaultDeviceCfg(); }
+  if (!deviceConfig || !deviceConfig.buttons) deviceConfig = _defaultDeviceCfg();
+  while (deviceConfig.buttons.length < 16) {
+    const i = deviceConfig.buttons.length;
+    deviceConfig.buttons.push({ id: i + 1, name: `Tecla ${i + 1}`, project: null });
+  }
+  _saveDC();
 }
 
 function _saveDC() {
