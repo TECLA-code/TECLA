@@ -1176,8 +1176,19 @@ function _saveDC() {
   localStorage.setItem(_DC_KEY, JSON.stringify(deviceConfig));
 }
 
-const _POT_NAMES = { 74:'Filtre tall', 71:'Ressonància', 7:'Volum', 10:'Panorama', 11:'Expressió', 1:'Modulació', 91:'Reverb', 93:'Chorus' };
 let _dcSel = null; // { type:'btn'|'pot', id:number }
+
+const _CC_NAMES = {
+  0:'Bank Sel',1:'Mod Wheel',2:'Breath',4:'Foot',5:'Portamento',7:'Volum',
+  8:'Balance',10:'Paneo',11:'Expressió',12:'FX1',13:'FX2',
+  16:'GP1',17:'GP2',18:'GP3',19:'GP4',
+  64:'Sustain',65:'Portamento',66:'Sostenuto',67:'Soft Ped',68:'Legato',
+  71:'Timbre',72:'Release',73:'Attack',74:'Brillantor',75:'Decay',
+  76:'Vibrato R',77:'Vibrato D',78:'Vibrato D',
+  84:'Portamento',91:'Reverb',92:'Tremolo',93:'Chorus',94:'Detune',95:'Phaser',
+  120:'Sounds Off',121:'Reset',123:'Notes Off'
+};
+function _ccLabel(cc) { return _CC_NAMES[cc] ? _CC_NAMES[cc] : `CC ${cc}`; }
 
 function renderDevicePanel() {
   if (!deviceConfig) return;
@@ -1201,7 +1212,7 @@ function _renderDCHardware() {
     w.innerHTML = `
       <div class="dev-pot-knob"><div class="dev-pot-indicator"></div></div>
       <span class="dev-pot-lbl">${pot.name}</span>
-      <span class="dev-pot-cc">CC ${pot.cc}</span>`;
+      <span class="dev-pot-cc">${_ccLabel(pot.cc)}</span>`;
     w.addEventListener('click', () => {
       _dcSel = (sel) ? null : { type: 'pot', id: pot.id };
       _renderDCHardware(); _renderDCConfigArea();
