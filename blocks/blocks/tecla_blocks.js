@@ -1656,3 +1656,162 @@ Blockly.Blocks['tecla_euclidean_rhythm'] = {
         this.setInputsInline(true);
     }
 };
+
+// ==================== BLOCS DE SEQÜENCIADOR ====================
+
+Blockly.Blocks['tecla_seq_play_steps'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("🎵 Seqüència MIDI")
+      .appendField(new Blockly.FieldTextInput("60,62,64,67,69"), "NOTES");
+    this.appendValueInput("VELOCITY")
+      .setCheck("Number")
+      .appendField("vel");
+    this.appendValueInput("STEP_DUR")
+      .setCheck("Number")
+      .appendField("durada/pas (s)");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour('#00ffc8');
+    this.setInputsInline(true);
+    this.setTooltip("Toca una seqüència de notes MIDI separades per comes (ex: 60,62,64,67)");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['tecla_arpeggio_dir'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("🎶 Arpegi")
+      .appendField(new Blockly.FieldDropdown([
+        ["Do Major (C)", "C"], ["Re Major (D)", "D"], ["Mi Major (E)", "E"],
+        ["Fa Major (F)", "F"], ["Sol Major (G)", "G"], ["La Major (A)", "A"],
+        ["Si Major (B)", "B"], ["Do menor (Cm)", "Cm"], ["Re menor (Dm)", "Dm"],
+        ["Mi menor (Em)", "Em"], ["Fa menor (Fm)", "Fm"], ["Sol menor (Gm)", "Gm"],
+        ["La menor (Am)", "Am"], ["Si menor (Bm)", "Bm"]
+      ]), "CHORD")
+      .appendField(new Blockly.FieldDropdown([
+        ["↑ Amunt", "up"],
+        ["↓ Avall", "down"],
+        ["↕ Amunt-Avall", "updown"],
+        ["🎲 Aleatori", "random"]
+      ]), "DIR");
+    this.appendValueInput("SPEED")
+      .setCheck("Number")
+      .appendField("temps/nota (s)");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour('#00ffc8');
+    this.setInputsInline(true);
+    this.setTooltip("Toca les notes d'un acord en seqüència amb la direcció triada");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['tecla_drum_hit'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("🥁 Colpir")
+      .appendField(new Blockly.FieldDropdown([
+        ["Kick (Bombo)", "36"],
+        ["Snare (Caixa)", "38"],
+        ["Hi-Hat Tancat", "42"],
+        ["Hi-Hat Obert", "46"],
+        ["Crash", "49"],
+        ["Ride", "51"],
+        ["Tom Alt", "50"],
+        ["Tom Mig", "47"],
+        ["Tom Baix", "45"],
+        ["Clap", "39"],
+        ["Cowbell", "56"]
+      ]), "DRUM");
+    this.appendValueInput("VELOCITY")
+      .setCheck("Number")
+      .appendField("vel");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour('#00ffc8');
+    this.setInputsInline(true);
+    this.setTooltip("Toca un instrument de percussió MIDI GM (canal 10)");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['tecla_drum_pattern'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("🥁 Patró (16 passos)")
+      .appendField(new Blockly.FieldDropdown([
+        ["Kick (Bombo)", "36"],
+        ["Snare (Caixa)", "38"],
+        ["Hi-Hat Tancat", "42"],
+        ["Hi-Hat Obert", "46"],
+        ["Crash", "49"]
+      ]), "DRUM");
+    this.appendDummyInput()
+      .appendField("pasos")
+      .appendField(new Blockly.FieldTextInput("1000100010001000"), "PATTERN");
+    this.appendValueInput("STEP_DUR")
+      .setCheck("Number")
+      .appendField("durada/pas (s)");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour('#00ffc8');
+    this.setTooltip("Patró rítmic de fins a 16 passos: 1=cop, 0=silenci (ex: 1000100010001000)");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['tecla_note_name'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("🎵 Nota")
+      .appendField(new Blockly.FieldDropdown([
+        ["C2 (Do 2)", "36"], ["D2 (Re 2)", "38"], ["E2 (Mi 2)", "40"],
+        ["F2 (Fa 2)", "41"], ["G2 (Sol 2)", "43"], ["A2 (La 2)", "45"], ["B2 (Si 2)", "47"],
+        ["C3 (Do 3)", "48"], ["D3 (Re 3)", "50"], ["E3 (Mi 3)", "52"],
+        ["F3 (Fa 3)", "53"], ["G3 (Sol 3)", "55"], ["A3 (La 3)", "57"], ["B3 (Si 3)", "59"],
+        ["C4 (Do 4 – central)", "60"], ["C#4 / Db4", "61"],
+        ["D4 (Re 4)", "62"], ["D#4 / Eb4", "63"],
+        ["E4 (Mi 4)", "64"], ["F4 (Fa 4)", "65"], ["F#4 / Gb4", "66"],
+        ["G4 (Sol 4)", "67"], ["G#4 / Ab4", "68"],
+        ["A4 (La 4 – 440Hz)", "69"], ["A#4 / Bb4", "70"], ["B4 (Si 4)", "71"],
+        ["C5 (Do 5)", "72"], ["D5 (Re 5)", "74"], ["E5 (Mi 5)", "76"],
+        ["F5 (Fa 5)", "77"], ["G5 (Sol 5)", "79"], ["A5 (La 5)", "81"], ["B5 (Si 5)", "83"],
+        ["C6 (Do 6)", "84"], ["D6 (Re 6)", "86"], ["E6 (Mi 6)", "88"]
+      ]), "NOTE");
+    this.setOutput(true, "Number");
+    this.setColour('#00ffc8');
+    this.setTooltip("Retorna el número MIDI d'una nota musical");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['tecla_chord_progression'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("🎼 Progressió")
+      .appendField(new Blockly.FieldDropdown([
+        ["I–IV–V–I  (Pop)", "pop"],
+        ["I–V–vi–IV  (Modern)", "modern"],
+        ["ii–V–I  (Jazz)", "jazz"],
+        ["I–vi–IV–V  (Anys 50)", "fifties"],
+        ["I–IV–I–V  (Blues)", "blues"],
+        ["i–VII–VI–VII  (Rock menor)", "rock"]
+      ]), "PROG")
+      .appendField("Key")
+      .appendField(new Blockly.FieldDropdown([
+        ["C", "0"], ["D", "2"], ["E", "4"], ["F", "5"],
+        ["G", "7"], ["A", "9"], ["B", "11"]
+      ]), "KEY");
+    this.appendValueInput("BEATS_DUR")
+      .setCheck("Number")
+      .appendField("s/acord");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour('#00ffc8');
+    this.setInputsInline(true);
+    this.setTooltip("Toca una progressió d'acords completa en la tonalitat triada");
+    this.setHelpUrl("");
+  }
+};

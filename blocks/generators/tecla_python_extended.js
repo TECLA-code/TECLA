@@ -476,3 +476,113 @@ Blockly.Python['tecla_euclidean_rhythm'] = function (block) {
     const code = `((${step} * ${pulses}) % ${steps}) < ${pulses}`;
     return [code, Blockly.Python.ORDER_RELATIONAL];
 };
+
+// ==================== SEQÜENCIADOR ====================
+
+Blockly.Python['tecla_seq_play_steps'] = function (block) {
+  const notes    = block.getFieldValue('NOTES') || '60,62,64,67';
+  const velocity = Blockly.Python.valueToCode(block, 'VELOCITY', Blockly.Python.ORDER_ATOMIC) || '100';
+  const stepDur  = Blockly.Python.valueToCode(block, 'STEP_DUR', Blockly.Python.ORDER_ATOMIC) || '0.25';
+  return `# Seqüència MIDI\n` +
+    `for _seq_note in [${notes}]:\n` +
+    `    midi.send(NoteOn(_seq_note, ${velocity}))\n` +
+    `    time.sleep(${stepDur})\n` +
+    `    midi.send(NoteOff(_seq_note, 0))\n`;
+};
+
+Blockly.Python['tecla_arpeggio_dir'] = function (block) {
+  const chord = block.getFieldValue('CHORD');
+  const dir   = block.getFieldValue('DIR');
+  const speed = Blockly.Python.valueToCode(block, 'SPEED', Blockly.Python.ORDER_ATOMIC) || '0.12';
+
+  const chordMap = {
+    'C':  [48,52,55,60], 'D':  [50,54,57,62], 'E':  [52,56,59,64],
+    'F':  [53,57,60,65], 'G':  [55,59,62,67], 'A':  [57,61,64,69], 'B':  [59,63,66,71],
+    'Cm': [48,51,55,60], 'Dm': [50,53,57,62], 'Em': [52,55,59,64],
+    'Fm': [53,56,60,65], 'Gm': [55,58,62,67], 'Am': [57,60,64,69], 'Bm': [59,62,66,71]
+  };
+  const notes = chordMap[chord] || [48,52,55,60];
+
+  let seq;
+  if (dir === 'up')     seq = notes;
+  else if (dir === 'down') seq = [...notes].reverse();
+  else if (dir === 'updown') seq = [...notes, ...[...notes].reverse().slice(1,-1)];
+  else seq = notes; // random handled at runtime below
+
+  if (dir === 'random') {
+    return `# Arpegi ${chord} aleatori\n` +
+      `import random as _rnd\n` +
+      `_arp = [${notes.join(',')}]\n` +
+      `_rnd.shuffle(_arp)\n` +
+      `for _n in _arp:\n` +
+      `    midi.send(NoteOn(_n, 100))\n` +
+      `    time.sleep(${speed})\n` +
+      `    midi.send(NoteOff(_n, 0))\n`;
+  }
+
+  let code = `# Arpegi ${chord} ${dir}\n`;
+  seq.forEach(n => {
+    code += `midi.send(NoteOn(${n}, 100))\n`;
+    code += `time.sleep(${speed})\n`;
+    code += `midi.send(NoteOff(${n}, 0))\n`;
+  });
+  return code;
+};
+
+Blockly.Python['tecla_drum_hit'] = function (block) {
+  const drum     = block.getFieldValue('DRUM');
+  const velocity = Blockly.Python.valueToCode(block, 'VELOCITY', Blockly.Python.ORDER_ATOMIC) || '100';
+  return `# Percussió MIDI GM (canal 10)\n` +
+    `midi.send(NoteOn(${drum}, ${velocity}, channel=9))\n` +
+    `time.sleep(0.05)\n` +
+    `midi.send(NoteOff(${drum}, 0, channel=9))\n`;
+};
+
+Blockly.Python['tecla_drum_pattern'] = function (block) {
+  const drum    = block.getFieldValue('DRUM');
+  const pattern = block.getFieldValue('PATTERN') || '1000100010001000';
+  const stepDur = Blockly.Python.valueToCode(block, 'STEP_DUR', Blockly.Python.ORDER_ATOMIC) || '0.125';
+  return `# Patró rítmic: ${pattern}\n` +
+    `for _step in "${pattern}":\n` +
+    `    if _step == '1':\n` +
+    `        midi.send(NoteOn(${drum}, 100, channel=9))\n` +
+    `        time.sleep(0.04)\n` +
+    `        midi.send(NoteOff(${drum}, 0, channel=9))\n` +
+    `    time.sleep(${stepDur})\n`;
+};
+
+Blockly.Python['tecla_note_name'] = function (block) {
+  const note = block.getFieldValue('NOTE') || '60';
+  return [note, Blockly.Python.ORDER_ATOMIC];
+};
+
+Blockly.Python['tecla_chord_progression'] = function (block) {
+  const prog     = block.getFieldValue('PROG');
+  const keyOff   = parseInt(block.getFieldValue('KEY') || '0', 10);
+  const beatsDur = Blockly.Python.valueToCode(block, 'BEATS_DUR', Blockly.Python.ORDER_ATOMIC) || '1.0';
+
+  // Progressions en C (offset 0), transposades pel key
+  const progressions = {
+    pop:     [[48,52,55],[53,57,60],[55,59,62],[48,52,55]],       // I-IV-V-I
+    modern:  [[48,52,55],[55,59,62],[57,60,64],[53,57,60]],       // I-V-vi-IV
+    jazz:    [[50,53,57],[55,59,62],[48,52,55]],                   // ii-V-I
+    fifties: [[48,52,55],[57,60,64],[53,57,60],[55,59,62]],       // I-vi-IV-V
+    blues:   [[48,52,55],[53,57,60],[48,52,55],[55,59,62]],       // I-IV-I-V
+    rock:    [[48,51,55],[46,50,53],[45,48,52],[46,50,53]]        // i-VII-VI-VII
+  };
+
+  const chords = (progressions[prog] || progressions.pop)
+    .map(ch => ch.map(n => n + keyOff));
+
+  const keyNames = {0:'C',2:'D',4:'E',5:'F',7:'G',9:'A',11:'B'};
+  const keyName  = keyNames[keyOff] || 'C';
+
+  let code = `# Progressió ${prog} en ${keyName}\n`;
+  chords.forEach((ch, i) => {
+    code += `# Acord ${i+1}\n`;
+    ch.forEach(n => code += `midi.send(NoteOn(${n}, 90))\n`);
+    code += `time.sleep(${beatsDur})\n`;
+    ch.forEach(n => code += `midi.send(NoteOff(${n}, 0))\n`);
+  });
+  return code;
+};
