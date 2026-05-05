@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupButtons();
   setupFileOpen();
   initThemeSystem();
+  initDeviceConfig();
   updateStatusBar();
 });
 
@@ -159,6 +160,7 @@ function setupTabs() {
       document.querySelectorAll('.panel-content').forEach(p => p.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById(`panel-${btn.dataset.tab}`).classList.add('active');
+      if (btn.dataset.tab === 'device') renderDevicePanel();
     });
   });
 }
@@ -177,6 +179,8 @@ function setupButtons() {
   document.getElementById('btn-copy-code').addEventListener('click', copyCode);
   document.getElementById('btn-simulate').addEventListener('click', runSimulation);
   document.getElementById('btn-stop-sim').addEventListener('click', stopSimulation);
+  document.getElementById('btn-gen-device-code').addEventListener('click', exportDeviceCode);
+  document.getElementById('btn-upload-device-code').addEventListener('click', uploadDeviceCode);
   document.getElementById('btn-ex-melody').addEventListener('click', () => loadExample('melody'));
   document.getElementById('btn-ex-sequencer').addEventListener('click', () => loadExample('sequencer'));
   document.getElementById('btn-ex-buttons').addEventListener('click', () => loadExample('buttons'));
@@ -855,7 +859,235 @@ function loadExample(type) {
   }
 }
 
-// ── Utilities ─────────────────────────────────────────────────
+// ── Device Configuration System ────────────────────────────────
+const _DC_KEY = 'tecla-device-cfg';
+let deviceConfig = null;
+
+function _defaultDeviceCfg() {
+  return {
+    numButtons: 8,
+    buttons: Array.from({ length: 8 }, (_, i) => ({
+      id: i + 1, name: `Botó ${i + 1}`, project: null
+    })),
+    pots: [
+      { id: 0, name: 'X', cc: 74, channel: 1, min: 0, max: 127 },
+      { id: 1, name: 'Y', cc: 71, channel: 1, min: 0, max: 127 },
+      { id: 2, name: 'Z', cc:  7, channel: 1, min: 0, max: 127 }
+    ]
+  };
+}
+
+function initDeviceConfig() {
+  try { deviceConfig = JSON.parse(localStorage.getItem(_DC_KEY)) || _defaultDeviceCfg(); }
+  catch { deviceConfig = _defaultDeviceCfg(); }
+}
+
+function _saveDC() {
+  localStorage.setItem(_DC_KEY, JSON.stringify(deviceConfig));
+}
+
+function renderDevicePanel() {
+  if (!deviceConfig) return;
+  const grid = document.getElementById('dbc-grid');
+  const potsEl = document.getElementById('dbc-pots');
+  const cntEl = document.getElementById('dbc-count');
+  if (!grid || !potsEl) return;
+
+  const assigned = deviceConfig.buttons.filter(b => b.project).length;
+  if (cntEl) cntEl.textContent = `${assigned} / ${deviceConfig.buttons.length} assignats`;
+
+  // Render buttons
+  grid.innerHTML = '';
+  deviceConfig.buttons.forEach(btn => {
+    const hp = !!btn.project;
+    const card = document.createElement('div');
+    card.className = `dbc-card${hp ? ' assigned' : ''}`;
+    card.innerHTML = `
+      <div class="dbc-header">
+        <span class="dbc-num">B${btn.id}</span>
+        <input class="dbc-name" value="${btn.name.replace(/"/g,'&quot;')}" maxlength="14" placeholder="Nom">
+      </div>
+      <div class="dbc-project${hp ? ' assigned' : ''}">
+        ${hp ? '📄 ' + btn.project.name : '— buit —'}
+      </div>
+      <div class="dbc-actions">
+        <button class="btn" data-act="assign" data-id="${btn.id}" title="Assignar el workspace actual a aquest botó">↓ Assignar</button>
+        <button class="btn${hp ? '' : ' hidden'}" data-act="load"   data-id="${btn.id}" title="Carregar al workspace">⇑</button>
+        <button class="btn${hp ? '' : ' hidden'}" data-act="clear"  data-id="${btn.id}" title="Esborrar">×</button>
+      </div>`;
+
+    card.querySelector('.dbc-name').addEventListener('change', e => {
+      const b = deviceConfig.buttons.find(x => x.id === btn.id);
+      if (b) { b.name = e.target.value.trim() || `Botó ${btn.id}`; _saveDC(); }
+    });
+    card.querySelectorAll('[data-act]').forEach(el => {
+      el.addEventListener('click', () => {
+        const id = parseInt(el.dataset.id);
+        if (el.dataset.act === 'assign') _assignProject(id);
+        if (el.dataset.act === 'load')   _loadBtnProject(id);
+        if (el.dataset.act === 'clear')  _clearBtnProject(id);
+      });
+    });
+    grid.appendChild(card);
+  });
+
+  // Render pots
+  potsEl.innerHTML = '';
+  const potNames = { 74:'Filtre tall', 71:'Ressonància', 7:'Volum', 10:'Panorama', 11:'Expressió', 1:'Modulació' };
+  deviceConfig.pots.forEach(pot => {
+    const row = document.createElement('div');
+    row.className = 'pot-row';
+    row.innerHTML = `
+      <span class="pot-lbl">${pot.name}</span>
+      <div class="pot-f"><label>CC</label><input type="number" data-pot="${pot.id}" data-f="cc" value="${pot.cc}" min="0" max="127"></div>
+      <div class="pot-f"><label>Min</label><input type="number" data-pot="${pot.id}" data-f="min" value="${pot.min}" min="0" max="127"></div>
+      <div class="pot-f"><label>Màx</label><input type="number" data-pot="${pot.id}" data-f="max" value="${pot.max}" min="0" max="127"></div>
+      <div class="pot-f"><label>Canal</label><input type="number" data-pot="${pot.id}" data-f="channel" value="${pot.channel}" min="1" max="16"></div>
+      <span style="font-size:10px;color:var(--text3);margin-left:auto">${potNames[pot.cc] || ''}</span>`;
+    row.querySelectorAll('input[type=number]').forEach(inp => {
+      inp.addEventListener('change', () => {
+        const p = deviceConfig.pots.find(x => x.id === parseInt(inp.dataset.pot));
+        if (!p) return;
+        const v = parseInt(inp.value) || 0;
+        if (inp.dataset.f === 'cc')      { p.cc = v; const lbl = row.querySelector('span:last-child'); if(lbl) lbl.textContent = potNames[v]||''; }
+        if (inp.dataset.f === 'min')     p.min = v;
+        if (inp.dataset.f === 'max')     p.max = v;
+        if (inp.dataset.f === 'channel') p.channel = v;
+        _saveDC();
+      });
+    });
+    potsEl.appendChild(row);
+  });
+
+  // Enable upload btn if device connected
+  const uploadBtn = document.getElementById('btn-upload-device-code');
+  if (uploadBtn) uploadBtn.disabled = !deviceDirHandle;
+}
+
+function _assignProject(btnId) {
+  if (workspace.getAllBlocks(false).length === 0) {
+    toast('El workspace està buit. Afegeix blocs primer.', 'err'); return;
+  }
+  const xml = Blockly.Xml.workspaceToDom(workspace);
+  const xmlText = Blockly.Xml.domToText(xml);
+  const code = updateGeneratedCode();
+  const btn = deviceConfig.buttons.find(b => b.id === btnId);
+  if (!btn) return;
+  btn.project = { name: currentProject.name, xml: xmlText, code: code || '' };
+  _saveDC();
+  renderDevicePanel();
+  toast(`✓ "${currentProject.name}" assignat al Botó ${btnId}`, 'ok');
+}
+
+function _loadBtnProject(btnId) {
+  const btn = deviceConfig.buttons.find(b => b.id === btnId);
+  if (!btn || !btn.project) return;
+  if (!confirm(`Carregar "${btn.project.name}"? El workspace actual es perdrà.`)) return;
+  workspace.clear();
+  try {
+    const dom = Blockly.utils.xml.textToDom(btn.project.xml);
+    Blockly.Xml.domToWorkspace(dom, workspace);
+    currentProject.name = btn.project.name;
+    codeCache = { hash: null, code: null };
+    updateGeneratedCode();
+    updateStatusBar();
+    toast(`⇑ Carregat: ${btn.project.name}`, 'ok');
+  } catch (e) {
+    toast('Error carregant projecte', 'err');
+  }
+}
+
+function _clearBtnProject(btnId) {
+  const btn = deviceConfig.buttons.find(b => b.id === btnId);
+  if (!btn) return;
+  btn.project = null;
+  _saveDC();
+  renderDevicePanel();
+  toast(`Botó ${btnId} netejat`);
+}
+
+function _buildDeviceCode() {
+  const cfg = deviceConfig;
+  const N = cfg.buttons.length;
+  let c = `# === TECLA Device Configuration ===\n# Generat per TECLA Blocks\n# Botons assignats: ${cfg.buttons.filter(b=>b.project).map(b=>`B${b.id} → ${b.project.name}`).join(', ') || 'cap'}\n\n`;
+  c += `import usb_midi, adafruit_midi, board, digitalio, analogio, time\n`;
+  c += `from adafruit_midi.note_on import NoteOn\n`;
+  c += `from adafruit_midi.note_off import NoteOff\n`;
+  c += `from adafruit_midi.control_change import ControlChange\n\n`;
+  c += `_midi = adafruit_midi.MIDI(midi_out=usb_midi.ports[1], out_channel=0)\n\n`;
+
+  // Button GPIO pins (GP0..GP7)
+  c += `# Botons (ajusta els pins al teu hardware)\n`;
+  c += `_BTN_PINS = [board.GP${Array.from({length:N},(_,i)=>i).join(', board.GP')}]\n`;
+  c += `_btns = [digitalio.DigitalInOut(p) for p in _BTN_PINS]\n`;
+  c += `for _b in _btns:\n    _b.direction = digitalio.Direction.INPUT\n    _b.pull = digitalio.Pull.UP\n\n`;
+
+  // Pots
+  c += `# Potenciòmetres\n`;
+  c += `_POT_PINS = [board.A0, board.A1, board.A2]\n`;
+  c += `_pots = [analogio.AnalogIn(p) for p in _POT_PINS]\n`;
+  c += `_POT_CC  = [${cfg.pots.map(p=>p.cc).join(', ')}]\n`;
+  c += `_POT_CH  = [${cfg.pots.map(p=>p.channel-1).join(', ')}]\n`;
+  c += `_POT_MIN = [${cfg.pots.map(p=>p.min).join(', ')}]\n`;
+  c += `_POT_MAX = [${cfg.pots.map(p=>p.max).join(', ')}]\n\n`;
+
+  // Project functions
+  cfg.buttons.forEach((btn, i) => {
+    c += `# --- Botó ${btn.id}: ${btn.project ? btn.project.name : 'sense assignar'} ---\n`;
+    c += `def _run_${i+1}():\n`;
+    if (btn.project && btn.project.code) {
+      btn.project.code.split('\n').forEach(line => { c += `    ${line}\n`; });
+    } else {
+      c += `    pass\n`;
+    }
+    c += `\n`;
+  });
+
+  // Dispatch table
+  c += `_PROJECTS = [${Array.from({length:N},(_,i)=>`_run_${i+1}`).join(', ')}]\n\n`;
+
+  // Main loop
+  c += `_prev = [True] * ${N}\n`;
+  c += `_ppot = [0] * 3\n\n`;
+  c += `def _rpot(p, mn, mx):\n    return mn + int((p.value >> 9) * (mx - mn) / 127)\n\n`;
+  c += `while True:\n`;
+  c += `    for i in range(${N}):\n`;
+  c += `        s = _btns[i].value\n`;
+  c += `        if not s and _prev[i]: _PROJECTS[i]()\n`;
+  c += `        _prev[i] = s\n`;
+  c += `    for i in range(3):\n`;
+  c += `        v = _rpot(_pots[i], _POT_MIN[i], _POT_MAX[i])\n`;
+  c += `        if abs(v - _ppot[i]) > 1:\n`;
+  c += `            adafruit_midi.MIDI(midi_out=usb_midi.ports[1], out_channel=_POT_CH[i]).send(ControlChange(_POT_CC[i], max(0,min(127,v))))\n`;
+  c += `            _ppot[i] = v\n`;
+  c += `    time.sleep(0.01)\n`;
+  return c;
+}
+
+function exportDeviceCode() {
+  if (!deviceConfig.buttons.some(b => b.project)) {
+    toast('Cap botó té cap projecte assignat', 'err'); return;
+  }
+  const code = _buildDeviceCode();
+  blobDownload(code, 'code.py', 'text/x-python');
+  toast('✓ code.py generat i descarregat', 'ok');
+}
+
+async function uploadDeviceCode() {
+  if (!deviceDirHandle) { toast('Connecta el dispositiu primer', 'err'); return; }
+  const code = _buildDeviceCode();
+  try {
+    const fh = await deviceDirHandle.getFileHandle('code.py', { create: true });
+    const w  = await fh.createWritable();
+    await w.write(code);
+    await w.close();
+    toast('✓ code.py pujat al dispositiu', 'ok');
+  } catch (e) {
+    toast('Error pujant codi', 'err'); console.error(e);
+  }
+}
+
+// ── Utilities ─────────────────────────────────────────────────────────
 function blobDownload(content, filename, mime) {
   const blob = new Blob([content], { type: mime });
   const url = URL.createObjectURL(blob);
