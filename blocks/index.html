@@ -251,57 +251,52 @@
     input[type=text]:focus { outline: none; border-color: var(--accent); }
 
     /* ── Device config panel ─────────────────────────────────── */
-    .dbc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; margin-bottom: 4px; }
-    .dbc-card {
-      background: var(--surface2); border: 1.5px solid var(--border);
-      border-radius: 8px; padding: 9px; display: flex; flex-direction: column; gap: 7px;
-      transition: border-color .15s;
+    .dev-hw-wrap { display: flex; gap: 12px; align-items: stretch; padding: 12px 0 10px; flex-shrink: 0; }
+    .dev-pots-col { display: flex; flex-direction: column; align-items: center; justify-content: space-around; gap: 6px; flex-shrink: 0; width: 52px; }
+    .dev-pot-w { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; opacity: 0.72; transition: opacity .15s; flex: 1; justify-content: center; }
+    .dev-pot-w:hover { opacity: 0.9; }
+    .dev-pot-w.selected { opacity: 1; }
+    .dev-pot-knob { width: 40px; height: 40px; border-radius: 50%; background: #dde1eb; border: 2px solid rgba(0,0,0,.15); position: relative; box-shadow: 0 3px 0 rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.6); transition: border-color .15s, box-shadow .15s; flex-shrink: 0; }
+    .dev-pot-w.selected .dev-pot-knob { border-color: var(--accent); box-shadow: 0 2px 0 rgba(0,0,0,.18), 0 0 0 2px var(--accent); }
+    .dev-pot-indicator { position: absolute; top: 4px; left: 50%; transform: translateX(-50%); width: 2px; height: 8px; background: rgba(0,0,0,.42); border-radius: 2px; }
+    .dev-pot-lbl { font-size: 9.5px; font-weight: 700; color: var(--text2); line-height: 1; }
+    .dev-pot-cc { font-size: 8.5px; color: var(--text3); line-height: 1; }
+    .dev-keys-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; flex: 1; }
+    .dev-key-btn {
+      aspect-ratio: 1; background: #dde1eb; border: 1.5px solid rgba(0,0,0,.16);
+      border-radius: 7px; display: flex; flex-direction: column;
+      align-items: flex-start; justify-content: flex-end;
+      cursor: pointer; position: relative;
+      box-shadow: 0 3px 0 rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.55);
+      transition: all .1s; padding: 5px 5px 4px; overflow: hidden;
     }
-    .dbc-card.assigned { border-color: rgba(61,201,108,.4); }
-    .dbc-header { display: flex; align-items: center; gap: 5px; }
-    .dbc-num {
-      font-size: 10px; font-weight: 700; color: var(--accent);
-      background: rgba(74,128,240,.12); border: 1px solid rgba(74,128,240,.25);
-      border-radius: 4px; padding: 2px 5px; white-space: nowrap; flex-shrink: 0;
-    }
-    .dbc-card.assigned .dbc-num { color: var(--green); background: rgba(61,201,108,.1); border-color: rgba(61,201,108,.3); }
-    .dbc-name {
-      flex: 1; min-width: 0; padding: 3px 6px; border-radius: 4px;
-      border: 1px solid var(--border); background: var(--surface);
-      color: var(--text); font-size: 10.5px; font-family: var(--font);
-    }
-    .dbc-name:focus { outline: none; border-color: var(--accent); }
-    .dbc-project {
-      font-size: 10px; color: var(--text3); padding: 4px 6px;
-      border-radius: 4px; background: var(--surface); border: 1px solid var(--border);
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      min-height: 24px; display: flex; align-items: center;
-    }
-    .dbc-project.assigned { color: var(--green); border-color: rgba(61,201,108,.25); background: rgba(61,201,108,.05); }
-    .dbc-actions { display: flex; gap: 4px; }
-    .dbc-actions .btn { padding: 3px 5px; font-size: 9.5px; flex: 1; justify-content: center; min-width: 0; }
-    .dbc-actions .btn.hidden { display: none; }
-    .pot-row {
-      display: flex; align-items: center; gap: 8px; padding: 8px 10px;
-      background: var(--surface2); border-radius: 8px; border: 1px solid var(--border);
-      margin-bottom: 7px; flex-wrap: wrap;
-    }
-    .pot-lbl { font-weight: 700; color: var(--accent); min-width: 14px; font-size: 12px; }
-    .pot-f { display: flex; align-items: center; gap: 4px; }
-    .pot-f label { font-size: 10px; color: var(--text3); }
-    .pot-f input[type=number] {
-      width: 46px; padding: 4px 5px; border-radius: 4px; text-align: center;
-      border: 1px solid var(--border); background: var(--surface);
-      color: var(--text); font-size: 11px; font-family: var(--font);
-    }
-    .pot-f input[type=number]:focus { outline: none; border-color: var(--accent); }
-    .dev-stitle {
-      font-size: 10px; font-weight: 600; color: var(--text3);
-      text-transform: uppercase; letter-spacing: .08em;
-      margin: 14px 0 8px; display: flex; align-items: center; justify-content: space-between;
-    }
-    .dev-stitle:first-child { margin-top: 0; }
-    .dev-export-bar { display:flex; gap:8px; padding:10px 0; border-top:1px solid var(--border); margin-top:10px; flex-shrink:0; }
+    .dev-key-btn:hover { background: #eaecf5; border-color: rgba(0,0,0,.26); }
+    .dev-key-btn:active { transform: scale(.95); box-shadow: 0 1px 0 rgba(0,0,0,.28), inset 0 1px 2px rgba(0,0,0,.12); }
+    .dev-key-btn.selected { border-color: var(--accent) !important; box-shadow: 0 0 0 2px var(--accent), 0 2px 0 rgba(0,0,0,.12) !important; }
+    .dev-key-btn.assigned { background: rgba(61,201,108,.2); border-color: rgba(61,201,108,.5); box-shadow: 0 3px 0 rgba(61,201,108,.25), inset 0 1px 0 rgba(255,255,255,.3); }
+    .dev-key-num { position: absolute; top: 4px; left: 5px; font-size: 8px; color: rgba(0,0,0,.3); font-family: var(--mono); pointer-events: none; font-weight: 700; }
+    .dev-key-name { font-size: 8.5px; font-weight: 700; color: rgba(0,0,0,.62); font-family: var(--mono); pointer-events: none; line-height: 1.2; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dev-key-proj { font-size: 7.5px; color: rgba(0,0,0,.38); pointer-events: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; line-height: 1.2; }
+    .dev-key-btn.assigned .dev-key-name { color: rgba(15,80,40,.85); }
+    .dev-key-btn.assigned .dev-key-proj { color: rgba(15,80,40,.55); }
+    .dev-cfg-area { flex-shrink: 0; border-top: 1px solid var(--border); padding: 10px 0 8px; }
+    .dev-cfg-hint { display: flex; align-items: center; justify-content: center; min-height: 56px; font-size: 11px; color: var(--text3); }
+    .dev-cfg-head { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .dev-cfg-head span { color: var(--accent); }
+    .dev-cfg-name-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+    .dev-cfg-name-row input { flex: 1; padding: 5px 8px; font-size: 11px; min-width: 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface2); color: var(--text); font-family: var(--font); }
+    .dev-cfg-name-row input:focus { outline: none; border-color: var(--accent); }
+    .dev-cfg-proj-info { font-size: 10.5px; padding: 5px 8px; border-radius: 5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .dev-cfg-proj-info.has-proj { color: var(--green); background: rgba(61,201,108,.07); border: 1px solid rgba(61,201,108,.2); }
+    .dev-cfg-proj-info.no-proj { color: var(--text3); background: var(--surface2); border: 1px solid var(--border); }
+    .dev-cfg-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+    .dev-cfg-btns .btn { padding: 4px 9px; font-size: 10.5px; }
+    .dev-pot-fields { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; }
+    .dev-pot-field { display: flex; flex-direction: column; gap: 3px; }
+    .dev-pot-field label { font-size: 9.5px; color: var(--text3); text-transform: uppercase; letter-spacing: .04em; }
+    .dev-pot-field input[type=number] { width: 100%; padding: 5px 4px; border-radius: 4px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: 11px; font-family: var(--font); text-align: center; }
+    .dev-pot-field input[type=number]:focus { outline: none; border-color: var(--accent); }
+    .dev-export-bar { display:flex; gap:8px; padding:10px 0 2px; border-top:1px solid var(--border); flex-shrink:0; }
 
     /* ── Theme body classes ──────────────────────────────────── */
     body.theme-light { --bg:#f2f2f2; --surface:#ffffff; --surface2:#ebebeb; --surface3:#e0e0e0; --accent:#4a80f0; --accent-d:#2d5cd9; --border:rgba(0,0,0,.1); --border-h:rgba(0,0,0,.2); --text:#111; --text2:rgba(0,0,0,.5); --text3:rgba(0,0,0,.3); }
@@ -526,27 +521,18 @@
 
         <!-- Device config panel -->
         <div id="panel-device" class="panel-content">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;flex-shrink:0;gap:10px">
-            <div>
-              <div style="font-size:13px;font-weight:600">Mapa del dispositiu</div>
-              <div style="font-size:11px;color:var(--text3);margin-top:3px">Assigna un projecte a cada botó i configura els potes MIDI</div>
-            </div>
+          <!-- hardware representation rendered by JS -->
+          <div id="dev-hw-wrap" class="dev-hw-wrap">
+            <div id="dev-pots-col" class="dev-pots-col"></div>
+            <div id="dev-keys-grid" class="dev-keys-grid"></div>
           </div>
-
-          <div class="dev-stitle">
-            <span>Botons</span>
-            <span id="dbc-count" style="font-size:10px;color:var(--text3)">0 / 8 assignats</span>
+          <!-- contextual config area rendered by JS -->
+          <div id="dev-cfg-area" class="dev-cfg-area">
+            <div class="dev-cfg-hint">← Clica un botó o potenciòmetre per configurar-lo</div>
           </div>
-          <div id="dbc-grid" class="dbc-grid"></div>
-
-          <div class="dev-stitle" style="margin-top:18px">
-            <span>Potenciòmetres MIDI</span>
-          </div>
-          <div id="dbc-pots"></div>
-
           <div class="dev-export-bar">
-            <button class="btn btn-primary" id="btn-gen-device-code" style="flex:1;justify-content:center">⬇ Generar &amp; descarregar codi.py</button>
-            <button class="btn btn-success" id="btn-upload-device-code" style="flex:1;justify-content:center" disabled>📤 Pujar al dispositiu</button>
+            <button class="btn btn-primary" id="btn-gen-device-code" style="flex:1;justify-content:center">⬇ Generar codi.py</button>
+            <button class="btn btn-success" id="btn-upload-device-code" style="flex:1;justify-content:center" disabled>📤 Pujar</button>
           </div>
         </div>
 

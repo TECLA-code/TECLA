@@ -886,82 +886,118 @@ function _saveDC() {
   localStorage.setItem(_DC_KEY, JSON.stringify(deviceConfig));
 }
 
+const _POT_NAMES = { 74:'Filtre tall', 71:'Ressonància', 7:'Volum', 10:'Panorama', 11:'Expressió', 1:'Modulació', 91:'Reverb', 93:'Chorus' };
+let _dcSel = null; // { type:'btn'|'pot', id:number }
+
 function renderDevicePanel() {
   if (!deviceConfig) return;
-  const grid = document.getElementById('dbc-grid');
-  const potsEl = document.getElementById('dbc-pots');
-  const cntEl = document.getElementById('dbc-count');
-  if (!grid || !potsEl) return;
-
-  const assigned = deviceConfig.buttons.filter(b => b.project).length;
-  if (cntEl) cntEl.textContent = `${assigned} / ${deviceConfig.buttons.length} assignats`;
-
-  // Render buttons
-  grid.innerHTML = '';
-  deviceConfig.buttons.forEach(btn => {
-    const hp = !!btn.project;
-    const card = document.createElement('div');
-    card.className = `dbc-card${hp ? ' assigned' : ''}`;
-    card.innerHTML = `
-      <div class="dbc-header">
-        <span class="dbc-num">B${btn.id}</span>
-        <input class="dbc-name" value="${btn.name.replace(/"/g,'&quot;')}" maxlength="14" placeholder="Nom">
-      </div>
-      <div class="dbc-project${hp ? ' assigned' : ''}">
-        ${hp ? '📄 ' + btn.project.name : '— buit —'}
-      </div>
-      <div class="dbc-actions">
-        <button class="btn" data-act="assign" data-id="${btn.id}" title="Assignar el workspace actual a aquest botó">↓ Assignar</button>
-        <button class="btn${hp ? '' : ' hidden'}" data-act="load"   data-id="${btn.id}" title="Carregar al workspace">⇑</button>
-        <button class="btn${hp ? '' : ' hidden'}" data-act="clear"  data-id="${btn.id}" title="Esborrar">×</button>
-      </div>`;
-
-    card.querySelector('.dbc-name').addEventListener('change', e => {
-      const b = deviceConfig.buttons.find(x => x.id === btn.id);
-      if (b) { b.name = e.target.value.trim() || `Botó ${btn.id}`; _saveDC(); }
-    });
-    card.querySelectorAll('[data-act]').forEach(el => {
-      el.addEventListener('click', () => {
-        const id = parseInt(el.dataset.id);
-        if (el.dataset.act === 'assign') _assignProject(id);
-        if (el.dataset.act === 'load')   _loadBtnProject(id);
-        if (el.dataset.act === 'clear')  _clearBtnProject(id);
-      });
-    });
-    grid.appendChild(card);
-  });
-
-  // Render pots
-  potsEl.innerHTML = '';
-  const potNames = { 74:'Filtre tall', 71:'Ressonància', 7:'Volum', 10:'Panorama', 11:'Expressió', 1:'Modulació' };
-  deviceConfig.pots.forEach(pot => {
-    const row = document.createElement('div');
-    row.className = 'pot-row';
-    row.innerHTML = `
-      <span class="pot-lbl">${pot.name}</span>
-      <div class="pot-f"><label>CC</label><input type="number" data-pot="${pot.id}" data-f="cc" value="${pot.cc}" min="0" max="127"></div>
-      <div class="pot-f"><label>Min</label><input type="number" data-pot="${pot.id}" data-f="min" value="${pot.min}" min="0" max="127"></div>
-      <div class="pot-f"><label>Màx</label><input type="number" data-pot="${pot.id}" data-f="max" value="${pot.max}" min="0" max="127"></div>
-      <div class="pot-f"><label>Canal</label><input type="number" data-pot="${pot.id}" data-f="channel" value="${pot.channel}" min="1" max="16"></div>
-      <span style="font-size:10px;color:var(--text3);margin-left:auto">${potNames[pot.cc] || ''}</span>`;
-    row.querySelectorAll('input[type=number]').forEach(inp => {
-      inp.addEventListener('change', () => {
-        const p = deviceConfig.pots.find(x => x.id === parseInt(inp.dataset.pot));
-        if (!p) return;
-        const v = parseInt(inp.value) || 0;
-        if (inp.dataset.f === 'cc')      { p.cc = v; const lbl = row.querySelector('span:last-child'); if(lbl) lbl.textContent = potNames[v]||''; }
-        if (inp.dataset.f === 'min')     p.min = v;
-        if (inp.dataset.f === 'max')     p.max = v;
-        if (inp.dataset.f === 'channel') p.channel = v;
-        _saveDC();
-      });
-    });
-    potsEl.appendChild(row);
-  });
-
-  // Enable upload btn if device connected
+  _renderDCHardware();
+  _renderDCConfigArea();
   const uploadBtn = document.getElementById('btn-upload-device-code');
   if (uploadBtn) uploadBtn.disabled = !deviceDirHandle;
+}
+
+function _renderDCHardware() {
+  const potsCol  = document.getElementById('dev-pots-col');
+  const keysGrid = document.getElementById('dev-keys-grid');
+  if (!potsCol || !keysGrid) return;
+
+  // Pots column
+  potsCol.innerHTML = '';
+  deviceConfig.pots.forEach(pot => {
+    const sel = _dcSel && _dcSel.type === 'pot' && _dcSel.id === pot.id;
+    const w = document.createElement('div');
+    w.className = `dev-pot-w${sel ? ' selected' : ''}`;
+    w.innerHTML = `
+      <div class="dev-pot-knob"><div class="dev-pot-indicator"></div></div>
+      <span class="dev-pot-lbl">${pot.name}</span>
+      <span class="dev-pot-cc">CC ${pot.cc}</span>`;
+    w.addEventListener('click', () => {
+      _dcSel = (sel) ? null : { type: 'pot', id: pot.id };
+      _renderDCHardware(); _renderDCConfigArea();
+    });
+    potsCol.appendChild(w);
+  });
+
+  // Keys grid
+  keysGrid.innerHTML = '';
+  deviceConfig.buttons.forEach(btn => {
+    const hp  = !!btn.project;
+    const sel = _dcSel && _dcSel.type === 'btn' && _dcSel.id === btn.id;
+    const el  = document.createElement('div');
+    el.className = `dev-key-btn${hp ? ' assigned' : ''}${sel ? ' selected' : ''}`;
+    el.innerHTML = `
+      <span class="dev-key-num">${btn.id}</span>
+      <span class="dev-key-name">${btn.name}</span>
+      ${hp ? `<span class="dev-key-proj">${btn.project.name}</span>` : ''}`;
+    el.addEventListener('click', () => {
+      _dcSel = (sel) ? null : { type: 'btn', id: btn.id };
+      _renderDCHardware(); _renderDCConfigArea();
+    });
+    keysGrid.appendChild(el);
+  });
+}
+
+function _renderDCConfigArea() {
+  const area = document.getElementById('dev-cfg-area');
+  if (!area) return;
+  if (!_dcSel) {
+    area.innerHTML = `<div class="dev-cfg-hint">← Clica un botó o potenciòmetre per configurar-lo</div>`;
+    return;
+  }
+  if (_dcSel.type === 'btn') {
+    const btn = deviceConfig.buttons.find(b => b.id === _dcSel.id);
+    if (!btn) return;
+    const hp = !!btn.project;
+    area.innerHTML = `
+      <div class="dev-cfg-head">Botó <span>B${btn.id}</span></div>
+      <div class="dev-cfg-name-row">
+        <input id="dcf-bname" type="text" value="${btn.name.replace(/"/g,'&quot;')}" maxlength="16" placeholder="Nom del botó" style="width:100%;font-size:11px">
+      </div>
+      <div class="dev-cfg-proj-info ${hp ? 'has-proj' : 'no-proj'}">
+        ${hp ? `📄 ${btn.project.name}` : '— Cap projecte assignat —'}
+      </div>
+      <div class="dev-cfg-btns">
+        <button class="btn btn-primary" id="dcf-assign">↓ Assignar workspace</button>
+        ${hp ? `<button class="btn" id="dcf-load">⇑ Carregar</button><button class="btn btn-danger" id="dcf-clear">✕ Netejar</button>` : ''}
+      </div>`;
+    area.querySelector('#dcf-bname').addEventListener('change', e => {
+      btn.name = e.target.value.trim() || `Botó ${btn.id}`; _saveDC(); _renderDCHardware();
+    });
+    area.querySelector('#dcf-assign').addEventListener('click', () => _assignProject(btn.id));
+    area.querySelector('#dcf-load')?.addEventListener('click', () => _loadBtnProject(btn.id));
+    area.querySelector('#dcf-clear')?.addEventListener('click', () => _clearBtnProject(btn.id));
+  } else {
+    const pot = deviceConfig.pots.find(p => p.id === _dcSel.id);
+    if (!pot) return;
+    const fname = _POT_NAMES[pot.cc] || '';
+    area.innerHTML = `
+      <div class="dev-cfg-head">Potenciòmetre <span>${pot.name}</span></div>
+      <div class="dev-pot-fields">
+        <div class="dev-pot-field"><label>CC</label><input type="number" id="dcf-pcc" value="${pot.cc}" min="0" max="127"></div>
+        <div class="dev-pot-field"><label>Mínim</label><input type="number" id="dcf-pmin" value="${pot.min}" min="0" max="127"></div>
+        <div class="dev-pot-field"><label>Màxim</label><input type="number" id="dcf-pmax" value="${pot.max}" min="0" max="127"></div>
+        <div class="dev-pot-field"><label>Canal</label><input type="number" id="dcf-pch" value="${pot.channel}" min="1" max="16"></div>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:8px">${fname ? `Funció: ${fname}` : 'CC ' + pot.cc}</div>
+      <div class="dev-cfg-name-row">
+        <input id="dcf-pname" type="text" value="${pot.name}" maxlength="8" placeholder="Etiqueta" style="width:100%;font-size:11px">
+      </div>`;
+    const upd = () => {
+      const cc = parseInt(area.querySelector('#dcf-pcc').value) || 0;
+      pot.cc      = cc;
+      pot.min     = parseInt(area.querySelector('#dcf-pmin').value) || 0;
+      pot.max     = parseInt(area.querySelector('#dcf-pmax').value) || 127;
+      pot.channel = parseInt(area.querySelector('#dcf-pch').value)  || 1;
+      const fn = area.querySelector('div[style*="font-size:10px"]');
+      if (fn) fn.textContent = _POT_NAMES[cc] ? `Funció: ${_POT_NAMES[cc]}` : `CC ${cc}`;
+      _saveDC(); _renderDCHardware();
+    };
+    ['#dcf-pcc','#dcf-pmin','#dcf-pmax','#dcf-pch'].forEach(id => area.querySelector(id)?.addEventListener('change', upd));
+    area.querySelector('#dcf-pname').addEventListener('change', e => {
+      pot.name = e.target.value.trim() || pot.name; _saveDC(); _renderDCHardware();
+    });
+  }
 }
 
 function _assignProject(btnId) {
