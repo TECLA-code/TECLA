@@ -580,6 +580,43 @@
         <value name="TO_MAX"><shadow type="math_number"><field name="NUM">127</field></shadow></value>
       </block>
     </category>
+    <category name="MIDI Avançat" colour="#40c8ff">
+      <block type="tecla_midi_cc">
+        <value name="CC_NUM"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+        <value name="CC_VAL"><shadow type="math_number"><field name="NUM">64</field></shadow></value>
+      </block>
+      <block type="tecla_midi_pitch_bend">
+        <value name="AMOUNT"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+      </block>
+      <block type="tecla_midi_sustain"></block>
+      <block type="tecla_midi_expression">
+        <value name="VALUE"><shadow type="math_number"><field name="NUM">127</field></shadow></value>
+      </block>
+      <block type="tecla_midi_all_notes_off"></block>
+    </category>
+    <category name="Live Coding" colour="#ff3d00">
+      <block type="tecla_note_on_only">
+        <value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value>
+        <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+      </block>
+      <block type="tecla_note_off_only">
+        <value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value>
+      </block>
+      <block type="tecla_transpose">
+        <value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value>
+        <value name="SEMITONES"><shadow type="math_number"><field name="NUM">7</field></shadow></value>
+      </block>
+      <block type="tecla_humanize_vel">
+        <value name="BASE_VEL"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+        <value name="SPREAD"><shadow type="math_number"><field name="NUM">12</field></shadow></value>
+      </block>
+      <block type="tecla_crescendo">
+        <value name="FROM_VAL"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="TO_VAL"><shadow type="math_number"><field name="NUM">127</field></shadow></value>
+        <value name="DURATION"><shadow type="math_number"><field name="NUM">4.0</field></shadow></value>
+      </block>
+      <block type="tecla_riff_repeat"></block>
+    </category>
     <category name="Seqüenciador" colour="#00ffc8">
       <block type="tecla_note_name"></block>
       <block type="tecla_seq_play_steps">

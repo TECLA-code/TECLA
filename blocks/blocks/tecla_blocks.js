@@ -1657,6 +1657,206 @@ Blockly.Blocks['tecla_euclidean_rhythm'] = {
     }
 };
 
+// ==================== BLOCS DE MIDI AVANÇAT ====================
+
+Blockly.Blocks['tecla_midi_cc'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("🎛️ Enviar CC")
+      .appendField(new Blockly.FieldDropdown([
+        ["1 – Modulació", "1"], ["7 – Volum", "7"], ["10 – Pan", "10"],
+        ["11 – Expressió", "11"], ["64 – Sustain", "64"],
+        ["71 – Resonància (Q)", "71"], ["74 – Brillantor (Cutoff)", "74"],
+        ["91 – Reverb Send", "91"], ["93 – Chorus Send", "93"],
+        ["Personalitzat…", "custom"]
+      ]), "CC_TYPE");
+    this.appendValueInput("CC_NUM")
+      .setCheck("Number")
+      .appendField("num");
+    this.appendValueInput("CC_VAL")
+      .setCheck("Number")
+      .appendField("valor (0–127)");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour('#40c8ff');
+    this.setInputsInline(true);
+    this.setTooltip("Envia un missatge MIDI Control Change (CC) al DAW");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['tecla_midi_pitch_bend'] = {
+  init: function () {
+    this.appendValueInput("AMOUNT")
+      .setCheck("Number")
+      .appendField("🎵 Pitch Bend");
+    this.appendDummyInput()
+      .appendField("(-63 = avall, 0 = centre, +63 = amunt)");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour('#40c8ff');
+    this.setInputsInline(true);
+    this.setTooltip("Desafia l'afinació de totes les notes del canal (-63 a +63)");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['tecla_midi_all_notes_off'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("🚨 Panic – Apagar totes les notes");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour('#40c8ff');
+    this.setTooltip("Envia NoteOff a totes les notes de tots els canals (CC 123)");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['tecla_midi_sustain'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("🦶 Pedal Sustain")
+      .appendField(new Blockly.FieldDropdown([
+        ["ON (premut)", "127"],
+        ["OFF (alliberat)", "0"]
+      ]), "STATE");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour('#40c8ff');
+    this.setInputsInline(true);
+    this.setTooltip("Activa o desactiva el pedal de sustain (CC 64)");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['tecla_midi_expression'] = {
+  init: function () {
+    this.appendValueInput("VALUE")
+      .setCheck("Number")
+      .appendField("🎭 Expressió (dinàmica)");
+    this.appendDummyInput()
+      .appendField("(0=silenci, 127=màxim)");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour('#40c8ff');
+    this.setInputsInline(true);
+    this.setTooltip("Controla la dinàmica expressiva en temps real (CC 11)");
+    this.setHelpUrl("");
+  }
+};
+
+// ==================== BLOCS DE LIVE CODING ====================
+
+Blockly.Blocks['tecla_note_on_only'] = {
+  init: function () {
+    this.appendValueInput("NOTE")
+      .setCheck("Number")
+      .appendField("▶ NoteOn nota");
+    this.appendValueInput("VELOCITY")
+      .setCheck("Number")
+      .appendField("vel");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour('#ff3d00');
+    this.setInputsInline(true);
+    this.setTooltip("Inicia una nota sense aturar-la (útil per drones i pads)");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['tecla_note_off_only'] = {
+  init: function () {
+    this.appendValueInput("NOTE")
+      .setCheck("Number")
+      .appendField("■ NoteOff nota");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour('#ff3d00');
+    this.setInputsInline(true);
+    this.setTooltip("Atura una nota que estava sonant (NoteOff explícit)");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['tecla_transpose'] = {
+  init: function () {
+    this.appendValueInput("NOTE")
+      .setCheck("Number")
+      .appendField("🔀 Transportar nota");
+    this.appendValueInput("SEMITONES")
+      .setCheck("Number")
+      .appendField("+ semitons");
+    this.setOutput(true, "Number");
+    this.setColour('#ff3d00');
+    this.setInputsInline(true);
+    this.setTooltip("Puja o baixa una nota N semitons (positiu = amunt, negatiu = avall)");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['tecla_humanize_vel'] = {
+  init: function () {
+    this.appendValueInput("BASE_VEL")
+      .setCheck("Number")
+      .appendField("🎭 Humanitzar vel");
+    this.appendValueInput("SPREAD")
+      .setCheck("Number")
+      .appendField("± variació");
+    this.setOutput(true, "Number");
+    this.setColour('#ff3d00');
+    this.setInputsInline(true);
+    this.setTooltip("Retorna una velocitat aleatòria dins del rang base ± variació");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['tecla_crescendo'] = {
+  init: function () {
+    this.appendValueInput("FROM_VAL")
+      .setCheck("Number")
+      .appendField("📈 Crescendo de");
+    this.appendValueInput("TO_VAL")
+      .setCheck("Number")
+      .appendField("a");
+    this.appendValueInput("DURATION")
+      .setCheck("Number")
+      .appendField("en (s)");
+    this.appendDummyInput()
+      .appendField(new Blockly.FieldDropdown([
+        ["Volum (CC7)", "7"],
+        ["Expressió (CC11)", "11"],
+        ["Modulació (CC1)", "1"],
+        ["Brillantor (CC74)", "74"]
+      ]), "CC");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour('#ff3d00');
+    this.setInputsInline(true);
+    this.setTooltip("Augmenta o disminueix gradualment un paràmetre MIDI al llarg del temps");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['tecla_riff_repeat'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("🔄 Repetir Riff")
+      .appendField(new Blockly.FieldNumber(4, 1, 64), "TIMES")
+      .appendField("vegades, transport")
+      .appendField(new Blockly.FieldNumber(0, -12, 12), "EACH_TRANSPOSE")
+      .appendField("semitons/rep");
+    this.appendStatementInput("RIFF")
+      .setCheck(null)
+      .appendField("riff");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour('#ff3d00');
+    this.setTooltip("Repeteix el contingut N vegades, transposant X semitons cada repetició");
+    this.setHelpUrl("");
+  }
+};
+
 // ==================== BLOCS DE SEQÜENCIADOR ====================
 
 Blockly.Blocks['tecla_seq_play_steps'] = {

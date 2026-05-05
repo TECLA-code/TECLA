@@ -477,6 +477,94 @@ Blockly.Python['tecla_euclidean_rhythm'] = function (block) {
     return [code, Blockly.Python.ORDER_RELATIONAL];
 };
 
+// ==================== MIDI AVANÇAT ====================
+
+Blockly.Python['tecla_midi_cc'] = function (block) {
+  const ccType = block.getFieldValue('CC_TYPE');
+  const ccNum  = Blockly.Python.valueToCode(block, 'CC_NUM',  Blockly.Python.ORDER_ATOMIC) || '1';
+  const ccVal  = Blockly.Python.valueToCode(block, 'CC_VAL',  Blockly.Python.ORDER_ATOMIC) || '64';
+  const num    = ccType === 'custom' ? ccNum : ccType;
+  return `midi.send(ControlChange(${num}, max(0, min(127, int(${ccVal})))))\n`;
+};
+
+Blockly.Python['tecla_midi_pitch_bend'] = function (block) {
+  const amount = Blockly.Python.valueToCode(block, 'AMOUNT', Blockly.Python.ORDER_ATOMIC) || '0';
+  return `# Pitch Bend: escala -63..+63 → 0..16383\n` +
+    `midi.send(PitchBend(max(0, min(16383, int((${amount} + 63) * 130)))))\n`;
+};
+
+Blockly.Python['tecla_midi_all_notes_off'] = function (_block) {
+  return `# Panic: apagar totes les notes\n` +
+    `for _ch in range(16):\n` +
+    `    midi.send(ControlChange(123, 0, channel=_ch))\n`;
+};
+
+Blockly.Python['tecla_midi_sustain'] = function (block) {
+  const state = block.getFieldValue('STATE');
+  return `midi.send(ControlChange(64, ${state}))  # Sustain pedal\n`;
+};
+
+Blockly.Python['tecla_midi_expression'] = function (block) {
+  const val = Blockly.Python.valueToCode(block, 'VALUE', Blockly.Python.ORDER_ATOMIC) || '127';
+  return `midi.send(ControlChange(11, max(0, min(127, int(${val})))))  # CC11 Expressió\n`;
+};
+
+// ==================== LIVE CODING ====================
+
+Blockly.Python['tecla_note_on_only'] = function (block) {
+  const note = Blockly.Python.valueToCode(block, 'NOTE',     Blockly.Python.ORDER_ATOMIC) || '60';
+  const vel  = Blockly.Python.valueToCode(block, 'VELOCITY', Blockly.Python.ORDER_ATOMIC) || '100';
+  return `midi.send(NoteOn(${note}, ${vel}))  # NoteOn sense NoteOff\n`;
+};
+
+Blockly.Python['tecla_note_off_only'] = function (block) {
+  const note = Blockly.Python.valueToCode(block, 'NOTE', Blockly.Python.ORDER_ATOMIC) || '60';
+  return `midi.send(NoteOff(${note}, 0))  # NoteOff explícit\n`;
+};
+
+Blockly.Python['tecla_transpose'] = function (block) {
+  const note = Blockly.Python.valueToCode(block, 'NOTE',      Blockly.Python.ORDER_ADDITIVE) || '60';
+  const semi = Blockly.Python.valueToCode(block, 'SEMITONES', Blockly.Python.ORDER_ADDITIVE) || '0';
+  return [`max(0, min(127, (${note}) + (${semi})))`, Blockly.Python.ORDER_FUNCTION_CALL];
+};
+
+Blockly.Python['tecla_humanize_vel'] = function (block) {
+  const base   = Blockly.Python.valueToCode(block, 'BASE_VEL', Blockly.Python.ORDER_ADDITIVE) || '100';
+  const spread = Blockly.Python.valueToCode(block, 'SPREAD',   Blockly.Python.ORDER_ATOMIC)   || '10';
+  Blockly.Python.definitions_['import_random'] = 'import random';
+  return [`max(1, min(127, (${base}) + random.randint(-${spread}, ${spread})))`,
+          Blockly.Python.ORDER_FUNCTION_CALL];
+};
+
+Blockly.Python['tecla_crescendo'] = function (block) {
+  const from = Blockly.Python.valueToCode(block, 'FROM_VAL', Blockly.Python.ORDER_ATOMIC) || '0';
+  const to   = Blockly.Python.valueToCode(block, 'TO_VAL',   Blockly.Python.ORDER_ATOMIC) || '127';
+  const dur  = Blockly.Python.valueToCode(block, 'DURATION', Blockly.Python.ORDER_ATOMIC) || '2.0';
+  const cc   = block.getFieldValue('CC');
+  return `# Crescendo CC${cc} de ${from} a ${to} en ${dur}s\n` +
+    `_steps = 20\n` +
+    `_step_t = (${dur}) / _steps\n` +
+    `for _i in range(_steps + 1):\n` +
+    `    _v = int((${from}) + (_i / _steps) * ((${to}) - (${from})))\n` +
+    `    midi.send(ControlChange(${cc}, max(0, min(127, _v))))\n` +
+    `    time.sleep(_step_t)\n`;
+};
+
+Blockly.Python['tecla_riff_repeat'] = function (block) {
+  const times   = block.getFieldValue('TIMES')           || '4';
+  const transp  = block.getFieldValue('EACH_TRANSPOSE')  || '0';
+  const riff    = Blockly.Python.statementToCode(block, 'RIFF') || '    pass\n';
+  if (transp === '0' || transp === 0) {
+    return `# Riff × ${times}\nfor _rep in range(${times}):\n${riff}`;
+  }
+  return `# Riff × ${times} (transport ${transp > 0 ? '+' : ''}${transp} semitons/rep)\n` +
+    `_riff_offset = 0\n` +
+    `for _rep in range(${times}):\n` +
+    `    # (usa 'tecla_transpose' als blocs interns per aplicar _riff_offset)\n` +
+    `    _riff_offset += ${transp}\n` +
+    riff;
+};
+
 // ==================== SEQÜENCIADOR ====================
 
 Blockly.Python['tecla_seq_play_steps'] = function (block) {
