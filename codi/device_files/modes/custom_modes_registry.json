@@ -497,6 +497,17 @@
         "has_update": true,
         "has_cleanup": true
       }
+    },
+    "Billar": {
+      "file_name": "mode_billar",
+      "class_name": "ModeBillar",
+      "added_date": "2026-05-05T23:03:00.000000",
+      "metadata": {
+        "description": "Pilotes físiques que reboten i generen notes. X:velocitat Y:to Z:rebost",
+        "has_setup": true,
+        "has_update": true,
+        "has_cleanup": true
+      }
     }
   }
 }
