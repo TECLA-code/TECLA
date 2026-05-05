@@ -7,6 +7,48 @@
 
 'use strict';
 
+// ── i18n ──────────────────────────────────────────────────────
+const _I18N = {
+  ca: {
+    'btn.back':'Inici','tab.code':'Codi','tab.sim':'Simulador','tab.guide':'Guia','tab.fw':'Firmware',
+    'tab.theme':'Aparença','tab.proj':'Projectes','tab.device':'Tecles',
+    'btn.new':'Nou','btn.open':'Obrir','btn.save':'Guardar','btn.export':'Exportar .py',
+    'btn.connect':'Connectar','btn.upload':'Pujar','btn.copy':'Copiar',
+    'btn.simulate':'Executar','btn.stop':'Aturar',
+    'code.title':'Codi Python generat','sim.vis':'Visualitzador','sim.out':'Sortida',
+    'btn.projsave':'↓ Guardar actual','btn.projimport':'↑ Importar .tblocks','proj.mine':'Els meus projectes'
+  },
+  es: {
+    'btn.back':'Inicio','tab.code':'Código','tab.sim':'Simulador','tab.guide':'Guía','tab.fw':'Firmware',
+    'tab.theme':'Apariencia','tab.proj':'Proyectos','tab.device':'Teclas',
+    'btn.new':'Nuevo','btn.open':'Abrir','btn.save':'Guardar','btn.export':'Exportar .py',
+    'btn.connect':'Conectar','btn.upload':'Subir','btn.copy':'Copiar',
+    'btn.simulate':'Ejecutar','btn.stop':'Detener',
+    'code.title':'Código Python generado','sim.vis':'Visualizador','sim.out':'Salida',
+    'btn.projsave':'↓ Guardar actual','btn.projimport':'↑ Importar .tblocks','proj.mine':'Mis proyectos'
+  },
+  en: {
+    'btn.back':'Home','tab.code':'Code','tab.sim':'Simulator','tab.guide':'Guide','tab.fw':'Firmware',
+    'tab.theme':'Appearance','tab.proj':'Projects','tab.device':'Keys',
+    'btn.new':'New','btn.open':'Open','btn.save':'Save','btn.export':'Export .py',
+    'btn.connect':'Connect','btn.upload':'Upload','btn.copy':'Copy',
+    'btn.simulate':'Run','btn.stop':'Stop',
+    'code.title':'Generated Python code','sim.vis':'Visualizer','sim.out':'Output',
+    'btn.projsave':'↓ Save current','btn.projimport':'↑ Import .tblocks','proj.mine':'My projects'
+  }
+};
+let _curLang = 'ca';
+function applyI18n(lang) {
+  if (lang) _curLang = lang;
+  const dict = _I18N[_curLang] || _I18N.ca;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const v = dict[el.dataset.i18n]; if (v) el.textContent = v;
+  });
+  const sel = document.getElementById('sel-lang'); if (sel) sel.value = _curLang;
+  document.documentElement.lang = _curLang === 'en' ? 'en' : _curLang === 'es' ? 'es' : 'ca';
+  localStorage.setItem('tecla-blk-lang', _curLang);
+}
+
 let workspace;
 let simulationRunning = false;
 let activeVisuals = [];
@@ -33,9 +75,11 @@ function getWorkspaceHash(ws) {
 
 // ── Init ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  _curLang = localStorage.getItem('tecla-blk-lang') || 'ca';
   initBlockly();
   setupTabs();
   setupButtons();
+  applyI18n(_curLang);
   setupFileOpen();
   initThemeSystem();
   initDeviceConfig();
@@ -191,6 +235,7 @@ function setupButtons() {
   document.getElementById('btn-ex-buttons').addEventListener('click', () => loadExample('buttons'));
   document.getElementById('btn-ex-complex').addEventListener('click', () => loadExample('complex'));
 
+  document.getElementById('sel-lang')?.addEventListener('change', e => applyI18n(e.target.value));
   document.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
     if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveProject(); }

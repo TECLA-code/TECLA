@@ -22,6 +22,7 @@
       --accent: #4a80f0;
       --accent-d: #2d5cd9;
       --green: #3dc96c;
+      --key-bg: #dde1eb;
       --radius: 6px;
       --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
       --mono: "SF Mono", Menlo, Monaco, Consolas, monospace;
@@ -110,9 +111,9 @@
     .code-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-shrink: 0; }
     .code-header h3 { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; }
     .code-display {
-      flex: 1; background: #000; border: 1px solid var(--border);
+      flex: 1; background: var(--bg); border: 1px solid var(--border);
       border-radius: var(--radius); padding: 14px;
-      font-family: var(--mono); font-size: 11.5px; color: #a5b4fc;
+      font-family: var(--mono); font-size: 11.5px; color: var(--accent);
       overflow: auto; line-height: 1.5; min-height: 200px;
       white-space: pre;
     }
@@ -121,14 +122,14 @@
     .sim-section { margin-bottom: 14px; }
     .sim-label { font-size: 10.5px; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; display: block; }
     .sim-canvas-wrap {
-      background: #000; border: 1px solid var(--border);
+      background: var(--bg); border: 1px solid var(--border);
       border-radius: var(--radius); overflow: hidden;
       display: flex; justify-content: center; align-items: center;
     }
     #simulatorCanvas { display: block; }
     .sim-controls { display: flex; gap: 6px; flex-wrap: wrap; }
     .sim-terminal {
-      background: #000; border: 1px solid var(--border);
+      background: var(--bg); border: 1px solid var(--border);
       border-radius: var(--radius); padding: 12px;
       font-family: var(--mono); font-size: 11px; color: var(--text2);
       height: 150px; overflow-y: auto;
@@ -309,21 +310,21 @@
     .dev-pots-col { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; flex-shrink: 0; }
     .dev-pot-w { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; opacity: 0.8; transition: opacity .2s; }
     .dev-pot-w:hover, .dev-pot-w.selected { opacity: 1; }
-    .dev-pot-knob { width: 50px; height: 50px; border-radius: 50%; border: 2px solid rgba(0,0,0,.2); background: #dde1eb; position: relative; box-shadow: 0 3px 0 rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.6); transition: border-color .15s, box-shadow .15s; }
+    .dev-pot-knob { width: 50px; height: 50px; border-radius: 50%; border: 2px solid rgba(0,0,0,.2); background: var(--key-bg); position: relative; box-shadow: 0 3px 0 rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.6); transition: border-color .15s, box-shadow .15s; }
     .dev-pot-w.selected .dev-pot-knob { border-color: var(--accent); box-shadow: 0 3px 0 rgba(0,0,0,.28), 0 0 0 2px var(--accent); }
     .dev-pot-indicator { position: absolute; top: 4px; left: 50%; transform: translateX(-50%); width: 2px; height: 10px; background: rgba(0,0,0,.45); border-radius: 2px; }
     .dev-pot-lbl { font-size: 11px; font-weight: 600; color: var(--text); }
     .dev-pot-cc { font-size: 9px; color: var(--text2); }
     .dev-keys-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 320px; }
     .dev-key-btn {
-      aspect-ratio: 1; background: #dde1eb; border: 1px solid rgba(0,0,0,.18);
+      aspect-ratio: 1; background: var(--key-bg); border: 1px solid rgba(0,0,0,.18);
       border-radius: 7px; display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       cursor: pointer; position: relative;
       box-shadow: 0 3px 0 rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.55);
       transition: all .1s; padding: 2px; overflow: hidden;
     }
-    .dev-key-btn:hover { border-color: rgba(0,0,0,.28); background: #eaecf5; }
+    .dev-key-btn:hover { border-color: rgba(0,0,0,.28); filter: brightness(1.07); }
     .dev-key-btn:active { transform: scale(.95); box-shadow: 0 1px 0 rgba(0,0,0,.3), inset 0 1px 2px rgba(0,0,0,.15); }
     .dev-key-btn.selected { border-color: var(--accent) !important; box-shadow: 0 0 0 2px var(--accent), 0 3px 0 rgba(0,0,0,.2) !important; }
     .dev-key-btn.assigned { background: rgba(61,201,108,.2); border-color: rgba(61,201,108,.55); box-shadow: 0 3px 0 rgba(61,201,108,.25), inset 0 1px 0 rgba(255,255,255,.4); }
@@ -368,6 +369,12 @@
     body.theme-slate { --bg:#0a0e14; --surface:#111820; --surface2:#18222e; --surface3:#202c3c; --accent:#94a3b8; --accent-d:#7c8fa6; --border:rgba(148,163,184,.09); --border-h:rgba(148,163,184,.18); }
     body.theme-acid { --bg:#060900; --surface:#0b1100; --surface2:#131a00; --surface3:#1c2600; --accent:#a3e635; --accent-d:#84cc16; --border:rgba(163,230,53,.09); --border-h:rgba(163,230,53,.18); }
     body.theme-sand { --bg:#fef7e8; --surface:#fffcf2; --surface2:#fdefc5; --surface3:#fae3a5; --accent:#b45309; --accent-d:#92400e; --border:rgba(180,83,9,.12); --border-h:rgba(180,83,9,.24); --text:#3a1800; --text2:#854d0e; --text3:#c08030; }
+    /* ── Per-theme key colour ───────────────────────────── */
+    body.theme-light{--key-bg:#e0e0e0}body.theme-neon{--key-bg:#d4f2ec}body.theme-warm{--key-bg:#ede5d8}
+    body.theme-purple{--key-bg:#e2dbf5}body.theme-ocean{--key-bg:#d6edf8}body.theme-forest{--key-bg:#d4eadb}
+    body.theme-rose{--key-bg:#f0dae8}body.theme-ice{--key-bg:#deeeff}body.theme-carbon{--key-bg:#e8d4d4}
+    body.theme-hc{--key-bg:#f0f0f0}body.theme-crepuscle{--key-bg:#ede0d2}body.theme-cosmic{--key-bg:#dcdaf8}
+    body.theme-mint{--key-bg:#d4eee0}body.theme-slate{--key-bg:#dde4ec}body.theme-acid{--key-bg:#d8ee96}body.theme-sand{--key-bg:#f5e4c4}
   </style>
 </head>
 <body>
@@ -376,8 +383,13 @@
     <div class="header-left">
       <a href="../index.html" class="back-btn">
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H3M7 4l-4 4 4 4"/></svg>
-        Inici
+        <span data-i18n="btn.back">Inici</span>
       </a>
+      <select id="sel-lang" class="btn" title="Idioma" style="min-width:42px;padding:3px 6px;font-size:11px;cursor:pointer;appearance:none;-webkit-appearance:none;text-align:center">
+        <option value="ca">CA</option>
+        <option value="es">ES</option>
+        <option value="en">EN</option>
+      </select>
       <div>
         <div class="logo">T E C L A</div>
         <div class="logo-sub">BLOCKS</div>
@@ -387,13 +399,13 @@
       </div>
     </div>
     <div class="header-right">
-      <button class="btn" id="btn-new" title="Nou projecte">Nou</button>
-      <button class="btn" id="btn-open" title="Obrir projecte">Obrir</button>
-      <button class="btn btn-primary" id="btn-save" title="Guardar projecte">Guardar</button>
-      <button class="btn" id="btn-export" title="Exportar codi Python">Exportar .py</button>
+      <button class="btn" id="btn-new" data-i18n="btn.new">Nou</button>
+      <button class="btn" id="btn-open" data-i18n="btn.open">Obrir</button>
+      <button class="btn btn-primary" id="btn-save" data-i18n="btn.save">Guardar</button>
+      <button class="btn" id="btn-export" data-i18n="btn.export">Exportar .py</button>
       <div class="sep"></div>
-      <button class="btn" id="btn-connect" title="Connectar dispositiu TECLA">Connectar</button>
-      <button class="btn btn-success" id="btn-upload" title="Pujar codi al dispositiu" disabled>Pujar</button>
+      <button class="btn" id="btn-connect" data-i18n="btn.connect">Connectar</button>
+      <button class="btn btn-success" id="btn-upload" disabled data-i18n="btn.upload">Pujar</button>
     </div>
   </header>
 
@@ -406,21 +418,21 @@
     <!-- Side panel -->
     <div class="side-panel">
       <div class="panel-tabs">
-        <button class="tab-btn active" data-tab="code">Codi</button>
-        <button class="tab-btn" data-tab="simulator">Simulador</button>
-        <button class="tab-btn" data-tab="guide">Guia</button>
-        <button class="tab-btn" data-tab="firmware">Firmware</button>
-        <button class="tab-btn" data-tab="theme">Aparença</button>
-        <button class="tab-btn" data-tab="projects">Projectes</button>
-        <button class="tab-btn" data-tab="device">Tecles</button>
+        <button class="tab-btn active" data-tab="code" data-i18n="tab.code">Codi</button>
+        <button class="tab-btn" data-tab="simulator" data-i18n="tab.sim">Simulador</button>
+        <button class="tab-btn" data-tab="guide" data-i18n="tab.guide">Guia</button>
+        <button class="tab-btn" data-tab="firmware" data-i18n="tab.fw">Firmware</button>
+        <button class="tab-btn" data-tab="theme" data-i18n="tab.theme">Aparença</button>
+        <button class="tab-btn" data-tab="projects" data-i18n="tab.proj">Projectes</button>
+        <button class="tab-btn" data-tab="device" data-i18n="tab.device">Tecles</button>
       </div>
       <div class="panel-body">
 
         <!-- Code panel -->
         <div id="panel-code" class="panel-content active">
           <div class="code-header">
-            <h3>Codi Python generat</h3>
-            <button class="btn" id="btn-copy-code" title="Copiar codi">Copiar</button>
+            <h3 data-i18n="code.title">Codi Python generat</h3>
+            <button class="btn" id="btn-copy-code" data-i18n="btn.copy">Copiar</button>
           </div>
           <pre id="generatedCode" class="code-display"># El teu codi apareixerà aquí...</pre>
         </div>
@@ -433,7 +445,7 @@
             <select id="midi-port-select"><option value="">— port MIDI —</option></select>
             <button class="btn" id="btn-midi-connect">MIDI</button>
           </div>
-          <span class="sim-label">Visualitzador</span>
+          <span class="sim-label" data-i18n="sim.vis">Visualitzador</span>
           <div class="sim-section">
             <div class="sim-canvas-wrap">
               <canvas id="simulatorCanvas" width="388" height="200"></canvas>
@@ -441,11 +453,11 @@
           </div>
           <div class="sim-section">
             <div class="sim-controls">
-              <button class="btn btn-primary" id="btn-simulate">Executar</button>
-              <button class="btn" id="btn-stop-sim" disabled>Aturar</button>
+              <button class="btn btn-primary" id="btn-simulate" data-i18n="btn.simulate">Executar</button>
+              <button class="btn" id="btn-stop-sim" disabled data-i18n="btn.stop">Aturar</button>
             </div>
           </div>
-          <span class="sim-label">Sortida</span>
+          <span class="sim-label" data-i18n="sim.out">Sortida</span>
           <div id="simulatorOutput" class="sim-terminal"></div>
         </div>
 
@@ -580,11 +592,11 @@
           <div class="proj-divider"></div>
           <!-- Els meus projectes -->
           <div class="proj-sect-head">
-            <span class="proj-sect-title">Els meus projectes</span>
+            <span class="proj-sect-title" data-i18n="proj.mine">Els meus projectes</span>
           </div>
           <div class="proj-topbar">
-            <button class="btn btn-sm btn-primary" id="btn-proj-save">↓ Guardar actual</button>
-            <button class="btn btn-sm" id="btn-proj-import">↑ Importar .tblocks</button>
+            <button class="btn btn-sm btn-primary" id="btn-proj-save" data-i18n="btn.projsave">↓ Guardar actual</button>
+            <button class="btn btn-sm" id="btn-proj-import" data-i18n="btn.projimport">↑ Importar .tblocks</button>
           </div>
           <div id="proj-list" class="proj-list"></div>
         </div>
@@ -593,8 +605,8 @@
         <div id="panel-device" class="panel-content">
           <!-- hardware representation rendered by JS -->
           <div id="dev-hw-wrap" class="dev-hw-wrap">
-            <div id="dev-pots-col" class="dev-pots-col"></div>
             <div id="dev-keys-grid" class="dev-keys-grid"></div>
+            <div id="dev-pots-col" class="dev-pots-col"></div>
           </div>
           <!-- contextual config area rendered by JS -->
           <div id="dev-cfg-area" class="dev-cfg-area">
