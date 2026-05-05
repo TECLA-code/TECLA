@@ -290,6 +290,19 @@
       border-radius:8px; padding:10px 12px; margin-top:4px;
     }
     .proj-assign-title { font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:.07em; margin-bottom:8px; }
+    /* Checklist — idèntic a TECLA MIDI pestanya Capes */
+    .checklist { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; margin-bottom:9px; }
+    label.cb { display:flex; align-items:center; gap:6px; cursor:pointer; font-size:11.5px; padding:3px 0; line-height:1.4; }
+    label.cb input[type=checkbox] { width:12px; height:12px; accent-color:var(--accent); cursor:pointer; flex-shrink:0; }
+    .checklist label.cb { padding:4px 6px; border-radius:3px; }
+    .checklist label.cb:hover { background:var(--surface2); }
+    .proj-section { flex-shrink:0; }
+    .proj-sect-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+    .proj-sect-title { font-size:10.5px; font-weight:600; color:var(--text2); text-transform:uppercase; letter-spacing:.07em; }
+    .proj-sect-count { font-size:10px; color:var(--accent); }
+    .proj-sect-desc { font-size:11.5px; color:var(--text2); line-height:1.65; margin-bottom:10px; }
+    .proj-divider { height:1px; background:var(--border); margin:12px 0; flex-shrink:0; }
+    .btn-sm { font-size:10.5px; padding:3px 8px; }
 
     /* ── Device config panel ─────────────────────────────────── */
     .dev-hw-wrap { display: flex; gap: 12px; align-items: stretch; padding: 12px 0 10px; flex-shrink: 0; }
@@ -563,13 +576,18 @@
 
         <!-- Projects library panel -->
         <div id="panel-projects" class="panel-content">
+          <!-- Exemples integrats (renderitzat per JS) -->
+          <div id="proj-examples-section"></div>
+          <div class="proj-divider"></div>
+          <!-- Els meus projectes -->
+          <div class="proj-sect-head">
+            <span class="proj-sect-title">Els meus projectes</span>
+          </div>
           <div class="proj-topbar">
-            <button class="btn btn-primary" id="btn-proj-save">↓ Guardar actual</button>
-            <button class="btn" id="btn-proj-import">↑ Importar .tblocks</button>
+            <button class="btn btn-sm btn-primary" id="btn-proj-save">↓ Guardar actual</button>
+            <button class="btn btn-sm" id="btn-proj-import">↑ Importar .tblocks</button>
           </div>
-          <div id="proj-list" class="proj-list">
-            <div class="proj-empty"><div class="proj-empty-icon">📚</div><div>Encara no hi ha projectes guardats.<br>Prem <strong>Guardar actual</strong> per afegir el workspace,<br>o importa fitxers <strong>.tblocks</strong>.</div></div>
-          </div>
+          <div id="proj-list" class="proj-list"></div>
         </div>
 
         <!-- Device config panel -->

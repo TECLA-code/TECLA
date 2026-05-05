@@ -886,14 +886,91 @@ function initProjectsLib() {
 }
 function _saveProjectsLib() { localStorage.setItem(_PROJLIB_KEY, JSON.stringify(projectsLib)); }
 
+// ── Built-in example presets ──────────────────────────────────
+const _BUILTIN_EXAMPLES = [
+  { name: 'Pentatònica C', desc: 'Escala pentatònica de Do ascendent en bucle',
+    blocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="tecla_repeat_forever" x="50" y="50"><statement name="DO"><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">90</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.25</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">62</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">85</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.25</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">64</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">80</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.25</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">67</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">75</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.25</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">69</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">70</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.5</field></shadow></value><next><block type="tecla_wait"><value name="TIME"><shadow type="math_number"><field name="NUM">0.25</field></shadow></value></block></next></block></next></block></next></block></next></block></statement></block></xml>` },
+  { name: 'Escala La Menor', desc: 'Escala natural de La menor completa',
+    blocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="tecla_repeat_forever" x="50" y="50"><statement name="DO"><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">57</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">88</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.2</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">59</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">82</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.2</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">78</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.2</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">62</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">74</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.2</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">64</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">70</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.2</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">65</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">66</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.2</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">67</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">62</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.4</field></shadow></value><next><block type="tecla_wait"><value name="TIME"><shadow type="math_number"><field name="NUM">0.2</field></shadow></value></block></next></block></next></block></next></block></next></block></next></block></next></block></statement></block></xml>` },
+  { name: 'Acords Pop', desc: 'Progressió clàssica C – Am – F – G',
+    blocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="tecla_repeat_forever" x="50" y="50"><statement name="DO"><block type="tecla_play_chord"><field name="CHORD">C</field><field name="DURATION">1.5</field><next><block type="tecla_play_chord"><field name="CHORD">Am</field><field name="DURATION">1.5</field><next><block type="tecla_play_chord"><field name="CHORD">F</field><field name="DURATION">1.5</field><next><block type="tecla_play_chord"><field name="CHORD">G</field><field name="DURATION">1.5</field></block></next></block></next></block></next></block></statement></block></xml>` },
+  { name: 'Arpegi La Menor', desc: 'Arpegi trencat ascendent i descendent de Am',
+    blocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="tecla_repeat_forever" x="50" y="50"><statement name="DO"><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">57</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">85</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.3</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">80</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.3</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">64</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">75</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.3</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">69</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">70</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.3</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">64</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">73</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.3</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">68</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.3</field></shadow></value><next><block type="tecla_wait"><value name="TIME"><shadow type="math_number"><field name="NUM">0.2</field></shadow></value></block></next></block></next></block></next></block></next></block></next></block></statement></block></xml>` },
+  { name: 'Jazz II-V-I', desc: 'Progressió de jazz Dm – G – C',
+    blocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="tecla_repeat_forever" x="50" y="50"><statement name="DO"><block type="tecla_play_chord"><field name="CHORD">Dm</field><field name="DURATION">1</field><next><block type="tecla_play_chord"><field name="CHORD">G</field><field name="DURATION">1</field><next><block type="tecla_play_chord"><field name="CHORD">C</field><field name="DURATION">2</field><next><block type="tecla_wait"><value name="TIME"><shadow type="math_number"><field name="NUM">0.5</field></shadow></value></block></next></block></next></block></next></block></statement></block></xml>` },
+  { name: 'Ambient Capes', desc: 'Notes llargues i atmosfèriques, tempo lent',
+    blocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="tecla_repeat_forever" x="50" y="50"><statement name="DO"><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">48</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">55</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">3.0</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">55</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">45</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">3.0</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">40</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">4.0</field></shadow></value><next><block type="tecla_wait"><value name="TIME"><shadow type="math_number"><field name="NUM">0.5</field></shadow></value></block></next></block></next></block></next></block></statement></block></xml>` },
+  { name: 'Ràfega Cromàtica', desc: 'Pujada cromàtica ràpida de 8 semitons',
+    blocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="tecla_repeat_forever" x="50" y="50"><statement name="DO"><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">88</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">61</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">84</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">62</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">80</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">63</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">76</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">64</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">72</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">65</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">68</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">66</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">64</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">67</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">60</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.3</field></shadow></value><next><block type="tecla_wait"><value name="TIME"><shadow type="math_number"><field name="NUM">0.4</field></shadow></value></block></next></block></next></block></next></block></next></block></next></block></next></block></next></block></statement></block></xml>` },
+  { name: 'Groove Probabilístic', desc: 'Ritme melòdic amb variació aleatòria',
+    blocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="tecla_repeat_forever" x="50" y="50"><statement name="DO"><block type="tecla_probability"><value name="PERCENT"><shadow type="math_number"><field name="NUM">80</field></shadow></value><statement name="DO"><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">95</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value></block></statement><next><block type="tecla_wait"><value name="TIME"><shadow type="math_number"><field name="NUM">0.25</field></shadow></value><next><block type="tecla_probability"><value name="PERCENT"><shadow type="math_number"><field name="NUM">55</field></shadow></value><statement name="DO"><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">64</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">80</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value></block></statement><next><block type="tecla_wait"><value name="TIME"><shadow type="math_number"><field name="NUM">0.25</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">67</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">88</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value><next><block type="tecla_wait"><value name="TIME"><shadow type="math_number"><field name="NUM">0.25</field></shadow></value></block></next></block></next></block></next></block></next></block></next></block></statement></block></xml>` }
+];
+let _exSelected = new Set();
+
+function _renderExamplesSection() {
+  const container = document.getElementById('proj-examples-section');
+  if (!container) return;
+  const selCount = _exSelected.size;
+  container.innerHTML = `
+    <div class="proj-section">
+      <div class="proj-sect-head">
+        <span class="proj-sect-title">Exemples disponibles</span>
+        <span class="proj-sect-count" id="ex-sel-count">${selCount > 0 ? selCount + ' seleccionats' : ''}</span>
+      </div>
+      <p class="proj-sect-desc">Marca els que vols usar i prem <strong>Afegir a biblioteca</strong>.</p>
+      <div class="checklist" id="ex-checklist"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-sm btn-primary" id="btn-ex-add-lib">+ Afegir a biblioteca</button>
+        <button class="btn btn-sm" id="btn-ex-all">Tots</button>
+        <button class="btn btn-sm" id="btn-ex-none">Cap</button>
+      </div>
+    </div>`;
+  const checklist = container.querySelector('#ex-checklist');
+  _BUILTIN_EXAMPLES.forEach(ex => {
+    const inLib = projectsLib.some(p => p.name === ex.name);
+    const label = document.createElement('label');
+    label.className = 'cb';
+    label.innerHTML = `<input type="checkbox"${_exSelected.has(ex.name) ? ' checked' : ''}${inLib ? ' disabled' : ''}><span style="${inLib ? 'color:var(--text3);text-decoration:line-through' : ''}" title="${ex.desc}">${ex.name}</span>`;
+    label.querySelector('input').addEventListener('change', e => {
+      if (e.target.checked) _exSelected.add(ex.name); else _exSelected.delete(ex.name);
+      const c = container.querySelector('#ex-sel-count');
+      if (c) c.textContent = _exSelected.size > 0 ? _exSelected.size + ' seleccionats' : '';
+    });
+    checklist.appendChild(label);
+  });
+  container.querySelector('#btn-ex-add-lib').addEventListener('click', _addExamplesToLib);
+  container.querySelector('#btn-ex-all').addEventListener('click', () => {
+    _exSelected = new Set(_BUILTIN_EXAMPLES.filter(e => !projectsLib.some(p => p.name === e.name)).map(e => e.name));
+    renderProjectsPanel();
+  });
+  container.querySelector('#btn-ex-none').addEventListener('click', () => { _exSelected.clear(); renderProjectsPanel(); });
+}
+
+function _addExamplesToLib() {
+  if (_exSelected.size === 0) { toast('Selecciona almenys un exemple', 'err'); return; }
+  let added = 0;
+  _BUILTIN_EXAMPLES.forEach(ex => {
+    if (!_exSelected.has(ex.name) || projectsLib.some(p => p.name === ex.name)) return;
+    projectsLib.push({ id: _projId(), name: ex.name, source: 'builtin', timestamp: new Date().toISOString(),
+      tblocks: { name: ex.name, version: '1.0', format: 'legacy', blocks: ex.blocks } });
+    added++;
+  });
+  _exSelected.clear();
+  _saveProjectsLib();
+  renderProjectsPanel();
+  toast(`✓ ${added} exemple${added !== 1 ? 's' : ''} afegit${added !== 1 ? 's' : ''} a la biblioteca`, 'ok');
+}
+
 function renderProjectsPanel() {
+  _renderExamplesSection();
   const list = document.getElementById('proj-list');
   if (!list) return;
   if (projectsLib.length === 0) {
-    list.innerHTML = `<div class="proj-empty"><div class="proj-empty-icon">📚</div><div>Encara no hi ha projectes guardats.<br>Prem <strong>Guardar actual</strong> per afegir el workspace,<br>o importa fitxers <strong>.tblocks</strong>.</div></div>`;
+    list.innerHTML = `<div class="proj-empty"><div class="proj-empty-icon">📂</div><div>Afegeix exemples de dalt o importa fitxers <strong>.tblocks</strong>.</div></div>`;
     return;
   }
   list.innerHTML = '';
+  const srcLabel = { import: 'Importat', save: 'Guardat', builtin: 'Exemple' };
   projectsLib.forEach(proj => {
     const card = document.createElement('div');
     card.className = 'proj-card';
@@ -903,7 +980,7 @@ function renderProjectsPanel() {
       <div class="proj-dot" style="background:${col}"></div>
       <div class="proj-info">
         <div class="proj-name">${proj.name}</div>
-        <div class="proj-meta">${proj.source === 'import' ? 'Importat' : 'Guardat'} · ${_projDate(proj.timestamp)}</div>
+        <div class="proj-meta">${srcLabel[proj.source] || 'Guardat'} · ${_projDate(proj.timestamp)}</div>
       </div>
       <div class="proj-actions">
         <button class="btn" data-act="open" title="Carregar al workspace">⇑ Obrir</button>
