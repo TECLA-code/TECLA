@@ -10,6 +10,7 @@
 let workspace;
 let simulationRunning = false;
 let activeVisuals = [];
+let currentBPM = 120;
 
 let currentProject = {
   name: 'Projecte sense títol',
@@ -465,8 +466,28 @@ async function evalValue(block) {
       const b = await evalValue(block.getInputTargetBlock('TO'));
       return Math.floor(Math.random() * (b - a + 1)) + a;
     }
+    case 'tecla_note_name':
+      return parseFloat(block.getFieldValue('NOTE')) || 60;
+    case 'tecla_transpose': {
+      const tn = await evalValue(block.getInputTargetBlock('NOTE'));
+      const ts = await evalValue(block.getInputTargetBlock('SEMITONES'));
+      return Math.max(0, Math.min(127, tn + ts));
+    }
+    case 'tecla_humanize_vel': {
+      const hb = await evalValue(block.getInputTargetBlock('BASE_VEL'));
+      const hs = await evalValue(block.getInputTargetBlock('SPREAD'));
+      return Math.max(1, Math.min(127, Math.round(hb + (Math.random()*2-1)*hs)));
+    }
+    case 'tecla_get_random_scale_note': {
+      const scales={major:[0,2,4,5,7,9,11],minor:[0,2,3,5,7,8,10],pentatonic:[0,2,4,7,9],blues:[0,3,5,6,7,10],dorian:[0,2,3,5,7,9,10]};
+      const roots={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+      const sc=scales[block.getFieldValue('SCALE')]||scales.major;
+      const rt=roots[block.getFieldValue('ROOT')]||0;
+      const oc=await evalValue(block.getInputTargetBlock('OCTAVE'))||4;
+      return rt+sc[Math.floor(Math.random()*sc.length)]+(oc+1)*12;
+    }
     default: {
-      const f = block.getFieldValue('NUM') ?? block.getFieldValue('VALUE') ?? block.getFieldValue('A') ?? '0';
+      const f = block.getFieldValue('NUM') ?? block.getFieldValue('VALUE') ?? block.getFieldValue('NOTE') ?? block.getFieldValue('A') ?? '0';
       return parseFloat(f) || 0;
     }
   }
@@ -530,7 +551,7 @@ async function execBlock(block) {
       break;
     }
     case 'tecla_wait': {
-      const dur = await getVal(block,'DURATION',1);
+      const dur = await getVal(block,'TIME',1);
       simLog(`⏱ Espera ${dur}s`, 'sys');
       await sleep(dur * 1000);
       break;
@@ -577,6 +598,146 @@ async function execBlock(block) {
       const inner = block.getInputTargetBlock('DO');
       let guard = 0;
       while (simulationRunning && guard++ < 64) { await execChain(inner); }
+      break;
+    }
+    case 'tecla_repeat_forever': {
+      const rfInner = block.getInputTargetBlock('DO');
+      while (simulationRunning) {
+        if (rfInner) await execChain(rfInner);
+        await sleep(1);
+      }
+      break;
+    }
+    case 'tecla_set_bpm': {
+      const bpm = await getVal(block,'BPM',120);
+      currentBPM = Math.max(20, Math.min(300, bpm));
+      simLog(`⏱ BPM: ${Math.round(currentBPM)}`, 'sys');
+      break;
+    }
+    case 'tecla_wait_beat': {
+      const beats = parseFloat(block.getFieldValue('BEATS')) || 1;
+      await sleep((60000 / currentBPM) * beats);
+      break;
+    }
+    case 'tecla_drum_hit': {
+      const drum = parseInt(block.getFieldValue('DRUM')) || 36;
+      const dvel = Math.round(await getVal(block,'VELOCITY',100));
+      const drumNames={36:'Kick',38:'Snare',42:'HH↑',46:'HH↓',49:'Crash',51:'Ride',50:'Tom↑',47:'Tom~',45:'Tom↓',39:'Clap',56:'Cow'};
+      midiNoteOn(10, drum, dvel);
+      simLog(`🥁 ${drumNames[drum]||drum} vel:${dvel}`, 'note');
+      await sleep(40);
+      midiNoteOff(10, drum);
+      break;
+    }
+    case 'tecla_drum_pattern': {
+      const dpDrum = parseInt(block.getFieldValue('DRUM')) || 36;
+      const dpPat  = block.getFieldValue('PATTERN') || '1000100010001000';
+      const dpStep = await getVal(block,'STEP_DUR',0.125);
+      simLog(`🥁 Patró: ${dpPat}`, 'sys');
+      for (const s of dpPat) {
+        if (!simulationRunning) break;
+        if (s==='1') { midiNoteOn(10,dpDrum,100); await sleep(40); midiNoteOff(10,dpDrum); await sleep(Math.max(0,(dpStep*1000)-40)); }
+        else { await sleep(dpStep*1000); }
+      }
+      break;
+    }
+    case 'tecla_seq_play_steps': {
+      const sqNotes = (block.getFieldValue('NOTES')||'60').split(',').map(n=>parseInt(n.trim())).filter(n=>!isNaN(n));
+      const sqVel   = Math.max(1,Math.min(127,Math.round(await getVal(block,'VELOCITY',90))));
+      const sqDur   = await getVal(block,'STEP_DUR',0.25);
+      const sqCtx   = document.getElementById('simulatorCanvas')?.getContext('2d');
+      simLog(`🎵 Seqüència [${sqNotes.map(noteToName).join(' ')}]`,'note');
+      for (const n of sqNotes) {
+        if (!simulationRunning) break;
+        midiNoteOn(1,n,sqVel); if(sqCtx) visualizeNote(sqCtx,n,sqVel);
+        await sleep(sqDur*1000*0.85); midiNoteOff(1,n); await sleep(sqDur*1000*0.15);
+      }
+      break;
+    }
+    case 'tecla_arpeggio_dir': {
+      const ACMAP={C:[48,52,55,60],D:[50,54,57,62],E:[52,56,59,64],F:[53,57,60,65],G:[55,59,62,67],A:[57,61,64,69],B:[59,63,66,71],Cm:[48,51,55,60],Dm:[50,53,57,62],Em:[52,55,59,64],Fm:[53,56,60,65],Gm:[55,58,62,67],Am:[57,60,64,69],Bm:[59,62,66,71]};
+      const ach=block.getFieldValue('CHORD')||'Am', adir=block.getFieldValue('DIR')||'up';
+      const asp=await getVal(block,'SPEED',0.12);
+      let an=[...(ACMAP[ach]||ACMAP.Am)];
+      if(adir==='down') an=an.reverse();
+      if(adir==='updown') an=[...an,...[...an].reverse().slice(1,-1)];
+      if(adir==='random') an.sort(()=>Math.random()-.5);
+      const arpCtx=document.getElementById('simulatorCanvas')?.getContext('2d');
+      simLog(`🎶 Arpegi ${ach} ${adir}`,'note');
+      for(const n of an){
+        if(!simulationRunning) break;
+        midiNoteOn(1,n,90); if(arpCtx) visualizeNote(arpCtx,n,90);
+        await sleep(asp*1000*.85); midiNoteOff(1,n); await sleep(asp*1000*.15);
+      }
+      break;
+    }
+    case 'tecla_chord_progression': {
+      const CPMAP={pop:[[48,52,55],[53,57,60],[55,59,62],[48,52,55]],modern:[[48,52,55],[55,59,62],[57,60,64],[53,57,60]],jazz:[[50,53,57],[55,59,62],[48,52,55]],fifties:[[48,52,55],[57,60,64],[53,57,60],[55,59,62]],blues:[[48,52,55],[53,57,60],[48,52,55],[55,59,62]],rock:[[48,51,55],[46,50,53],[45,48,52],[46,50,53]]};
+      const cpProg=block.getFieldValue('PROG')||'modern', cpKey=parseInt(block.getFieldValue('KEY'))||0;
+      const cpDur=await getVal(block,'BEATS_DUR',1.5);
+      const cpChords=(CPMAP[cpProg]||CPMAP.modern).map(ch=>ch.map(n=>n+cpKey));
+      const cpCtx=document.getElementById('simulatorCanvas')?.getContext('2d');
+      const cpKeyN={0:'C',2:'D',4:'E',5:'F',7:'G',9:'A',11:'B'};
+      simLog(`🎼 Progressió ${cpProg} en ${cpKeyN[cpKey]||'C'}`,'note');
+      for(const ch of cpChords){
+        if(!simulationRunning) break;
+        ch.forEach(n=>{midiNoteOn(1,n,88); if(cpCtx) visualizeNote(cpCtx,n,88);});
+        simLog(`  ♪ [${ch.map(noteToName).join(' ')}]`,'note');
+        await sleep(cpDur*1000); ch.forEach(n=>midiNoteOff(1,n)); await sleep(20);
+      }
+      break;
+    }
+    case 'tecla_midi_cc': {
+      const ccT=block.getFieldValue('CC_TYPE');
+      const ccN=ccT==='custom'?Math.round(await getVal(block,'CC_NUM',1)):parseInt(ccT);
+      const ccV=Math.max(0,Math.min(127,Math.round(await getVal(block,'CC_VAL',64))));
+      midiCC(1,ccN,ccV); simLog(`🎛️ CC${ccN}=${ccV}`,'sys'); break;
+    }
+    case 'tecla_midi_pitch_bend': {
+      const pbA=await getVal(block,'AMOUNT',0);
+      const pbV=Math.max(0,Math.min(16383,Math.round((pbA+63)*130)));
+      if(midiOutput) midiOutput.send([0xE0,pbV&127,(pbV>>7)&127]);
+      simLog(`🎵 PitchBend ${pbA>0?'+':''}${Math.round(pbA)}`,'sys'); break;
+    }
+    case 'tecla_midi_all_notes_off': {
+      for(let c=1;c<=16;c++) midiCC(c,123,0);
+      simLog('🚨 Panic – notes apagades','sys'); break;
+    }
+    case 'tecla_midi_sustain': {
+      const suS=parseInt(block.getFieldValue('STATE'))||0;
+      midiCC(1,64,suS); simLog(`🦶 Sustain ${suS>0?'ON':'OFF'}`,'sys'); break;
+    }
+    case 'tecla_midi_expression': {
+      const exV=Math.max(0,Math.min(127,Math.round(await getVal(block,'VALUE',127))));
+      midiCC(1,11,exV); simLog(`🎭 Expressió: ${exV}`,'sys'); break;
+    }
+    case 'tecla_note_on_only': {
+      const nonNote=Math.round(await getVal(block,'NOTE',60));
+      const nonVel =Math.round(await getVal(block,'VELOCITY',100));
+      const nonCtx =document.getElementById('simulatorCanvas')?.getContext('2d');
+      midiNoteOn(1,nonNote,nonVel); if(nonCtx) visualizeNote(nonCtx,nonNote,nonVel);
+      simLog(`▶ NoteOn ${noteToName(nonNote)} vel:${nonVel}`,'note'); break;
+    }
+    case 'tecla_note_off_only': {
+      const nofNote=Math.round(await getVal(block,'NOTE',60));
+      midiNoteOff(1,nofNote); simLog(`■ NoteOff ${noteToName(nofNote)}`,'sys'); break;
+    }
+    case 'tecla_crescendo': {
+      const crFrom=await getVal(block,'FROM_VAL',0), crTo=await getVal(block,'TO_VAL',127);
+      const crDur=await getVal(block,'DURATION',2), crCC=parseInt(block.getFieldValue('CC'))||7;
+      const crSt=20, crStT=(crDur*1000)/crSt;
+      simLog(`📈 Crescendo CC${crCC} ${Math.round(crFrom)}→${Math.round(crTo)} en ${crDur}s`,'sys');
+      for(let i=0;i<=crSt&&simulationRunning;i++){
+        midiCC(1,crCC,Math.max(0,Math.min(127,Math.round(crFrom+(i/crSt)*(crTo-crFrom)))));
+        await sleep(crStT);
+      }
+      break;
+    }
+    case 'tecla_riff_repeat': {
+      const rrT=parseInt(block.getFieldValue('TIMES'))||4;
+      const rrIn=block.getInputTargetBlock('RIFF');
+      simLog(`🔄 Riff × ${rrT}`,'sys');
+      for(let i=0;i<rrT&&simulationRunning;i++) if(rrIn) await execChain(rrIn);
       break;
     }
     default: {
