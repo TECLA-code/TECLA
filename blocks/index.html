@@ -177,8 +177,8 @@
     .modal p { font-size: 12.5px; color: var(--text2); line-height: 1.65; margin-bottom: 16px; }
     .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
 
-    /* ── 5 tabs ──────────────────────────────────────────────── */
-    .tab-btn { font-size: 10.5px; }
+    /* ── 7 tabs ──────────────────────────────────────────────── */
+    .tab-btn { font-size: 9.5px; }
 
     /* ── Guide styles ────────────────────────────────────────── */
     .guide-h1 { font-size: 12.5px; font-weight: 700; color: var(--text); margin: 0 0 8px; }
@@ -249,6 +249,47 @@
     .ct-field label { font-size: 10.5px; color: var(--text2); white-space: nowrap; }
     input[type=text] { width: 100%; padding: 6px 10px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: 12px; font-family: var(--font); }
     input[type=text]:focus { outline: none; border-color: var(--accent); }
+
+    /* ── Projects library panel ──────────────────────────────── */
+    .proj-topbar { display:flex; gap:6px; margin-bottom:12px; flex-shrink:0; }
+    .proj-topbar .btn { flex:1; justify-content:center; font-size:10.5px; }
+    .proj-list { display:flex; flex-direction:column; gap:6px; flex:1; overflow-y:auto; }
+    .proj-card {
+      display:flex; align-items:center; gap:10px; padding:9px 11px;
+      background:var(--surface2); border:1.5px solid var(--border);
+      border-radius:8px; transition:border-color .15s;
+    }
+    .proj-card:hover { border-color:var(--border-h); }
+    .proj-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+    .proj-info { flex:1; min-width:0; }
+    .proj-name { font-size:12px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .proj-meta { font-size:9.5px; color:var(--text3); margin-top:2px; }
+    .proj-actions { display:flex; gap:4px; flex-shrink:0; }
+    .proj-actions .btn { padding:3px 7px; font-size:10px; }
+    .proj-empty {
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      flex:1; gap:10px; color:var(--text3); font-size:12px; text-align:center;
+      padding:30px 20px; line-height:1.65;
+    }
+    .proj-empty-icon { font-size:28px; opacity:.4; }
+    .proj-btn-picker {
+      display:flex; flex-wrap:wrap; gap:5px; padding:8px 0 4px;
+    }
+    .proj-btn-pick {
+      width:28px; height:28px; border-radius:5px; background:#dde1eb;
+      border:1.5px solid rgba(0,0,0,.18); font-size:9px; font-weight:700;
+      color:rgba(0,0,0,.55); cursor:pointer; display:flex; align-items:center;
+      justify-content:center; transition:all .1s; font-family:var(--mono);
+      box-shadow: 0 2px 0 rgba(0,0,0,.22);
+    }
+    .proj-btn-pick:hover { background:#eaecf5; border-color:rgba(0,0,0,.3); }
+    .proj-btn-pick.taken { background:rgba(61,201,108,.18); border-color:rgba(61,201,108,.5); color:rgba(15,80,40,.7); }
+    .proj-btn-pick.taken:hover { background:rgba(61,201,108,.28); }
+    .proj-assign-overlay {
+      background:var(--surface); border:1px solid var(--border-h);
+      border-radius:8px; padding:10px 12px; margin-top:4px;
+    }
+    .proj-assign-title { font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:.07em; margin-bottom:8px; }
 
     /* ── Device config panel ─────────────────────────────────── */
     .dev-hw-wrap { display: flex; gap: 12px; align-items: stretch; padding: 12px 0 10px; flex-shrink: 0; }
@@ -358,6 +399,7 @@
         <button class="tab-btn" data-tab="guide">Guia</button>
         <button class="tab-btn" data-tab="firmware">Firmware</button>
         <button class="tab-btn" data-tab="theme">Aparença</button>
+        <button class="tab-btn" data-tab="projects">Projectes</button>
         <button class="tab-btn" data-tab="device">Dispositiu</button>
       </div>
       <div class="panel-body">
@@ -519,6 +561,17 @@
           </div>
         </div>
 
+        <!-- Projects library panel -->
+        <div id="panel-projects" class="panel-content">
+          <div class="proj-topbar">
+            <button class="btn btn-primary" id="btn-proj-save">↓ Guardar actual</button>
+            <button class="btn" id="btn-proj-import">↑ Importar .tblocks</button>
+          </div>
+          <div id="proj-list" class="proj-list">
+            <div class="proj-empty"><div class="proj-empty-icon">📚</div><div>Encara no hi ha projectes guardats.<br>Prem <strong>Guardar actual</strong> per afegir el workspace,<br>o importa fitxers <strong>.tblocks</strong>.</div></div>
+          </div>
+        </div>
+
         <!-- Device config panel -->
         <div id="panel-device" class="panel-content">
           <!-- hardware representation rendered by JS -->
@@ -552,6 +605,7 @@
 
   <!-- Hidden file input for open -->
   <input type="file" id="file-open-input" accept=".tblocks,.py,.json">
+  <input type="file" id="proj-import-input" accept=".tblocks" multiple>
 
   <!-- Toolbox XML -->
   <xml id="toolbox" style="display:none">

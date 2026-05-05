@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupFileOpen();
   initThemeSystem();
   initDeviceConfig();
+  initProjectsLib();
   updateStatusBar();
 });
 
@@ -160,7 +161,8 @@ function setupTabs() {
       document.querySelectorAll('.panel-content').forEach(p => p.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById(`panel-${btn.dataset.tab}`).classList.add('active');
-      if (btn.dataset.tab === 'device') renderDevicePanel();
+      if (btn.dataset.tab === 'device')   renderDevicePanel();
+      if (btn.dataset.tab === 'projects') renderProjectsPanel();
     });
   });
 }
@@ -181,6 +183,9 @@ function setupButtons() {
   document.getElementById('btn-stop-sim').addEventListener('click', stopSimulation);
   document.getElementById('btn-gen-device-code').addEventListener('click', exportDeviceCode);
   document.getElementById('btn-upload-device-code').addEventListener('click', uploadDeviceCode);
+  document.getElementById('btn-proj-save').addEventListener('click', saveCurrentToLib);
+  document.getElementById('btn-proj-import').addEventListener('click', () => document.getElementById('proj-import-input').click());
+  document.getElementById('proj-import-input').addEventListener('change', importProjectFiles);
   document.getElementById('btn-ex-melody').addEventListener('click', () => loadExample('melody'));
   document.getElementById('btn-ex-sequencer').addEventListener('click', () => loadExample('sequencer'));
   document.getElementById('btn-ex-buttons').addEventListener('click', () => loadExample('buttons'));
@@ -857,6 +862,163 @@ function loadExample(type) {
   } catch (e) {
     toast('Error carregant exemple', 'err');
   }
+}
+
+// ── Projects Library System ─────────────────────────────────────
+const _PROJLIB_KEY = 'tecla-blk-projects';
+let projectsLib = [];
+let _projAssignOpen = null;
+
+const _PROJ_COLORS = ['#f472b6','#60a5fa','#34d399','#fbbf24','#a78bfa','#fb923c','#22d3ee','#e879f9','#4ade80','#f87171'];
+function _projColor(name) {
+  let h = 0; for (const c of name) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
+  return _PROJ_COLORS[h % _PROJ_COLORS.length];
+}
+function _projId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function _projDate(iso) {
+  try { const d = new Date(iso); return d.toLocaleDateString('ca',{day:'2-digit',month:'2-digit',year:'numeric'}); }
+  catch { return ''; }
+}
+
+function initProjectsLib() {
+  try { projectsLib = JSON.parse(localStorage.getItem(_PROJLIB_KEY)) || []; }
+  catch { projectsLib = []; }
+}
+function _saveProjectsLib() { localStorage.setItem(_PROJLIB_KEY, JSON.stringify(projectsLib)); }
+
+function renderProjectsPanel() {
+  const list = document.getElementById('proj-list');
+  if (!list) return;
+  if (projectsLib.length === 0) {
+    list.innerHTML = `<div class="proj-empty"><div class="proj-empty-icon">📚</div><div>Encara no hi ha projectes guardats.<br>Prem <strong>Guardar actual</strong> per afegir el workspace,<br>o importa fitxers <strong>.tblocks</strong>.</div></div>`;
+    return;
+  }
+  list.innerHTML = '';
+  projectsLib.forEach(proj => {
+    const card = document.createElement('div');
+    card.className = 'proj-card';
+    const col = _projColor(proj.name);
+    const isAssignOpen = _projAssignOpen === proj.id;
+    card.innerHTML = `
+      <div class="proj-dot" style="background:${col}"></div>
+      <div class="proj-info">
+        <div class="proj-name">${proj.name}</div>
+        <div class="proj-meta">${proj.source === 'import' ? 'Importat' : 'Guardat'} · ${_projDate(proj.timestamp)}</div>
+      </div>
+      <div class="proj-actions">
+        <button class="btn" data-act="open" title="Carregar al workspace">⇑ Obrir</button>
+        <button class="btn" data-act="assign" title="Assignar a un botó del dispositiu" style="color:var(--accent)">→ Botó</button>
+        <button class="btn btn-danger" data-act="del" title="Eliminar">✕</button>
+      </div>
+      ${isAssignOpen ? `<div class="proj-assign-overlay" style="width:100%;margin-top:0">
+        <div class="proj-assign-title">Assignar a botó:</div>
+        <div class="proj-btn-picker" id="picker-${proj.id}"></div>
+      </div>` : ''}`;
+    card.style.flexWrap = 'wrap';
+    card.querySelector('[data-act="open"]').addEventListener('click', () => _openProjectFromLib(proj.id));
+    card.querySelector('[data-act="assign"]').addEventListener('click', e => { e.stopPropagation(); _toggleAssignPicker(proj.id); });
+    card.querySelector('[data-act="del"]').addEventListener('click', () => _deleteProjectFromLib(proj.id));
+    if (isAssignOpen) _fillAssignPicker(card.querySelector(`#picker-${proj.id}`), proj.id);
+    list.appendChild(card);
+  });
+}
+
+function _toggleAssignPicker(projId) {
+  _projAssignOpen = (_projAssignOpen === projId) ? null : projId;
+  renderProjectsPanel();
+}
+
+function _fillAssignPicker(el, projId) {
+  if (!el || !deviceConfig) return;
+  deviceConfig.buttons.forEach(btn => {
+    const taken = !!btn.project;
+    const b = document.createElement('div');
+    b.className = `proj-btn-pick${taken ? ' taken' : ''}`;
+    b.title = taken ? `Botó ${btn.id}: ${btn.project.name}` : `Botó ${btn.id}: buit`;
+    b.textContent = `B${btn.id}`;
+    b.addEventListener('click', () => _assignProjToBtn(projId, btn.id));
+    el.appendChild(b);
+  });
+}
+
+function _assignProjToBtn(projId, btnId) {
+  const proj = projectsLib.find(p => p.id === projId);
+  const btn  = deviceConfig?.buttons.find(b => b.id === btnId);
+  if (!proj || !btn) return;
+  const xml  = proj.tblocks.format === 'legacy' ? proj.tblocks.blocks : Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspace));
+  const code = proj.tblocks.pycode || '';
+  btn.project = { name: proj.name, xml, code };
+  _saveDC();
+  _projAssignOpen = null;
+  renderProjectsPanel();
+  toast(`✓ "${proj.name}" → Botó ${btnId}`, 'ok');
+}
+
+function _openProjectFromLib(projId) {
+  const proj = projectsLib.find(p => p.id === projId);
+  if (!proj) return;
+  if (workspace.getAllBlocks(false).length > 0 && !confirm(`Carregar "${proj.name}"? El workspace actual es perdrà.`)) return;
+  loadProjectFromText(JSON.stringify(proj.tblocks), proj.name);
+  toast(`⇑ "${proj.name}" carregat`, 'ok');
+}
+
+function _deleteProjectFromLib(projId) {
+  const proj = projectsLib.find(p => p.id === projId);
+  if (!proj || !confirm(`Eliminar "${proj.name}" de la biblioteca?`)) return;
+  projectsLib = projectsLib.filter(p => p.id !== projId);
+  _saveProjectsLib();
+  if (_projAssignOpen === projId) _projAssignOpen = null;
+  renderProjectsPanel();
+  toast(`"${proj.name}" eliminat`);
+}
+
+function saveCurrentToLib() {
+  if (workspace.getAllBlocks(false).length === 0) { toast('El workspace està buit', 'err'); return; }
+  const existing = projectsLib.find(p => p.name === currentProject.name);
+  if (existing) {
+    if (!confirm(`"${currentProject.name}" ja existeix. Sobreescriure?`)) return;
+    projectsLib = projectsLib.filter(p => p.id !== existing.id);
+  }
+  const xml  = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspace));
+  const code = updateGeneratedCode() || '';
+  const entry = {
+    id: _projId(),
+    name: currentProject.name,
+    source: 'save',
+    timestamp: new Date().toISOString(),
+    tblocks: { name: currentProject.name, version: '2.0', format: 'legacy', blocks: xml, pycode: code }
+  };
+  projectsLib.unshift(entry);
+  _saveProjectsLib();
+  renderProjectsPanel();
+  toast(`✓ "${currentProject.name}" guardat a la biblioteca`, 'ok');
+}
+
+async function importProjectFiles(e) {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+  let imported = 0, skipped = 0;
+  for (const file of files) {
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (!data.name || !data.blocks) { skipped++; continue; }
+      const existing = projectsLib.find(p => p.name === data.name);
+      if (existing) { skipped++; continue; }
+      projectsLib.push({
+        id: _projId(),
+        name: data.name,
+        source: 'import',
+        timestamp: new Date().toISOString(),
+        tblocks: data
+      });
+      imported++;
+    } catch { skipped++; }
+  }
+  e.target.value = '';
+  _saveProjectsLib();
+  renderProjectsPanel();
+  toast(`✓ ${imported} importat${imported !== 1 ? 's' : ''}${skipped ? ` (${skipped} omesos)` : ''}`, imported ? 'ok' : 'err');
 }
 
 // ── Device Configuration System ────────────────────────────────
