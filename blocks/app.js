@@ -767,11 +767,23 @@ async function runSimulation() {
   initVisualizer(ctx);
 
   const topBlocks = workspace.getTopBlocks(true);
-  if (topBlocks.length === 0) { simLog('Cap bloc al workspace', 'sys'); }
-  for (const block of topBlocks) {
-    if (!simulationRunning) break;
-    await execChain(block);
+  if (topBlocks.length === 0) { simLog('Cap bloc al workspace', 'sys'); stopSimulation(); return; }
+
+  // Prioritzar el bloc que conté tecla_repeat_forever (bucle principal)
+  // Si no n'hi ha, agafar el primer bloc top-left
+  function chainContains(block, type) {
+    let cur = block;
+    while (cur) {
+      if (cur.type === type) return true;
+      const inner = cur.getInputTargetBlock('DO') || cur.getInputTargetBlock('BODY') || cur.getInputTargetBlock('STATEMENT');
+      if (inner && chainContains(inner, type)) return true;
+      cur = cur.getNextBlock();
+    }
+    return false;
   }
+  const mainBlock = topBlocks.find(b => chainContains(b, 'tecla_repeat_forever')) || topBlocks[0];
+  simLog(`▶ Executant cadena principal (${mainBlock.type})`, 'sys');
+  await execChain(mainBlock);
 
   if (simulationRunning) {
     simLog('▣ Completat', 'sys');
