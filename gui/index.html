@@ -869,7 +869,7 @@
         if (k.type === 'hold_mod') return `${indent}keyboard.press(${k.modifier || 'Keycode.COMMAND'})\n`;
         if (k.type === 'layer_change') {
           const d = k.layer_dir === 'prev' ? '-1' : '1';
-          return `${indent}current_layer = (current_layer + ${d}) % LAYER_COUNT\n${i2}pass\n`;
+          return `${indent}current_layer = (current_layer + ${d}) % LAYER_COUNT\n`;
         }
         if (k.type === 'key') {
           const pmods = (k.mods||[]).map(m => ({'Ctrl':'Keycode.CONTROL','Shift':'Keycode.SHIFT','Alt':'Keycode.ALT','Cmd':'Keycode.COMMAND'})[m]||'').filter(Boolean);
