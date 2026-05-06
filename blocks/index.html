@@ -351,6 +351,10 @@
     .dev-pot-field input[type=number] { width: 100%; padding: 5px 4px; border-radius: 4px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: 11px; font-family: var(--font); text-align: center; }
     .dev-pot-field input[type=number]:focus { outline: none; border-color: var(--accent); }
     .dev-export-bar { display:flex; gap:8px; padding:10px 0 2px; border-top:1px solid var(--border); flex-shrink:0; }
+    .dcf-lib-picker { max-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; }
+    .dcf-lib-item { padding: 4px 8px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); font-size: 11px; color: var(--text); cursor: pointer; transition: background .1s, border-color .1s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dcf-lib-item:hover { background: var(--surface3); border-color: var(--accent); color: var(--accent); }
+    .dcf-lib-item.active { border-color: var(--accent); color: var(--accent); background: rgba(74,128,240,.1); }
 
     /* ── Theme body classes ──────────────────────────────────── */
     body.theme-light { --bg:#f2f2f2; --surface:#ffffff; --surface2:#ebebeb; --surface3:#e0e0e0; --accent:#4a80f0; --accent-d:#2d5cd9; --border:rgba(0,0,0,.1); --border-h:rgba(0,0,0,.2); --text:#111; --text2:rgba(0,0,0,.5); --text3:rgba(0,0,0,.3); }
@@ -419,12 +423,12 @@
     <div class="side-panel">
       <div class="panel-tabs">
         <button class="tab-btn active" data-tab="code" data-i18n="tab.code">Codi</button>
+        <button class="tab-btn" data-tab="device" data-i18n="tab.device">Tecles</button>
+        <button class="tab-btn" data-tab="projects" data-i18n="tab.proj">Projectes</button>
         <button class="tab-btn" data-tab="simulator" data-i18n="tab.sim">Simulador</button>
-        <button class="tab-btn" data-tab="guide" data-i18n="tab.guide">Guia</button>
         <button class="tab-btn" data-tab="firmware" data-i18n="tab.fw">Firmware</button>
         <button class="tab-btn" data-tab="theme" data-i18n="tab.theme">Aparença</button>
-        <button class="tab-btn" data-tab="projects" data-i18n="tab.proj">Projectes</button>
-        <button class="tab-btn" data-tab="device" data-i18n="tab.device">Tecles</button>
+        <button class="tab-btn" data-tab="guide" data-i18n="tab.guide">Guia</button>
       </div>
       <div class="panel-body">
 

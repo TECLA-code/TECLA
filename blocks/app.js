@@ -955,40 +955,33 @@ let _exSelected = new Set();
 function _renderExamplesSection() {
   const container = document.getElementById('proj-examples-section');
   if (!container) return;
-  const selCount = _exSelected.size;
   container.innerHTML = `
     <div class="proj-section">
       <div class="proj-sect-head">
         <span class="proj-sect-title">Exemples disponibles</span>
-        <span class="proj-sect-count" id="ex-sel-count">${selCount > 0 ? selCount + ' seleccionats' : ''}</span>
       </div>
-      <p class="proj-sect-desc">Marca els que vols usar i prem <strong>Afegir a biblioteca</strong>.</p>
+      <p class="proj-sect-desc">Marca per afegir directament a la biblioteca.</p>
       <div class="checklist" id="ex-checklist"></div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="btn btn-sm btn-primary" id="btn-ex-add-lib">+ Afegir a biblioteca</button>
-        <button class="btn btn-sm" id="btn-ex-all">Tots</button>
-        <button class="btn btn-sm" id="btn-ex-none">Cap</button>
-      </div>
     </div>`;
   const checklist = container.querySelector('#ex-checklist');
   _BUILTIN_EXAMPLES.forEach(ex => {
     const inLib = projectsLib.some(p => p.name === ex.name);
     const label = document.createElement('label');
     label.className = 'cb';
-    label.innerHTML = `<input type="checkbox"${_exSelected.has(ex.name) ? ' checked' : ''}${inLib ? ' disabled' : ''}><span style="${inLib ? 'color:var(--text3);text-decoration:line-through' : ''}" title="${ex.desc}">${ex.name}</span>`;
-    label.querySelector('input').addEventListener('change', e => {
-      if (e.target.checked) _exSelected.add(ex.name); else _exSelected.delete(ex.name);
-      const c = container.querySelector('#ex-sel-count');
-      if (c) c.textContent = _exSelected.size > 0 ? _exSelected.size + ' seleccionats' : '';
-    });
+    label.innerHTML = `<input type="checkbox"${inLib ? ' checked disabled' : ''}><span style="${inLib ? 'color:var(--text3)' : ''}" title="${ex.desc}">${ex.name}</span>`;
+    if (!inLib) {
+      label.querySelector('input').addEventListener('change', e => {
+        if (!e.target.checked) return;
+        projectsLib.push({ id: _projId(), name: ex.name, source: 'builtin',
+          timestamp: new Date().toISOString(),
+          tblocks: { name: ex.name, version: '1.0', format: 'legacy', blocks: ex.blocks } });
+        _saveProjectsLib();
+        renderProjectsPanel();
+        toast(`✓ "${ex.name}" afegit a la biblioteca`, 'ok');
+      });
+    }
     checklist.appendChild(label);
   });
-  container.querySelector('#btn-ex-add-lib').addEventListener('click', _addExamplesToLib);
-  container.querySelector('#btn-ex-all').addEventListener('click', () => {
-    _exSelected = new Set(_BUILTIN_EXAMPLES.filter(e => !projectsLib.some(p => p.name === e.name)).map(e => e.name));
-    renderProjectsPanel();
-  });
-  container.querySelector('#btn-ex-none').addEventListener('click', () => { _exSelected.clear(); renderProjectsPanel(); });
 }
 
 function _addExamplesToLib() {
@@ -1250,6 +1243,9 @@ function _renderDCConfigArea() {
     const btn = deviceConfig.buttons.find(b => b.id === _dcSel.id);
     if (!btn) return;
     const hp = !!btn.project;
+    const libItems = projectsLib.length > 0
+      ? projectsLib.map(p => `<div class="dcf-lib-item${btn.project && btn.project.name === p.name ? ' active' : ''}" data-pid="${p.id}">${p.name}</div>`).join('')
+      : `<div style="font-size:11px;color:var(--text3);padding:4px 0">Cap projecte a la biblioteca</div>`;
     area.innerHTML = `
       <div class="dev-cfg-head">Botó <span>B${btn.id}</span></div>
       <div class="dev-cfg-name-row">
@@ -1258,20 +1254,28 @@ function _renderDCConfigArea() {
       <div class="dev-cfg-proj-info ${hp ? 'has-proj' : 'no-proj'}">
         ${hp ? `📄 ${btn.project.name}` : '— Cap projecte assignat —'}
       </div>
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:6px 0 3px">Tria de la biblioteca</div>
+      <div class="dcf-lib-picker">${libItems}</div>
       <div class="dev-cfg-btns">
-        <button class="btn btn-primary" id="dcf-assign">↓ Assignar workspace</button>
-        ${hp ? `<button class="btn" id="dcf-load">⇑ Carregar</button><button class="btn btn-danger" id="dcf-clear">✕ Netejar</button>` : ''}
+        ${hp ? `<button class="btn" id="dcf-load">⇑ Carregar al workspace</button><button class="btn btn-danger" id="dcf-clear">✕ Netejar</button>` : ''}
       </div>`;
     area.querySelector('#dcf-bname').addEventListener('change', e => {
       btn.name = e.target.value.trim() || `Botó ${btn.id}`; _saveDC(); _renderDCHardware();
     });
-    area.querySelector('#dcf-assign').addEventListener('click', () => _assignProject(btn.id));
+    area.querySelectorAll('.dcf-lib-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const proj = projectsLib.find(p => p.id === item.dataset.pid);
+        if (!proj) return;
+        btn.project = { name: proj.name, xml: proj.tblocks.blocks, code: proj.tblocks.pycode || '' };
+        _saveDC(); renderDevicePanel();
+        toast(`✓ "${proj.name}" → B${btn.id}`, 'ok');
+      });
+    });
     area.querySelector('#dcf-load')?.addEventListener('click', () => _loadBtnProject(btn.id));
     area.querySelector('#dcf-clear')?.addEventListener('click', () => _clearBtnProject(btn.id));
   } else {
     const pot = deviceConfig.pots.find(p => p.id === _dcSel.id);
     if (!pot) return;
-    const fname = _POT_NAMES[pot.cc] || '';
     area.innerHTML = `
       <div class="dev-cfg-head">Potenciòmetre <span>${pot.name}</span></div>
       <div class="dev-pot-fields">
@@ -1280,7 +1284,7 @@ function _renderDCConfigArea() {
         <div class="dev-pot-field"><label>Màxim</label><input type="number" id="dcf-pmax" value="${pot.max}" min="0" max="127"></div>
         <div class="dev-pot-field"><label>Canal</label><input type="number" id="dcf-pch" value="${pot.channel}" min="1" max="16"></div>
       </div>
-      <div style="font-size:10px;color:var(--text3);margin-bottom:8px">${fname ? `Funció: ${fname}` : 'CC ' + pot.cc}</div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:8px">${_ccLabel(pot.cc)}</div>
       <div class="dev-cfg-name-row">
         <input id="dcf-pname" type="text" value="${pot.name}" maxlength="8" placeholder="Etiqueta" style="width:100%;font-size:11px">
       </div>`;
@@ -1291,7 +1295,7 @@ function _renderDCConfigArea() {
       pot.max     = parseInt(area.querySelector('#dcf-pmax').value) || 127;
       pot.channel = parseInt(area.querySelector('#dcf-pch').value)  || 1;
       const fn = area.querySelector('div[style*="font-size:10px"]');
-      if (fn) fn.textContent = _POT_NAMES[cc] ? `Funció: ${_POT_NAMES[cc]}` : `CC ${cc}`;
+      if (fn) fn.textContent = _ccLabel(cc);
       _saveDC(); _renderDCHardware();
     };
     ['#dcf-pcc','#dcf-pmin','#dcf-pmax','#dcf-pch'].forEach(id => area.querySelector(id)?.addEventListener('change', upd));
