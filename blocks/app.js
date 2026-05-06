@@ -16,7 +16,49 @@ const _I18N = {
     'btn.connect':'Connectar','btn.upload':'Pujar','btn.copy':'Copiar',
     'btn.simulate':'Executar','btn.stop':'Aturar',
     'code.title':'Codi Python generat','sim.vis':'Visualitzador','sim.out':'Sortida',
-    'btn.projsave':'↓ Guardar actual','btn.projimport':'↑ Importar .tblocks','proj.mine':'Els meus projectes'
+    'btn.projsave':'↓ Guardar actual','btn.projimport':'↑ Importar .tblocks','proj.mine':'Els meus projectes',
+    'midi.disconn':'MIDI: desconnectat',
+    'proj.examples':'Exemples disponibles','proj.exdesc':'Marca per afegir directament a la biblioteca.',
+    'proj.cat.music':'🎵 Música','proj.cat.util':'⚡ Utilitats',
+    'proj.open':'⇑ Obrir','proj.assign':'→ Botó','proj.assignto':'Assignar a botó:',
+    'proj.empty':'Afegeix exemples de dalt o importa fitxers .tblocks.',
+    'proj.src.import':'Importat','proj.src.save':'Guardat','proj.src.builtin':'Exemple',
+    'dev.gencode':'⬇ Generar codi.py','dev.pushbtn':'📤 Pujar',
+    'dev.hint':'← Clica un botó o potenciòmetre per configurar-lo',
+    'dev.button':'Botó','dev.pot':'Potenciòmetre','dev.libpick':'Tria de la biblioteca',
+    'dev.nolib':'Cap projecte a la biblioteca','dev.noproj':'— Cap projecte assignat —',
+    'dev.load':'⇑ Carregar al workspace','dev.clear':'✕ Netejar',
+    'dev.cc':'CC','dev.min':'Mínim','dev.max':'Màxim','dev.chan':'Canal','dev.label':'Etiqueta',
+    'dev.mode':'Mode','dev.mode.midi':'MIDI CC','dev.mode.hid_vol':'🔊 Volum',
+    'dev.mode.hid_bright':'☀️ Brillantor','dev.mode.hid_scroll':'↕ Scroll',
+    'guide.t1':'1. Primers passos','guide.t2':'2. Programar amb blocs','guide.t3':'3. Pujar al dispositiu','guide.t4':'Exemples',
+    'guide.t2b':'Categories de blocs',
+    'guide.p1a':"Connecta el TECLA a l'ordinador via USB-C.",
+    'guide.p1b':'Si és la primera vegada, instal·la CircuitPython (pestanya Firmware → Pas 1).',
+    'guide.p1c':'Instal·la la carpeta adafruit_midi a CIRCUITPY/lib/ (Pas 2).',
+    'guide.n1':'El TECLA funciona com a interfície MIDI USB. No cal cap driver addicional a macOS i Linux.',
+    'guide.p2a':"Arrossega blocs de la caixa d'eines a l'espai de treball.",
+    'guide.p2b':'Encaixa els blocs per crear el teu programa.',
+    'guide.p2c':'El codi CircuitPython es genera automàticament a la pestanya Codi.',
+    'guide.cat1':'🎵 Música Bàsica: Notes MIDI, acords, escales',
+    'guide.cat2':'🔊 Síntesi Avançada: Oscil·ladors, LFO, envelops',
+    'guide.cat3':'🎛️ Control Hardware: Botons i potenciòmetres del TECLA',
+    'guide.cat4':'🎚️ Efectes: Delay, reverb, filtres',
+    'guide.cat5':'🔌 GPIO: Pins digitals, PWM, analògics',
+    'guide.cat6':'🎲 Generatiu: Probabilitat, LFO per software, quantització',
+    'guide.cat7':'⌨️ Accions: Teclat USB, dreceres, media',
+    'guide.p3a':'Prem Connectar al header i selecciona el volum CIRCUITPY.',
+    'guide.p3b':'Un cop connectat, prem Pujar per copiar el codi al dispositiu.',
+    'guide.p3c':"El TECLA s'executa automàticament en reiniciar-se.",
+    'guide.n3':"Requereix Chrome o Edge (File System Access API). A Safari, exporta el .py i copia'l manualment a CIRCUITPY.",
+    'ex.melody':'Melodia','ex.seq':'Seqüenciador','ex.btns':'Botons','ex.synth':'Sintetitzador',
+    'fw.status':'Estat del dispositiu','fw.device':'Dispositiu','fw.circuitpy':'Volum CIRCUITPY',
+    'fw.disconn':'desconnectat','fw.push':'Pujar codi al dispositiu',
+    'fw.t1':'Instal·lar CircuitPython','fw.t2':'Instal·lar les llibreries','fw.t3':'Pujar el codi del projecte',
+    'fw.dl.fw':'Descarregar CircuitPython (.uf2)','fw.dl.lib':'Descarregar Bundle de Llibreries',
+    'theme.title':'Aparença','theme.editor':'Editor de temes','theme.newbtn':'+ Nou tema',
+    'theme.name':'Nom:','theme.random':'🎲 Aleatori','theme.save':'Desa i aplica','theme.reset':'Restablir',
+    'status.ready':'Llest per programar'
   },
   es: {
     'btn.back':'Inicio','tab.code':'Código','tab.sim':'Simulador','tab.guide':'Guía','tab.fw':'Firmware',
@@ -25,7 +67,49 @@ const _I18N = {
     'btn.connect':'Conectar','btn.upload':'Subir','btn.copy':'Copiar',
     'btn.simulate':'Ejecutar','btn.stop':'Detener',
     'code.title':'Código Python generado','sim.vis':'Visualizador','sim.out':'Salida',
-    'btn.projsave':'↓ Guardar actual','btn.projimport':'↑ Importar .tblocks','proj.mine':'Mis proyectos'
+    'btn.projsave':'↓ Guardar actual','btn.projimport':'↑ Importar .tblocks','proj.mine':'Mis proyectos',
+    'midi.disconn':'MIDI: desconectado',
+    'proj.examples':'Ejemplos disponibles','proj.exdesc':'Marca para añadir directamente a la biblioteca.',
+    'proj.cat.music':'🎵 Música','proj.cat.util':'⚡ Utilidades',
+    'proj.open':'⇑ Abrir','proj.assign':'→ Botón','proj.assignto':'Asignar a botón:',
+    'proj.empty':'Añade ejemplos de arriba o importa archivos .tblocks.',
+    'proj.src.import':'Importado','proj.src.save':'Guardado','proj.src.builtin':'Ejemplo',
+    'dev.gencode':'⬇ Generar código.py','dev.pushbtn':'📤 Subir',
+    'dev.hint':'← Haz clic en un botón o potenciómetro para configurarlo',
+    'dev.button':'Botón','dev.pot':'Potenciómetro','dev.libpick':'Elige de la biblioteca',
+    'dev.nolib':'No hay proyectos en la biblioteca','dev.noproj':'— Sin proyecto asignado —',
+    'dev.load':'⇑ Cargar al workspace','dev.clear':'✕ Limpiar',
+    'dev.cc':'CC','dev.min':'Mínimo','dev.max':'Máximo','dev.chan':'Canal','dev.label':'Etiqueta',
+    'dev.mode':'Modo','dev.mode.midi':'MIDI CC','dev.mode.hid_vol':'🔊 Volumen',
+    'dev.mode.hid_bright':'☀️ Brillo','dev.mode.hid_scroll':'↕ Scroll',
+    'guide.t1':'1. Primeros pasos','guide.t2':'2. Programar con bloques','guide.t3':'3. Subir al dispositivo','guide.t4':'Ejemplos',
+    'guide.t2b':'Categorías de bloques',
+    'guide.p1a':'Conecta el TECLA al ordenador via USB-C.',
+    'guide.p1b':'Si es la primera vez, instala CircuitPython (pestaña Firmware → Paso 1).',
+    'guide.p1c':'Instala la carpeta adafruit_midi en CIRCUITPY/lib/ (Paso 2).',
+    'guide.n1':'El TECLA funciona como interfaz MIDI USB. No se necesita ningún driver adicional en macOS y Linux.',
+    'guide.p2a':'Arrastra bloques del cajón de herramientas al espacio de trabajo.',
+    'guide.p2b':'Encaja los bloques para crear tu programa.',
+    'guide.p2c':'El código CircuitPython se genera automáticamente en la pestaña Código.',
+    'guide.cat1':'🎵 Música Básica: Notas MIDI, acordes, escalas',
+    'guide.cat2':'🔊 Síntesis Avanzada: Osciladores, LFO, envolventes',
+    'guide.cat3':'🎛️ Control Hardware: Botones y potenciómetros del TECLA',
+    'guide.cat4':'🎚️ Efectos: Delay, reverb, filtros',
+    'guide.cat5':'🔌 GPIO: Pines digitales, PWM, analógicos',
+    'guide.cat6':'🎲 Generativo: Probabilidad, LFO por software, cuantización',
+    'guide.cat7':'⌨️ Acciones: Teclado USB, atajos, media',
+    'guide.p3a':'Pulsa Conectar en el header y selecciona el volumen CIRCUITPY.',
+    'guide.p3b':'Una vez conectado, pulsa Subir para copiar el código al dispositivo.',
+    'guide.p3c':'El TECLA se ejecuta automáticamente al reiniciarse.',
+    'guide.n3':"Requiere Chrome o Edge (File System Access API). En Safari, exporta el .py y cópialo manualmente a CIRCUITPY.",
+    'ex.melody':'Melodía','ex.seq':'Secuenciador','ex.btns':'Botones','ex.synth':'Sintetizador',
+    'fw.status':'Estado del dispositivo','fw.device':'Dispositivo','fw.circuitpy':'Volumen CIRCUITPY',
+    'fw.disconn':'desconectado','fw.push':'Subir código al dispositivo',
+    'fw.t1':'Instalar CircuitPython','fw.t2':'Instalar las librerías','fw.t3':'Subir el código del proyecto',
+    'fw.dl.fw':'Descargar CircuitPython (.uf2)','fw.dl.lib':'Descargar Bundle de Librerías',
+    'theme.title':'Apariencia','theme.editor':'Editor de temas','theme.newbtn':'+ Nuevo tema',
+    'theme.name':'Nombre:','theme.random':'🎲 Aleatorio','theme.save':'Guardar y aplicar','theme.reset':'Restablecer',
+    'status.ready':'Listo para programar'
   },
   en: {
     'btn.back':'Home','tab.code':'Code','tab.sim':'Simulator','tab.guide':'Guide','tab.fw':'Firmware',
@@ -34,19 +118,67 @@ const _I18N = {
     'btn.connect':'Connect','btn.upload':'Upload','btn.copy':'Copy',
     'btn.simulate':'Run','btn.stop':'Stop',
     'code.title':'Generated Python code','sim.vis':'Visualizer','sim.out':'Output',
-    'btn.projsave':'↓ Save current','btn.projimport':'↑ Import .tblocks','proj.mine':'My projects'
+    'btn.projsave':'↓ Save current','btn.projimport':'↑ Import .tblocks','proj.mine':'My projects',
+    'midi.disconn':'MIDI: disconnected',
+    'proj.examples':'Available examples','proj.exdesc':'Check to add directly to the library.',
+    'proj.cat.music':'🎵 Music','proj.cat.util':'⚡ Utilities',
+    'proj.open':'⇑ Open','proj.assign':'→ Key','proj.assignto':'Assign to key:',
+    'proj.empty':'Add examples from above or import .tblocks files.',
+    'proj.src.import':'Imported','proj.src.save':'Saved','proj.src.builtin':'Example',
+    'dev.gencode':'⬇ Generate code.py','dev.pushbtn':'📤 Upload',
+    'dev.hint':'← Click a key or potentiometer to configure it',
+    'dev.button':'Key','dev.pot':'Potentiometer','dev.libpick':'Choose from library',
+    'dev.nolib':'No projects in library','dev.noproj':'— No project assigned —',
+    'dev.load':'⇑ Load to workspace','dev.clear':'✕ Clear',
+    'dev.cc':'CC','dev.min':'Min','dev.max':'Max','dev.chan':'Channel','dev.label':'Label',
+    'dev.mode':'Mode','dev.mode.midi':'MIDI CC','dev.mode.hid_vol':'🔊 Volume',
+    'dev.mode.hid_bright':'☀️ Brightness','dev.mode.hid_scroll':'↕ Scroll',
+    'guide.t1':'1. First steps','guide.t2':'2. Programming with blocks','guide.t3':'3. Upload to device','guide.t4':'Examples',
+    'guide.t2b':'Block categories',
+    'guide.p1a':'Connect TECLA to your computer via USB-C.',
+    'guide.p1b':'If first time, install CircuitPython (Firmware tab → Step 1).',
+    'guide.p1c':'Install the adafruit_midi folder to CIRCUITPY/lib/ (Step 2).',
+    'guide.n1':'TECLA works as a USB MIDI interface. No additional drivers needed on macOS or Linux.',
+    'guide.p2a':'Drag blocks from the toolbox to the workspace.',
+    'guide.p2b':'Connect blocks to create your program.',
+    'guide.p2c':'CircuitPython code is generated automatically in the Code tab.',
+    'guide.cat1':'🎵 Basic Music: MIDI notes, chords, scales',
+    'guide.cat2':'🔊 Advanced Synthesis: Oscillators, LFO, envelopes',
+    'guide.cat3':'🎛️ Hardware Control: TECLA buttons and potentiometers',
+    'guide.cat4':'🎚️ Effects: Delay, reverb, filters',
+    'guide.cat5':'🔌 GPIO: Digital pins, PWM, analog',
+    'guide.cat6':'🎲 Generative: Probability, software LFO, quantisation',
+    'guide.cat7':'⌨️ Actions: USB keyboard, shortcuts, media',
+    'guide.p3a':'Press Connect in the header and select the CIRCUITPY volume.',
+    'guide.p3b':'Once connected, press Upload to copy the code to the device.',
+    'guide.p3c':'TECLA runs automatically on restart.',
+    'guide.n3':"Requires Chrome or Edge (File System Access API). On Safari, export the .py and copy it manually to CIRCUITPY.",
+    'ex.melody':'Melody','ex.seq':'Sequencer','ex.btns':'Buttons','ex.synth':'Synthesizer',
+    'fw.status':'Device status','fw.device':'Device','fw.circuitpy':'CIRCUITPY volume',
+    'fw.disconn':'disconnected','fw.push':'Upload code to device',
+    'fw.t1':'Install CircuitPython','fw.t2':'Install libraries','fw.t3':'Upload project code',
+    'fw.dl.fw':'Download CircuitPython (.uf2)','fw.dl.lib':'Download Library Bundle',
+    'theme.title':'Appearance','theme.editor':'Theme editor','theme.newbtn':'+ New theme',
+    'theme.name':'Name:','theme.random':'🎲 Random','theme.save':'Save & apply','theme.reset':'Reset',
+    'status.ready':'Ready to program'
   }
 };
 let _curLang = 'ca';
+function t(key) { return (_I18N[_curLang] || _I18N.ca)[key] || (_I18N.ca)[key] || key; }
 function applyI18n(lang) {
   if (lang) _curLang = lang;
   const dict = _I18N[_curLang] || _I18N.ca;
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const v = dict[el.dataset.i18n]; if (v) el.textContent = v;
   });
+  const sm = document.getElementById('status-message');
+  if (sm && (sm.textContent === '' || Object.values(_I18N).some(d => Object.values(d).includes(sm.textContent))))
+    sm.textContent = dict['status.ready'] || sm.textContent;
   const sel = document.getElementById('sel-lang'); if (sel) sel.value = _curLang;
   document.documentElement.lang = _curLang === 'en' ? 'en' : _curLang === 'es' ? 'es' : 'ca';
   localStorage.setItem('tecla-blk-lang', _curLang);
+  renderProjectsPanel();
+  renderDevicePanel();
 }
 
 let workspace;
@@ -964,41 +1096,63 @@ const _BUILTIN_EXAMPLES = [
     blocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="tecla_repeat_forever" x="50" y="50"><statement name="DO"><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">48</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">55</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">3.0</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">55</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">45</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">3.0</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">40</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">4.0</field></shadow></value><next><block type="tecla_wait"><value name="TIME"><shadow type="math_number"><field name="NUM">0.5</field></shadow></value></block></next></block></next></block></next></block></statement></block></xml>` },
   { name: 'Ràfega Cromàtica', desc: 'Pujada cromàtica ràpida de 8 semitons',
     blocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="tecla_repeat_forever" x="50" y="50"><statement name="DO"><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">88</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">61</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">84</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">62</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">80</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">63</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">76</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">64</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">72</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">65</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">68</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">66</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">64</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">67</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">60</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.3</field></shadow></value><next><block type="tecla_wait"><value name="TIME"><shadow type="math_number"><field name="NUM">0.4</field></shadow></value></block></next></block></next></block></next></block></next></block></next></block></next></block></next></block></statement></block></xml>` },
-  { name: 'Groove Probabilístic', desc: 'Ritme melòdic amb variació aleatòria',
-    blocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="tecla_repeat_forever" x="50" y="50"><statement name="DO"><block type="tecla_probability"><value name="PERCENT"><shadow type="math_number"><field name="NUM">80</field></shadow></value><statement name="DO"><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">95</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value></block></statement><next><block type="tecla_wait"><value name="TIME"><shadow type="math_number"><field name="NUM">0.25</field></shadow></value><next><block type="tecla_probability"><value name="PERCENT"><shadow type="math_number"><field name="NUM">55</field></shadow></value><statement name="DO"><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">64</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">80</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value></block></statement><next><block type="tecla_wait"><value name="TIME"><shadow type="math_number"><field name="NUM">0.25</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">67</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">88</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value><next><block type="tecla_wait"><value name="TIME"><shadow type="math_number"><field name="NUM">0.25</field></shadow></value></block></next></block></next></block></next></block></next></block></next></block></statement></block></xml>` }
+  { name: 'Groove Probabilístic', desc: 'Ritme melòdic amb variació aleatòria', category: 'music',
+    blocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="tecla_repeat_forever" x="50" y="50"><statement name="DO"><block type="tecla_probability"><value name="PERCENT"><shadow type="math_number"><field name="NUM">80</field></shadow></value><statement name="DO"><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">95</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value></block></statement><next><block type="tecla_wait"><value name="TIME"><shadow type="math_number"><field name="NUM">0.25</field></shadow></value><next><block type="tecla_probability"><value name="PERCENT"><shadow type="math_number"><field name="NUM">55</field></shadow></value><statement name="DO"><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">64</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">80</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value></block></statement><next><block type="tecla_wait"><value name="TIME"><shadow type="math_number"><field name="NUM">0.25</field></shadow></value><next><block type="tecla_play_note"><value name="NOTE"><shadow type="math_number"><field name="NUM">67</field></shadow></value><value name="VELOCITY"><shadow type="math_number"><field name="NUM">88</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value><next><block type="tecla_wait"><value name="TIME"><shadow type="math_number"><field name="NUM">0.25</field></shadow></value></block></next></block></next></block></next></block></next></block></next></block></statement></block></xml>` },
+  { name: 'Play / Pausa', desc: 'Prem la tecla de play/pausa del reproductor de música', category: 'util',
+    blocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="tecla_media" x="50" y="50"><field name="ACTION">PLAY_PAUSE</field></block></xml>` },
+  { name: 'Pista Anterior / Següent', desc: 'Salta a la pista anterior o la següent', category: 'util',
+    blocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="tecla_media" x="50" y="50"><field name="ACTION">SCAN_PREVIOUS_TRACK</field><next><block type="tecla_media"><field name="ACTION">SCAN_NEXT_TRACK</field></block></next></block></xml>` },
+  { name: 'Dreceres Edició', desc: 'Ctrl+Z (Desfer), Ctrl+C (Copiar), Ctrl+V (Enganxar)', category: 'util',
+    blocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="tecla_key_combo" x="50" y="50"><field name="MODIFIER">CONTROL</field><field name="KEY">Z</field><next><block type="tecla_key_combo"><field name="MODIFIER">CONTROL</field><field name="KEY">C</field><next><block type="tecla_key_combo"><field name="MODIFIER">CONTROL</field><field name="KEY">V</field></block></next></block></next></block></xml>` },
+  { name: 'Guardar i Exportar', desc: 'Ctrl+S (Guardar) seguit de Ctrl+Shift+S (Guardar com)', category: 'util',
+    blocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="tecla_key_combo" x="50" y="50"><field name="MODIFIER">CONTROL</field><field name="KEY">S</field><next><block type="tecla_key_combo"><field name="MODIFIER">CTRL_SHIFT</field><field name="KEY">S</field></block></next></block></xml>` },
+  { name: 'Finestra Nova / Tanca', desc: 'Ctrl+N (Nova finestra) o Ctrl+W (Tancar pestanya)', category: 'util',
+    blocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="tecla_key_combo" x="50" y="50"><field name="MODIFIER">CONTROL</field><field name="KEY">T</field><next><block type="tecla_key_combo"><field name="MODIFIER">CONTROL</field><field name="KEY">W</field></block></next></block></xml>` },
+  { name: 'Escriure Text', desc: 'Escriu un text predefinit com si fos un teclat', category: 'util',
+    blocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="tecla_type_text" x="50" y="50"><field name="TEXT">Hola, TECLA!</field></block></xml>` }
 ];
 let _exSelected = new Set();
 
 function _renderExamplesSection() {
   const container = document.getElementById('proj-examples-section');
   if (!container) return;
+  const musicExs  = _BUILTIN_EXAMPLES.filter(e => !e.category || e.category === 'music');
+  const utilExs   = _BUILTIN_EXAMPLES.filter(e => e.category === 'util');
+  const makeChecklist = (exs, listId) => {
+    const div = document.createElement('div');
+    div.className = 'checklist';
+    div.id = listId;
+    exs.forEach(ex => {
+      const inLib = projectsLib.some(p => p.name === ex.name);
+      const label = document.createElement('label');
+      label.className = 'cb';
+      label.innerHTML = `<input type="checkbox"${inLib ? ' checked disabled' : ''}><span style="${inLib ? 'color:var(--text3)' : ''}" title="${ex.desc}">${ex.name}</span>`;
+      if (!inLib) {
+        label.querySelector('input').addEventListener('change', e => {
+          if (!e.target.checked) return;
+          projectsLib.push({ id: _projId(), name: ex.name, source: 'builtin',
+            timestamp: new Date().toISOString(),
+            tblocks: { name: ex.name, version: '1.0', format: 'legacy', blocks: ex.blocks } });
+          _saveProjectsLib();
+          renderProjectsPanel();
+          toast(`✓ "${ex.name}" afegit a la biblioteca`, 'ok');
+        });
+      }
+      div.appendChild(label);
+    });
+    return div;
+  };
   container.innerHTML = `
     <div class="proj-section">
-      <div class="proj-sect-head">
-        <span class="proj-sect-title">Exemples disponibles</span>
-      </div>
-      <p class="proj-sect-desc">Marca per afegir directament a la biblioteca.</p>
-      <div class="checklist" id="ex-checklist"></div>
+      <div class="proj-sect-head"><span class="proj-sect-title">${t('proj.examples')}</span></div>
+      <p class="proj-sect-desc">${t('proj.exdesc')}</p>
+      <div class="proj-cat-label">${t('proj.cat.music')}</div>
+      <div id="ex-checklist-music"></div>
+      <div class="proj-cat-label" style="margin-top:8px">${t('proj.cat.util')}</div>
+      <div id="ex-checklist-util"></div>
     </div>`;
-  const checklist = container.querySelector('#ex-checklist');
-  _BUILTIN_EXAMPLES.forEach(ex => {
-    const inLib = projectsLib.some(p => p.name === ex.name);
-    const label = document.createElement('label');
-    label.className = 'cb';
-    label.innerHTML = `<input type="checkbox"${inLib ? ' checked disabled' : ''}><span style="${inLib ? 'color:var(--text3)' : ''}" title="${ex.desc}">${ex.name}</span>`;
-    if (!inLib) {
-      label.querySelector('input').addEventListener('change', e => {
-        if (!e.target.checked) return;
-        projectsLib.push({ id: _projId(), name: ex.name, source: 'builtin',
-          timestamp: new Date().toISOString(),
-          tblocks: { name: ex.name, version: '1.0', format: 'legacy', blocks: ex.blocks } });
-        _saveProjectsLib();
-        renderProjectsPanel();
-        toast(`✓ "${ex.name}" afegit a la biblioteca`, 'ok');
-      });
-    }
-    checklist.appendChild(label);
-  });
+  container.querySelector('#ex-checklist-music').replaceWith(makeChecklist(musicExs, 'ex-checklist-music'));
+  container.querySelector('#ex-checklist-util').replaceWith(makeChecklist(utilExs, 'ex-checklist-util'));
 }
 
 function _addExamplesToLib() {
@@ -1020,30 +1174,30 @@ function renderProjectsPanel() {
   _renderExamplesSection();
   const list = document.getElementById('proj-list');
   if (!list) return;
-  if (projectsLib.length === 0) {
-    list.innerHTML = `<div class="proj-empty"><div class="proj-empty-icon">📂</div><div>Afegeix exemples de dalt o importa fitxers <strong>.tblocks</strong>.</div></div>`;
+  if (list.innerHTML === '' && projectsLib.length === 0) {
+    list.innerHTML = `<div class="proj-empty"><div class="proj-empty-icon">📂</div><div>${t('proj.empty')}</div></div>`;
     return;
   }
   list.innerHTML = '';
-  const srcLabel = { import: 'Importat', save: 'Guardat', builtin: 'Exemple' };
   projectsLib.forEach(proj => {
     const card = document.createElement('div');
     card.className = 'proj-card';
     const col = _projColor(proj.name);
     const isAssignOpen = _projAssignOpen === proj.id;
+    const srcLbl = t('proj.src.' + (proj.source || 'save'));
     card.innerHTML = `
       <div class="proj-dot" style="background:${col}"></div>
       <div class="proj-info">
         <div class="proj-name">${proj.name}</div>
-        <div class="proj-meta">${srcLabel[proj.source] || 'Guardat'} · ${_projDate(proj.timestamp)}</div>
+        <div class="proj-meta">${srcLbl} · ${_projDate(proj.timestamp)}</div>
       </div>
       <div class="proj-actions">
-        <button class="btn" data-act="open" title="Carregar al workspace">⇑ Obrir</button>
-        <button class="btn" data-act="assign" title="Assignar a un botó del dispositiu" style="color:var(--accent)">→ Botó</button>
-        <button class="btn btn-danger" data-act="del" title="Eliminar">✕</button>
+        <button class="btn" data-act="open" title="${t('dev.load')}">${t('proj.open')}</button>
+        <button class="btn" data-act="assign" title="${t('proj.assignto')}" style="color:var(--accent)">${t('proj.assign')}</button>
+        <button class="btn btn-danger" data-act="del" title="✕">✕</button>
       </div>
       ${isAssignOpen ? `<div class="proj-assign-overlay" style="width:100%;margin-top:0">
-        <div class="proj-assign-title">Assignar a botó:</div>
+        <div class="proj-assign-title">${t('proj.assignto')}</div>
         <div class="proj-btn-picker" id="picker-${proj.id}"></div>
       </div>` : ''}`;
     card.style.flexWrap = 'wrap';
@@ -1164,9 +1318,9 @@ function _defaultDeviceCfg() {
       id: i + 1, name: `Tecla ${i + 1}`, project: null
     })),
     pots: [
-      { id: 0, name: 'X', cc: 74, channel: 1, min: 0, max: 127 },
-      { id: 1, name: 'Y', cc: 71, channel: 1, min: 0, max: 127 },
-      { id: 2, name: 'Z', cc:  7, channel: 1, min: 0, max: 127 }
+      { id: 0, name: 'X', cc: 74, channel: 1, min: 0, max: 127, fnType: 'midi' },
+      { id: 1, name: 'Y', cc: 71, channel: 1, min: 0, max: 127, fnType: 'midi' },
+      { id: 2, name: 'Z', cc:  7, channel: 1, min: 0, max: 127, fnType: 'midi' }
     ]
   };
 }
@@ -1219,10 +1373,12 @@ function _renderDCHardware() {
     const sel = _dcSel && _dcSel.type === 'pot' && _dcSel.id === pot.id;
     const w = document.createElement('div');
     w.className = `dev-pot-w${sel ? ' selected' : ''}`;
+    const potFn = pot.fnType || 'midi';
+    const potLbl = potFn === 'midi' ? _ccLabel(pot.cc) : t('dev.mode.' + potFn);
     w.innerHTML = `
       <div class="dev-pot-knob"><div class="dev-pot-indicator"></div></div>
       <span class="dev-pot-lbl">${pot.name}</span>
-      <span class="dev-pot-cc">${_ccLabel(pot.cc)}</span>`;
+      <span class="dev-pot-cc" style="${potFn !== 'midi' ? 'color:var(--accent)' : ''}">${potLbl}</span>`;
     w.addEventListener('click', () => {
       _dcSel = (sel) ? null : { type: 'pot', id: pot.id };
       _renderDCHardware(); _renderDCConfigArea();
@@ -1253,7 +1409,7 @@ function _renderDCConfigArea() {
   const area = document.getElementById('dev-cfg-area');
   if (!area) return;
   if (!_dcSel) {
-    area.innerHTML = `<div class="dev-cfg-hint">← Clica un botó o potenciòmetre per configurar-lo</div>`;
+    area.innerHTML = `<div class="dev-cfg-hint">${t('dev.hint')}</div>`;
     return;
   }
   if (_dcSel.type === 'btn') {
@@ -1262,19 +1418,19 @@ function _renderDCConfigArea() {
     const hp = !!btn.project;
     const libItems = projectsLib.length > 0
       ? projectsLib.map(p => `<div class="dcf-lib-item${btn.project && btn.project.name === p.name ? ' active' : ''}" data-pid="${p.id}">${p.name}</div>`).join('')
-      : `<div style="font-size:11px;color:var(--text3);padding:4px 0">Cap projecte a la biblioteca</div>`;
+      : `<div style="font-size:11px;color:var(--text3);padding:4px 0">${t('dev.nolib')}</div>`;
     area.innerHTML = `
-      <div class="dev-cfg-head">Botó <span>B${btn.id}</span></div>
+      <div class="dev-cfg-head">${t('dev.button')} <span>B${btn.id}</span></div>
       <div class="dev-cfg-name-row">
-        <input id="dcf-bname" type="text" value="${btn.name.replace(/"/g,'&quot;')}" maxlength="16" placeholder="Nom del botó" style="width:100%;font-size:11px">
+        <input id="dcf-bname" type="text" value="${btn.name.replace(/"/g,'&quot;')}" maxlength="16" placeholder="${t('dev.label')}" style="width:100%;font-size:11px">
       </div>
       <div class="dev-cfg-proj-info ${hp ? 'has-proj' : 'no-proj'}">
-        ${hp ? `📄 ${btn.project.name}` : '— Cap projecte assignat —'}
+        ${hp ? `📄 ${btn.project.name}` : t('dev.noproj')}
       </div>
-      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:6px 0 3px">Tria de la biblioteca</div>
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:6px 0 3px">${t('dev.libpick')}</div>
       <div class="dcf-lib-picker">${libItems}</div>
       <div class="dev-cfg-btns">
-        ${hp ? `<button class="btn" id="dcf-load">⇑ Carregar al workspace</button><button class="btn btn-danger" id="dcf-clear">✕ Netejar</button>` : ''}
+        ${hp ? `<button class="btn" id="dcf-load">${t('dev.load')}</button><button class="btn btn-danger" id="dcf-clear">${t('dev.clear')}</button>` : ''}
       </div>`;
     area.querySelector('#dcf-bname').addEventListener('change', e => {
       btn.name = e.target.value.trim() || `Botó ${btn.id}`; _saveDC(); _renderDCHardware();
@@ -1293,29 +1449,48 @@ function _renderDCConfigArea() {
   } else {
     const pot = deviceConfig.pots.find(p => p.id === _dcSel.id);
     if (!pot) return;
-    area.innerHTML = `
-      <div class="dev-cfg-head">Potenciòmetre <span>${pot.name}</span></div>
+    const fn = pot.fnType || 'midi';
+    const isMidi = fn === 'midi';
+    const midiFields = isMidi ? `
       <div class="dev-pot-fields">
-        <div class="dev-pot-field"><label>CC</label><input type="number" id="dcf-pcc" value="${pot.cc}" min="0" max="127"></div>
-        <div class="dev-pot-field"><label>Mínim</label><input type="number" id="dcf-pmin" value="${pot.min}" min="0" max="127"></div>
-        <div class="dev-pot-field"><label>Màxim</label><input type="number" id="dcf-pmax" value="${pot.max}" min="0" max="127"></div>
-        <div class="dev-pot-field"><label>Canal</label><input type="number" id="dcf-pch" value="${pot.channel}" min="1" max="16"></div>
+        <div class="dev-pot-field"><label>${t('dev.cc')}</label><input type="number" id="dcf-pcc" value="${pot.cc}" min="0" max="127"></div>
+        <div class="dev-pot-field"><label>${t('dev.min')}</label><input type="number" id="dcf-pmin" value="${pot.min}" min="0" max="127"></div>
+        <div class="dev-pot-field"><label>${t('dev.max')}</label><input type="number" id="dcf-pmax" value="${pot.max}" min="0" max="127"></div>
+        <div class="dev-pot-field"><label>${t('dev.chan')}</label><input type="number" id="dcf-pch" value="${pot.channel}" min="1" max="16"></div>
       </div>
-      <div style="font-size:10px;color:var(--text3);margin-bottom:8px">${_ccLabel(pot.cc)}</div>
+      <div id="dcf-cclbl" style="font-size:10px;color:var(--text3);margin-bottom:8px">${_ccLabel(pot.cc)}</div>` : 
+      `<div style="font-size:11px;color:var(--text3);padding:4px 0 8px">${t('dev.mode.' + fn)} — ${fn==='hid_vol'?'Controla el volum del sistema':fn==='hid_bright'?'Controla la brillantor de la pantalla':'Controla el scroll del ratolí'}</div>`;
+    area.innerHTML = `
+      <div class="dev-cfg-head">${t('dev.pot')} <span>${pot.name}</span></div>
+      <div class="dev-cfg-name-row" style="margin-bottom:8px">
+        <label style="font-size:10px;color:var(--text3);min-width:38px">${t('dev.mode')}</label>
+        <select id="dcf-pfn" style="flex:1;padding:5px 6px;font-size:11px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text)">
+          <option value="midi"${fn==='midi'?' selected':''}>${t('dev.mode.midi')}</option>
+          <option value="hid_vol"${fn==='hid_vol'?' selected':''}>${t('dev.mode.hid_vol')}</option>
+          <option value="hid_bright"${fn==='hid_bright'?' selected':''}>${t('dev.mode.hid_bright')}</option>
+          <option value="hid_scroll"${fn==='hid_scroll'?' selected':''}>${t('dev.mode.hid_scroll')}</option>
+        </select>
+      </div>
+      ${midiFields}
       <div class="dev-cfg-name-row">
-        <input id="dcf-pname" type="text" value="${pot.name}" maxlength="8" placeholder="Etiqueta" style="width:100%;font-size:11px">
+        <input id="dcf-pname" type="text" value="${pot.name}" maxlength="8" placeholder="${t('dev.label')}" style="width:100%;font-size:11px">
       </div>`;
-    const upd = () => {
-      const cc = parseInt(area.querySelector('#dcf-pcc').value) || 0;
-      pot.cc      = cc;
-      pot.min     = parseInt(area.querySelector('#dcf-pmin').value) || 0;
-      pot.max     = parseInt(area.querySelector('#dcf-pmax').value) || 127;
-      pot.channel = parseInt(area.querySelector('#dcf-pch').value)  || 1;
-      const fn = area.querySelector('div[style*="font-size:10px"]');
-      if (fn) fn.textContent = _ccLabel(cc);
-      _saveDC(); _renderDCHardware();
-    };
-    ['#dcf-pcc','#dcf-pmin','#dcf-pmax','#dcf-pch'].forEach(id => area.querySelector(id)?.addEventListener('change', upd));
+    area.querySelector('#dcf-pfn').addEventListener('change', e => {
+      pot.fnType = e.target.value; _saveDC(); _renderDCConfigArea(); _renderDCHardware();
+    });
+    if (isMidi) {
+      const upd = () => {
+        const cc = parseInt(area.querySelector('#dcf-pcc').value) || 0;
+        pot.cc      = cc;
+        pot.min     = parseInt(area.querySelector('#dcf-pmin').value) || 0;
+        pot.max     = parseInt(area.querySelector('#dcf-pmax').value) || 127;
+        pot.channel = parseInt(area.querySelector('#dcf-pch').value)  || 1;
+        const lbl = area.querySelector('#dcf-cclbl');
+        if (lbl) lbl.textContent = _ccLabel(cc);
+        _saveDC(); _renderDCHardware();
+      };
+      ['#dcf-pcc','#dcf-pmin','#dcf-pmax','#dcf-pch'].forEach(id => area.querySelector(id)?.addEventListener('change', upd));
+    }
     area.querySelector('#dcf-pname').addEventListener('change', e => {
       pot.name = e.target.value.trim() || pot.name; _saveDC(); _renderDCHardware();
     });
@@ -1393,14 +1568,27 @@ function _buildDeviceCode() {
   c += `_btns = [digitalio.DigitalInOut(p) for p in _BTN_PINS]\n`;
   c += `for _b in _btns:\n    _b.direction = digitalio.Direction.INPUT\n    _b.pull = digitalio.Pull.UP\n\n`;
 
+  // HID imports for pots (if not already added for buttons)
+  const _needsHID = cfg.pots.some(p => (p.fnType||'midi') !== 'midi');
+  const _needsMouse = cfg.pots.some(p => (p.fnType||'midi') === 'hid_scroll');
+  if (_needsHID && !(_allCode.includes('_keyboard') || _allCode.includes('_cc.'))) {
+    c += `import usb_hid\n`;
+    c += `from adafruit_hid.consumer_control import ConsumerControl\n`;
+    c += `from adafruit_hid.consumer_control_code import ConsumerControlCode\n`;
+    c += `_cc = ConsumerControl(usb_hid.devices)\n`;
+  } else if (_needsHID && !_allCode.includes('_cc.')) {
+    c += `# _cc already initialised above\n`;
+  }
+  if (_needsMouse) {
+    c += `from adafruit_hid.mouse import Mouse\n`;
+    c += `_mouse = Mouse(usb_hid.devices)\n`;
+  }
+  if (_needsHID || _needsMouse) c += `\n`;
+
   // Pots
   c += `# Potenciòmetres\n`;
   c += `_POT_PINS = [board.A0, board.A1, board.A2]\n`;
-  c += `_pots = [analogio.AnalogIn(p) for p in _POT_PINS]\n`;
-  c += `_POT_CC  = [${cfg.pots.map(p=>p.cc).join(', ')}]\n`;
-  c += `_POT_CH  = [${cfg.pots.map(p=>p.channel-1).join(', ')}]\n`;
-  c += `_POT_MIN = [${cfg.pots.map(p=>p.min).join(', ')}]\n`;
-  c += `_POT_MAX = [${cfg.pots.map(p=>p.max).join(', ')}]\n\n`;
+  c += `_pots = [analogio.AnalogIn(p) for p in _POT_PINS]\n\n`;
 
   // Project functions
   cfg.buttons.forEach((btn, i) => {
@@ -1426,11 +1614,34 @@ function _buildDeviceCode() {
   c += `        s = _btns[i].value\n`;
   c += `        if not s and _prev[i]: _PROJECTS[i]()\n`;
   c += `        _prev[i] = s\n`;
-  c += `    for i in range(3):\n`;
-  c += `        v = _rpot(_pots[i], _POT_MIN[i], _POT_MAX[i])\n`;
-  c += `        if abs(v - _ppot[i]) > 1:\n`;
-  c += `            adafruit_midi.MIDI(midi_out=usb_midi.ports[1], out_channel=_POT_CH[i]).send(ControlChange(_POT_CC[i], max(0,min(127,v))))\n`;
-  c += `            _ppot[i] = v\n`;
+  cfg.pots.forEach((pot, i) => {
+    const pf = pot.fnType || 'midi';
+    c += `    _rv${i} = int(_pots[${i}].value >> 9)\n`;
+    if (pf === 'midi') {
+      const range = Math.max(1, (pot.max||127) - (pot.min||0));
+      c += `    if abs(_rv${i} - _ppot[${i}]) > 1:\n`;
+      c += `        adafruit_midi.MIDI(midi_out=usb_midi.ports[1], out_channel=${(pot.channel||1)-1}).send(ControlChange(${pot.cc||0}, max(0, min(127, ${pot.min||0} + int(_rv${i} * ${range} / 127)))))\n`;
+      c += `        _ppot[${i}] = _rv${i}\n`;
+    } else if (pf === 'hid_vol') {
+      c += `    if _rv${i} > _ppot[${i}] + 4:\n`;
+      c += `        _cc.send(ConsumerControlCode.VOLUME_INCREMENT)\n`;
+      c += `        _ppot[${i}] = _rv${i}\n`;
+      c += `    elif _rv${i} < _ppot[${i}] - 4:\n`;
+      c += `        _cc.send(ConsumerControlCode.VOLUME_DECREMENT)\n`;
+      c += `        _ppot[${i}] = _rv${i}\n`;
+    } else if (pf === 'hid_bright') {
+      c += `    if _rv${i} > _ppot[${i}] + 4:\n`;
+      c += `        _cc.send(ConsumerControlCode.BRIGHTNESS_INCREMENT)\n`;
+      c += `        _ppot[${i}] = _rv${i}\n`;
+      c += `    elif _rv${i} < _ppot[${i}] - 4:\n`;
+      c += `        _cc.send(ConsumerControlCode.BRIGHTNESS_DECREMENT)\n`;
+      c += `        _ppot[${i}] = _rv${i}\n`;
+    } else if (pf === 'hid_scroll') {
+      c += `    if abs(_rv${i} - _ppot[${i}]) > 8:\n`;
+      c += `        _mouse.move(wheel=(_rv${i} - _ppot[${i}]) // 16)\n`;
+      c += `        _ppot[${i}] = _rv${i}\n`;
+    }
+  });
   c += `    time.sleep(0.01)\n`;
   return c;
 }

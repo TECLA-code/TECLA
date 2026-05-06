@@ -355,6 +355,7 @@
     .dcf-lib-item { flex-shrink: 0; padding: 6px 9px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); font-size: 11.5px; color: var(--text); cursor: pointer; transition: background .1s, border-color .1s; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .dcf-lib-item:hover { background: var(--surface3); border-color: var(--accent); color: var(--accent); }
     .dcf-lib-item.active { border-color: var(--accent); color: var(--accent); background: rgba(74,128,240,.1); }
+    .proj-cat-label { font-size: 10px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .07em; padding: 2px 0 4px; margin-top: 4px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
 
     /* ── Theme body classes ──────────────────────────────────── */
     body.theme-light { --bg:#f2f2f2; --surface:#ffffff; --surface2:#ebebeb; --surface3:#e0e0e0; --accent:#4a80f0; --accent-d:#2d5cd9; --border:rgba(0,0,0,.1); --border-h:rgba(0,0,0,.2); --text:#111; --text2:rgba(0,0,0,.5); --text3:rgba(0,0,0,.3); }
@@ -445,11 +446,12 @@
         <div id="panel-simulator" class="panel-content">
           <div class="midi-bar">
             <span class="dot" id="midi-status-dot" style="background:var(--border-h)"></span>
-            <span id="midi-status-text">MIDI: desconnectat</span>
+            <span id="midi-status-text" data-i18n="midi.disconn">MIDI: desconnectat</span>
             <select id="midi-port-select"><option value="">— port MIDI —</option></select>
             <button class="btn" id="btn-midi-connect">MIDI</button>
           </div>
           <span class="sim-label" data-i18n="sim.vis">Visualitzador</span>
+          <span class="sim-label" style="display:none" id="sim-label-midi"></span>
           <div class="sim-section">
             <div class="sim-canvas-wrap">
               <canvas id="simulatorCanvas" width="388" height="200"></canvas>
@@ -468,40 +470,40 @@
         <!-- Guide panel -->
         <div id="panel-guide" class="panel-content">
           <div class="guide-section">
-            <div class="guide-h1">1. Primers passos</div>
-            <p class="guide-li">Connecta el TECLA a l'ordinador via <strong>USB-C</strong>.</p>
-            <p class="guide-li">Si és la primera vegada, instal·la CircuitPython (pestanya <em>Firmware</em> → Pas 1).</p>
-            <p class="guide-li">Instal·la la carpeta <strong>adafruit_midi</strong> a <strong>CIRCUITPY/lib/</strong> (Pas 2).</p>
-            <div class="guide-note">El TECLA funciona com a interfície MIDI USB. No cal cap driver addicional a macOS i Linux.</div>
+            <div class="guide-h1" data-i18n="guide.t1">1. Primers passos</div>
+            <p class="guide-li" data-i18n="guide.p1a">Connecta el TECLA a l'ordinador via USB-C.</p>
+            <p class="guide-li" data-i18n="guide.p1b">Si és la primera vegada, instal·la CircuitPython (pestanya Firmware → Pas 1).</p>
+            <p class="guide-li" data-i18n="guide.p1c">Instal·la la carpeta adafruit_midi a CIRCUITPY/lib/ (Pas 2).</p>
+            <div class="guide-note" data-i18n="guide.n1">El TECLA funciona com a interfície MIDI USB. No cal cap driver addicional a macOS i Linux.</div>
           </div>
           <div class="guide-section">
-            <div class="guide-h1">2. Programar amb blocs</div>
-            <p class="guide-li">Arrossega blocs de la caixa d'eines a l'espai de treball.</p>
-            <p class="guide-li">Encaixa els blocs per crear el teu programa musical.</p>
-            <p class="guide-li">El codi <strong>CircuitPython</strong> es genera automàticament a la pestanya <em>Codi</em>.</p>
-            <div class="guide-h2">Categories de blocs</div>
-            <p class="guide-li"><strong>Música Bàsica:</strong> Notes MIDI, acords, escales</p>
-            <p class="guide-li"><strong>Síntesi Avançada:</strong> Oscil·ladors, LFO, envelops</p>
-            <p class="guide-li"><strong>Control Hardware:</strong> Botons i potenciòmetres del TECLA</p>
-            <p class="guide-li"><strong>Efectes:</strong> Delay, reverb, filtres</p>
-            <p class="guide-li"><strong>GPIO:</strong> Pins digitals, PWM, analògics</p>
-            <p class="guide-li"><strong>Generatiu:</strong> Probabilitat, LFO per software, quantització</p>
-            <p class="guide-li"><strong>Scratch:</strong> Events, missatges, control de flux</p>
+            <div class="guide-h1" data-i18n="guide.t2">2. Programar amb blocs</div>
+            <p class="guide-li" data-i18n="guide.p2a">Arrossega blocs de la caixa d'eines a l'espai de treball.</p>
+            <p class="guide-li" data-i18n="guide.p2b">Encaixa els blocs per crear el teu programa.</p>
+            <p class="guide-li" data-i18n="guide.p2c">El codi CircuitPython es genera automàticament a la pestanya Codi.</p>
+            <div class="guide-h2" data-i18n="guide.t2b">Categories de blocs</div>
+            <p class="guide-li" data-i18n="guide.cat1">Música Bàsica: Notes MIDI, acords, escales</p>
+            <p class="guide-li" data-i18n="guide.cat2">Síntesi Avançada: Oscil·ladors, LFO, envelops</p>
+            <p class="guide-li" data-i18n="guide.cat3">Control Hardware: Botons i potenciòmetres del TECLA</p>
+            <p class="guide-li" data-i18n="guide.cat4">Efectes: Delay, reverb, filtres</p>
+            <p class="guide-li" data-i18n="guide.cat5">GPIO: Pins digitals, PWM, analògics</p>
+            <p class="guide-li" data-i18n="guide.cat6">Generatiu: Probabilitat, LFO per software, quantització</p>
+            <p class="guide-li" data-i18n="guide.cat7">Accions: Teclat USB, dreceres, media</p>
           </div>
           <div class="guide-section">
-            <div class="guide-h1">3. Pujar al dispositiu</div>
-            <p class="guide-li">Prem <strong>Connectar</strong> al header i selecciona el volum <strong>CIRCUITPY</strong>.</p>
-            <p class="guide-li">Un cop connectat, prem <strong>Pujar</strong> per copiar el codi al dispositiu.</p>
-            <p class="guide-li">El TECLA s'executa automàticament en reiniciar-se.</p>
-            <div class="guide-note">Requereix Chrome o Edge (File System Access API). A Safari, exporta el <strong>.py</strong> i copia'l manualment a CIRCUITPY.</div>
+            <div class="guide-h1" data-i18n="guide.t3">3. Pujar al dispositiu</div>
+            <p class="guide-li" data-i18n="guide.p3a">Prem Connectar al header i selecciona el volum CIRCUITPY.</p>
+            <p class="guide-li" data-i18n="guide.p3b">Un cop connectat, prem Pujar per copiar el codi al dispositiu.</p>
+            <p class="guide-li" data-i18n="guide.p3c">El TECLA s'executa automàticament en reiniciar-se.</p>
+            <div class="guide-note" data-i18n="guide.n3">Requereix Chrome o Edge (File System Access API). A Safari, exporta el .py i copia'l manualment a CIRCUITPY.</div>
           </div>
           <div class="guide-section">
-            <div class="guide-h1">Exemples</div>
+            <div class="guide-h1" data-i18n="guide.t4">Exemples</div>
             <div class="ex-btns">
-              <button class="btn" id="btn-ex-melody">Melodia</button>
-              <button class="btn" id="btn-ex-sequencer">Seqüenciador</button>
-              <button class="btn" id="btn-ex-buttons">Botons</button>
-              <button class="btn" id="btn-ex-complex">Sintetitzador</button>
+              <button class="btn" id="btn-ex-melody" data-i18n="ex.melody">Melodia</button>
+              <button class="btn" id="btn-ex-sequencer" data-i18n="ex.seq">Seqüenciador</button>
+              <button class="btn" id="btn-ex-buttons" data-i18n="ex.btns">Botons</button>
+              <button class="btn" id="btn-ex-complex" data-i18n="ex.synth">Sintetitzador</button>
             </div>
           </div>
         </div>
@@ -509,32 +511,32 @@
         <!-- Firmware panel -->
         <div id="panel-firmware" class="panel-content">
           <div class="status-card">
-            <div class="card-title">Estat del dispositiu</div>
-            <div class="status-row"><span>Dispositiu</span><span class="status-val" id="fw-device-name">—</span></div>
-            <div class="status-row"><span>Volum CIRCUITPY</span><span class="status-val" id="fw-device-status">desconnectat</span></div>
+            <div class="card-title" data-i18n="fw.status">Estat del dispositiu</div>
+            <div class="status-row"><span data-i18n="fw.device">Dispositiu</span><span class="status-val" id="fw-device-name">—</span></div>
+            <div class="status-row"><span data-i18n="fw.circuitpy">Volum CIRCUITPY</span><span class="status-val" id="fw-device-status" data-i18n-id="fw.disconn">desconnectat</span></div>
           </div>
-          <button class="btn btn-success" id="btn-fw-upload" style="width:100%;margin-bottom:14px;justify-content:center">Pujar codi al dispositiu</button>
+          <button class="btn btn-success" id="btn-fw-upload" style="width:100%;margin-bottom:14px;justify-content:center" data-i18n="fw.push">Pujar codi al dispositiu</button>
 
           <div class="fw-step">
-            <div class="fw-step-title"><span class="fw-step-num">1</span>Instal·lar CircuitPython</div>
+            <div class="fw-step-title"><span class="fw-step-num">1</span><span data-i18n="fw.t1">Instal·lar CircuitPython</span></div>
             <p class="fw-step-desc">Entra al mode bootloader mantenint <strong>BOOTSEL</strong> mentre connectes el USB-C. El dispositiu apareixerà com <strong>RPI-RP2</strong>.</p>
             <p class="fw-step-sub">Obre el Finder → arrossega el fitxer <strong>.uf2</strong> al volum <strong>RPI-RP2</strong>. El dispositiu es reiniciarà com <strong>CIRCUITPY</strong>.</p>
             <a class="dl-link" href="https://circuitpython.org/board/raspberry_pi_pico/" target="_blank">
               <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M4 7l4 4 4-4"/><rect x="2" y="11" width="12" height="2" rx="1"/></svg>
-              Descarregar CircuitPython (.uf2)
+              <span data-i18n="fw.dl.fw">Descarregar CircuitPython (.uf2)</span>
             </a>
           </div>
           <div class="fw-step">
-            <div class="fw-step-title"><span class="fw-step-num">2</span>Instal·lar les llibreries</div>
+            <div class="fw-step-title"><span class="fw-step-num">2</span><span data-i18n="fw.t2">Instal·lar les llibreries</span></div>
             <p class="fw-step-desc">Descarrega el <strong>bundle de llibreries</strong> de CircuitPython i copia la carpeta <strong>adafruit_midi</strong> dins <strong>CIRCUITPY/lib/</strong>.</p>
             <p class="fw-step-sub">Cerca <em>adafruit-circuitpython-bundle</em> → descomprimeix → copia <strong>adafruit_midi/</strong> a <strong>CIRCUITPY/lib/</strong>.</p>
             <a class="dl-link" href="https://github.com/adafruit/Adafruit_CircuitPython_Bundle/releases/latest" target="_blank">
               <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M4 7l4 4 4-4"/><rect x="2" y="11" width="12" height="2" rx="1"/></svg>
-              Descarregar Bundle de Llibreries
+              <span data-i18n="fw.dl.lib">Descarregar Bundle de Llibreries</span>
             </a>
           </div>
           <div class="fw-step">
-            <div class="fw-step-title"><span class="fw-step-num">3</span>Pujar el codi del projecte</div>
+            <div class="fw-step-title"><span class="fw-step-num">3</span><span data-i18n="fw.t3">Pujar el codi del projecte</span></div>
             <p class="fw-step-desc">Un cop CIRCUITPY és visible, connecta el dispositiu amb el botó <strong>Connectar</strong> del header i prem <strong>Pujar</strong> per copiar el codi.</p>
             <p class="fw-step-sub">El fitxer <strong>code.py</strong> es copia automàticament i el TECLA s'executa de nou.</p>
           </div>
@@ -543,7 +545,7 @@
         <!-- Theme panel -->
         <div id="panel-theme" class="panel-content">
           <div class="card">
-            <div class="card-title">Aparença</div>
+            <div class="card-title" data-i18n="theme.title">Aparença</div>
             <div class="theme-cards" id="theme-cards">
               <div class="theme-card active" data-theme="dark"><div class="theme-swatches"><span style="background:#0c0c0c"></span><span style="background:#141414"></span><span style="background:#1c1c1c"></span><span style="background:#4a80f0"></span></div><div class="theme-card-name">Fosc</div></div>
               <div class="theme-card" data-theme="light"><div class="theme-swatches"><span style="background:#f2f2f2"></span><span style="background:#fff"></span><span style="background:#ebebeb"></span><span style="background:#4a80f0"></span></div><div class="theme-card-name">Clar</div></div>
@@ -564,16 +566,16 @@
               <div class="theme-card" data-theme="sand"><div class="theme-swatches"><span style="background:#fef7e8"></span><span style="background:#fffcf2"></span><span style="background:#fdefc5"></span><span style="background:#b45309"></span></div><div class="theme-card-name">Sorra</div></div>
             </div>
             <div style="border-top:1px solid var(--border);margin:20px 0 16px;position:relative">
-              <span style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--surface2);padding:0 12px;font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase">Editor de temes</span>
+              <span style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--surface2);padding:0 12px;font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase" data-i18n="theme.editor">Editor de temes</span>
             </div>
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
               <div id="ct-mode-indicator" style="font-size:11px;color:var(--text3);font-weight:500"></div>
-              <button class="btn" id="btn-new-theme" style="font-size:11px">+ Nou tema</button>
+              <button class="btn" id="btn-new-theme" style="font-size:11px" data-i18n="theme.newbtn">+ Nou tema</button>
             </div>
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-              <label style="font-size:12px;color:var(--text2);white-space:nowrap;min-width:36px">Nom:</label>
+              <label style="font-size:12px;color:var(--text2);white-space:nowrap;min-width:36px" data-i18n="theme.name">Nom:</label>
               <input type="text" id="ct-name" placeholder="Ex: El meu tema">
-              <button class="btn" id="btn-random-theme">&#127922; Aleatori</button>
+              <button class="btn" id="btn-random-theme" data-i18n="theme.random">🎲 Aleatori</button>
             </div>
             <div class="custom-theme-grid">
               <div class="ct-field"><input type="color" id="ct-bg" value="#0c0c0c"><label>Fons</label></div>
@@ -583,8 +585,8 @@
               <div class="ct-field"><input type="color" id="ct-accent" value="#4a80f0"><label>Accent</label></div>
             </div>
             <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
-              <button class="btn btn-primary" id="btn-save-custom-theme">Desa i aplica</button>
-              <button class="btn" id="btn-reset-custom-theme">Restablir</button>
+              <button class="btn btn-primary" id="btn-save-custom-theme" data-i18n="theme.save">Desa i aplica</button>
+              <button class="btn" id="btn-reset-custom-theme" data-i18n="theme.reset">Restablir</button>
             </div>
           </div>
         </div>
@@ -617,8 +619,8 @@
             <div class="dev-cfg-hint">← Clica un botó o potenciòmetre per configurar-lo</div>
           </div>
           <div class="dev-export-bar">
-            <button class="btn btn-primary" id="btn-gen-device-code" style="flex:1;justify-content:center">⬇ Generar codi.py</button>
-            <button class="btn btn-success" id="btn-upload-device-code" style="flex:1;justify-content:center" disabled>📤 Pujar</button>
+            <button class="btn btn-primary" id="btn-gen-device-code" style="flex:1;justify-content:center" data-i18n="dev.gencode">⬇ Generar codi.py</button>
+            <button class="btn btn-success" id="btn-upload-device-code" style="flex:1;justify-content:center" disabled data-i18n="dev.pushbtn">📤 Pujar</button>
           </div>
         </div>
 
@@ -637,8 +639,8 @@
   <div class="toast" id="toast"></div>
 
   <!-- Hidden file input for open -->
-  <input type="file" id="file-open-input" accept=".tblocks,.py,.json">
-  <input type="file" id="proj-import-input" accept=".tblocks" multiple>
+  <input type="file" id="file-open-input" accept=".tblocks,.py,.json" style="display:none">
+  <input type="file" id="proj-import-input" accept=".tblocks" multiple style="display:none">
 
   <!-- Toolbox XML -->
   <xml id="toolbox" style="display:none">
