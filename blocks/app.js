@@ -961,6 +961,11 @@ async function execBlock(block) {
       const mAction = block.getFieldValue('ACTION');
       simLog(`🏛️ Media: ${mAction}`, 'sys'); break;
     }
+    case 'tecla_open_app': {
+      const oaName = block.getFieldValue('APP_NAME') || '?';
+      const oaPlat = block.getFieldValue('PLATFORM');
+      simLog(`🚀 Obrir "${oaName}" (${oaPlat === 'mac' ? 'macOS' : 'Windows'})`, 'sys'); break;
+    }
     default: {
       const inner = block.getInputTargetBlock('DO') || block.getInputTargetBlock('BODY') || block.getInputTargetBlock('STACK');
       if (inner) await execChain(inner);
@@ -1027,8 +1032,10 @@ function initVisualizer(ctx) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   function render() {
     if (!simulationRunning) return;
-    ctx.fillStyle = 'rgba(0,0,0,0.12)';
+    const _trailBg = getComputedStyle(document.body).getPropertyValue('--bg').trim() || '#0a0a0a';
+    ctx.save(); ctx.globalAlpha = 0.25; ctx.fillStyle = _trailBg;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
     activeVisuals.forEach((v, i) => {
       ctx.beginPath();
       ctx.arc(v.x, v.y, v.life * 1.5, 0, Math.PI * 2);
@@ -1268,7 +1275,7 @@ function _openProjectFromLib(projId) {
 
 function _deleteProjectFromLib(projId) {
   const proj = projectsLib.find(p => p.id === projId);
-  if (!proj || !confirm(`Eliminar "${proj.name}" de la biblioteca?`)) return;
+  if (!proj) return;
   projectsLib = projectsLib.filter(p => p.id !== projId);
   _saveProjectsLib();
   if (_projAssignOpen === projId) _projAssignOpen = null;
@@ -1781,6 +1788,10 @@ function applyTheme(name, save=true) {
   if (name !== 'custom') { _activeCustomId=null; _renderSavedThemes(); }
   _updateModeIndicator();
   setTimeout(updateBlocklyColors, 0);
+  setTimeout(() => {
+    const cv = document.getElementById('simulatorCanvas');
+    if (cv) { const c = cv.getContext('2d'); c.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg').trim() || '#0a0a0a'; c.fillRect(0,0,cv.width,cv.height); }
+  }, 20);
 }
 
 function updateBlocklyColors() {

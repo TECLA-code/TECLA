@@ -34,3 +34,25 @@ Blockly.Python['tecla_media'] = function(block) {
   const action = block.getFieldValue('ACTION');
   return `_cc.send(ConsumerControlCode.${action})\n`;
 };
+
+Blockly.Python['tecla_open_app'] = function(block) {
+  const app  = (block.getFieldValue('APP_NAME') || 'Spotify').replace(/"/g, '\\"');
+  const plat = block.getFieldValue('PLATFORM');
+  let code = `# Obrir app: ${app}\n`;
+  if (plat === 'mac') {
+    code += `_keyboard.press(Keycode.COMMAND, Keycode.SPACE)\n`;
+    code += `_keyboard.release_all()\n`;
+    code += `time.sleep(0.5)\n`;
+    code += `_layout.write("${app}")\n`;
+    code += `time.sleep(0.3)\n`;
+    code += `_keyboard.send(Keycode.ENTER)\n`;
+  } else {
+    code += `_keyboard.press(Keycode.WINDOWS, Keycode.R)\n`;
+    code += `_keyboard.release_all()\n`;
+    code += `time.sleep(0.4)\n`;
+    code += `_layout.write("${app}")\n`;
+    code += `time.sleep(0.2)\n`;
+    code += `_keyboard.send(Keycode.ENTER)\n`;
+  }
+  return code;
+};

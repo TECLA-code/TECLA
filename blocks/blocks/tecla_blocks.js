@@ -2122,7 +2122,7 @@ Blockly.Blocks['tecla_media'] = {
         ["\u23ee P\u00e0gina anterior","SCAN_PREVIOUS_TRACK"],
         ["\ud83d\udd0a Volum +","VOLUME_INCREMENT"],
         ["\ud83d\udd09 Volum \u2013","VOLUME_DECREMENT"],
-        ["\ud83d\udd07 Silen\u00eci","MUTE"],
+        ["\ud83d\udd07 Silenci","MUTE"],
         ["\ud83c\udf10 Obrir navegador","AL_INTERNET_BROWSER"],
         ["\ud83d\udce7 Obrir correu","AL_EMAIL_READER"],
         ["\ud83d\udd22 Calculadora","AL_CALCULATOR"]
@@ -2131,6 +2131,24 @@ Blockly.Blocks['tecla_media'] = {
     this.setNextStatement(true, null);
     this.setColour('#ff6d00');
     this.setTooltip("Control multimedia: play, pausa, volum, aplicaci\u00f3...");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['tecla_open_app'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("\ud83d\ude80 Obrir app")
+      .appendField(new Blockly.FieldTextInput("Spotify"), "APP_NAME")
+      .appendField(new Blockly.FieldDropdown([
+        ["macOS (Spotlight)", "mac"],
+        ["Windows (Ex\u00e9cuta)", "win"]
+      ]), "PLATFORM");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour('#ff6d00');
+    this.setInputsInline(true);
+    this.setTooltip("Obre una aplicaci\u00f3 al PC: envia Cmd+Espai (macOS) o Win+R (Windows) i escriu el nom de l'app.");
     this.setHelpUrl("");
   }
 };
