@@ -4634,7 +4634,7 @@
 
       try {
         // 1. Load manifest
-        const manifestRes = await fetch('/device_files_manifest.json');
+        const manifestRes = await fetch('./device_files_manifest.json');
         if (!manifestRes.ok) throw new Error('No s\'ha trobat device_files_manifest.json al servidor');
         const manifest = await manifestRes.json();
 
