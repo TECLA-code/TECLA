@@ -4692,7 +4692,7 @@
           _fwMsg(`Copiant ${relPath}…`);
           try {
             const isBinary = relPath.endsWith('.mpy');
-            const res = await fetch(`/device_files/${relPath}`);
+            const res = await fetch(`./device_files/${relPath}`);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const content = isBinary ? await res.arrayBuffer() : await res.text();
             await device.writeFile(relPath, content);
