@@ -794,6 +794,23 @@ async function execBlock(block) {
       for(let i=0;i<rrT&&simulationRunning;i++) if(rrIn) await execChain(rrIn);
       break;
     }
+    case 'tecla_key_press': {
+      const kpKey = block.getFieldValue('KEY');
+      simLog(`⌨️ Tecla: ${kpKey}`, 'sys'); break;
+    }
+    case 'tecla_key_combo': {
+      const kcMod = block.getFieldValue('MODIFIER');
+      const kcKey = block.getFieldValue('KEY');
+      simLog(`⌨️ Drecera: ${kcMod}+${kcKey}`, 'sys'); break;
+    }
+    case 'tecla_type_text': {
+      const ttText = block.getFieldValue('TEXT');
+      simLog(`⌨️ Escrivint: "${ttText}"`, 'sys'); break;
+    }
+    case 'tecla_media': {
+      const mAction = block.getFieldValue('ACTION');
+      simLog(`🏛️ Media: ${mAction}`, 'sys'); break;
+    }
     default: {
       const inner = block.getInputTargetBlock('DO') || block.getInputTargetBlock('BODY') || block.getInputTargetBlock('STACK');
       if (inner) await execChain(inner);
@@ -1356,6 +1373,19 @@ function _buildDeviceCode() {
   c += `from adafruit_midi.note_off import NoteOff\n`;
   c += `from adafruit_midi.control_change import ControlChange\n\n`;
   c += `_midi = adafruit_midi.MIDI(midi_out=usb_midi.ports[1], out_channel=0)\n\n`;
+
+  const _allCode = cfg.buttons.map(b => b.project?.code || '').join('\n');
+  if (_allCode.includes('_keyboard') || _allCode.includes('_layout') || _allCode.includes('_cc.')) {
+    c += `import usb_hid\n`;
+    c += `from adafruit_hid.keyboard import Keyboard\n`;
+    c += `from adafruit_hid.keycode import Keycode\n`;
+    c += `from adafruit_hid.keyboard_layout_us import KeyboardLayoutUS\n`;
+    c += `from adafruit_hid.consumer_control import ConsumerControl\n`;
+    c += `from adafruit_hid.consumer_control_code import ConsumerControlCode\n`;
+    c += `_keyboard = Keyboard(usb_hid.devices)\n`;
+    c += `_layout = KeyboardLayoutUS(_keyboard)\n`;
+    c += `_cc = ConsumerControl(usb_hid.devices)\n\n`;
+  }
 
   // Button GPIO pins (GP0..GP7)
   c += `# Botons (ajusta els pins al teu hardware)\n`;

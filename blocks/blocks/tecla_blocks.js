@@ -1987,6 +1987,105 @@ Blockly.Blocks['tecla_note_name'] = {
   }
 };
 
+// ==================== ACCIONS (HID Teclat / Media) ====================
+
+Blockly.Blocks['tecla_key_press'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("\u2328\ufe0f Tecla")
+      .appendField(new Blockly.FieldDropdown([
+        ["A","A"],["B","B"],["C","C"],["D","D"],["E","E"],["F","F"],["G","G"],
+        ["H","H"],["I","I"],["J","J"],["K","K"],["L","L"],["M","M"],["N","N"],
+        ["O","O"],["P","P"],["Q","Q"],["R","R"],["S","S"],["T","T"],["U","U"],
+        ["V","V"],["W","W"],["X","X"],["Y","Y"],["Z","Z"],
+        ["0","ZERO"],["1","ONE"],["2","TWO"],["3","THREE"],["4","FOUR"],
+        ["5","FIVE"],["6","SIX"],["7","SEVEN"],["8","EIGHT"],["9","NINE"],
+        ["F1","F1"],["F2","F2"],["F3","F3"],["F4","F4"],["F5","F5"],["F6","F6"],
+        ["F7","F7"],["F8","F8"],["F9","F9"],["F10","F10"],["F11","F11"],["F12","F12"],
+        ["\u21b5 Enter","ENTER"],["\u232b Backspace","BACKSPACE"],
+        ["\u2423 Espai","SPACE"],["\u21e5 Tab","TAB"],
+        ["\u238b Esc","ESCAPE"],["\u2326 Suprimir","DELETE"],
+        ["\u2191 Amunt","UP_ARROW"],["\u2193 Avall","DOWN_ARROW"],
+        ["\u2190 Esquerra","LEFT_ARROW"],["\u2192 Dreta","RIGHT_ARROW"],
+        ["\u21de Re P\u00e0g","PAGE_UP"],["\u21df Av P\u00e0g","PAGE_DOWN"],
+        ["\u21f1 Inici","HOME"],["\u21f2 Fi","END"]
+      ]), "KEY");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour('#ff6d00');
+    this.setTooltip("Prem i allibera una tecla del teclat USB (HID)");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['tecla_key_combo'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("\u2328\ufe0f Drecera")
+      .appendField(new Blockly.FieldDropdown([
+        ["Ctrl","CONTROL"],["Alt","ALT"],["Shift","SHIFT"],
+        ["Ctrl+Shift","CTRL_SHIFT"],["Ctrl+Alt","CTRL_ALT"],
+        ["Ctrl+Shift+Alt","CTRL_SHIFT_ALT"],["Win / \u2318","GUI"]
+      ]), "MODIFIER")
+      .appendField("+")
+      .appendField(new Blockly.FieldDropdown([
+        ["A","A"],["B","B"],["C","C"],["D","D"],["E","E"],["F","F"],["G","G"],
+        ["H","H"],["I","I"],["J","J"],["K","K"],["L","L"],["M","M"],["N","N"],
+        ["O","O"],["P","P"],["Q","Q"],["R","R"],["S","S"],["T","T"],["U","U"],
+        ["V","V"],["W","W"],["X","X"],["Y","Y"],["Z","Z"],
+        ["F1","F1"],["F2","F2"],["F3","F3"],["F4","F4"],["F5","F5"],["F6","F6"],
+        ["F7","F7"],["F8","F8"],["F9","F9"],["F10","F10"],["F11","F11"],["F12","F12"],
+        ["\u21b5 Enter","ENTER"],["\u232b Backspace","BACKSPACE"],
+        ["\u2423 Espai","SPACE"],["\u21e5 Tab","TAB"],
+        ["\u2191","UP_ARROW"],["\u2193","DOWN_ARROW"],
+        ["\u2190","LEFT_ARROW"],["\u2192","RIGHT_ARROW"]
+      ]), "KEY");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour('#ff6d00');
+    this.setInputsInline(true);
+    this.setTooltip("Prem una combinaci\u00f3 de tecles (drecera de teclat)");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['tecla_type_text'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("\u2328\ufe0f Escriure text")
+      .appendField(new Blockly.FieldTextInput("Hola!"), "TEXT");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour('#ff6d00');
+    this.setTooltip("Escriu un text com si fos un teclat USB");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['tecla_media'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("\ud83c\udfdb\ufe0f Media")
+      .appendField(new Blockly.FieldDropdown([
+        ["\u25b6\u23f8 Play / Pausa","PLAY_PAUSE"],
+        ["\u23f9 Parar","STOP"],
+        ["\u23ed P\u00e0gina seg\u00fcent","SCAN_NEXT_TRACK"],
+        ["\u23ee P\u00e0gina anterior","SCAN_PREVIOUS_TRACK"],
+        ["\ud83d\udd0a Volum +","VOLUME_INCREMENT"],
+        ["\ud83d\udd09 Volum \u2013","VOLUME_DECREMENT"],
+        ["\ud83d\udd07 Silen\u00eci","MUTE"],
+        ["\ud83c\udf10 Obrir navegador","AL_INTERNET_BROWSER"],
+        ["\ud83d\udce7 Obrir correu","AL_EMAIL_READER"],
+        ["\ud83d\udd22 Calculadora","AL_CALCULATOR"]
+      ]), "ACTION");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour('#ff6d00');
+    this.setTooltip("Control multimedia: play, pausa, volum, aplicaci\u00f3...");
+    this.setHelpUrl("");
+  }
+};
+
 Blockly.Blocks['tecla_chord_progression'] = {
   init: function () {
     this.appendDummyInput()

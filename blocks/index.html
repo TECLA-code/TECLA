@@ -327,12 +327,12 @@
     .dev-key-btn:hover { border-color: rgba(0,0,0,.28); filter: brightness(1.07); }
     .dev-key-btn:active { transform: scale(.95); box-shadow: 0 1px 0 rgba(0,0,0,.3), inset 0 1px 2px rgba(0,0,0,.15); }
     .dev-key-btn.selected { border-color: var(--accent) !important; box-shadow: 0 0 0 2px var(--accent), 0 3px 0 rgba(0,0,0,.2) !important; }
-    .dev-key-btn.assigned { background: rgba(74,128,240,.22); border-color: rgba(74,128,240,.6); box-shadow: 0 3px 0 rgba(74,128,240,.25), inset 0 1px 0 rgba(255,255,255,.4); }
+    .dev-key-btn.assigned { background: var(--key-bg); border-color: rgba(74,128,240,.7); box-shadow: inset 0 0 0 1000px rgba(74,128,240,.18), 0 3px 0 rgba(74,128,240,.3), inset 0 1px 0 rgba(255,255,255,.4); }
     .dev-key-num { position: absolute; top: 3px; left: 4px; font-size: 7px; color: rgba(0,0,0,.3); font-family: var(--mono); pointer-events: none; font-weight: 700; }
     .dev-key-name { font-size: 8px; font-weight: 700; color: rgba(0,0,0,.72); font-family: var(--mono); pointer-events: none; line-height: 1.2; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 3px; text-align: center; }
     .dev-key-proj { font-size: 7px; color: rgba(0,0,0,.4); pointer-events: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; line-height: 1.2; text-align: center; padding: 0 2px; }
-    .dev-key-btn.assigned .dev-key-name { color: rgba(20,50,140,.9); }
-    .dev-key-btn.assigned .dev-key-proj { color: rgba(20,50,140,.6); }
+    .dev-key-btn.assigned .dev-key-name { color: rgba(30,60,160,.95); }
+    .dev-key-btn.assigned .dev-key-proj { color: rgba(30,60,160,.65); }
     .dev-cfg-area { flex-shrink: 0; border-top: 1px solid var(--border); padding: 10px 0 8px; }
     .dev-cfg-hint { display: flex; align-items: center; justify-content: center; min-height: 56px; font-size: 11px; color: var(--text3); }
     .dev-cfg-head { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
@@ -352,7 +352,7 @@
     .dev-pot-field input[type=number]:focus { outline: none; border-color: var(--accent); }
     .dev-export-bar { display:flex; gap:8px; padding:10px 0 2px; border-top:1px solid var(--border); flex-shrink:0; }
     .dcf-lib-picker { max-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; }
-    .dcf-lib-item { padding: 6px 9px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); font-size: 11.5px; color: var(--text); cursor: pointer; transition: background .1s, border-color .1s; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dcf-lib-item { flex-shrink: 0; padding: 6px 9px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); font-size: 11.5px; color: var(--text); cursor: pointer; transition: background .1s, border-color .1s; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .dcf-lib-item:hover { background: var(--surface3); border-color: var(--accent); color: var(--accent); }
     .dcf-lib-item.active { border-color: var(--accent); color: var(--accent); background: rgba(74,128,240,.1); }
 
@@ -794,6 +794,12 @@
       <block type="tecla_function_define"></block>
       <block type="tecla_function_call"></block>
     </category>
+    <category name="Accions" colour="#ff6d00">
+      <block type="tecla_key_press"></block>
+      <block type="tecla_key_combo"></block>
+      <block type="tecla_type_text"></block>
+      <block type="tecla_media"></block>
+    </category>
     <sep></sep>
     <category name="Events Scratch" colour="#FFBF00">
       <block type="scratch_when_flag_clicked"></block>
@@ -811,6 +817,7 @@
   <script src="blocks/scratch_compatible.js"></script>
   <script src="generators/tecla_python.js"></script>
   <script src="generators/tecla_python_extended.js"></script>
+  <script src="generators/tecla_python_hid.js"></script>
   <script src="generators/scratch_python.js"></script>
   <script src="app.js"></script>
 </body>
