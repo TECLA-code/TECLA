@@ -617,6 +617,28 @@ Blockly.Python['tecla_arpeggio_dir'] = function (block) {
   return code;
 };
 
+Blockly.Python['tecla_seq_grid'] = function (block) {
+  const _N = {'C':0,'Cs':1,'D':2,'Ds':3,'E':4,'F':5,'Fs':6,'G':7,'Gs':8,'A':9,'As':10,'B':11};
+  const vel = block.getFieldValue('VEL') || '100';
+  const dur = block.getFieldValue('DUR') || '0.25';
+  const steps = [];
+  for (let i = 1; i <= 8; i++) {
+    const n = block.getFieldValue('N' + i);
+    const o = block.getFieldValue('O' + i);
+    if (!n || n === 'REST') steps.push(-1);
+    else steps.push((parseInt(o) + 1) * 12 + (_N[n] || 0));
+  }
+  let code = `# Seqüenciador grid (8 passos)\n`;
+  code += `for _sn in [${steps.join(', ')}]:\n`;
+  code += `    if _sn >= 0:\n`;
+  code += `        midi.send(NoteOn(_sn, ${vel}))\n`;
+  code += `        time.sleep(${dur})\n`;
+  code += `        midi.send(NoteOff(_sn, 0))\n`;
+  code += `    else:\n`;
+  code += `        time.sleep(${dur})\n`;
+  return code;
+};
+
 Blockly.Python['tecla_drum_hit'] = function (block) {
   const drum     = block.getFieldValue('DRUM');
   const velocity = Blockly.Python.valueToCode(block, 'VELOCITY', Blockly.Python.ORDER_ATOMIC) || '100';

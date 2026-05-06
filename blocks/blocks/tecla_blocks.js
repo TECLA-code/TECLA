@@ -1879,6 +1879,55 @@ Blockly.Blocks['tecla_seq_play_steps'] = {
   }
 };
 
+Blockly.Blocks['tecla_seq_grid'] = {
+  init: function () {
+    const NOTES = [
+      ["\u2014 Silenci","REST"],
+      ["C","C"],["C\u266f","Cs"],["D","D"],["D\u266f","Ds"],
+      ["E","E"],["F","F"],["F\u266f","Fs"],["G","G"],["G\u266f","Gs"],
+      ["A","A"],["A\u266f","As"],["B","B"]
+    ];
+    const OCTS = [["2","2"],["3","3"],["4","4"],["5","5"],["6","6"]];
+    this.appendDummyInput()
+      .appendField("\ud83c\udfb5 Seqüenciador  Vel")
+      .appendField(new Blockly.FieldNumber(100, 0, 127), "VEL")
+      .appendField("  Durada/pas")
+      .appendField(new Blockly.FieldNumber(0.25, 0.01, 4, 0.01), "DUR")
+      .appendField("s");
+    this.appendDummyInput()
+      .appendField("1")
+      .appendField(new Blockly.FieldDropdown(NOTES), "N1")
+      .appendField(new Blockly.FieldDropdown(OCTS), "O1")
+      .appendField("  2")
+      .appendField(new Blockly.FieldDropdown(NOTES), "N2")
+      .appendField(new Blockly.FieldDropdown(OCTS), "O2")
+      .appendField("  3")
+      .appendField(new Blockly.FieldDropdown(NOTES), "N3")
+      .appendField(new Blockly.FieldDropdown(OCTS), "O3")
+      .appendField("  4")
+      .appendField(new Blockly.FieldDropdown(NOTES), "N4")
+      .appendField(new Blockly.FieldDropdown(OCTS), "O4");
+    this.appendDummyInput()
+      .appendField("5")
+      .appendField(new Blockly.FieldDropdown(NOTES), "N5")
+      .appendField(new Blockly.FieldDropdown(OCTS), "O5")
+      .appendField("  6")
+      .appendField(new Blockly.FieldDropdown(NOTES), "N6")
+      .appendField(new Blockly.FieldDropdown(OCTS), "O6")
+      .appendField("  7")
+      .appendField(new Blockly.FieldDropdown(NOTES), "N7")
+      .appendField(new Blockly.FieldDropdown(OCTS), "O7")
+      .appendField("  8")
+      .appendField(new Blockly.FieldDropdown(NOTES), "N8")
+      .appendField(new Blockly.FieldDropdown(OCTS), "O8");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour('#00ffc8');
+    this.setTooltip("Seqüenciador de 8 passos visual. Tria nota i octava per a cada pas. \u2014 = silenci.");
+    this.setHelpUrl("");
+  }
+};
+
 Blockly.Blocks['tecla_arpeggio_dir'] = {
   init: function () {
     this.appendDummyInput()

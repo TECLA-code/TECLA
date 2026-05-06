@@ -827,6 +827,24 @@ async function execBlock(block) {
       }
       break;
     }
+    case 'tecla_seq_grid': {
+      const _NM={'C':0,'Cs':1,'D':2,'Ds':3,'E':4,'F':5,'Fs':6,'G':7,'Gs':8,'A':9,'As':10,'B':11};
+      const sgVel=Math.max(1,Math.min(127,parseInt(block.getFieldValue('VEL'))||100));
+      const sgDur=(parseFloat(block.getFieldValue('DUR'))||0.25);
+      const sgSteps=[];
+      for(let _i=1;_i<=8;_i++){
+        const _n=block.getFieldValue('N'+_i), _o=block.getFieldValue('O'+_i);
+        sgSteps.push((!_n||_n==='REST') ? -1 : (parseInt(_o)+1)*12+(_NM[_n]||0));
+      }
+      const sgCtx=document.getElementById('simulatorCanvas')?.getContext('2d');
+      simLog(`🎵 Seq grid [${sgSteps.map(n=>n<0?'—':noteToName(n)).join(' ')}]`,'note');
+      for(const _sn of sgSteps){
+        if(!simulationRunning) break;
+        if(_sn>=0){midiNoteOn(1,_sn,sgVel); if(sgCtx) visualizeNote(sgCtx,_sn,sgVel); await sleep(sgDur*850); midiNoteOff(1,_sn); await sleep(sgDur*150);}
+        else{await sleep(sgDur*1000);}
+      }
+      break;
+    }
     case 'tecla_seq_play_steps': {
       const sqNotes = (block.getFieldValue('NOTES')||'60').split(',').map(n=>parseInt(n.trim())).filter(n=>!isNaN(n));
       const sqVel   = Math.max(1,Math.min(127,Math.round(await getVal(block,'VELOCITY',90))));
