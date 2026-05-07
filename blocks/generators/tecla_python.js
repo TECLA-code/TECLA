@@ -118,7 +118,8 @@ Blockly.Python['tecla_play_scale'] = function (block) {
 
 Blockly.Python['tecla_set_octave'] = function (block) {
   const octave = block.getFieldValue('OCTAVE');
-  const code = `# Canviar octava a ${octave}\n` +
+  const code = `global current_octave\n` +
+    `# Canviar octava a ${octave}\n` +
     `current_octave = ${octave}\n`;
   return code;
 };

@@ -1568,11 +1568,17 @@ function _buildDeviceCode() {
   const cfg = deviceConfig;
   const N = cfg.buttons.length;
   let c = `# === TECLA Device Configuration ===\n# Generat per TECLA Blocks\n# Botons assignats: ${cfg.buttons.filter(b=>b.project).map(b=>`B${b.id} → ${b.project.name}`).join(', ') || 'cap'}\n\n`;
-  c += `import usb_midi, adafruit_midi, board, digitalio, analogio, time\n`;
+  c += `import usb_midi, adafruit_midi, board, digitalio, analogio, time, random, math\n`;
   c += `from adafruit_midi.note_on import NoteOn\n`;
   c += `from adafruit_midi.note_off import NoteOff\n`;
   c += `from adafruit_midi.control_change import ControlChange\n\n`;
   c += `midi = adafruit_midi.MIDI(midi_out=usb_midi.ports[1], out_channel=0)\n\n`;
+  c += `# Variables Globals\n`;
+  c += `current_octave = 4\n`;
+  c += `bpm = 120\n`;
+  c += `button_states = [False] * 16\n`;
+  c += `last_button_states = [False] * 16\n`;
+  c += `pot_values = [0, 0, 0]\n\n`;
 
   const _allCode = cfg.buttons.map(b => b.project?.xml || '').join('\n');
   if (_allCode.includes('tecla_key_combo') || _allCode.includes('tecla_type_text') || _allCode.includes('tecla_media')) {
@@ -1650,12 +1656,15 @@ function _buildDeviceCode() {
   c += `def _rpot(p, mn, mx):\n    return mn + int((p.value >> 9) * (mx - mn) / 127)\n\n`;
   c += `while True:\n`;
   c += `    for i in range(${N}):\n`;
+  c += `        last_button_states[i] = button_states[i]\n`;
   c += `        s = _btns[i].value\n`;
+  c += `        button_states[i] = not s\n`;
   c += `        if not s and _prev[i]: _PROJECTS[i]()\n`;
   c += `        _prev[i] = s\n`;
   cfg.pots.forEach((pot, i) => {
     const pf = pot.fnType || 'midi';
     c += `    _rv${i} = int(_pots[${i}].value >> 9)\n`;
+    c += `    pot_values[${i}] = _rv${i}\n`;
     if (pf === 'midi') {
       const range = Math.max(1, (pot.max||127) - (pot.min||0));
       c += `    if abs(_rv${i} - _ppot[${i}]) > 1:\n`;
