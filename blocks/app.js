@@ -1597,7 +1597,7 @@ function _buildDeviceCode() {
   c += `# Botons (ajusta els pins al teu hardware)\n`;
   c += `_BTN_PINS = [board.GP${Array.from({length:N},(_,i)=>i).join(', board.GP')}]\n`;
   c += `_btns = [digitalio.DigitalInOut(p) for p in _BTN_PINS]\n`;
-  c += `for _b in _btns:\n    _b.direction = digitalio.Direction.INPUT\n    _b.pull = digitalio.Pull.UP\n\n`;
+  c += `for _b in _btns:\n    _b.direction = digitalio.Direction.INPUT\n    _b.pull = digitalio.Pull.DOWN\n\n`;
 
   // HID imports for pots (if not already added for buttons)
   const _needsHID = cfg.pots.some(p => (p.fnType||'midi') !== 'midi');
@@ -1651,15 +1651,15 @@ function _buildDeviceCode() {
   c += `_PROJECTS = [${Array.from({length:N},(_,i)=>`_run_${i+1}`).join(', ')}]\n\n`;
 
   // Main loop
-  c += `_prev = [True] * ${N}\n`;
+  c += `_prev = [False] * ${N}\n`;
   c += `_ppot = [0] * 3\n\n`;
   c += `def _rpot(p, mn, mx):\n    return mn + int((p.value >> 9) * (mx - mn) / 127)\n\n`;
   c += `while True:\n`;
   c += `    for i in range(${N}):\n`;
   c += `        last_button_states[i] = button_states[i]\n`;
   c += `        s = _btns[i].value\n`;
-  c += `        button_states[i] = not s\n`;
-  c += `        if not s and _prev[i]: _PROJECTS[i]()\n`;
+  c += `        button_states[i] = s\n`;
+  c += `        if s and not _prev[i]: _PROJECTS[i]()\n`;
   c += `        _prev[i] = s\n`;
   cfg.pots.forEach((pot, i) => {
     const pf = pot.fnType || 'midi';
