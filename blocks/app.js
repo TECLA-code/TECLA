@@ -1572,10 +1572,10 @@ function _buildDeviceCode() {
   c += `from adafruit_midi.note_on import NoteOn\n`;
   c += `from adafruit_midi.note_off import NoteOff\n`;
   c += `from adafruit_midi.control_change import ControlChange\n\n`;
-  c += `_midi = adafruit_midi.MIDI(midi_out=usb_midi.ports[1], out_channel=0)\n\n`;
+  c += `midi = adafruit_midi.MIDI(midi_out=usb_midi.ports[1], out_channel=0)\n\n`;
 
-  const _allCode = cfg.buttons.map(b => b.project?.code || '').join('\n');
-  if (_allCode.includes('_keyboard') || _allCode.includes('_layout') || _allCode.includes('_cc.')) {
+  const _allCode = cfg.buttons.map(b => b.project?.xml || '').join('\n');
+  if (_allCode.includes('tecla_key_combo') || _allCode.includes('tecla_type_text') || _allCode.includes('tecla_media')) {
     c += `import usb_hid\n`;
     c += `from adafruit_hid.keyboard import Keyboard\n`;
     c += `from adafruit_hid.keycode import Keycode\n`;
@@ -1612,15 +1612,29 @@ function _buildDeviceCode() {
 
   // Pots
   c += `# Potenciòmetres\n`;
-  c += `_POT_PINS = [board.A0, board.A1, board.A2]\n`;
+  c += `_POT_PINS = [board.A1, board.A0, board.A2]\n`;
   c += `_pots = [analogio.AnalogIn(p) for p in _POT_PINS]\n\n`;
 
   // Project functions
   cfg.buttons.forEach((btn, i) => {
     c += `# --- Botó ${btn.id}: ${btn.project ? btn.project.name : 'sense assignar'} ---\n`;
     c += `def _run_${i+1}():\n`;
-    if (btn.project && btn.project.code) {
-      btn.project.code.split('\n').forEach(line => { c += `    ${line}\n`; });
+    if (btn.project && btn.project.xml) {
+      try {
+        const tempWs = new Blockly.Workspace();
+        Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(btn.project.xml), tempWs);
+        const codeBlocks = Blockly.Python.workspaceToCode(tempWs);
+        tempWs.dispose();
+        if (codeBlocks.trim()) {
+          codeBlocks.split('\n').forEach(line => {
+            if (line.trim() !== '') c += `    ${line}\n`;
+          });
+        } else {
+          c += `    pass\n`;
+        }
+      } catch (e) {
+        c += `    pass\n`;
+      }
     } else {
       c += `    pass\n`;
     }

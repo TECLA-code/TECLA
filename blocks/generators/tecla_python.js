@@ -610,5 +610,33 @@ Blockly.Python['tecla_set_volume'] = function (block) {
   return code;
 };
 
+// ==================== GENERADORS D'UTILITATS (Multimèdia, Teclat, Text) ====================
+
+Blockly.Python['tecla_media'] = function (block) {
+  const action = block.getFieldValue('ACTION');
+  return `_cc.send(ConsumerControlCode.${action})\n`;
+};
+
+Blockly.Python['tecla_type_text'] = function (block) {
+  const text = block.getFieldValue('TEXT');
+  return `_layout.write(${JSON.stringify(text)})\n`;
+};
+
+Blockly.Python['tecla_key_combo'] = function (block) {
+  const mod = block.getFieldValue('MODIFIER');
+  const key = block.getFieldValue('KEY');
+  let mods = [];
+  if (mod === 'CONTROL') mods.push('Keycode.CONTROL');
+  if (mod === 'ALT') mods.push('Keycode.ALT');
+  if (mod === 'SHIFT') mods.push('Keycode.SHIFT');
+  if (mod === 'CTRL_SHIFT') mods.push('Keycode.CONTROL', 'Keycode.SHIFT');
+  if (mod === 'CTRL_ALT') mods.push('Keycode.CONTROL', 'Keycode.ALT');
+  if (mod === 'CTRL_SHIFT_ALT') mods.push('Keycode.CONTROL', 'Keycode.SHIFT', 'Keycode.ALT');
+  if (mod === 'GUI') mods.push('Keycode.GUI');
+
+  const modsStr = mods.join(', ');
+  return `_keyboard.send(${modsStr ? modsStr + ', ' : ''}Keycode.${key})\n`;
+};
+
 // Exportar la funció
 window.generateCompletePythonCode = generateCompletePythonCode;
