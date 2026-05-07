@@ -875,7 +875,7 @@
           const pmods = (k.mods||[]).map(m => ({'Ctrl':'Keycode.CONTROL','Shift':'Keycode.SHIFT','Alt':'Keycode.ALT','Cmd':'Keycode.COMMAND'})[m]||'').filter(Boolean);
           return `${indent}keyboard.press(${pmods.length ? pmods.join(', ') + ', ' : ''}${k.keycode})\n`;
         }
-        if (k.type === 'string') return `${indent}layout.write("${k.string}")\n`;
+        if (k.type === 'string') return `${indent}layout.write(${JSON.stringify(k.string || '')})\n`;
         if (k.type === 'consumer') return `${indent}cc.send(${k.consumer})\n`;
         if (k.type === 'mouse') return `${indent}mouse.click(${k.mouse})\n`;
         return `${indent}pass\n`;
