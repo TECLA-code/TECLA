@@ -1772,6 +1772,42 @@
       background: var(--surface3);
       border-radius: 3px
     }
+
+    /* HARMONIC PROFILES */
+    .hp-cats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 12px
+    }
+    .hp-cat-btn {
+      padding: 3px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text2);
+      font-size: 11px;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: all .15s
+    }
+    .hp-cat-btn:hover { color: var(--text); border-color: var(--border-h) }
+    .hp-cat-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff
+    }
+    .hp-badge {
+      display: inline-block;
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 10px;
+      background: rgba(74,128,240,.18);
+      color: var(--accent);
+      margin-left: 3px;
+      font-family: var(--mono);
+      vertical-align: middle
+    }
   </style>
 </head>
 
@@ -1885,6 +1921,19 @@
             <button class="btn btn-sm" id="btn-scales-all">Totes</button>
             <button class="btn btn-sm" id="btn-scales-none">Cap</button>
           </div>
+        </div>
+      </div>
+
+      <!-- Perfils Tonals -->
+      <div class="card" style="margin-top:14px">
+        <div class="card-title">Perfils Tonals del Mode Teclat <span class="hp-badge" id="hp-count-badge">0</span></div>
+        <p style="font-size:11.5px;color:var(--text2);margin-bottom:12px;line-height:1.6">Notes «segures» d'un camp harmònic concret. La tecla 9 cicla entre escales <strong>i</strong> perfils actius. La tònica es controla amb la tecla 10.</p>
+        <div class="hp-cats" id="hp-cat-pills"></div>
+        <div class="checklist c3" id="harmonic-profiles-list"></div>
+        <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
+          <button class="btn btn-sm btn-primary" id="btn-save-profiles">Guardar</button>
+          <button class="btn btn-sm" id="btn-profiles-all">Tots</button>
+          <button class="btn btn-sm" id="btn-profiles-none">Cap</button>
         </div>
       </div>
 
@@ -3060,6 +3109,9 @@
         keyboard_scales: mc.keyboard_scales || [],
         arpeggiator_modes: mc.arpeggiator_modes || Array.from({ length: 16 }, (_, i) => i),
         custom_arpeggiator_patterns: _customArps,
+        harmonic_profiles: (mc.harmonic_profiles || []).map(id => {
+          const p = HARMONIC_PROFILES.find(x => x.id === id); return p || null;
+        }).filter(Boolean),
         potentiometer_functions: mc.potentiometer_functions || {},
         arp_potentiometer_functions: mc.arp_potentiometer_functions || {}
       };
@@ -3087,6 +3139,60 @@
       [10, "Zig-Zag"], [11, "Block"], [12, "Rolled"], [13, "Octaves"], [14, "Contrari"], [15, "Spread"]
     ];
     const AVAILABLE_EFFECTS = ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend'];
+
+    // ── Perfils Tonals (IDs 3000+) ─────────────────────────────────
+    // intervals[8]: semitons des de la tònica (tecla 10 la transposa)
+    // Ordre botons: notes de l'acord → extensions → octava alta
+    const HARMONIC_PROFILES = [
+      // ── Majors ──────────────────────────────────────────────────
+      { id:3000, cat:"Majors", name:"Major",            intervals:[0,2,4,5,7,9,11,12] },
+      { id:3001, cat:"Majors", name:"Major add9",       intervals:[0,2,4,7,9,11,14,12] },
+      { id:3002, cat:"Majors", name:"Major 6/9",        intervals:[0,4,7,9,2,11,14,12] },
+      { id:3003, cat:"Majors", name:"Pent. Major",      intervals:[0,2,4,7,9,12,14,16] },
+      // ── Menors ──────────────────────────────────────────────────
+      { id:3100, cat:"Menors", name:"Menor Natural",    intervals:[0,2,3,5,7,8,10,12] },
+      { id:3101, cat:"Menors", name:"Menor Harmònica",  intervals:[0,2,3,5,7,8,11,12] },
+      { id:3102, cat:"Menors", name:"Menor Melòdica",   intervals:[0,2,3,5,7,9,11,12] },
+      { id:3103, cat:"Menors", name:"Pent. Menor",      intervals:[0,3,5,7,10,12,15,17] },
+      { id:3104, cat:"Menors", name:"Blues",            intervals:[0,3,5,6,7,10,12,15] },
+      { id:3105, cat:"Menors", name:"Menor add9",       intervals:[0,2,3,5,7,8,10,14] },
+      // ── Jazz ────────────────────────────────────────────────────
+      { id:3200, cat:"Jazz",   name:"Maj7 (Jònic)",     intervals:[0,4,7,11,2,9,5,12] },
+      { id:3201, cat:"Jazz",   name:"Min7 (Dòric)",     intervals:[0,3,7,10,2,9,5,12] },
+      { id:3202, cat:"Jazz",   name:"Dom7 (Mixolidi)",  intervals:[0,4,7,10,2,9,5,12] },
+      { id:3203, cat:"Jazz",   name:"Min7b5 (Locri)",   intervals:[0,3,6,10,1,8,5,12] },
+      { id:3204, cat:"Jazz",   name:"Maj7#11 (Lidi)",   intervals:[0,4,7,11,2,6,9,12] },
+      { id:3205, cat:"Jazz",   name:"MinMaj7",          intervals:[0,3,7,11,2,5,8,12] },
+      { id:3206, cat:"Jazz",   name:"Dom7sus4",         intervals:[0,5,7,10,2,3,9,12] },
+      { id:3207, cat:"Jazz",   name:"Dim7",             intervals:[0,3,6,9,3,6,9,12] },
+      { id:3208, cat:"Jazz",   name:"Maj9",             intervals:[0,4,7,11,14,2,9,12] },
+      { id:3209, cat:"Jazz",   name:"Min9 (Dòric)",     intervals:[0,3,7,10,14,2,9,12] },
+      { id:3210, cat:"Jazz",   name:"Dom9",             intervals:[0,4,7,10,14,2,9,12] },
+      { id:3211, cat:"Jazz",   name:"Dom7#11 (Lidi Dom.)", intervals:[0,4,7,10,2,6,9,12] },
+      // ── Modals ──────────────────────────────────────────────────
+      { id:3300, cat:"Modals", name:"Dòric",            intervals:[0,2,3,5,7,9,10,12] },
+      { id:3301, cat:"Modals", name:"Frigi",            intervals:[0,1,3,5,7,8,10,12] },
+      { id:3302, cat:"Modals", name:"Lidi",             intervals:[0,2,4,6,7,9,11,12] },
+      { id:3303, cat:"Modals", name:"Mixolidi",         intervals:[0,2,4,5,7,9,10,12] },
+      { id:3304, cat:"Modals", name:"Locri",            intervals:[0,1,3,5,6,8,10,12] },
+      { id:3305, cat:"Modals", name:"Lidi Dom.",        intervals:[0,2,4,6,7,9,10,12] },
+      { id:3306, cat:"Modals", name:"Alterada",         intervals:[0,1,3,4,6,8,10,12] },
+      // ── World ────────────────────────────────────────────────────
+      { id:3400, cat:"World",  name:"Flamenca",         intervals:[0,1,4,5,7,8,10,12] },
+      { id:3401, cat:"World",  name:"Flamenca Maj.",    intervals:[0,1,4,5,7,8,11,12] },
+      { id:3402, cat:"World",  name:"Aràbiga",          intervals:[0,1,4,5,7,8,11,12] },
+      { id:3403, cat:"World",  name:"Hongaresa",        intervals:[0,2,3,6,7,9,10,12] },
+      { id:3404, cat:"World",  name:"Japonesa",         intervals:[0,1,5,6,7,10,12,17] },
+      { id:3405, cat:"World",  name:"Bhairav",          intervals:[0,1,4,5,7,8,11,12] },
+      { id:3406, cat:"World",  name:"Catalana",         intervals:[0,1,4,5,7,9,11,12] },
+      // ── Colors ───────────────────────────────────────────────────
+      { id:3500, cat:"Colors", name:"Tons Sencers",     intervals:[0,2,4,6,8,10,12,14] },
+      { id:3501, cat:"Colors", name:"Octatònica H-W",   intervals:[0,1,3,4,6,7,9,10] },
+      { id:3502, cat:"Colors", name:"Octatònica W-H",   intervals:[0,2,3,5,6,8,9,11] },
+    ];
+    const HP_CATEGORIES = ['Majors','Menors','Jazz','Modals','World','Colors'];
+    let _hpCurrentCat = 'all';
+
 
     function setSelectVal(id, val) {
       const el = document.getElementById(id); if (!el || !val) return;
@@ -3131,6 +3237,49 @@
       cont.innerHTML = html;
     }
 
+    function _rebuildHarmonicProfilesList(catFilter) {
+      if (catFilter !== undefined) _hpCurrentCat = catFilter;
+      const cont = document.getElementById('harmonic-profiles-list');
+      const pillsCont = document.getElementById('hp-cat-pills');
+      const badge = document.getElementById('hp-count-badge');
+      if (!cont) return;
+      const mc = _loadModesConfig();
+      const enabled = new Set((mc.harmonic_profiles || []).map(Number));
+
+      // Build category pills (only once)
+      if (pillsCont && !pillsCont.dataset.built) {
+        pillsCont.dataset.built = '1';
+        const all = document.createElement('button');
+        all.className = 'hp-cat-btn active'; all.textContent = 'Tots'; all.dataset.cat = 'all';
+        pillsCont.appendChild(all);
+        HP_CATEGORIES.forEach(cat => {
+          const btn = document.createElement('button');
+          btn.className = 'hp-cat-btn'; btn.textContent = cat; btn.dataset.cat = cat;
+          pillsCont.appendChild(btn);
+        });
+        pillsCont.addEventListener('click', e => {
+          const b = e.target.closest('.hp-cat-btn'); if (!b) return;
+          pillsCont.querySelectorAll('.hp-cat-btn').forEach(x => x.classList.remove('active'));
+          b.classList.add('active');
+          _rebuildHarmonicProfilesList(b.dataset.cat);
+        });
+      }
+      // Update active pill
+      if (pillsCont) pillsCont.querySelectorAll('.hp-cat-btn').forEach(b =>
+        b.classList.toggle('active', b.dataset.cat === _hpCurrentCat));
+
+      const visible = _hpCurrentCat === 'all'
+        ? HARMONIC_PROFILES
+        : HARMONIC_PROFILES.filter(p => p.cat === _hpCurrentCat);
+
+      cont.innerHTML = visible.map(p =>
+        `<label class="cb"><input type="checkbox" class="hp-chk" value="${p.id}" ${enabled.has(p.id) ? 'checked' : ''}>
+         <span title="${p.cat}">◈ ${p.name}</span></label>`
+      ).join('');
+
+      if (badge) badge.textContent = enabled.size;
+    }
+
     async function buildModesTab() {
       const mc = _loadModesConfig();
 
@@ -3161,8 +3310,11 @@
         });
       }
 
-      // Keyboard scales checklist (predefined + progressions + custom scales)
+      // Keyboard scales checklist
       _rebuildKeyboardScalesList();
+
+      // Harmonic profiles
+      _rebuildHarmonicProfilesList();
 
       // Effects checklist
       const effCont = document.getElementById('effects-list');
@@ -3291,6 +3443,20 @@
     });
     document.getElementById('btn-scales-all')?.addEventListener('click', () => document.querySelectorAll('.kb-scale-chk').forEach(c => c.checked = true));
     document.getElementById('btn-scales-none')?.addEventListener('click', () => document.querySelectorAll('.kb-scale-chk').forEach(c => c.checked = false));
+
+    document.getElementById('btn-save-profiles')?.addEventListener('click', () => {
+      const enabled = [...document.querySelectorAll('.hp-chk:checked')].map(c => +c.value);
+      const mc = _loadModesConfig(); mc.harmonic_profiles = enabled; _saveModesConfig(mc);
+      const badge = document.getElementById('hp-count-badge'); if (badge) badge.textContent = enabled.length;
+      log(`${enabled.length} perfils tonals guardats.`, 'ok');
+      showGlobalToast('Guardat correctament');
+    });
+    document.getElementById('btn-profiles-all')?.addEventListener('click', () => {
+      document.querySelectorAll('.hp-chk').forEach(c => c.checked = true);
+    });
+    document.getElementById('btn-profiles-none')?.addEventListener('click', () => {
+      document.querySelectorAll('.hp-chk').forEach(c => c.checked = false);
+    });
 
     document.getElementById('btn-save-effects')?.addEventListener('click', () => {
       const enabled = [...document.querySelectorAll('.effect-chk:checked')].map(c => c.value);
@@ -3901,7 +4067,9 @@
       _reloadConfig() {
         const mc = _loadModesConfig();
         const scales = mc.keyboard_scales || [];
-        this.availableScales = scales.length ? scales : [0];
+        const profiles = mc.harmonic_profiles || [];
+        // Merge: escales + perfils tonals (IDs 3000+) en una sola llista ordenada
+        this.availableScales = [...scales, ...profiles].length ? [...scales, ...profiles] : [0];
         const arps = mc.arp_modes || [];
         this.availableArpModes = arps.length ? arps : [0, 1, 2];
         const pf = mc.pot_functions || {};
@@ -3915,6 +4083,7 @@
 
       get scaleName() {
         const id = this.availableScales[this.scaleIdx] ?? 0;
+        if (id >= 3000) { const p = HARMONIC_PROFILES.find(x => x.id === id); return p ? `◈ ${p.name}` : `Perfil ${id}`; }
         if (id >= 2000) { const cs = _customScales[id - 2000]; return cs ? `♦ ${cs.name}` : `Custom ${id - 2000}`; }
         if (id >= 1000) { const p = _getProgressions()[id - 1000]; return p ? `♪ ${p.name}` : `Prog ${id - 1000}`; }
         return SCALE_NAMES_JS[id] ?? `Escala ${id}`;
@@ -4032,6 +4201,13 @@
 
       _noteForBtn(btnIdx) {
         const id = this.availableScales[this.scaleIdx] ?? 0;
+        if (id >= 3000) {
+          // Perfil tonal: intervals relatius a la tònica del cercle de quintes
+          const profile = HARMONIC_PROFILES.find(p => p.id === id);
+          if (!profile) return null;
+          const interval = profile.intervals[btnIdx] ?? 0;
+          return Math.max(0, Math.min(127, this.octave * 12 + KEY_OFFSETS_JS[this.keyIndex] + interval));
+        }
         if (id >= 2000) {
           const cs = _customScales[id - 2000];
           if (!cs?.notes) return null;
@@ -4052,9 +4228,39 @@
         return Math.max(0, Math.min(127, (this.octave + octOff) * 12 + KEY_OFFSETS_JS[this.keyIndex] + intervals[deg]));
       }
 
+      // Troba la nota del camp harmònic més propera a un interval objectiu sobre la arrel
+      // targetSemitons: interval objectiu en semitons (ex: 3-4 per a 3a menor/major, 7 per a 5a)
+      _findProfileChordNote(profileIntervals, rootInterval, targetSemitons) {
+        let best = null, bestDist = Infinity;
+        for (const iv of profileIntervals) {
+          const diff = ((iv - rootInterval) % 12 + 12) % 12;
+          if (diff === 0) continue; // Ignora la pròpia arrel
+          const dist = Math.min(...targetSemitons.map(t => Math.abs(diff - t)));
+          if (dist < bestDist) { bestDist = dist; best = iv; }
+        }
+        return best;
+      }
+
       _chordNotesForBtn(btnIdx) {
         const root = this._noteForBtn(btnIdx); if (root === null) return [];
         const id = this.availableScales[this.scaleIdx] ?? 0;
+
+        if (id >= 3000) {
+          // Perfil tonal: 3a i 5a calculades a partir dels sons del camp harmònic
+          const profile = HARMONIC_PROFILES.find(p => p.id === id);
+          if (!profile) return [root];
+          const rootInterval = profile.intervals[btnIdx] ?? 0;
+          const keyOff = KEY_OFFSETS_JS[this.keyIndex];
+          // Cerca la nota del perfil més propera a una 3a (3-4 st) i a una 5a (6-7 st)
+          const thirdIv = this._findProfileChordNote(profile.intervals, rootInterval, [3, 4]);
+          const fifthIv = this._findProfileChordNote(profile.intervals, rootInterval, [6, 7, 8]);
+          const notes = [root];
+          if (thirdIv !== null) notes.push(Math.max(0, Math.min(127, this.octave * 12 + keyOff + thirdIv)));
+          if (fifthIv !== null) notes.push(Math.max(0, Math.min(127, this.octave * 12 + keyOff + fifthIv)));
+          return notes;
+        }
+
+        // Escales clàssiques: diatònic sobre l'escala
         const intervals = SCALES_JS[id] ?? SCALES_JS[0];
         const deg = btnIdx % intervals.length;
         const third = ((intervals[(deg + 2) % intervals.length] - intervals[deg]) + 12) % 12 || 4;
@@ -4075,17 +4281,13 @@
 
       _playChord(btnIdx) {
         this._noteOff(btnIdx);
-        const root = this._noteForBtn(btnIdx); if (root === null) return;
-        const id = this.availableScales[this.scaleIdx] ?? 0;
-        const intervals = SCALES_JS[id] ?? SCALES_JS[0];
-        const deg = btnIdx % intervals.length;
-        const third = ((intervals[(deg + 2) % intervals.length] - intervals[deg]) + 12) % 12 || 4;
-        const fifth = ((intervals[(deg + 4) % intervals.length] - intervals[deg]) + 12) % 12 || 7;
-        for (const n of [root, root + third, root + fifth].map(x => Math.max(0, Math.min(127, x)))) {
+        // Reutilitza _chordNotesForBtn per a tots els tipus (escales i perfils tonals)
+        for (const n of this._chordNotesForBtn(btnIdx)) {
           this.buttonNotes[btnIdx].add(n); this.activeNotes.add(n);
           this.webMidi.send('note_on', n, this.velocity, 0);
         }
       }
+
 
       _allNotesOff() {
         if (this._lastArpNote !== undefined) { try { this.webMidi.send('note_off', this._lastArpNote, 0, 0); } catch { } this._lastArpNote = undefined; }
@@ -4128,14 +4330,22 @@
 
       _updateHUD() {
         const id = this.availableScales[this.scaleIdx] ?? 0;
-        const intervals = SCALES_JS[id] ?? SCALES_JS[0];
         const keyOff = KEY_OFFSETS_JS[this.keyIndex];
         // Buttons 1-8: show note names
         for (let i = 0; i < 8; i++) {
           const el = document.getElementById(`key-ml-${i}`); if (!el) continue;
-          const deg = i % intervals.length; const octOff = Math.floor(i / intervals.length);
-          const noteNum = (this.octave + octOff) * 12 + keyOff + intervals[deg];
-          el.textContent = `${NOTES_JS[noteNum % 12]}${this.octave + octOff}`;
+          let noteNum;
+          if (id >= 3000) {
+            // Perfil tonal: intervals del perfil
+            const profile = HARMONIC_PROFILES.find(p => p.id === id);
+            const interval = profile ? (profile.intervals[i] ?? 0) : 0;
+            noteNum = this.octave * 12 + keyOff + interval;
+          } else {
+            const intervals = SCALES_JS[id] ?? SCALES_JS[0];
+            const deg = i % intervals.length; const octOff = Math.floor(i / intervals.length);
+            noteNum = (this.octave + octOff) * 12 + keyOff + intervals[deg];
+          }
+          el.textContent = `${NOTES_JS[noteNum % 12]}${Math.floor(noteNum / 12) - 1}`;
           document.querySelector(`.sim-key[data-idx="${i}"]`)?.classList.add('has-mode');
         }
         // Function buttons 9-12

@@ -12,7 +12,7 @@ Blockly.Python['tecla_play_note'] = function (block) {
 
   const code = `# Tocar nota MIDI ${note}\n` +
     `midi.send(NoteOn(${note}, ${velocity}))\n` +
-    `time.sleep(${duration})\n` +
+    `tecla_sleep(${duration})\n` +
     `midi.send(NoteOff(${note}, 0))\n`;
   return code;
 };
@@ -47,7 +47,7 @@ Blockly.Python['tecla_play_chord'] = function (block) {
     code += `midi.send(NoteOn(${note} + (current_octave - 4) * 12, 100))\n`;
   });
 
-  code += `time.sleep(${duration})\n`;
+  code += `tecla_sleep(${duration})\n`;
 
   // Aturar totes les notes
   notes.forEach(note => {
@@ -75,7 +75,7 @@ Blockly.Python['tecla_play_arpeggio'] = function (block) {
 
   notes.forEach((note, index) => {
     code += `midi.send(NoteOn(${note} + (current_octave - 4) * 12, 100))\n`;
-    code += `time.sleep(${speed})\n`;
+    code += `tecla_sleep(${speed})\n`;
     code += `midi.send(NoteOff(${note} + (current_octave - 4) * 12, 0))\n`;
   });
 
@@ -109,7 +109,7 @@ Blockly.Python['tecla_play_scale'] = function (block) {
   intervals.forEach(interval => {
     const note = baseNote + interval;
     code += `midi.send(NoteOn(${note}, 100))\n`;
-    code += `time.sleep(0.3)\n`;
+    code += `tecla_sleep(0.3)\n`;
     code += `midi.send(NoteOff(${note}, 0))\n`;
   });
 
@@ -184,7 +184,7 @@ Blockly.Python['tecla_effect_filter'] = function (block) {
 
 Blockly.Python['tecla_wait'] = function (block) {
   const seconds = Blockly.Python.valueToCode(block, 'TIME', Blockly.Python.ORDER_ATOMIC) || '1';
-  const code = `time.sleep(${seconds})\n`;
+  const code = `tecla_sleep(${seconds})\n`;
   return code;
 };
 
@@ -193,8 +193,9 @@ Blockly.Python['tecla_repeat_forever'] = function (block) {
 
   const code = `# Repetir per sempre\n` +
     `while True:\n` +
+    `  tecla_yield()  # Comprova si algun botó interromp el bucle\n` +
     statements +
-    `  time.sleep(0.05)  # Petit delay per evitar bloqueig\n`;
+    `  tecla_sleep(0.01)  # Petit delay per evitar bloqueig\n`;
   return code;
 };
 

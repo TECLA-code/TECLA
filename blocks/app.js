@@ -1580,6 +1580,24 @@ function _buildDeviceCode() {
   c += `last_button_states = [False] * 16\n`;
   c += `pot_values = [0, 0, 0]\n\n`;
 
+  // --- Sistema d'interrupció de bucles (TeclaInterrupt) ---
+  c += `# Sistema d'interrupció\n`;
+  c += `class TeclaInterrupt(Exception): pass\n\n`;
+  c += `def tecla_sleep(duration):\n`;
+  c += `    t_end = time.monotonic() + duration\n`;
+  c += `    while time.monotonic() < t_end:\n`;
+  c += `        for _b in _btns:\n`;
+  c += `            if _b.value:\n`;
+  c += `                raise TeclaInterrupt()\n`;
+  c += `        time.sleep(0.005)\n\n`;
+  c += `def tecla_yield():\n`;
+  c += `    for _b in _btns:\n`;
+  c += `        if _b.value:\n`;
+  c += `            raise TeclaInterrupt()\n\n`;
+  c += `def _midi_panic():\n`;
+  c += `    for _n in range(128):\n`;
+  c += `        midi.send(NoteOff(_n, 0))\n\n`;
+
   const _allCode = cfg.buttons.map(b => b.project?.xml || '').join('\n');
   if (_allCode.includes('tecla_key_combo') || _allCode.includes('tecla_type_text') || _allCode.includes('tecla_media')) {
     c += `import usb_hid\n`;
@@ -1659,7 +1677,11 @@ function _buildDeviceCode() {
   c += `        last_button_states[i] = button_states[i]\n`;
   c += `        s = _btns[i].value\n`;
   c += `        button_states[i] = s\n`;
-  c += `        if s and not _prev[i]: _PROJECTS[i]()\n`;
+  c += `        if s and not _prev[i]:\n`;
+  c += `            try:\n`;
+  c += `                _PROJECTS[i]()\n`;
+  c += `            except TeclaInterrupt:\n`;
+  c += `                _midi_panic()  # Silenci MIDI instant\n`;
   c += `        _prev[i] = s\n`;
   cfg.pots.forEach((pot, i) => {
     const pf = pot.fnType || 'midi';
