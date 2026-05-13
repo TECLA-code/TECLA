@@ -3085,33 +3085,45 @@
       const assigned = bank.modes.filter(Boolean).length;
       log(`Configuració desada: ${assigned} tecles assignades a '${bank.name}'.`, 'ok');
       showGlobalToast('Guardat correctament');
-      if (device.isConnected()) {
-        try {
-          await device.writeFile('tecla_web_config.json', JSON.stringify(buildDeviceConfig(), null, 2));
-          log('✓ Sincronitzat al dispositiu (tecla_web_config.json).', 'ok');
-        } catch (e) { log(`Error sincronitzant: ${e.message}`, 'warn'); }
-      }
+      await _syncConfigToDevice();
     });
+
+    async function _syncConfigToDevice() {
+      if (!device.isConnected()) return;
+      try {
+        const cfgData = JSON.stringify(buildDeviceConfig(), null, 2);
+        await device.writeFile('config/tecla_config.json', cfgData);
+        await device.writeFile('.config_reload', Date.now().toString());
+        log('✓ Configuració sincronitzada al dispositiu.', 'ok');
+      } catch (e) { log(`Error sincronitzant al dispositiu: ${e.message}`, 'warn'); }
+    }
 
     function buildDeviceConfig() {
       const mc = _loadModesConfig();
       // Convert file names ("mode_mandelbrot.py") → display names ("Mandelbrot") that mode_manager.py expects
       const fileToName = Object.fromEntries(_modesIndex.map(m => [m.file, m.name]));
+      // Merge normal scale IDs + harmonic profile IDs into a single ordered list for the device
+      const kbScales = mc.keyboard_scales || [];
+      const hpIds = mc.harmonic_profiles || [];
+      const allScaleIds = [...kbScales, ...hpIds.filter(id => !kbScales.includes(id))].sort((a, b) => a - b);
+      const hpProfiles = hpIds.map(id => {
+        const p = HARMONIC_PROFILES.find(x => x.id === id); return p || null;
+      }).filter(Boolean);
       return {
         banks: _keysConfig.banks.map(b => ({
           name: b.name,
           modes: b.modes.map(f => f ? (fileToName[f] || f) : ''),
-          efectos_temporales: b.efectos || {}
+          efectos_temporales: b.efectos || {},
+          keyboard_scales: allScaleIds
         })),
         current_bank: _keysConfig.currentBank,
         enabled_modes: mc.enabled_modes || [],
         available_effects: mc.available_effects || ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend'],
-        keyboard_scales: mc.keyboard_scales || [],
+        keyboard_scales: allScaleIds,
         arpeggiator_modes: mc.arpeggiator_modes || Array.from({ length: 16 }, (_, i) => i),
         custom_arpeggiator_patterns: _customArps,
-        harmonic_profiles: (mc.harmonic_profiles || []).map(id => {
-          const p = HARMONIC_PROFILES.find(x => x.id === id); return p || null;
-        }).filter(Boolean),
+        custom_chord_progressions: _getProgressions(),
+        harmonic_profiles: hpProfiles,
         potentiometer_functions: mc.potentiometer_functions || {},
         arp_potentiometer_functions: mc.arp_potentiometer_functions || {}
       };
@@ -3434,22 +3446,24 @@
       refreshKeyDropdowns();
     });
 
-    document.getElementById('btn-save-scales')?.addEventListener('click', () => {
+    document.getElementById('btn-save-scales')?.addEventListener('click', async () => {
       const enabled = [...document.querySelectorAll('.kb-scale-chk:checked')].map(c => +c.value);
       if (!enabled.length) { alert('Selecciona almenys una escala.'); return; }
       const mc = _loadModesConfig(); mc.keyboard_scales = enabled.sort((a, b) => a - b); _saveModesConfig(mc);
       log(`${enabled.length} escales guardades.`, 'ok');
       showGlobalToast('Guardat correctament');
+      await _syncConfigToDevice();
     });
     document.getElementById('btn-scales-all')?.addEventListener('click', () => document.querySelectorAll('.kb-scale-chk').forEach(c => c.checked = true));
     document.getElementById('btn-scales-none')?.addEventListener('click', () => document.querySelectorAll('.kb-scale-chk').forEach(c => c.checked = false));
 
-    document.getElementById('btn-save-profiles')?.addEventListener('click', () => {
+    document.getElementById('btn-save-profiles')?.addEventListener('click', async () => {
       const enabled = [...document.querySelectorAll('.hp-chk:checked')].map(c => +c.value);
       const mc = _loadModesConfig(); mc.harmonic_profiles = enabled; _saveModesConfig(mc);
       const badge = document.getElementById('hp-count-badge'); if (badge) badge.textContent = enabled.length;
       log(`${enabled.length} perfils tonals guardats.`, 'ok');
       showGlobalToast('Guardat correctament');
+      await _syncConfigToDevice();
     });
     document.getElementById('btn-profiles-all')?.addEventListener('click', () => {
       document.querySelectorAll('.hp-chk').forEach(c => c.checked = true);
@@ -3458,16 +3472,17 @@
       document.querySelectorAll('.hp-chk').forEach(c => c.checked = false);
     });
 
-    document.getElementById('btn-save-effects')?.addEventListener('click', () => {
+    document.getElementById('btn-save-effects')?.addEventListener('click', async () => {
       const enabled = [...document.querySelectorAll('.effect-chk:checked')].map(c => c.value);
       const mc = _loadModesConfig(); mc.available_effects = enabled; _saveModesConfig(mc);
       log(`Efectes guardats: ${enabled.join(', ')}`, 'ok');
       showGlobalToast('Guardat correctament');
+      await _syncConfigToDevice();
     });
     document.getElementById('btn-effects-all')?.addEventListener('click', () => document.querySelectorAll('.effect-chk').forEach(c => c.checked = true));
     document.getElementById('btn-effects-none')?.addEventListener('click', () => document.querySelectorAll('.effect-chk').forEach(c => c.checked = false));
 
-    document.getElementById('btn-save-arp')?.addEventListener('click', () => {
+    document.getElementById('btn-save-arp')?.addEventListener('click', async () => {
       const enabled = [...document.querySelectorAll('.arp-chk:checked')].map(c => +c.value);
       
       const mc = _loadModesConfig(); 
@@ -3475,6 +3490,7 @@
       _saveModesConfig(mc);
       log(`${enabled.length} patrons d'arpegiador guardats.`, 'ok');
       showGlobalToast('Guardat correctament');
+      await _syncConfigToDevice();
     });
     document.getElementById('btn-arp-all')?.addEventListener('click', () => document.querySelectorAll('.arp-chk').forEach(c => c.checked = true));
     document.getElementById('btn-arp-none')?.addEventListener('click', () => document.querySelectorAll('.arp-chk').forEach(c => c.checked = false));
@@ -3494,12 +3510,7 @@
       _saveModesConfig(mc);
       log('Funcions dels potenciòmetres guardades.', 'ok');
       showGlobalToast('Guardat correctament');
-      if (device.isConnected()) {
-        try {
-          await device.writeFile('tecla_web_config.json', JSON.stringify(buildDeviceConfig(), null, 2));
-          log('✓ Potenciòmetres sincronitzats al dispositiu.', 'ok');
-        } catch (e) { log(`Error sincronitzant: ${e.message}`, 'warn'); }
-      }
+      await _syncConfigToDevice();
     });
 
     // ══════════════════════════════════════════════════════════════
