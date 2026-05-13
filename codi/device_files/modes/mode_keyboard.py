@@ -886,193 +886,85 @@ class KeyboardMode:
             except Exception as e:
                 print(f"Error tocant acord: {e}")
     
-    def _process_arpeggiator(self, button_states, current_time):
-        """Processa l'arpeggiador (amb suport per acords i múltiples modes)"""
-        # Trobar botons premuts (només 1-8)
-        pressed_buttons = [i for i in range(8) if i < len(button_states) and button_states[i]]
-        
-        if not pressed_buttons:
-            # No hi ha botons premuts - aturar arpeggiador
-            self.stop_all_notes()
-            self.arp_index = 0
-            self.arp_notes = []
-            self.arp_button_order = []
-            return
-        
-        # Mode 'Ordre': Detectar canvis en botons premuts per actualitzar ordre
-        if ARP_DIRS[self.arp_mode_index] == 'order':
-            # Afegir nous botons a l'ordre
-            for btn in pressed_buttons:
-                if btn not in self.arp_button_order:
-                    self.arp_button_order.append(btn)
-            # Eliminar botons que ja no estan premuts
-            self.arp_button_order = [btn for btn in self.arp_button_order if btn in pressed_buttons]
-        
-        # Generar notes per als botons premuts amb tonalitat i escala
-        all_notes = []
-        
-        # Obtenir escala actual
-        if len(self.available_scales) == 0:
-            return
-        
-        current_scale_id = self.available_scales[self.scale_mode_index]
-        
-        # Detectar tipus: perfil harmònic (>= 3000), escala personalitzada (>= 2000), progressió (1000-1999) o escala normal (< 1000)
-        if current_scale_id >= 3000:
-            # Per perfils harmònics, calcular notes per intervals del perfil
-            profile = self.config_manager.get_harmonic_profile_by_scale_id(current_scale_id) if self.config_manager else None
-            if not profile:
-                return
-            intervals = profile.get('intervals', [0, 2, 4, 5, 7, 9, 11, 12])
-            key_offset = KEY_OFFSETS[self.key_index]
-            for btn_idx in pressed_buttons:
-                interval = intervals[btn_idx] if btn_idx < len(intervals) else 0
-                note = max(0, min(127, self.octave * 12 + key_offset + interval))
-                all_notes.append(note)
-        elif current_scale_id >= 2000:
-            # Per escales personalitzades, obtenir notes directament de la configuració
-            custom_scale = self.config_manager.get_custom_scale_by_scale_id(current_scale_id) if self.config_manager else None
-            if not custom_scale:
-                return
-            
-            notes_data = custom_scale.get('notes', [])
-            for btn_idx in pressed_buttons:
-                # Trobar la nota per aquest botó
-                note_config = None
-                for note in notes_data:
-                    if note.get('button') == btn_idx:
-                        note_config = note
-                        break
-                
-                if note_config:
-                    # Obtenir nota MIDI directament
-                    midi_note = note_config.get('midi_note')
-                    if midi_note is None:
-                        note_name = note_config.get('note_name', 'C')
-                        config_octave = note_config.get('octave', 4)
-                        note_offset_val = note_offset(note_name)
-                        # Aplicar offset d'octava actual (botons 14-15)
-                        midi_note = (self.octave + config_octave - 4 + 1) * 12 + note_offset_val
+    def _scale_triad(self, b, si, ko):
+        sd = b % len(si); oo = b // len(si)
+        base = self.octave * 12 + ko
+        r = base + oo * 12 + si[sd]
+        t3d = (sd + 2) % len(si); t3o = oo + (sd + 2) // len(si)
+        r3 = base + t3o * 12 + si[t3d]
+        t5d = (sd + 4) % len(si); t5o = oo + (sd + 4) // len(si)
+        r5 = base + t5o * 12 + si[t5d]
+        return [max(0, min(127, r)), max(0, min(127, r3)), max(0, min(127, r5))]
+
+    def _collect_arp_notes(self, btns):
+        if not self.available_scales:
+            return []
+        sid = self.available_scales[self.scale_mode_index]
+        cm = self.config_manager
+        out = []
+        if sid >= 3000:
+            p = cm.get_harmonic_profile_by_scale_id(sid) if cm else None
+            if not p: return []
+            ivs = p.get('intervals', [0, 2, 4, 5, 7, 9, 11, 12])
+            ko = KEY_OFFSETS[self.key_index]
+            for b in btns:
+                out.append(max(0, min(127, self.octave * 12 + ko + (ivs[b] if b < len(ivs) else 0))))
+        elif sid >= 2000:
+            cs = cm.get_custom_scale_by_scale_id(sid) if cm else None
+            if not cs: return []
+            nd = cs.get('notes', [])
+            for b in btns:
+                nc = None
+                for n in nd:
+                    if n.get('button') == b: nc = n; break
+                if nc:
+                    mn = nc.get('midi_note')
+                    if mn is None:
+                        mn = (self.octave + nc.get('octave', 4) - 3) * 12 + note_offset(nc.get('note_name', 'C'))
                     else:
-                        # Si ja té midi_note, aplicar offset d'octava
-                        config_octave = midi_note // 12
-                        note_in_octave = midi_note % 12
-                        midi_note = (config_octave + self.octave - 4) * 12 + note_in_octave
-                    
-                    midi_note = max(0, min(127, midi_note))
-                    all_notes.append(midi_note)
-        elif current_scale_id >= 1000:
-            # Per progressions, generar directament els acords configurats
-            progression = self.config_manager.get_progression_by_scale_id(current_scale_id) if self.config_manager else None
-            if not progression:
-                return
-            
-            chords_data = progression.get('chords', [])
-            for btn_idx in pressed_buttons:
-                # Trobar l'acord per aquest botó
-                chord_config = None
-                for chord in chords_data:
-                    if chord.get('button') == btn_idx:
-                        chord_config = chord
-                        break
-                
-                if chord_config:
-                    # Generar notes de l'acord
-                    root_note_name = chord_config.get('root_note', 'C')
-                    chord_type = chord_config.get('chord_type', 'Major')
-                    config_octave = chord_config.get('octave', 4)
-                    
-                    # Aplicar offset d'octava actual (botons 14-15)
-                    root_offset = note_offset(root_note_name)
-                    base_note = (self.octave + config_octave - 4) * 12 + root_offset
-                    
-                    chord_intervals = CHORDS.get(chord_type, (0, 4, 7))
-                    for interval in chord_intervals:
-                        note = base_note + interval
-                        note = max(0, min(127, note))
-                        all_notes.append(note)
+                        mn = (mn // 12 + self.octave - 4) * 12 + mn % 12
+                    out.append(max(0, min(127, mn)))
+        elif sid >= 1000:
+            pr = cm.get_progression_by_scale_id(sid) if cm else None
+            if not pr: return []
+            cd = pr.get('chords', [])
+            for b in btns:
+                cc = None
+                for c in cd:
+                    if c.get('button') == b: cc = c; break
+                if cc:
+                    bn = (self.octave + cc.get('octave', 4) - 4) * 12 + note_offset(cc.get('root_note', 'C'))
+                    for iv in CHORDS.get(cc.get('chord_type', 'Major'), (0, 4, 7)):
+                        out.append(max(0, min(127, bn + iv)))
         else:
-            # Escala normal
-            scale_intervals = SCALES[current_scale_id]
-            key_offset = KEY_OFFSETS[self.key_index]
-            
-            for btn_idx in pressed_buttons:
+            si = SCALES[sid]; ko = KEY_OFFSETS[self.key_index]
+            for b in btns:
                 if self.chord_mode_active:
-                    # Mode acords: generar tríada (root, 3a, 5a) per cada botó
-                    scale_degree = btn_idx % len(scale_intervals)
-                    octave_offset = btn_idx // len(scale_intervals)
-                    root_note = (self.octave + octave_offset) * 12 + key_offset + scale_intervals[scale_degree]
-                    
-                    # Root
-                    all_notes.append(root_note)
-                    
-                    # Tercera (2 graus d'escala amunt)
-                    third_degree = (scale_degree + 2) % len(scale_intervals)
-                    third_octave = octave_offset + ((scale_degree + 2) // len(scale_intervals))
-                    third_note = (self.octave + third_octave) * 12 + key_offset + scale_intervals[third_degree]
-                    all_notes.append(third_note)
-                    
-                    # Quinta (4 graus d'escala amunt)
-                    fifth_degree = (scale_degree + 4) % len(scale_intervals)
-                    fifth_octave = octave_offset + ((scale_degree + 4) // len(scale_intervals))
-                    fifth_note = (self.octave + fifth_octave) * 12 + key_offset + scale_intervals[fifth_degree]
-                    all_notes.append(fifth_note)
+                    out.extend(self._scale_triad(b, si, ko))
                 else:
-                    # Mode normal: una nota per botó
-                    scale_degree = btn_idx % len(scale_intervals)
-                    octave_offset = btn_idx // len(scale_intervals)
-                    note = (self.octave + octave_offset) * 12 + key_offset + scale_intervals[scale_degree]
-                    note = max(0, min(127, note))
-                    all_notes.append(note)
-        
-        # Processar notes segons el mode d'arpegiador
-        arp_direction = ARP_DIRS[self.arp_mode_index]
-        
-        if arp_direction == 'order':
-            # Mode 'Ordre': Mantenir ordre de pulsació dels botons
-            # Generar notes per cada botó en l'ordre en què es van prémer
-            ordered_notes = []
-            for btn_idx in self.arp_button_order:
-                if self.chord_mode_active:
-                    # Generar acord per aquest botó
-                    scale_degree = btn_idx % len(scale_intervals)
-                    octave_offset = btn_idx // len(scale_intervals)
-                    root_note = (self.octave + octave_offset) * 12 + key_offset + scale_intervals[scale_degree]
-                    ordered_notes.append(max(0, min(127, root_note)))
-                    # Tercera
-                    third_degree = (scale_degree + 2) % len(scale_intervals)
-                    third_octave = octave_offset + ((scale_degree + 2) // len(scale_intervals))
-                    third_note = (self.octave + third_octave) * 12 + key_offset + scale_intervals[third_degree]
-                    ordered_notes.append(max(0, min(127, third_note)))
-                    # Quinta
-                    fifth_degree = (scale_degree + 4) % len(scale_intervals)
-                    fifth_octave = octave_offset + ((scale_degree + 4) // len(scale_intervals))
-                    fifth_note = (self.octave + fifth_octave) * 12 + key_offset + scale_intervals[fifth_degree]
-                    ordered_notes.append(max(0, min(127, fifth_note)))
-                else:
-                    # Una nota per botó
-                    scale_degree = btn_idx % len(scale_intervals)
-                    octave_offset = btn_idx // len(scale_intervals)
-                    note = (self.octave + octave_offset) * 12 + key_offset + scale_intervals[scale_degree]
-                    ordered_notes.append(max(0, min(127, note)))
-            self.arp_notes = ordered_notes
-        else:
-            # Altres modes: eliminar duplicats i ordenar
-            all_notes = sorted(set(max(0, min(127, n)) for n in all_notes))
-            self.arp_notes = all_notes
-        
-        # Comprovar si és hora de la següent nota
-        if current_time - self.last_arp_time >= self.arp_speed:
-            # Aturar nota anterior
+                    sd = b % len(si); oo = b // len(si)
+                    out.append(max(0, min(127, self.octave * 12 + ko + oo * 12 + si[sd])))
+        return out
+
+    def _process_arpeggiator(self, button_states, current_time):
+        pressed = [i for i in range(8) if i < len(button_states) and button_states[i]]
+        if not pressed:
             self.stop_all_notes()
-            
-            # Tocar nota(es) actual(s)
+            self.arp_index = 0; self.arp_notes = []; self.arp_button_order = []
+            return
+        arp_dir = ARP_DIRS[self.arp_mode_index]
+        if arp_dir == 'order':
+            for b in pressed:
+                if b not in self.arp_button_order: self.arp_button_order.append(b)
+            self.arp_button_order = [b for b in self.arp_button_order if b in pressed]
+            self.arp_notes = self._collect_arp_notes(self.arp_button_order)
+        else:
+            self.arp_notes = sorted(set(self._collect_arp_notes(pressed)))
+        if current_time - self.last_arp_time >= self.arp_speed:
+            self.stop_all_notes()
             if self.arp_notes:
-                # Processar segons tipus de patró
-                self._play_arp_pattern(arp_direction)
+                self._play_arp_pattern(arp_dir)
                 self.last_arp_time = current_time
-        
-        # Processar Gate en mode arpegiador (modula CC11 Expression)
         if self.gate_enabled:
             self._process_gate(current_time)
     

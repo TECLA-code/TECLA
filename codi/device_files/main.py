@@ -487,6 +487,8 @@ def main():
                         # Comprovar si existeix fitxer de senyal de recàrrega
                         signal_file = '.config_reload'
                         config_changed = False
+                        if not hasattr(hardware, '_last_reload_ts'):
+                            hardware._last_reload_ts = None
                         
                         # SUPORT SIMULADOR: Comprovar flag config_reload_requested
                         try:
@@ -503,13 +505,15 @@ def main():
                             # Si el fitxer de senyal existeix, recarregar configuració
                             with open(signal_file, 'r') as f:
                                 timestamp = f.read().strip()
-                                print(f"📡 Senyal de recàrrega detectada (timestamp: {timestamp})")
+                            if timestamp and timestamp != hardware._last_reload_ts:
+                                hardware._last_reload_ts = timestamp
+                                print('Recarregar config: ' + timestamp)
                                 config_changed = True
-                                
                             # Eliminar el fitxer de senyal després de processar-lo
                             try:
                                 import os
                                 os.remove(signal_file)
+                                hardware._last_reload_ts = None
                             except OSError:
                                 pass
                         except OSError:
