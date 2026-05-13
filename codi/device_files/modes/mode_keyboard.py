@@ -97,9 +97,8 @@ class KeyboardMode:
         self.gate_last_toggle = 0
         self.gate_high = True  # estat actual: high (127) o low (min_expr)
         
-        # Detecció de doble click per desactivar arpegiador i retrocedir escales
+        # Detecció de doble click per desactivar arpegiador
         self.last_arp_button_press = 0
-        self.last_scale_button_press = 0
         self.double_click_threshold = 0.3  # Segons per considerar doble click
         
         # Sustain hold: quan està actiu, no s'envien NoteOff (sustain indefinit)
@@ -507,43 +506,36 @@ class KeyboardMode:
                     # Botó acabat de prémer
                     # print(f"DEBUG: Botó {btn_idx+1} premut")  # Descomentar per debug
                     
-                    if btn_idx == 8:  # Botó 9: Ciclar escales / Doble click = retrocedir
+                    if btn_idx == 8:  # Botó 9: Ciclar escales, progressions i escales personalitzades
                         # IMPORTANT: Aturar totes les notes abans de canviar
                         self.stop_all_notes()
                         
+                        # Ciclar entre escales, progressions i escales personalitzades disponibles
                         if len(self.available_scales) > 0:
-                            # Detectar doble click per anar enrere
-                            time_since_last = current_time - self.last_scale_button_press
-                            is_double_click = time_since_last < self.double_click_threshold
-                            self.last_scale_button_press = current_time
-                            
-                            if is_double_click:
-                                self.scale_mode_index = (self.scale_mode_index - 1) % len(self.available_scales)
-                            else:
-                                self.scale_mode_index = (self.scale_mode_index + 1) % len(self.available_scales)
-                            
+                            self.scale_mode_index = (self.scale_mode_index + 1) % len(self.available_scales)
                             actual_scale_id = self.available_scales[self.scale_mode_index]
-                            direction = "←" if is_double_click else "→"
                             
-                            if actual_scale_id >= 3000:
-                                # És un perfil harmònic
-                                profile = self.config_manager.get_harmonic_profile_by_scale_id(actual_scale_id) if self.config_manager else None
-                                name = profile.get('name', f'#{actual_scale_id}') if profile else f'#{actual_scale_id}'
-                                print(f"◈ {direction} Perfil: {name} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
-                            elif actual_scale_id >= 2000:
+                            # Detectar tipus: escala personalitzada (>= 2000), progressió (1000-1999) o escala normal (< 1000)
+                            if actual_scale_id >= 2000:
                                 # És una escala personalitzada
                                 custom_scale = self.config_manager.get_custom_scale_by_scale_id(actual_scale_id) if self.config_manager else None
-                                name = custom_scale.get('name', f'#{actual_scale_id - 2000}') if custom_scale else f'#{actual_scale_id - 2000}'
-                                print(f"🎼 {direction} Escala: {name} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
+                                if custom_scale:
+                                    scale_name = custom_scale.get('name', 'Sense nom')
+                                    print(f"🎼 Escala Personalitzada: {scale_name} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
+                                else:
+                                    print(f"🎼 Escala Personalitzada #{actual_scale_id - 2000} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
                             elif actual_scale_id >= 1000:
                                 # És una progressió
                                 progression = self.config_manager.get_progression_by_scale_id(actual_scale_id) if self.config_manager else None
-                                name = progression.get('name', f'#{actual_scale_id - 1000}') if progression else f'#{actual_scale_id - 1000}'
-                                print(f"♪ {direction} Progressió: {name} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
+                                if progression:
+                                    prog_name = progression.get('name', 'Sense nom')
+                                    print(f"♪ Progressió: {prog_name} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
+                                else:
+                                    print(f"♪ Progressió #{actual_scale_id - 1000} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
                             else:
                                 # És una escala normal
                                 scale_name = SCALE_NAMES[actual_scale_id] if actual_scale_id < len(SCALE_NAMES) else f"Escala #{actual_scale_id}"
-                                print(f"🎼 {direction} {scale_name} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
+                                print(f"🎼 {scale_name} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
                     
                     elif btn_idx == 9:  # Botó 10: Canviar tonalitat (cromàtic)
                         # IMPORTANT: Aturar totes les notes abans de canviar de tonalitat
@@ -646,19 +638,8 @@ class KeyboardMode:
         
         current_scale_id = self.available_scales[self.scale_mode_index]
         
-        # Detectar tipus: perfil harmònic (>= 3000), escala personalitzada (>= 2000), progressió (1000-1999) o escala normal (< 1000)
-        if current_scale_id >= 3000:
-            # Mode perfil harmònic: intervals relatius a la tònica
-            profile = self.config_manager.get_harmonic_profile_by_scale_id(current_scale_id) if self.config_manager else None
-            if profile:
-                intervals = profile.get('intervals', [0, 2, 4, 5, 7, 9, 11, 12])
-                key_offset = KEY_OFFSETS[self.key_index]
-                interval = intervals[btn_idx] if btn_idx < len(intervals) else 0
-                note = max(0, min(127, self.octave * 12 + key_offset + interval))
-                self._note_on(note, btn_idx)
-            else:
-                print(f"Error: Perfil harmònic {current_scale_id} no trobat")
-        elif current_scale_id >= 2000:
+        # Detectar tipus: escala personalitzada (>= 2000), progressió (1000-1999) o escala normal (< 1000)
+        if current_scale_id >= 2000:
             # Mode escala personalitzada: tocar nota directament des de la configuració
             custom_scale = self.config_manager.get_custom_scale_by_scale_id(current_scale_id) if self.config_manager else None
             if custom_scale:
@@ -689,47 +670,6 @@ class KeyboardMode:
             # Tocar la nota amb la velocitat del potenciòmetre
             self._note_on(base_note, btn_idx)
     
-    def _generate_chord_from_harmonic_profile(self, btn_idx, profile):
-        """Genera un acord (arrel + 3a + 5a) des del camp harmònic del perfil tonal"""
-        if not profile:
-            return
-        self._note_off_for_button(btn_idx)
-        intervals = profile.get('intervals', [0, 2, 4, 5, 7, 9, 11, 12])
-        key_offset = KEY_OFFSETS[self.key_index]
-        root_interval = intervals[btn_idx] if btn_idx < len(intervals) else 0
-        root_note = max(0, min(127, self.octave * 12 + key_offset + root_interval))
-        # Cercar 3a (diff 3-4 st) i 5a (diff 6-8 st) dins els intervals del perfil
-        third_note = None
-        fifth_note = None
-        best_td = 999
-        best_fd = 999
-        for iv in intervals:
-            diff = (iv - root_interval) % 12
-            if diff == 0:
-                continue
-            td = min(abs(diff - 3), abs(diff - 4))
-            fd = min(abs(diff - 6), abs(diff - 7), abs(diff - 8))
-            if td < best_td:
-                best_td = td
-                third_note = max(0, min(127, self.octave * 12 + key_offset + iv))
-            if fd < best_fd:
-                best_fd = fd
-                fifth_note = max(0, min(127, self.octave * 12 + key_offset + iv))
-        chord_notes = [root_note]
-        if third_note is not None:
-            chord_notes.append(third_note)
-        if fifth_note is not None and fifth_note not in chord_notes:
-            chord_notes.append(fifth_note)
-        for i, note in enumerate(chord_notes):
-            try:
-                self.midi.send(NoteOn(note, self.velocity))
-                self.active_notes.add(note)
-                self.button_notes[btn_idx].add(note)
-                if i == 0:
-                    self._update_pwm_for_note(note)
-            except Exception as e:
-                print(f"Error tocant acord perfil: {e}")
-
     def _generate_chord_from_progression(self, btn_idx, progression):
         """Genera un acord des de la progressió personalitzada
         Args:
@@ -889,13 +829,6 @@ class KeyboardMode:
         
         current_scale_id = self.available_scales[self.scale_mode_index]
         
-        # Si és un perfil harmònic, generar acord harmonicat
-        if current_scale_id >= 3000:
-            profile = self.config_manager.get_harmonic_profile_by_scale_id(current_scale_id) if self.config_manager else None
-            if profile:
-                self._generate_chord_from_harmonic_profile(btn_idx, profile)
-            return
-
         # Si és una escala personalitzada, generar acord a partir de la nota configurada
         if current_scale_id >= 2000:
             custom_scale = self.config_manager.get_custom_scale_by_scale_id(current_scale_id) if self.config_manager else None
@@ -983,19 +916,8 @@ class KeyboardMode:
         
         current_scale_id = self.available_scales[self.scale_mode_index]
         
-        # Detectar tipus: perfil harmònic (>= 3000), escala personalitzada (>= 2000), progressió (1000-1999) o escala normal (< 1000)
-        if current_scale_id >= 3000:
-            # Per perfils harmònics, calcular notes per intervals del perfil
-            profile = self.config_manager.get_harmonic_profile_by_scale_id(current_scale_id) if self.config_manager else None
-            if not profile:
-                return
-            intervals = profile.get('intervals', [0, 2, 4, 5, 7, 9, 11, 12])
-            key_offset = KEY_OFFSETS[self.key_index]
-            for btn_idx in pressed_buttons:
-                interval = intervals[btn_idx] if btn_idx < len(intervals) else 0
-                note = max(0, min(127, self.octave * 12 + key_offset + interval))
-                all_notes.append(note)
-        elif current_scale_id >= 2000:
+        # Detectar tipus: escala personalitzada (>= 2000), progressió (1000-1999) o escala normal (< 1000)
+        if current_scale_id >= 2000:
             # Per escales personalitzades, obtenir notes directament de la configuració
             custom_scale = self.config_manager.get_custom_scale_by_scale_id(current_scale_id) if self.config_manager else None
             if not custom_scale:

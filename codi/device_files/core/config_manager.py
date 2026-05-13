@@ -272,39 +272,14 @@ class ConfigManager:
     
     def get_keyboard_scales(self, bank_index=None):
         """Retorna les escales configurades per al mode teclat d'un banc
-        Inclou escales predefinides (0-23), progressions (1000+), custom (2000+) i perfils harmònics (3000+)
+        Inclou escales predefinides (0-23) i progressions custom (1000+)
         """
         bank_idx = self.current_bank_index if bank_index is None else bank_index
         if 0 <= bank_idx < len(self.config['banks']):
-            bank_scales = self.config['banks'][bank_idx].get('keyboard_scales', None)
-            if bank_scales is not None:
-                return bank_scales
-        # Fallback al nivell superior (escrit per l'app web)
-        return self.config.get('keyboard_scales', [0, 1, 4, 5, 7, 8, 13, 15, 18, 19])
+            # Retornar les escales configurades o un valor per defecte
+            return self.config['banks'][bank_idx].get('keyboard_scales', [0, 1, 4, 5, 7, 8, 13, 15, 18, 19])
+        return [0, 1, 4, 5, 7, 8, 13, 15, 18, 19]  # Escales per defecte
     
-    def get_harmonic_profiles(self):
-        """Retorna la llista de perfils harmònics com a objectes complets"""
-        return self.config.get('harmonic_profiles', [])
-
-    def get_harmonic_profile_by_scale_id(self, scale_id):
-        """Si scale_id >= 3000, retorna el perfil harmònic corresponent"""
-        if scale_id < 3000:
-            return None
-        for p in self.get_harmonic_profiles():
-            if p.get('id') == scale_id:
-                return p
-        return None
-
-    def get_custom_scale_by_scale_id(self, scale_id):
-        """Si scale_id >= 2000, retorna l'escala personalitzada corresponent"""
-        if scale_id < 2000:
-            return None
-        idx = scale_id - 2000
-        custom_scales = self.config.get('custom_scales', [])
-        if 0 <= idx < len(custom_scales):
-            return custom_scales[idx]
-        return None
-
     def get_keyboard_scales_with_progressions(self, bank_index=None):
         """Retorna escales + progressions fusionades amb IDs únics
         Progressions tenen ID >= 1000
