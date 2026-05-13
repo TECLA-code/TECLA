@@ -97,10 +97,18 @@ class KeyboardMode:
         self.gate_last_toggle = 0
         self.gate_high = True  # estat actual: high (127) o low (min_expr)
         
-        # Detecció de doble click per desactivar arpegiador i retrocedir escales
-        self.last_arp_button_press = 0
-        self.last_scale_button_press = 0
-        self.double_click_threshold = 0.3  # Segons per considerar doble click
+        # Detecció long-press per escales (btn9), arpegiador (btn12) i efectes (T14/T15)
+        self.scale_btn_press_time = 0    # Quan es va prémer btn9
+        self.arp_btn_press_time = 0      # Quan es va prémer btn12 (arp actiu)
+        self.long_press_threshold = 0.5  # Segons per considerar long press
+        # T14 / T15 - Efectes temporals
+        self.available_effects_list = ['Sustain', 'Pausa', 'Gate', 'PitchBend']
+        self.t14_effect_index = 0
+        self.t15_effect_index = 1
+        self.t14_press_time = 0
+        self.t15_press_time = 0
+        self._prev_t14 = False
+        self._prev_t15 = False
         
         # Sustain hold: quan està actiu, no s'envien NoteOff (sustain indefinit)
         self.sustain_hold_enabled = False
@@ -150,6 +158,14 @@ class KeyboardMode:
             self.arp_pot_x_function = arp_pot_functions.get('arp_pot_x', 'Arp Speed (BPM)')
             self.arp_pot_y_function = arp_pot_functions.get('arp_pot_y', 'Arp Pattern Selector')
             self.arp_pot_z_function = arp_pot_functions.get('arp_pot_z', 'Gate Length')
+            
+            # Recarregar efectes disponibles per T14/T15
+            effects = self.config_manager.get_available_effects()
+            if effects:
+                self.available_effects_list = effects
+            # Assegurar índexs vàlids
+            self.t14_effect_index = self.t14_effect_index % len(self.available_effects_list)
+            self.t15_effect_index = self.t15_effect_index % len(self.available_effects_list)
             
         for i in range(12):
             self.button_notes[i].clear()
@@ -503,112 +519,87 @@ class KeyboardMode:
                 current_pressed = button_states[btn_idx]
                 was_pressed = btn_idx < len(self.last_button_states) and self.last_button_states[btn_idx]
                 
-                if current_pressed and not was_pressed:
-                    # Botó acabat de prémer
-                    # print(f"DEBUG: Botó {btn_idx+1} premut")  # Descomentar per debug
-                    
-                    if btn_idx == 8:  # Botó 9: Ciclar escales / Doble click = retrocedir
-                        # IMPORTANT: Aturar totes les notes abans de canviar
+                if btn_idx == 8:  # Botó 9: Ciclar escales — curt=avant, llarg=enrere
+                    if current_pressed and not was_pressed:
                         self.stop_all_notes()
-                        
-                        if len(self.available_scales) > 0:
-                            # Detectar doble click per anar enrere
-                            time_since_last = current_time - self.last_scale_button_press
-                            is_double_click = time_since_last < self.double_click_threshold
-                            self.last_scale_button_press = current_time
-                            
-                            if is_double_click:
+                        self.scale_btn_press_time = current_time
+                    elif not current_pressed and was_pressed:
+                        if self.scale_btn_press_time > 0 and len(self.available_scales) > 0:
+                            duration = current_time - self.scale_btn_press_time
+                            self.scale_btn_press_time = 0
+                            if duration >= self.long_press_threshold:
                                 self.scale_mode_index = (self.scale_mode_index - 1) % len(self.available_scales)
+                                direction = "←"
                             else:
                                 self.scale_mode_index = (self.scale_mode_index + 1) % len(self.available_scales)
-                            
+                                direction = "→"
                             actual_scale_id = self.available_scales[self.scale_mode_index]
-                            direction = "←" if is_double_click else "→"
-                            
                             if actual_scale_id >= 3000:
-                                # És un perfil harmònic
                                 profile = self.config_manager.get_harmonic_profile_by_scale_id(actual_scale_id) if self.config_manager else None
                                 name = profile.get('name', f'#{actual_scale_id}') if profile else f'#{actual_scale_id}'
                                 print(f"◈ {direction} Perfil: {name} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
                             elif actual_scale_id >= 2000:
-                                # És una escala personalitzada
                                 custom_scale = self.config_manager.get_custom_scale_by_scale_id(actual_scale_id) if self.config_manager else None
                                 name = custom_scale.get('name', f'#{actual_scale_id - 2000}') if custom_scale else f'#{actual_scale_id - 2000}'
                                 print(f"🎼 {direction} Escala: {name} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
                             elif actual_scale_id >= 1000:
-                                # És una progressió
                                 progression = self.config_manager.get_progression_by_scale_id(actual_scale_id) if self.config_manager else None
                                 name = progression.get('name', f'#{actual_scale_id - 1000}') if progression else f'#{actual_scale_id - 1000}'
                                 print(f"♪ {direction} Progressió: {name} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
                             else:
-                                # És una escala normal
                                 scale_name = SCALE_NAMES[actual_scale_id] if actual_scale_id < len(SCALE_NAMES) else f"Escala #{actual_scale_id}"
                                 print(f"🎼 {direction} {scale_name} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
-                    
-                    elif btn_idx == 9:  # Botó 10: Canviar tonalitat (cromàtic)
-                        # IMPORTANT: Aturar totes les notes abans de canviar de tonalitat
+                
+                elif btn_idx == 9:  # Botó 10: Canviar tonalitat (cromàtic)
+                    if current_pressed and not was_pressed:
                         self.stop_all_notes()
                         self.key_index = (self.key_index + 1) % 12
-                        key_name = KEY_CIRCLE[self.key_index]  # ordre cromàtic
+                        key_name = KEY_CIRCLE[self.key_index]
                         print(f"🎵 Tonalitat: {key_name}")
-                    
-                    elif btn_idx == 10:  # Botó 11: Toggle mode acords
-                        # IMPORTANT: Aturar totes les notes abans de canviar de mode
+                
+                elif btn_idx == 10:  # Botó 11: Toggle mode acords
+                    if current_pressed and not was_pressed:
                         self.stop_all_notes()
                         self.chord_mode_active = not self.chord_mode_active
                         status = "ACTIVAT" if self.chord_mode_active else "DESACTIVAT"
                         print(f"🎹 Mode Acords: {status}")
-                        
-                        # Re-aplicar CC MIDI actius (especialment sustain) per sincronitzar
                         self._reapply_active_ccs()
-                    
-                    elif btn_idx == 11:  # Botó 12: Ciclar modes d'arpegiador / Doble click desactiva
-                        # IMPORTANT: Aturar totes les notes abans de canviar de mode
+                
+                elif btn_idx == 11:  # Botó 12: Arpegiador — curt=ciclar, llarg=desactivar
+                    if current_pressed and not was_pressed:
                         self.stop_all_notes()
-                        
-                        # Detectar doble click
-                        time_since_last_press = current_time - self.last_arp_button_press
-                        is_double_click = time_since_last_press < self.double_click_threshold
-                        self.last_arp_button_press = current_time
-                        
-                        if is_double_click and self.arp_mode_active:
-                            # DOBLE CLICK: Desactivar arpeggiador completament
-                            self.arp_mode_active = False
-                            self.arp_notes = []
-                            self.arp_button_order = []
-                            print(f"🎶 Arpeggiador DESACTIVAT")
-                        elif not self.arp_mode_active:
-                            # Activar arpeggiador per primera vegada
+                        if not self.arp_mode_active:
                             self.arp_mode_active = True
                             self.arp_notes = []
                             self.arp_button_order = []
-                            # Assegurar que el mode inicial està dins dels disponibles
                             if self.arp_mode_index not in self.available_arp_modes:
                                 self.arp_mode_index = self.available_arp_modes[0] if self.available_arp_modes else 2
-                            # Noms dels modes d'arpegiador
                             arp_names = {0: 'Amunt', 1: 'Avall', 2: 'Ping-Pong', 3: 'Aleatori', 4: 'Ordre Premut'}
-                            arp_name = arp_names.get(self.arp_mode_index, f'Mode {self.arp_mode_index}')
-                            print(f"Arpeggiador: {arp_name}")
+                            print(f"Arpeggiador: {arp_names.get(self.arp_mode_index, f'Mode {self.arp_mode_index}')}")
+                            self.arp_btn_press_time = 0
                         else:
-                            # CLICK SIMPLE: Ciclar només entre modes disponibles per aquest banc
-                            if len(self.available_arp_modes) > 0:
-                                # Trobar índex actual dins available_arp_modes
-                                try:
-                                    current_idx = self.available_arp_modes.index(self.arp_mode_index)
-                                    next_idx = (current_idx + 1) % len(self.available_arp_modes)
-                                    self.arp_mode_index = self.available_arp_modes[next_idx]
-                                except ValueError:
-                                    # Si el mode actual no està disponible, agafar el primer
-                                    self.arp_mode_index = self.available_arp_modes[0]
-                                
-                                # Reset de variables d'arpegiador
-                                self.arp_index = 0
-                                self.arp_direction = 1
+                            self.arp_btn_press_time = current_time
+                    elif not current_pressed and was_pressed:
+                        if self.arp_btn_press_time > 0:
+                            duration = current_time - self.arp_btn_press_time
+                            self.arp_btn_press_time = 0
+                            if duration >= self.long_press_threshold:
+                                self.arp_mode_active = False
+                                self.arp_notes = []
                                 self.arp_button_order = []
-                                # Noms dels modes d'arpegiador
-                                arp_names = {0: 'Amunt', 1: 'Avall', 2: 'Ping-Pong', 3: 'Aleatori', 4: 'Ordre Premut'}
-                                arp_name = arp_names.get(self.arp_mode_index, f'Mode {self.arp_mode_index}')
-                                print(f"Arpeggiador: {arp_name}")
+                                print("🎶 Arpeggiador DESACTIVAT")
+                            else:
+                                if len(self.available_arp_modes) > 0:
+                                    try:
+                                        current_idx = self.available_arp_modes.index(self.arp_mode_index)
+                                        self.arp_mode_index = self.available_arp_modes[(current_idx + 1) % len(self.available_arp_modes)]
+                                    except ValueError:
+                                        self.arp_mode_index = self.available_arp_modes[0]
+                                    self.arp_index = 0
+                                    self.arp_direction = 1
+                                    self.arp_button_order = []
+                                    arp_names = {0: 'Amunt', 1: 'Avall', 2: 'Ping-Pong', 3: 'Aleatori', 4: 'Ordre Premut'}
+                                    print(f"Arpeggiador: {arp_names.get(self.arp_mode_index, f'Mode {self.arp_mode_index}')}")
         
         # Processar botons de notes 1-8 (índexs 0-7)
         if self.arp_mode_active:
@@ -1466,6 +1457,85 @@ class KeyboardMode:
         else:
             limit = "màxima (8)" if direction > 0 else "mínima (0)"
             print(f"🎹 Ja estàs a l'octava {limit}")
+
+    def update_extra_buttons(self, t14_state, t15_state, pot_values):
+        """Gestiona T14 i T15: efectes temporals mentre premuts, ciclen en soltar"""
+        current_time = time.monotonic()
+        
+        for btn_num, state, prev_state_attr, press_time_attr, effect_idx_attr in (
+            (14, t14_state, '_prev_t14', 't14_press_time', 't14_effect_index'),
+            (15, t15_state, '_prev_t15', 't15_press_time', 't15_effect_index'),
+        ):
+            prev_state = getattr(self, prev_state_attr)
+            
+            if state and not prev_state:
+                setattr(self, press_time_attr, current_time)
+                self._apply_temporal_effect(btn_num, pot_values)
+            elif state and prev_state:
+                self._apply_temporal_effect(btn_num, pot_values)
+            elif not state and prev_state:
+                self._release_temporal_effect(btn_num)
+                duration = current_time - getattr(self, press_time_attr)
+                n = len(self.available_effects_list)
+                if n > 0:
+                    idx = getattr(self, effect_idx_attr)
+                    if duration < 0.35:
+                        idx = (idx + 1) % n
+                        print(f"T{btn_num} \u2192 {self.available_effects_list[idx]}")
+                    elif duration >= self.long_press_threshold:
+                        idx = (idx - 1) % n
+                        print(f"T{btn_num} \u2190 {self.available_effects_list[idx]}")
+                    setattr(self, effect_idx_attr, idx)
+            
+            setattr(self, prev_state_attr, state)
+
+    def _apply_temporal_effect(self, btn_num, pot_values):
+        """Aplica l'efecte temporal del bot\u00f3 mentre est\u00e0 premut"""
+        idx = self.t14_effect_index if btn_num == 14 else self.t15_effect_index
+        if not self.available_effects_list or idx >= len(self.available_effects_list):
+            return
+        effect = self.available_effects_list[idx]
+        try:
+            if effect in ('Sustain', 'Sustain (CC64)'):
+                for ch in range(16):
+                    self.midi.send(ControlChange(64, 127, channel=ch))
+                self.sustain_hold_enabled = True
+            elif effect == 'Pausa':
+                self.stop_all_notes()
+            elif effect in ('Gate', 'Gate Length'):
+                if not self.gate_enabled:
+                    self.gate_enabled = True
+                if pot_values and len(pot_values) > 2 and pot_values[2] > 5:
+                    self.gate_period = max(0.05, 0.5 - (pot_values[2] / 127.0) * 0.45)
+            elif effect in ('PitchBend', 'Pitch Bend'):
+                pot_val = pot_values[1] if pot_values and len(pot_values) > 1 else 0
+                pitch_value = 0 if pot_val < 5 else int((pot_val / 127.0) * 8191)
+                self._send_pitch_bend(pitch_value)
+        except Exception as e:
+            print(f"Error efecte T{btn_num}: {e}")
+
+    def _release_temporal_effect(self, btn_num):
+        """Atura l'efecte temporal en alliberar el bot\u00f3"""
+        idx = self.t14_effect_index if btn_num == 14 else self.t15_effect_index
+        if not self.available_effects_list or idx >= len(self.available_effects_list):
+            return
+        effect = self.available_effects_list[idx]
+        try:
+            if effect in ('Sustain', 'Sustain (CC64)'):
+                for ch in range(16):
+                    self.midi.send(ControlChange(64, 0, channel=ch))
+                self.sustain_hold_enabled = False
+                self.sustain_level = 0
+            elif effect == 'Pausa':
+                pass
+            elif effect in ('Gate', 'Gate Length'):
+                self.gate_enabled = False
+                for ch in range(16):
+                    self.midi.send(ControlChange(11, 127, channel=ch))
+            elif effect in ('PitchBend', 'Pitch Bend'):
+                self._send_pitch_bend(0)
+        except Exception as e:
+            print(f"Error aturant efecte T{btn_num}: {e}")
             
     def get_info(self):
         """Retorna informació de l'estat actual"""

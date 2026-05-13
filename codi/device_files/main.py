@@ -60,6 +60,14 @@ class TeclaHardware:
         self.keyboard_mode = None
         self.keyboard_octave = 4
         self.keyboard_toggle_blocked_until = 0.0  # Bloqueig temporal per evitar toggle múltiple
+        
+        # Variables per als efectes temporals T14/T15 (capa de modes)
+        self.t14_effect_index = 0
+        self.t15_effect_index = 1
+        self.t14_press_time = 0
+        self.t15_press_time = 0
+        self.effect_long_press_threshold = 0.5  # segons
+        self.available_effects = ['Sustain', 'Pausa', 'Gate', 'PitchBend']
     
     def _init_buttons(self):
         """Inicialitza tots els botons"""
@@ -208,17 +216,52 @@ class TeclaHardware:
                         # NO enviar Sustain OFF si hi ha efectes actius
                         # self.midi_out.send(ControlChange(64, 0, channel=ch))   # Sustain OFF
         
-        # Botó 14 (index 13) - Baixar octava
-        if button_states[13] and not self.last_button_states[13]:
-            if self.keyboard_mode_active and self.keyboard_mode:
+        # Botons 14 i 15 (índexs 13 i 14) - Funció dependent de la capa activa
+        t14 = button_states[13] if len(button_states) > 13 else False
+        t15 = button_states[14] if len(button_states) > 14 else False
+        prev_t14 = self.last_button_states[13] if len(self.last_button_states) > 13 else False
+        prev_t15 = self.last_button_states[14] if len(self.last_button_states) > 14 else False
+        current_time_t = time.monotonic()
+        
+        if self.keyboard_mode_active and self.keyboard_mode:
+            # --- CAPA TECLAT: canvi d'octava ---
+            if t14 and not prev_t14:
                 self.keyboard_mode.change_octave(-1)
                 self.keyboard_octave = self.keyboard_mode.octave
-        
-        # Botó 15 (index 14) - Pujar octava
-        if button_states[14] and not self.last_button_states[14]:
-            if self.keyboard_mode_active and self.keyboard_mode:
+            if t15 and not prev_t15:
                 self.keyboard_mode.change_octave(1)
                 self.keyboard_octave = self.keyboard_mode.octave
+        else:
+            # --- CAPA MODES: efectes temporals ---
+            pot_values = self.read_pots()
+            # Carregar llista d'efectes actualitzada si cal
+            try:
+                self.available_effects = self.config_manager.get_available_effects()
+            except Exception:
+                pass
+            
+            for btn_state, prev_state, press_time_attr, effect_idx_attr, btn_label in (
+                (t14, prev_t14, 't14_press_time', 't14_effect_index', 'T14'),
+                (t15, prev_t15, 't15_press_time', 't15_effect_index', 'T15'),
+            ):
+                if btn_state and not prev_state:
+                    setattr(self, press_time_attr, current_time_t)
+                    self._apply_mode_effect(getattr(self, effect_idx_attr), pot_values)
+                elif btn_state and prev_state:
+                    self._apply_mode_effect(getattr(self, effect_idx_attr), pot_values)
+                elif not btn_state and prev_state:
+                    self._release_mode_effect(getattr(self, effect_idx_attr))
+                    duration = current_time_t - getattr(self, press_time_attr)
+                    n = len(self.available_effects)
+                    if n > 0:
+                        idx = getattr(self, effect_idx_attr)
+                        if duration < 0.35:
+                            idx = (idx + 1) % n
+                            print(f"{btn_label} → {self.available_effects[idx]}")
+                        elif duration >= self.effect_long_press_threshold:
+                            idx = (idx - 1) % n
+                            print(f"{btn_label} ← {self.available_effects[idx]}")
+                        setattr(self, effect_idx_attr, idx)
         
         # Botó 16 (index 15) - EMERGENCY STOP + NETEJA DE MEMÒRIA
         if button_states[15] and not self.last_button_states[15]:
@@ -268,6 +311,45 @@ class TeclaHardware:
         
         return mode_changed
     
+    def _apply_mode_effect(self, effect_idx, pot_values):
+        """Aplica l'efecte temporal indicat mentre T14/T15 estan premuts (capa modes)"""
+        if not self.available_effects or effect_idx >= len(self.available_effects):
+            return
+        effect = self.available_effects[effect_idx]
+        try:
+            if effect in ('Sustain', 'Sustain (CC64)'):
+                for ch in range(16):
+                    self.midi_out.send(ControlChange(64, 127, channel=ch))
+            elif effect == 'Pausa':
+                if self.mode_manager:
+                    self.mode_manager.stop_all_sound()
+            elif effect in ('Gate', 'Gate Length'):
+                pass
+            elif effect in ('PitchBend', 'Pitch Bend'):
+                from adafruit_midi.pitch_bend import PitchBend
+                pot_val = pot_values[1] if len(pot_values) > 1 else 0
+                pitch_value = 0 if pot_val < 5 else int((pot_val / 127.0) * 8191)
+                for ch in range(16):
+                    self.midi_out.send(PitchBend(pitch_value, channel=ch))
+        except Exception as e:
+            print(f"Error efecte modes: {e}")
+
+    def _release_mode_effect(self, effect_idx):
+        """Atura l'efecte temporal en alliberar T14/T15 (capa modes)"""
+        if not self.available_effects or effect_idx >= len(self.available_effects):
+            return
+        effect = self.available_effects[effect_idx]
+        try:
+            if effect in ('Sustain', 'Sustain (CC64)'):
+                for ch in range(16):
+                    self.midi_out.send(ControlChange(64, 0, channel=ch))
+            elif effect in ('PitchBend', 'Pitch Bend'):
+                from adafruit_midi.pitch_bend import PitchBend
+                for ch in range(16):
+                    self.midi_out.send(PitchBend(0, channel=ch))
+        except Exception as e:
+            print(f"Error alliberant efecte modes: {e}")
+
     def update_keyboard_mode(self, pot_values, button_states):
         """Actualitza el mode teclat si està actiu"""
         if self.keyboard_mode_active:
