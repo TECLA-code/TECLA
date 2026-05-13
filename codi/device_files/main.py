@@ -21,7 +21,6 @@ def midi_to_frequency(midi_note):
 
 # Importar només el gestor de modes
 from modes.mode_manager import ModeManager
-from modes.mode_keyboard import KeyboardMode
 
 # Configuració de pins
 # Nova versió del hardware: pins ordenats correctament (GP0, GP1, GP2, GP3...)
@@ -361,6 +360,8 @@ class TeclaHardware:
             if not self.keyboard_mode:
                 try:
                     print("🎹 Inicialitzant Mode Teclat...")
+                    import gc; gc.collect()  # Alliberar RAM abans d'importar
+                    from modes.mode_keyboard import KeyboardMode
                     self.keyboard_mode = KeyboardMode(
                         self.midi_out,
                         {'octave': self.keyboard_octave},

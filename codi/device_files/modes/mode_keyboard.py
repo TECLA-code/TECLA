@@ -33,6 +33,8 @@ except ImportError:
 # Ordre cromàtic (C, C#, D, ... B) — més intuïtiu que el cercle de quintes
 KEY_CIRCLE = ('C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B')
 KEY_OFFSETS = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
+_ARP_MODE_NAMES = ('Amunt', 'Avall', 'Ping-Pong', 'Aleatori', 'Ordre Premut')
+_NOTE_NAMES = ('C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B')
 
 class KeyboardMode:
     """Mode teclat que converteix botons 1-12 en notes MIDI"""
@@ -518,22 +520,7 @@ class KeyboardMode:
                             else:
                                 self.scale_mode_index = (self.scale_mode_index + 1) % len(self.available_scales)
                                 direction = "→"
-                            actual_scale_id = self.available_scales[self.scale_mode_index]
-                            if actual_scale_id >= 3000:
-                                profile = self.config_manager.get_harmonic_profile_by_scale_id(actual_scale_id) if self.config_manager else None
-                                name = profile.get('name', f'#{actual_scale_id}') if profile else f'#{actual_scale_id}'
-                                print(f"◈ {direction} Perfil: {name} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
-                            elif actual_scale_id >= 2000:
-                                custom_scale = self.config_manager.get_custom_scale_by_scale_id(actual_scale_id) if self.config_manager else None
-                                name = custom_scale.get('name', f'#{actual_scale_id - 2000}') if custom_scale else f'#{actual_scale_id - 2000}'
-                                print(f"🎼 {direction} Escala: {name} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
-                            elif actual_scale_id >= 1000:
-                                progression = self.config_manager.get_progression_by_scale_id(actual_scale_id) if self.config_manager else None
-                                name = progression.get('name', f'#{actual_scale_id - 1000}') if progression else f'#{actual_scale_id - 1000}'
-                                print(f"♪ {direction} Progressió: {name} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
-                            else:
-                                scale_name = SCALE_NAMES[actual_scale_id] if actual_scale_id < len(SCALE_NAMES) else f"Escala #{actual_scale_id}"
-                                print(f"🎼 {direction} {scale_name} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
+                            self._print_scale_info(direction)
                 
                 elif btn_idx == 9:  # Botó 10: Canviar tonalitat (cromàtic)
                     if current_pressed and not was_pressed:
@@ -553,38 +540,9 @@ class KeyboardMode:
                 elif btn_idx == 11:  # Botó 12: Arpegiador — curt=ciclar, llarg=desactivar
                     if current_pressed and not was_pressed:
                         self.stop_all_notes()
-                        if not self.arp_mode_active:
-                            self.arp_mode_active = True
-                            self.arp_notes = []
-                            self.arp_button_order = []
-                            if self.arp_mode_index not in self.available_arp_modes:
-                                self.arp_mode_index = self.available_arp_modes[0] if self.available_arp_modes else 2
-                            arp_names = {0: 'Amunt', 1: 'Avall', 2: 'Ping-Pong', 3: 'Aleatori', 4: 'Ordre Premut'}
-                            print(f"Arpeggiador: {arp_names.get(self.arp_mode_index, f'Mode {self.arp_mode_index}')}")
-                            self.arp_btn_press_time = 0
-                        else:
-                            self.arp_btn_press_time = current_time
+                        self._btn12_press(current_time)
                     elif not current_pressed and was_pressed:
-                        if self.arp_btn_press_time > 0:
-                            duration = current_time - self.arp_btn_press_time
-                            self.arp_btn_press_time = 0
-                            if duration >= self.long_press_threshold:
-                                self.arp_mode_active = False
-                                self.arp_notes = []
-                                self.arp_button_order = []
-                                print("🎶 Arpeggiador DESACTIVAT")
-                            else:
-                                if len(self.available_arp_modes) > 0:
-                                    try:
-                                        current_idx = self.available_arp_modes.index(self.arp_mode_index)
-                                        self.arp_mode_index = self.available_arp_modes[(current_idx + 1) % len(self.available_arp_modes)]
-                                    except ValueError:
-                                        self.arp_mode_index = self.available_arp_modes[0]
-                                    self.arp_index = 0
-                                    self.arp_direction = 1
-                                    self.arp_button_order = []
-                                    arp_names = {0: 'Amunt', 1: 'Avall', 2: 'Ping-Pong', 3: 'Aleatori', 4: 'Ordre Premut'}
-                                    print(f"Arpeggiador: {arp_names.get(self.arp_mode_index, f'Mode {self.arp_mode_index}')}")
+                        self._btn12_release(current_time)
         
         # Processar botons de notes 1-8 (índexs 0-7)
         if self.arp_mode_active:
@@ -1425,12 +1383,62 @@ class KeyboardMode:
             pass
     
     def _note_to_name(self, midi_note):
-        """Converteix número MIDI a nom de nota"""
-        note_names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-        octave = midi_note // 12 - 1
-        note = note_names[midi_note % 12]
-        return f"{note}{octave}"
+        return _NOTE_NAMES[midi_note % 12] + str(midi_note // 12 - 1)
         
+    def _btn12_press(self, current_time):
+        if not self.arp_mode_active:
+            self.arp_mode_active = True
+            self.arp_notes = []
+            self.arp_button_order = []
+            if self.arp_mode_index not in self.available_arp_modes:
+                self.arp_mode_index = self.available_arp_modes[0] if self.available_arp_modes else 2
+            n = _ARP_MODE_NAMES[self.arp_mode_index] if self.arp_mode_index < len(_ARP_MODE_NAMES) else str(self.arp_mode_index)
+            print('Arp: ' + n)
+            self.arp_btn_press_time = 0
+        else:
+            self.arp_btn_press_time = current_time
+
+    def _btn12_release(self, current_time):
+        if self.arp_btn_press_time > 0:
+            duration = current_time - self.arp_btn_press_time
+            self.arp_btn_press_time = 0
+            if duration >= self.long_press_threshold:
+                self.arp_mode_active = False
+                self.arp_notes = []
+                self.arp_button_order = []
+                print('Arp OFF')
+            elif self.available_arp_modes:
+                try:
+                    ci = self.available_arp_modes.index(self.arp_mode_index)
+                    self.arp_mode_index = self.available_arp_modes[(ci + 1) % len(self.available_arp_modes)]
+                except ValueError:
+                    self.arp_mode_index = self.available_arp_modes[0]
+                self.arp_index = 0
+                self.arp_direction = 1
+                self.arp_button_order = []
+                n = _ARP_MODE_NAMES[self.arp_mode_index] if self.arp_mode_index < len(_ARP_MODE_NAMES) else str(self.arp_mode_index)
+                print('Arp: ' + n)
+
+    def _print_scale_info(self, direction):
+        sid = self.available_scales[self.scale_mode_index]
+        pos = str(self.scale_mode_index + 1) + '/' + str(len(self.available_scales))
+        cm = self.config_manager
+        if sid >= 3000:
+            p = cm.get_harmonic_profile_by_scale_id(sid) if cm else None
+            n = p.get('name', '#' + str(sid)) if p else '#' + str(sid)
+            print('Perfil ' + direction + ' ' + n + ' (' + pos + ')')
+        elif sid >= 2000:
+            cs = cm.get_custom_scale_by_scale_id(sid) if cm else None
+            n = cs.get('name', '#' + str(sid - 2000)) if cs else '#' + str(sid - 2000)
+            print('Escala ' + direction + ' ' + n + ' (' + pos + ')')
+        elif sid >= 1000:
+            pr = cm.get_progression_by_scale_id(sid) if cm else None
+            n = pr.get('name', '#' + str(sid - 1000)) if pr else '#' + str(sid - 1000)
+            print('Prog ' + direction + ' ' + n + ' (' + pos + ')')
+        else:
+            sn = SCALE_NAMES[sid] if sid < len(SCALE_NAMES) else str(sid)
+            print('Escala ' + direction + ' ' + sn + ' (' + pos + ')')
+
     def change_octave(self, direction):
         """Canvia l'octava (+1 o -1)"""
         if direction > 0 and self.octave < 8:
