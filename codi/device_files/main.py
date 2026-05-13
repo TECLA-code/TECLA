@@ -11,7 +11,6 @@ import usb_midi
 from adafruit_midi import MIDI
 from adafruit_midi.note_off import NoteOff
 from adafruit_midi.control_change import ControlChange
-from adafruit_midi.pitch_bend import PitchBend
 
 
 # Funció global per convertir notes MIDI a freqüència
@@ -21,6 +20,7 @@ def midi_to_frequency(midi_note):
 
 # Importar només el gestor de modes
 from modes.mode_manager import ModeManager
+from modes.mode_keyboard import KeyboardMode
 
 # Configuració de pins
 # Nova versió del hardware: pins ordenats correctament (GP0, GP1, GP2, GP3...)
@@ -60,14 +60,6 @@ class TeclaHardware:
         self.keyboard_mode = None
         self.keyboard_octave = 4
         self.keyboard_toggle_blocked_until = 0.0  # Bloqueig temporal per evitar toggle múltiple
-        
-        # Variables per als efectes temporals T14/T15 (capa de modes)
-        self.t14_effect_index = 0
-        self.t15_effect_index = 1
-        self.t14_press_time = 0
-        self.t15_press_time = 0
-        self.effect_long_press_threshold = 0.5  # segons
-        self.available_effects = ['Sustain', 'Pausa', 'Gate', 'PitchBend']
     
     def _init_buttons(self):
         """Inicialitza tots els botons"""
@@ -216,57 +208,17 @@ class TeclaHardware:
                         # NO enviar Sustain OFF si hi ha efectes actius
                         # self.midi_out.send(ControlChange(64, 0, channel=ch))   # Sustain OFF
         
-        # Botons 14 i 15 (índexs 13 i 14) - Funció dependent de la capa activa
-        t14 = button_states[13] if len(button_states) > 13 else False
-        t15 = button_states[14] if len(button_states) > 14 else False
-        prev_t14 = self.last_button_states[13] if len(self.last_button_states) > 13 else False
-        prev_t15 = self.last_button_states[14] if len(self.last_button_states) > 14 else False
-        current_time_t = time.monotonic()
-        
-        if self.keyboard_mode_active and self.keyboard_mode:
-            # --- CAPA TECLAT: canvi d'octava ---
-            if t14 and not prev_t14:
+        # Botó 14 (index 13) - Baixar octava
+        if button_states[13] and not self.last_button_states[13]:
+            if self.keyboard_mode_active and self.keyboard_mode:
                 self.keyboard_mode.change_octave(-1)
                 self.keyboard_octave = self.keyboard_mode.octave
-            if t15 and not prev_t15:
+        
+        # Botó 15 (index 14) - Pujar octava
+        if button_states[14] and not self.last_button_states[14]:
+            if self.keyboard_mode_active and self.keyboard_mode:
                 self.keyboard_mode.change_octave(1)
                 self.keyboard_octave = self.keyboard_mode.octave
-        else:
-            # --- CAPA MODES: efectes temporals ---
-            pot_values = self.read_pots()
-            n = len(self.available_effects)
-            # T14
-            if t14 and not prev_t14:
-                self.t14_press_time = current_time_t
-                self._apply_mode_effect(self.t14_effect_index, pot_values)
-            elif t14 and prev_t14:
-                self._apply_mode_effect(self.t14_effect_index, pot_values)
-            elif not t14 and prev_t14:
-                self._release_mode_effect(self.t14_effect_index)
-                if n > 0:
-                    dur = current_time_t - self.t14_press_time
-                    if dur < 0.35:
-                        self.t14_effect_index = (self.t14_effect_index + 1) % n
-                        print('T14 >' + self.available_effects[self.t14_effect_index])
-                    elif dur >= self.effect_long_press_threshold:
-                        self.t14_effect_index = (self.t14_effect_index - 1) % n
-                        print('T14 <' + self.available_effects[self.t14_effect_index])
-            # T15
-            if t15 and not prev_t15:
-                self.t15_press_time = current_time_t
-                self._apply_mode_effect(self.t15_effect_index, pot_values)
-            elif t15 and prev_t15:
-                self._apply_mode_effect(self.t15_effect_index, pot_values)
-            elif not t15 and prev_t15:
-                self._release_mode_effect(self.t15_effect_index)
-                if n > 0:
-                    dur = current_time_t - self.t15_press_time
-                    if dur < 0.35:
-                        self.t15_effect_index = (self.t15_effect_index + 1) % n
-                        print('T15 >' + self.available_effects[self.t15_effect_index])
-                    elif dur >= self.effect_long_press_threshold:
-                        self.t15_effect_index = (self.t15_effect_index - 1) % n
-                        print('T15 <' + self.available_effects[self.t15_effect_index])
         
         # Botó 16 (index 15) - EMERGENCY STOP + NETEJA DE MEMÒRIA
         if button_states[15] and not self.last_button_states[15]:
@@ -316,43 +268,6 @@ class TeclaHardware:
         
         return mode_changed
     
-    def _apply_mode_effect(self, effect_idx, pot_values):
-        """Aplica l'efecte temporal indicat mentre T14/T15 estan premuts (capa modes)"""
-        if not self.available_effects or effect_idx >= len(self.available_effects):
-            return
-        effect = self.available_effects[effect_idx]
-        try:
-            if effect in ('Sustain', 'Sustain (CC64)'):
-                for ch in range(16):
-                    self.midi_out.send(ControlChange(64, 127, channel=ch))
-            elif effect == 'Pausa':
-                if self.mode_manager:
-                    self.mode_manager.stop_all_sound()
-            elif effect in ('Gate', 'Gate Length'):
-                pass
-            elif effect in ('PitchBend', 'Pitch Bend'):
-                pot_val = pot_values[1] if len(pot_values) > 1 else 0
-                pitch_value = 0 if pot_val < 5 else int((pot_val / 127.0) * 8191)
-                for ch in range(16):
-                    self.midi_out.send(PitchBend(pitch_value, channel=ch))
-        except Exception as e:
-            print(f"Error efecte modes: {e}")
-
-    def _release_mode_effect(self, effect_idx):
-        """Atura l'efecte temporal en alliberar T14/T15 (capa modes)"""
-        if not self.available_effects or effect_idx >= len(self.available_effects):
-            return
-        effect = self.available_effects[effect_idx]
-        try:
-            if effect in ('Sustain', 'Sustain (CC64)'):
-                for ch in range(16):
-                    self.midi_out.send(ControlChange(64, 0, channel=ch))
-            elif effect in ('PitchBend', 'Pitch Bend'):
-                for ch in range(16):
-                    self.midi_out.send(PitchBend(0, channel=ch))
-        except Exception as e:
-            print(f"Error alliberant efecte modes: {e}")
-
     def update_keyboard_mode(self, pot_values, button_states):
         """Actualitza el mode teclat si està actiu"""
         if self.keyboard_mode_active:
@@ -360,8 +275,6 @@ class TeclaHardware:
             if not self.keyboard_mode:
                 try:
                     print("🎹 Inicialitzant Mode Teclat...")
-                    import gc; gc.collect()  # Alliberar RAM abans d'importar
-                    from modes.mode_keyboard import KeyboardMode
                     self.keyboard_mode = KeyboardMode(
                         self.midi_out,
                         {'octave': self.keyboard_octave},
@@ -417,10 +330,6 @@ def main():
     hardware.midi_out = midi_out
     mode_manager = ModeManager(midi_out)
     hardware.mode_manager = mode_manager
-    try:
-        hardware.available_effects = config_manager.get_available_effects()
-    except Exception:
-        pass
     mode_names = mode_manager.get_available_modes()
     
     # Mostrar modes disponibles (sense numeració)
@@ -487,8 +396,6 @@ def main():
                         # Comprovar si existeix fitxer de senyal de recàrrega
                         signal_file = '.config_reload'
                         config_changed = False
-                        if not hasattr(hardware, '_last_reload_ts'):
-                            hardware._last_reload_ts = None
                         
                         # SUPORT SIMULADOR: Comprovar flag config_reload_requested
                         try:
@@ -505,15 +412,13 @@ def main():
                             # Si el fitxer de senyal existeix, recarregar configuració
                             with open(signal_file, 'r') as f:
                                 timestamp = f.read().strip()
-                            if timestamp and timestamp != hardware._last_reload_ts:
-                                hardware._last_reload_ts = timestamp
-                                print('Recarregar config: ' + timestamp)
+                                print(f"📡 Senyal de recàrrega detectada (timestamp: {timestamp})")
                                 config_changed = True
+                                
                             # Eliminar el fitxer de senyal després de processar-lo
                             try:
                                 import os
                                 os.remove(signal_file)
-                                hardware._last_reload_ts = None
                             except OSError:
                                 pass
                         except OSError:
@@ -530,10 +435,6 @@ def main():
                             # Recarregar configuració des del fitxer
                             config_manager.config = config_manager._load_config()
                             config_manager.current_bank_index = config_manager.config.get('current_bank', 0)
-                            try:
-                                hardware.available_effects = config_manager.get_available_effects()
-                            except Exception:
-                                pass
                             
                             try:
                                 mode_manager.load_config()

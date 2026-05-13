@@ -4058,17 +4058,7 @@
         this.arpDir = 1;
         this.lastArpTime = 0;
         this.lastArpBtnPress = 0;
-        this.arpBtnPressTime = 0;
         this._lastArpNote = undefined;
-        this.scaleBtnPressTime = 0;
-        this.longPressThreshold = 0.5;
-        // T14/T15 efectes temporals
-        this.t14EffectIdx = 0;
-        this.t15EffectIdx = 1;
-        this.t14PressTime = 0;
-        this.t15PressTime = 0;
-        this.t14Held = false;
-        this.t15Held = false;
         // Gate
         this.gateEnabled = false;
         this.gatePeriod = 0.2;
@@ -4139,9 +4129,11 @@
           } else {
             this._noteOn(idx);
           }
-        } else if (idx === 8) {  // T9: ciclar escala — curt=avant, llarg=enrere (detecta en release)
+        } else if (idx === 8) {  // T9: cycle scale
           this._allNotesOff();
-          this.scaleBtnPressTime = now;
+          this.scaleIdx = (this.scaleIdx + 1) % this.availableScales.length;
+          this.onLog(`🎼 Escala: ${this.scaleName}  (${this.scaleIdx + 1}/${this.availableScales.length})`, 'info');
+          this._updateHUD();
         } else if (idx === 9) {  // T10: cycle key
           this._allNotesOff();
           this.keyIndex = (this.keyIndex + 1) % 12;
@@ -4152,24 +4144,32 @@
           this.chordMode = !this.chordMode;
           this.onLog(`🎹 Acords: ${this.chordMode ? 'ACTIVAT' : 'DESACTIVAT'}`, 'info');
           this._updateHUD();
-        } else if (idx === 11) { // T12: Arpegiador — curt=ciclar, llarg=desactivar
+        } else if (idx === 11) { // T12: arpeggiator
           this._allNotesOff();
-          if (!this.arpMode) {
+          const dt = now - this.lastArpBtnPress;
+          this.lastArpBtnPress = now;
+          if (dt < 0.35 && this.arpMode) {
+            this.arpMode = false; this.arpNotes = []; this.arpButtonOrder = [];
+            if (this._lastArpNote !== undefined) { this.webMidi.send('note_off', this._lastArpNote, 0, 0); this._lastArpNote = undefined; }
+            this.onLog('🎶 Arpegiador DESACTIVAT (doble clic)', 'info');
+          } else if (!this.arpMode) {
             this.arpMode = true; this.arpNotes = []; this.arpButtonOrder = []; this.arpPos = 0; this.arpDir = 1;
             if (!this.availableArpModes.includes(this.arpModeIndex)) this.arpModeIndex = this.availableArpModes[0] ?? 2;
             this.onLog(`🎶 Arpegiador: ${ARP_NAMES_JS[this.arpModeIndex] ?? this.arpModeIndex}`, 'info');
-            this.arpBtnPressTime = 0;
           } else {
-            this.arpBtnPressTime = now;
+            const ci = this.availableArpModes.indexOf(this.arpModeIndex);
+            this.arpModeIndex = this.availableArpModes[(ci + 1) % this.availableArpModes.length] ?? 2;
+            this.arpPos = 0; this.arpDir = 1; this.arpButtonOrder = [];
+            this.onLog(`🎶 Arpegiador: ${ARP_NAMES_JS[this.arpModeIndex] ?? this.arpModeIndex}`, 'info');
           }
           this._updateHUD();
         } else if (idx === 12) { // T13: switch to modes layer
           this.onLog('T13 → selecciona un mode de la llista lateral per canviar de capa', 'info');
-        } else if (idx === 13) { // T14: octava avall (capa teclat)
+        } else if (idx === 13) { // T14: octave down
           this.octave = Math.max(0, this.octave - 1);
           this.onLog(`Octava: ${this.octave}`, 'info');
           this._updateHUD();
-        } else if (idx === 14) { // T15: octava amunt (capa teclat)
+        } else if (idx === 14) { // T15: octave up
           this.octave = Math.min(8, this.octave + 1);
           this.onLog(`Octava: ${this.octave}`, 'info');
           this._updateHUD();
@@ -4180,70 +4180,13 @@
       }
 
       releaseButton(idx) {
-        if (!this.active) return;
-        const now = performance.now() / 1000;
-        if (idx < 8) {
-          if (!this.arpMode) this._noteOff(idx);
-          else {
-            const removed = this.chordMode ? this._chordNotesForBtn(idx) : [this._noteForBtn(idx)].filter(n => n !== null);
-            this.arpNotes = this.arpNotes.filter(n => !removed.includes(n));
-            this.arpButtonOrder = this.arpButtonOrder.filter(b => b !== idx);
-          }
-        } else if (idx === 8) {  // T9 release: decidir direcci\u00f3 per durada
-          if (this.scaleBtnPressTime > 0 && this.availableScales.length > 0) {
-            const dur = now - this.scaleBtnPressTime;
-            this.scaleBtnPressTime = 0;
-            if (dur >= this.longPressThreshold) {
-              this.scaleIdx = (this.scaleIdx - 1 + this.availableScales.length) % this.availableScales.length;
-              this.onLog(`\u21d0 Escala: ${this.scaleName}  (${this.scaleIdx + 1}/${this.availableScales.length})`, 'info');
-            } else {
-              this.scaleIdx = (this.scaleIdx + 1) % this.availableScales.length;
-              this.onLog(`\u21d2 Escala: ${this.scaleName}  (${this.scaleIdx + 1}/${this.availableScales.length})`, 'info');
-            }
-            this._updateHUD();
-          }
-        } else if (idx === 11) { // T12 release: ciclar o desactivar arp
-          if (this.arpBtnPressTime > 0 && this.arpMode) {
-            const dur = now - this.arpBtnPressTime;
-            this.arpBtnPressTime = 0;
-            if (dur >= this.longPressThreshold) {
-              this.arpMode = false; this.arpNotes = []; this.arpButtonOrder = [];
-              if (this._lastArpNote !== undefined) { this.webMidi.send('note_off', this._lastArpNote, 0, 0); this._lastArpNote = undefined; }
-              this.onLog('\ud83c\udfb6 Arpegiador DESACTIVAT (long press)', 'info');
-            } else {
-              const ci = this.availableArpModes.indexOf(this.arpModeIndex);
-              this.arpModeIndex = this.availableArpModes[(ci + 1) % this.availableArpModes.length] ?? 2;
-              this.arpPos = 0; this.arpDir = 1; this.arpButtonOrder = [];
-              this.onLog(`\ud83c\udfb6 Arpegiador: ${ARP_NAMES_JS[this.arpModeIndex] ?? this.arpModeIndex}`, 'info');
-            }
-            this._updateHUD();
-          }
+        if (!this.active || idx >= 8) return;
+        if (!this.arpMode) this._noteOff(idx);
+        else {
+          const removed = this.chordMode ? this._chordNotesForBtn(idx) : [this._noteForBtn(idx)].filter(n => n !== null);
+          this.arpNotes = this.arpNotes.filter(n => !removed.includes(n));
+          this.arpButtonOrder = this.arpButtonOrder.filter(b => b !== idx);
         }
-      }
-
-      _simEffectsList() {
-        const mc = _loadModesConfig();
-        return (mc.available_effects || ['Sustain', 'Pausa', 'Gate', 'PitchBend']).filter(e => !['Modulation'].includes(e));
-      }
-
-      _applySimEffect(btnNum) {
-        const list = this._simEffectsList();
-        const effect = list[btnNum === 14 ? this.t14EffectIdx : this.t15EffectIdx];
-        if (!effect) return;
-        if (effect === 'Sustain') this.webMidi.send('control_change', 64, 127, 0);
-        else if (effect === 'Pausa') this._allNotesOff();
-        else if (effect === 'Gate') { this.gateEnabled = true; }
-        else if (effect === 'PitchBend') this.webMidi.send('pitch_bend', 4096, 0);
-        this.onLog(`T${btnNum} actiu: ${effect}`, 'info');
-      }
-
-      _releaseSimEffect(btnNum) {
-        const list = this._simEffectsList();
-        const effect = list[btnNum === 14 ? this.t14EffectIdx : this.t15EffectIdx];
-        if (!effect) return;
-        if (effect === 'Sustain') this.webMidi.send('control_change', 64, 0, 0);
-        else if (effect === 'Gate') { this.gateEnabled = false; this.webMidi.send('control_change', 11, 127, 0); }
-        else if (effect === 'PitchBend') this.webMidi.send('pitch_bend', 0, 0);
       }
 
       setPot(idx, value) {

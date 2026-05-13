@@ -282,10 +282,6 @@ class ConfigManager:
         # Fallback al nivell superior (escrit per l'app web)
         return self.config.get('keyboard_scales', [0, 1, 4, 5, 7, 8, 13, 15, 18, 19])
     
-    def get_available_effects(self):
-        """Retorna la llista d'efectes temporals disponibles per T14/T15"""
-        return self.config.get('available_effects', ['Sustain', 'Pausa', 'Gate', 'PitchBend'])
-
     def get_harmonic_profiles(self):
         """Retorna la llista de perfils harmònics com a objectes complets"""
         return self.config.get('harmonic_profiles', [])
