@@ -97,18 +97,10 @@ class KeyboardMode:
         self.gate_last_toggle = 0
         self.gate_high = True  # estat actual: high (127) o low (min_expr)
         
-        # Detecció long-press per escales (btn9), arpegiador (btn12) i efectes (T14/T15)
+        # Detecció long-press per escales (btn9) i arpegiador (btn12)
         self.scale_btn_press_time = 0    # Quan es va prémer btn9
         self.arp_btn_press_time = 0      # Quan es va prémer btn12 (arp actiu)
         self.long_press_threshold = 0.5  # Segons per considerar long press
-        # T14 / T15 - Efectes temporals
-        self.available_effects_list = ['Sustain', 'Pausa', 'Gate', 'PitchBend']
-        self.t14_effect_index = 0
-        self.t15_effect_index = 1
-        self.t14_press_time = 0
-        self.t15_press_time = 0
-        self._prev_t14 = False
-        self._prev_t15 = False
         
         # Sustain hold: quan està actiu, no s'envien NoteOff (sustain indefinit)
         self.sustain_hold_enabled = False
@@ -159,13 +151,6 @@ class KeyboardMode:
             self.arp_pot_y_function = arp_pot_functions.get('arp_pot_y', 'Arp Pattern Selector')
             self.arp_pot_z_function = arp_pot_functions.get('arp_pot_z', 'Gate Length')
             
-            # Recarregar efectes disponibles per T14/T15
-            effects = self.config_manager.get_available_effects()
-            if effects:
-                self.available_effects_list = effects
-            # Assegurar índexs vàlids
-            self.t14_effect_index = self.t14_effect_index % len(self.available_effects_list)
-            self.t15_effect_index = self.t15_effect_index % len(self.available_effects_list)
             
         for i in range(12):
             self.button_notes[i].clear()
@@ -1458,85 +1443,6 @@ class KeyboardMode:
             limit = "màxima (8)" if direction > 0 else "mínima (0)"
             print(f"🎹 Ja estàs a l'octava {limit}")
 
-    def update_extra_buttons(self, t14_state, t15_state, pot_values):
-        """Gestiona T14 i T15: efectes temporals mentre premuts, ciclen en soltar"""
-        current_time = time.monotonic()
-        
-        for btn_num, state, prev_state_attr, press_time_attr, effect_idx_attr in (
-            (14, t14_state, '_prev_t14', 't14_press_time', 't14_effect_index'),
-            (15, t15_state, '_prev_t15', 't15_press_time', 't15_effect_index'),
-        ):
-            prev_state = getattr(self, prev_state_attr)
-            
-            if state and not prev_state:
-                setattr(self, press_time_attr, current_time)
-                self._apply_temporal_effect(btn_num, pot_values)
-            elif state and prev_state:
-                self._apply_temporal_effect(btn_num, pot_values)
-            elif not state and prev_state:
-                self._release_temporal_effect(btn_num)
-                duration = current_time - getattr(self, press_time_attr)
-                n = len(self.available_effects_list)
-                if n > 0:
-                    idx = getattr(self, effect_idx_attr)
-                    if duration < 0.35:
-                        idx = (idx + 1) % n
-                        print(f"T{btn_num} \u2192 {self.available_effects_list[idx]}")
-                    elif duration >= self.long_press_threshold:
-                        idx = (idx - 1) % n
-                        print(f"T{btn_num} \u2190 {self.available_effects_list[idx]}")
-                    setattr(self, effect_idx_attr, idx)
-            
-            setattr(self, prev_state_attr, state)
-
-    def _apply_temporal_effect(self, btn_num, pot_values):
-        """Aplica l'efecte temporal del bot\u00f3 mentre est\u00e0 premut"""
-        idx = self.t14_effect_index if btn_num == 14 else self.t15_effect_index
-        if not self.available_effects_list or idx >= len(self.available_effects_list):
-            return
-        effect = self.available_effects_list[idx]
-        try:
-            if effect in ('Sustain', 'Sustain (CC64)'):
-                for ch in range(16):
-                    self.midi.send(ControlChange(64, 127, channel=ch))
-                self.sustain_hold_enabled = True
-            elif effect == 'Pausa':
-                self.stop_all_notes()
-            elif effect in ('Gate', 'Gate Length'):
-                if not self.gate_enabled:
-                    self.gate_enabled = True
-                if pot_values and len(pot_values) > 2 and pot_values[2] > 5:
-                    self.gate_period = max(0.05, 0.5 - (pot_values[2] / 127.0) * 0.45)
-            elif effect in ('PitchBend', 'Pitch Bend'):
-                pot_val = pot_values[1] if pot_values and len(pot_values) > 1 else 0
-                pitch_value = 0 if pot_val < 5 else int((pot_val / 127.0) * 8191)
-                self._send_pitch_bend(pitch_value)
-        except Exception as e:
-            print(f"Error efecte T{btn_num}: {e}")
-
-    def _release_temporal_effect(self, btn_num):
-        """Atura l'efecte temporal en alliberar el bot\u00f3"""
-        idx = self.t14_effect_index if btn_num == 14 else self.t15_effect_index
-        if not self.available_effects_list or idx >= len(self.available_effects_list):
-            return
-        effect = self.available_effects_list[idx]
-        try:
-            if effect in ('Sustain', 'Sustain (CC64)'):
-                for ch in range(16):
-                    self.midi.send(ControlChange(64, 0, channel=ch))
-                self.sustain_hold_enabled = False
-                self.sustain_level = 0
-            elif effect == 'Pausa':
-                pass
-            elif effect in ('Gate', 'Gate Length'):
-                self.gate_enabled = False
-                for ch in range(16):
-                    self.midi.send(ControlChange(11, 127, channel=ch))
-            elif effect in ('PitchBend', 'Pitch Bend'):
-                self._send_pitch_bend(0)
-        except Exception as e:
-            print(f"Error aturant efecte T{btn_num}: {e}")
-            
     def get_info(self):
         """Retorna informació de l'estat actual"""
         # Gestionar el cas inicial on sustain_level == -1

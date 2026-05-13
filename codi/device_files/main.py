@@ -11,6 +11,7 @@ import usb_midi
 from adafruit_midi import MIDI
 from adafruit_midi.note_off import NoteOff
 from adafruit_midi.control_change import ControlChange
+from adafruit_midi.pitch_bend import PitchBend
 
 
 # Funció global per convertir notes MIDI a freqüència
@@ -234,34 +235,39 @@ class TeclaHardware:
         else:
             # --- CAPA MODES: efectes temporals ---
             pot_values = self.read_pots()
-            # Carregar llista d'efectes actualitzada si cal
-            try:
-                self.available_effects = self.config_manager.get_available_effects()
-            except Exception:
-                pass
-            
-            for btn_state, prev_state, press_time_attr, effect_idx_attr, btn_label in (
-                (t14, prev_t14, 't14_press_time', 't14_effect_index', 'T14'),
-                (t15, prev_t15, 't15_press_time', 't15_effect_index', 'T15'),
-            ):
-                if btn_state and not prev_state:
-                    setattr(self, press_time_attr, current_time_t)
-                    self._apply_mode_effect(getattr(self, effect_idx_attr), pot_values)
-                elif btn_state and prev_state:
-                    self._apply_mode_effect(getattr(self, effect_idx_attr), pot_values)
-                elif not btn_state and prev_state:
-                    self._release_mode_effect(getattr(self, effect_idx_attr))
-                    duration = current_time_t - getattr(self, press_time_attr)
-                    n = len(self.available_effects)
-                    if n > 0:
-                        idx = getattr(self, effect_idx_attr)
-                        if duration < 0.35:
-                            idx = (idx + 1) % n
-                            print(f"{btn_label} → {self.available_effects[idx]}")
-                        elif duration >= self.effect_long_press_threshold:
-                            idx = (idx - 1) % n
-                            print(f"{btn_label} ← {self.available_effects[idx]}")
-                        setattr(self, effect_idx_attr, idx)
+            n = len(self.available_effects)
+            # T14
+            if t14 and not prev_t14:
+                self.t14_press_time = current_time_t
+                self._apply_mode_effect(self.t14_effect_index, pot_values)
+            elif t14 and prev_t14:
+                self._apply_mode_effect(self.t14_effect_index, pot_values)
+            elif not t14 and prev_t14:
+                self._release_mode_effect(self.t14_effect_index)
+                if n > 0:
+                    dur = current_time_t - self.t14_press_time
+                    if dur < 0.35:
+                        self.t14_effect_index = (self.t14_effect_index + 1) % n
+                        print('T14 >' + self.available_effects[self.t14_effect_index])
+                    elif dur >= self.effect_long_press_threshold:
+                        self.t14_effect_index = (self.t14_effect_index - 1) % n
+                        print('T14 <' + self.available_effects[self.t14_effect_index])
+            # T15
+            if t15 and not prev_t15:
+                self.t15_press_time = current_time_t
+                self._apply_mode_effect(self.t15_effect_index, pot_values)
+            elif t15 and prev_t15:
+                self._apply_mode_effect(self.t15_effect_index, pot_values)
+            elif not t15 and prev_t15:
+                self._release_mode_effect(self.t15_effect_index)
+                if n > 0:
+                    dur = current_time_t - self.t15_press_time
+                    if dur < 0.35:
+                        self.t15_effect_index = (self.t15_effect_index + 1) % n
+                        print('T15 >' + self.available_effects[self.t15_effect_index])
+                    elif dur >= self.effect_long_press_threshold:
+                        self.t15_effect_index = (self.t15_effect_index - 1) % n
+                        print('T15 <' + self.available_effects[self.t15_effect_index])
         
         # Botó 16 (index 15) - EMERGENCY STOP + NETEJA DE MEMÒRIA
         if button_states[15] and not self.last_button_states[15]:
@@ -326,7 +332,6 @@ class TeclaHardware:
             elif effect in ('Gate', 'Gate Length'):
                 pass
             elif effect in ('PitchBend', 'Pitch Bend'):
-                from adafruit_midi.pitch_bend import PitchBend
                 pot_val = pot_values[1] if len(pot_values) > 1 else 0
                 pitch_value = 0 if pot_val < 5 else int((pot_val / 127.0) * 8191)
                 for ch in range(16):
@@ -344,7 +349,6 @@ class TeclaHardware:
                 for ch in range(16):
                     self.midi_out.send(ControlChange(64, 0, channel=ch))
             elif effect in ('PitchBend', 'Pitch Bend'):
-                from adafruit_midi.pitch_bend import PitchBend
                 for ch in range(16):
                     self.midi_out.send(PitchBend(0, channel=ch))
         except Exception as e:
@@ -412,6 +416,10 @@ def main():
     hardware.midi_out = midi_out
     mode_manager = ModeManager(midi_out)
     hardware.mode_manager = mode_manager
+    try:
+        hardware.available_effects = config_manager.get_available_effects()
+    except Exception:
+        pass
     mode_names = mode_manager.get_available_modes()
     
     # Mostrar modes disponibles (sense numeració)
@@ -517,6 +525,10 @@ def main():
                             # Recarregar configuració des del fitxer
                             config_manager.config = config_manager._load_config()
                             config_manager.current_bank_index = config_manager.config.get('current_bank', 0)
+                            try:
+                                hardware.available_effects = config_manager.get_available_effects()
+                            except Exception:
+                                pass
                             
                             try:
                                 mode_manager.load_config()
