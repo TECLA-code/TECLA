@@ -489,6 +489,8 @@ def main():
             except MemoryError:
                 if gc:
                     gc.collect()
+            except KeyboardInterrupt:
+                pass  # Ignorar Ctrl+C de l'IDE (Thonny) — el MIDI segueix funcionant
             except Exception:
                 time.sleep(0.1)
             
