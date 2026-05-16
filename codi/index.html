@@ -3328,14 +3328,19 @@
     document.getElementById('btn-effects-all')?.addEventListener('click', () => document.querySelectorAll('.effect-chk').forEach(c => c.checked = true));
     document.getElementById('btn-effects-none')?.addEventListener('click', () => document.querySelectorAll('.effect-chk').forEach(c => c.checked = false));
 
-    document.getElementById('btn-save-arp')?.addEventListener('click', () => {
+    document.getElementById('btn-save-arp')?.addEventListener('click', async () => {
       const enabled = [...document.querySelectorAll('.arp-chk:checked')].map(c => +c.value);
-      
       const mc = _loadModesConfig(); 
       mc.arpeggiator_modes = enabled.sort((a, b) => a - b); 
       _saveModesConfig(mc);
       log(`${enabled.length} patrons d'arpegiador guardats.`, 'ok');
       showGlobalToast('Guardat correctament');
+      if (device.isConnected()) {
+        try {
+          await device.writeFile('tecla_web_config.json', JSON.stringify(buildDeviceConfig(), null, 2));
+          log('✓ Sincronitzat al dispositiu.', 'ok');
+        } catch (e) { log(`Error sincronitzant: ${e.message}`, 'warn'); }
+      }
     });
     document.getElementById('btn-arp-all')?.addEventListener('click', () => document.querySelectorAll('.arp-chk').forEach(c => c.checked = true));
     document.getElementById('btn-arp-none')?.addEventListener('click', () => document.querySelectorAll('.arp-chk').forEach(c => c.checked = false));
@@ -3847,10 +3852,18 @@
       _customArps.forEach((arp, i) => { arp.id = 2000 + i; });
       
       _saveCustomArps();
+      
+      // Auto-add new custom IDs to arpeggiator_modes so they are enabled by default
+      const _mc = _loadModesConfig();
+      const _ids = _mc.arpeggiator_modes || ARP_PATTERNS.map(([id]) => id);
+      _customArps.forEach(arp => { if (!_ids.includes(arp.id)) _ids.push(arp.id); });
+      _mc.arpeggiator_modes = _ids.sort((a, b) => a - b);
+      _saveModesConfig(_mc);
+      
       _renderArpList();
       _closeArpEditor();
       
-      // Also automatically save the new configuration to the device config
+      // Sync to device
       document.getElementById('btn-save-arp')?.click();
     }
 

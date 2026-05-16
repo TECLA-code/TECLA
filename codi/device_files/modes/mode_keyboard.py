@@ -889,7 +889,8 @@ class KeyboardMode:
             return
         
         # Mode 'Ordre': Detectar canvis en botons premuts per actualitzar ordre
-        if ARP_DIRS[self.arp_mode_index] == 'order':
+        _arp_dir_check = 'custom' if self.arp_mode_index >= 2000 else ARP_DIRS[self.arp_mode_index]
+        if _arp_dir_check == 'order':
             # Afegir nous botons a l'ordre
             for btn in pressed_buttons:
                 if btn not in self.arp_button_order:
@@ -993,7 +994,7 @@ class KeyboardMode:
                     all_notes.append(note)
         
         # Processar notes segons el mode d'arpegiador
-        arp_direction = ARP_DIRS[self.arp_mode_index]
+        arp_direction = 'custom' if self.arp_mode_index >= 2000 else ARP_DIRS[self.arp_mode_index]
         
         if arp_direction == 'order':
             # Mode 'Ordre': Mantenir ordre de pulsació dels botons
