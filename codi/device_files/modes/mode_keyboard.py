@@ -103,9 +103,8 @@ class KeyboardMode:
         self.gate_last_toggle = 0
         self.gate_high = True  # estat actual: high (127) o low (min_expr)
         
-        # Detecció de doble click per desactivar arpegiador
-        self.last_arp_button_press = 0
-        self.double_click_threshold = 0.3  # Segons per considerar doble click
+        # Detecció de click mantingut per desactivar arpegiador
+        self.arp_btn_press_time = 0.0
         
         # Sustain hold: quan està actiu, no s'envien NoteOff (sustain indefinit)
         self.sustain_hold_enabled = False
@@ -556,56 +555,39 @@ class KeyboardMode:
                     elif btn_idx == 10:  # Botó 11: Registrar inici de premuda
                         self.chord_btn_press_time = current_time
                     
-                    elif btn_idx == 11:  # Botó 12: Ciclar modes d'arpegiador / Doble click desactiva
-                        # IMPORTANT: Aturar totes les notes abans de canviar de mode
+                    elif btn_idx == 11:  # Botó 12: Registrar inici de premuda
+                        self.arp_btn_press_time = current_time
+                
+                elif not current_pressed and was_pressed:
+                    if btn_idx == 11:  # Botó 12: Arpeggiador (1 click=activa/cicla, mantingut=desactiva)
+                        elapsed = current_time - self.arp_btn_press_time
                         self.stop_all_notes()
-                        
-                        # Detectar doble click
-                        time_since_last_press = current_time - self.last_arp_button_press
-                        is_double_click = time_since_last_press < self.double_click_threshold
-                        self.last_arp_button_press = current_time
-                        
-                        if is_double_click and self.arp_mode_active:
-                            # DOBLE CLICK: Desactivar arpeggiador completament
+                        if elapsed >= 0.5:  # Click mantingut → desactivar
                             self.arp_mode_active = False
                             self.arp_notes = []
                             self.arp_button_order = []
                             print(f"🎶 Arpeggiador DESACTIVAT")
-                        elif not self.arp_mode_active:
-                            # Activar arpeggiador per primera vegada
+                        elif not self.arp_mode_active:  # Click curt + inactiu → activar
                             self.arp_mode_active = True
                             self.arp_notes = []
                             self.arp_button_order = []
-                            # Assegurar que el mode inicial està dins dels disponibles
                             if self.arp_mode_index not in self.available_arp_modes:
                                 self.arp_mode_index = self.available_arp_modes[0] if self.available_arp_modes else 2
-                            # Noms dels modes d'arpegiador
-                            arp_names = {0: 'Amunt', 1: 'Avall', 2: 'Ping-Pong', 3: 'Aleatori', 4: 'Ordre Premut'}
-                            arp_name = arp_names.get(self.arp_mode_index, f'Mode {self.arp_mode_index}')
-                            print(f"Arpeggiador: {arp_name}")
-                        else:
-                            # CLICK SIMPLE: Ciclar només entre modes disponibles per aquest banc
-                            if len(self.available_arp_modes) > 0:
-                                # Trobar índex actual dins available_arp_modes
+                            print(f"🎶 Arpeggiador: {self._get_arp_name(self.arp_mode_index)}")
+                        else:  # Click curt + actiu → ciclar patró
+                            if self.available_arp_modes:
                                 try:
                                     current_idx = self.available_arp_modes.index(self.arp_mode_index)
-                                    next_idx = (current_idx + 1) % len(self.available_arp_modes)
-                                    self.arp_mode_index = self.available_arp_modes[next_idx]
+                                    self.arp_mode_index = self.available_arp_modes[(current_idx + 1) % len(self.available_arp_modes)]
                                 except ValueError:
-                                    # Si el mode actual no està disponible, agafar el primer
                                     self.arp_mode_index = self.available_arp_modes[0]
-                                
-                                # Reset de variables d'arpegiador
                                 self.arp_index = 0
                                 self.arp_direction = 1
                                 self.arp_button_order = []
-                                # Noms dels modes d'arpegiador
-                                arp_names = {0: 'Amunt', 1: 'Avall', 2: 'Ping-Pong', 3: 'Aleatori', 4: 'Ordre Premut'}
-                                arp_name = arp_names.get(self.arp_mode_index, f'Mode {self.arp_mode_index}')
-                                print(f"Arpeggiador: {arp_name}")
-                
-                elif not current_pressed and was_pressed:
-                    if btn_idx == 10:  # Botó 11: Mode acords (1 click=activa/cicla, mantingut=desactiva)
+                                print(f"🎶 Arpeggiador: {self._get_arp_name(self.arp_mode_index)}")
+                        self._reapply_active_ccs()
+                    
+                    elif btn_idx == 10:  # Botó 11: Mode acords (1 click=activa/cicla, mantingut=desactiva)
                         elapsed = current_time - self.chord_btn_press_time
                         self.stop_all_notes()
                         if elapsed >= 0.5:  # Click mantingut → desactivar
@@ -1054,6 +1036,18 @@ class KeyboardMode:
         if self.gate_enabled:
             self._process_gate(current_time)
     
+    def _get_arp_name(self, mode_index):
+        """Retorna el nom del mode d'arpegiador (incloent patrons custom >= 2000)"""
+        if mode_index >= 2000:
+            custom = self.config_manager.get_custom_arp_by_id(mode_index) if self.config_manager else None
+            return custom.get('name', 'Custom') if custom else 'Custom'
+        arp_names = {
+            0: 'Amunt', 1: 'Avall', 2: 'Ping-Pong', 3: 'Aleatori', 4: 'Ordre',
+            5: 'Alberti', 6: 'Alberti Alt', 7: 'Vals', 8: 'Trencat', 9: 'Tr\u00e8molo',
+            10: 'Zig-Zag', 11: 'Block', 12: 'Rolled', 13: 'Octaves', 14: 'Contrari', 15: 'Spread'
+        }
+        return arp_names.get(mode_index, f'Mode {mode_index}')
+
     def _play_arp_pattern(self, direction):
         """Toca les notes segons el patró d'arpegiador seleccionat"""
         if not self.arp_notes:
