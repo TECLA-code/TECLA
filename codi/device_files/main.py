@@ -20,6 +20,10 @@ def midi_to_frequency(midi_note):
 
 # Importar només el gestor de modes
 from modes.mode_manager import ModeManager
+try:
+    import gc as _gc; _gc.collect()  # Desfragmentar heap abans del mòdul gran
+except Exception:
+    pass
 from modes.mode_keyboard import KeyboardMode
 
 # Configuració de pins

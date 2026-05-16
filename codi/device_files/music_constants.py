@@ -32,33 +32,6 @@ SCALES = (
     (0, 2, 4, 5, 7, 8, 11),      # 23: Harmònica Major
 )
 
-# Noms de les escales (per mostrar en prints)
-SCALE_NAMES = (
-    'Jònic (Major)',        # 0
-    'Dòric',                # 1
-    'Frigi',                # 2
-    'Lidi',                 # 3
-    'Mixolidi',             # 4
-    'Eòlic (Minor)',        # 5
-    'Locri',                # 6
-    'Pentatònica Major',    # 7
-    'Pentatònica Menor',    # 8
-    'Japonesa',             # 9
-    'Egípcia',              # 10
-    'Aràbiga',              # 11
-    'Hongaresa Menor',      # 12
-    'Lídia Dominant',       # 13
-    'Alterada',             # 14
-    'Menor Melòdica',       # 15
-    'Raga Bhairav',         # 16
-    'Raga Todi',            # 17
-    'Flamenca',             # 18
-    'Catalana',             # 19
-    'Frígia',               # 20
-    'Balcànica',            # 21
-    'Tons Sencers',         # 22
-    'Harmònica Major',      # 23
-)
 
 # Modes d'arpegiador: només direcció (sense noms)
 # Strings curts per estalviar memòria

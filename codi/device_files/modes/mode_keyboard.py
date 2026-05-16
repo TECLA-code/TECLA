@@ -15,11 +15,10 @@ from adafruit_midi.pitch_bend import PitchBend
 try:
     import sys
     sys.path.insert(0, '/sd' if '/sd' in sys.path else '.')
-    from music_constants import SCALES, SCALE_NAMES, ARP_DIRS, KEYS, NOTES, get_chord, note_offset
+    from music_constants import SCALES, ARP_DIRS, KEYS, NOTES, get_chord, note_offset
 except ImportError:
     # Fallback si no es troba el mòdul (desenvolupament)
     SCALES = ((0, 2, 4, 5, 7, 9, 11),)  # Només Major
-    SCALE_NAMES = ('Jònic (Major)',)  # Fallback
     ARP_DIRS = ('up', 'down', 'pingpong')
     KEYS = (0, 7, 2, 9, 4, 11, 6, 1, 8, 3, 10, 5)
     NOTES = ('C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B')
@@ -553,8 +552,7 @@ class KeyboardMode:
                                     print(f"♪ Progressió #{actual_scale_id - 1000} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
                             else:
                                 # És una escala normal
-                                scale_name = SCALE_NAMES[actual_scale_id] if actual_scale_id < len(SCALE_NAMES) else f"Escala #{actual_scale_id}"
-                                print(f"🎼 {scale_name} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
+                                print(f"🎼 Escala #{actual_scale_id} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
                     
                     elif btn_idx == 9:  # Botó 10: Canviar tonalitat (cromàtic)
                         # IMPORTANT: Aturar totes les notes abans de canviar de tonalitat
