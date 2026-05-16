@@ -49,6 +49,9 @@ class KeyboardMode:
         self.key_index = 0  # Índex de tonalitat (C per defecte)
         self.scale_mode_index = 0  # Índex d'escala actual
         self.chord_mode_active = False  # Mode acords desactivat per defecte
+        self.available_chord_types = ['Major']  # Tipologies d'acord disponibles
+        self.chord_type_index = 0  # Índex de la tipologia activa
+        self.chord_btn_press_time = 0.0  # Per detecció de click mantingut (botó 11)
         self.arp_mode_active = False  # Mode arpegiador desactivat per defecte
         self.last_button_states = [False] * 12
         # Mapatge de notes per botó per NoteOff ràpid i precís
@@ -66,6 +69,9 @@ class KeyboardMode:
             self.pot_x_function = pot_functions.get('pot_x', 'Velocity/Arp Speed (dual)')
             self.pot_y_function = pot_functions.get('pot_y', 'Modulation (CC1)')
             self.pot_z_function = pot_functions.get('pot_z', 'Sustain (CC64)')
+            
+            # Obtenir tipologies d'acord disponibles
+            self.available_chord_types = self.config_manager.get_chord_types()
             
         # Paràmetres controlables per potenciòmetres (tracking de valors)
         self.velocity = 100  # Velocitat/intensitat (0-127)
@@ -149,6 +155,9 @@ class KeyboardMode:
             self.arp_pot_x_function = arp_pot_functions.get('arp_pot_x', 'Arp Speed (BPM)')
             self.arp_pot_y_function = arp_pot_functions.get('arp_pot_y', 'Arp Pattern Selector')
             self.arp_pot_z_function = arp_pot_functions.get('arp_pot_z', 'Gate Length')
+            
+            # Recarregar tipologies d'acord disponibles
+            self.available_chord_types = self.config_manager.get_chord_types()
             
         for i in range(12):
             self.button_notes[i].clear()
@@ -544,15 +553,8 @@ class KeyboardMode:
                         key_name = KEY_CIRCLE[self.key_index]  # ordre cromàtic
                         print(f"🎵 Tonalitat: {key_name}")
                     
-                    elif btn_idx == 10:  # Botó 11: Toggle mode acords
-                        # IMPORTANT: Aturar totes les notes abans de canviar de mode
-                        self.stop_all_notes()
-                        self.chord_mode_active = not self.chord_mode_active
-                        status = "ACTIVAT" if self.chord_mode_active else "DESACTIVAT"
-                        print(f"🎹 Mode Acords: {status}")
-                        
-                        # Re-aplicar CC MIDI actius (especialment sustain) per sincronitzar
-                        self._reapply_active_ccs()
+                    elif btn_idx == 10:  # Botó 11: Registrar inici de premuda
+                        self.chord_btn_press_time = current_time
                     
                     elif btn_idx == 11:  # Botó 12: Ciclar modes d'arpegiador / Doble click desactiva
                         # IMPORTANT: Aturar totes les notes abans de canviar de mode
@@ -609,6 +611,25 @@ class KeyboardMode:
                                     arp_names = {0: 'Amunt', 1: 'Avall', 2: 'Ping-Pong', 3: 'Aleatori', 4: 'Ordre Premut'}
                                     arp_name = arp_names.get(self.arp_mode_index, f'Mode {self.arp_mode_index}')
                                 print(f"Arpeggiador: {arp_name}")
+                
+                elif not current_pressed and was_pressed:
+                    if btn_idx == 10:  # Botó 11: Mode acords (1 click=activa/cicla, mantingut=desactiva)
+                        elapsed = current_time - self.chord_btn_press_time
+                        self.stop_all_notes()
+                        if elapsed >= 0.5:  # Click mantingut → desactivar
+                            self.chord_mode_active = False
+                            self.chord_type_index = 0
+                            print(f"🎹 Mode Acords DESACTIVAT")
+                        elif not self.chord_mode_active:  # Click curt + inactiu → activar
+                            self.chord_mode_active = True
+                            ct = self.available_chord_types[self.chord_type_index] if self.available_chord_types else 'Major'
+                            print(f"🎹 Mode Acords ACTIVAT ({ct})")
+                        else:  # Click curt + actiu → ciclar tipologia
+                            if self.available_chord_types:
+                                self.chord_type_index = (self.chord_type_index + 1) % len(self.available_chord_types)
+                                ct = self.available_chord_types[self.chord_type_index]
+                                print(f"🎹 Acord: {ct}")
+                        self._reapply_active_ccs()
         
         # Processar botons de notes 1-8 (índexs 0-7)
         if self.arp_mode_active:
@@ -862,23 +883,10 @@ class KeyboardMode:
         octave_offset = btn_idx // len(scale_intervals)
         root_note = (self.octave + octave_offset) * 12 + key_offset + scale_intervals[scale_degree]
         
-        # Construir acord amb tríada (root, tercera, quinta)
-        chord_notes = []
-        
-        # Root
-        chord_notes.append(root_note)
-        
-        # Tercera (2 graus d'escala amunt)
-        third_degree = (scale_degree + 2) % len(scale_intervals)
-        third_octave = octave_offset + ((scale_degree + 2) // len(scale_intervals))
-        third_note = (self.octave + third_octave) * 12 + key_offset + scale_intervals[third_degree]
-        chord_notes.append(third_note)
-        
-        # Quinta (4 graus d'escala amunt)
-        fifth_degree = (scale_degree + 4) % len(scale_intervals)
-        fifth_octave = octave_offset + ((scale_degree + 4) // len(scale_intervals))
-        fifth_note = (self.octave + fifth_octave) * 12 + key_offset + scale_intervals[fifth_degree]
-        chord_notes.append(fifth_note)
+        # Intervals cromàtics des de la tipologia d'acord activa
+        chord_type = self.available_chord_types[self.chord_type_index] if self.available_chord_types else 'Major'
+        chord_intervals = CHORDS.get(chord_type, (0, 4, 7))
+        chord_notes = [root_note + interval for interval in chord_intervals]
         
         # Tocar les notes de l'acord
         for i, note in enumerate(chord_notes):
@@ -995,25 +1003,14 @@ class KeyboardMode:
             
             for btn_idx in pressed_buttons:
                 if self.chord_mode_active:
-                    # Mode acords: generar tríada (root, 3a, 5a) per cada botó
+                    # Mode acords: intervals cromàtics des de la tipologia activa
                     scale_degree = btn_idx % len(scale_intervals)
                     octave_offset = btn_idx // len(scale_intervals)
                     root_note = (self.octave + octave_offset) * 12 + key_offset + scale_intervals[scale_degree]
-                    
-                    # Root
-                    all_notes.append(root_note)
-                    
-                    # Tercera (2 graus d'escala amunt)
-                    third_degree = (scale_degree + 2) % len(scale_intervals)
-                    third_octave = octave_offset + ((scale_degree + 2) // len(scale_intervals))
-                    third_note = (self.octave + third_octave) * 12 + key_offset + scale_intervals[third_degree]
-                    all_notes.append(third_note)
-                    
-                    # Quinta (4 graus d'escala amunt)
-                    fifth_degree = (scale_degree + 4) % len(scale_intervals)
-                    fifth_octave = octave_offset + ((scale_degree + 4) // len(scale_intervals))
-                    fifth_note = (self.octave + fifth_octave) * 12 + key_offset + scale_intervals[fifth_degree]
-                    all_notes.append(fifth_note)
+                    chord_type = self.available_chord_types[self.chord_type_index] if self.available_chord_types else 'Major'
+                    chord_intervals = CHORDS.get(chord_type, (0, 4, 7))
+                    for interval in chord_intervals:
+                        all_notes.append(root_note + interval)
                 else:
                     # Mode normal: una nota per botó
                     scale_degree = btn_idx % len(scale_intervals)
@@ -1034,21 +1031,14 @@ class KeyboardMode:
             ordered_notes = []
             for btn_idx in self.arp_button_order:
                 if self.chord_mode_active:
-                    # Generar acord per aquest botó
+                    # Generar acord per aquest botó amb intervals cromàtics
                     scale_degree = btn_idx % len(scale_intervals)
                     octave_offset = btn_idx // len(scale_intervals)
                     root_note = (self.octave + octave_offset) * 12 + key_offset + scale_intervals[scale_degree]
-                    ordered_notes.append(max(0, min(127, root_note)))
-                    # Tercera
-                    third_degree = (scale_degree + 2) % len(scale_intervals)
-                    third_octave = octave_offset + ((scale_degree + 2) // len(scale_intervals))
-                    third_note = (self.octave + third_octave) * 12 + key_offset + scale_intervals[third_degree]
-                    ordered_notes.append(max(0, min(127, third_note)))
-                    # Quinta
-                    fifth_degree = (scale_degree + 4) % len(scale_intervals)
-                    fifth_octave = octave_offset + ((scale_degree + 4) // len(scale_intervals))
-                    fifth_note = (self.octave + fifth_octave) * 12 + key_offset + scale_intervals[fifth_degree]
-                    ordered_notes.append(max(0, min(127, fifth_note)))
+                    chord_type = self.available_chord_types[self.chord_type_index] if self.available_chord_types else 'Major'
+                    chord_intervals = CHORDS.get(chord_type, (0, 4, 7))
+                    for interval in chord_intervals:
+                        ordered_notes.append(max(0, min(127, root_note + interval)))
                 else:
                     # Una nota per botó
                     scale_degree = btn_idx % len(scale_intervals)

@@ -1918,6 +1918,17 @@
         </div>
       </div>
 
+      <div class="card" style="margin-top:14px">
+        <div class="card-title">Tipologies d'Acords (Botó 11)</div>
+        <p style="font-size:11px;color:var(--text3);margin:0 0 10px">Selecciona quines tipologies es ciclen al fer clic al botó 11 (mode acords). Click=activa/cicla · Click mantingut=desactiva.</p>
+        <div class="cb-grid" id="chord-types-list"></div>
+        <div style="display:flex;gap:6px;margin-top:12px">
+          <button class="btn btn-sm btn-primary" id="btn-save-chord-types">Guardar</button>
+          <button class="btn btn-sm" id="btn-chord-types-all">Tots</button>
+          <button class="btn btn-sm" id="btn-chord-types-none">Cap</button>
+        </div>
+      </div>
+
       <div class="panel-grid cols2" style="margin-top:14px">
         <div class="card">
           <div class="card-title">Potenciòmetres — Mode Teclat</div>
@@ -3048,20 +3059,32 @@
       const mc = _loadModesConfig();
       // Convert file names ("mode_mandelbrot.py") → display names ("Mandelbrot") that mode_manager.py expects
       const fileToName = Object.fromEntries(_modesIndex.map(m => [m.file, m.name]));
+      const kbScales = mc.keyboard_scales || [];
+      const arpModes = mc.arpeggiator_modes || Array.from({ length: 16 }, (_, i) => i);
+      const potFns = mc.potentiometer_functions || {};
+      const arpPotFns = mc.arp_potentiometer_functions || {};
+      const chordTypes = mc.chord_types || ['Major'];
       return {
         banks: _keysConfig.banks.map(b => ({
           name: b.name,
           modes: b.modes.map(f => f ? (fileToName[f] || f) : ''),
-          efectos_temporales: b.efectos || {}
+          efectos_temporales: b.efectos || {},
+          keyboard_scales: kbScales,
+          arpeggiator_modes: arpModes,
+          potentiometer_functions: potFns,
+          arp_potentiometer_functions: arpPotFns,
+          chord_types: chordTypes
         })),
         current_bank: _keysConfig.currentBank,
         enabled_modes: mc.enabled_modes || [],
         available_effects: mc.available_effects || ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend'],
-        keyboard_scales: mc.keyboard_scales || [],
-        arpeggiator_modes: mc.arpeggiator_modes || Array.from({ length: 16 }, (_, i) => i),
+        keyboard_scales: kbScales,
+        arpeggiator_modes: arpModes,
         custom_arpeggiator_patterns: _customArps,
-        potentiometer_functions: mc.potentiometer_functions || {},
-        arp_potentiometer_functions: mc.arp_potentiometer_functions || {}
+        custom_chord_progressions: _getProgressions(),
+        potentiometer_functions: potFns,
+        arp_potentiometer_functions: arpPotFns,
+        chord_types: chordTypes
       };
     }
 
@@ -3178,6 +3201,9 @@
       if (arpCont) {
         _rebuildArpCheckboxes();
       }
+
+      // Chord types
+      _rebuildChordTypesList();
 
       // Pots
       const pf = mc.potentiometer_functions || {};
@@ -3312,6 +3338,41 @@
     });
     document.getElementById('btn-arp-all')?.addEventListener('click', () => document.querySelectorAll('.arp-chk').forEach(c => c.checked = true));
     document.getElementById('btn-arp-none')?.addEventListener('click', () => document.querySelectorAll('.arp-chk').forEach(c => c.checked = false));
+
+    // ── Chord Types (Botó 11) ──────────────────────────────────────
+    const CHORD_TYPE_LIST = [
+      ['Major', 'Major (0,4,7)'], ['m', 'Menor (0,3,7)'], ['7', 'Dom7 (0,4,7,10)'],
+      ['maj7', 'Maj7 (0,4,7,11)'], ['m7', 'Men7 (0,3,7,10)'], ['dim', 'Disminuït (0,3,6)'],
+      ['aug', 'Augmentat (0,4,8)'], ['sus4', 'Sus4 (0,5,7)'], ['sus2', 'Sus2 (0,2,7)']
+    ];
+
+    function _rebuildChordTypesList() {
+      const cont = document.getElementById('chord-types-list');
+      if (!cont) return;
+      const mc = _loadModesConfig();
+      const enabled = new Set(mc.chord_types ?? ['Major']);
+      cont.innerHTML = CHORD_TYPE_LIST.map(([id, name]) =>
+        `<label class="cb"><input type="checkbox" class="chord-type-chk" value="${id}" ${enabled.has(id) ? 'checked' : ''}>
+         <span>${name}</span></label>`).join('');
+    }
+
+    document.getElementById('btn-save-chord-types')?.addEventListener('click', async () => {
+      const enabled = [...document.querySelectorAll('.chord-type-chk:checked')].map(c => c.value);
+      if (enabled.length === 0) { alert('Selecciona almenys una tipologia.'); return; }
+      const mc = _loadModesConfig();
+      mc.chord_types = enabled;
+      _saveModesConfig(mc);
+      log(`Tipologies d'acords guardades: ${enabled.join(', ')}`, 'ok');
+      showGlobalToast('Guardat correctament');
+      if (device.isConnected()) {
+        try {
+          await device.writeFile('tecla_web_config.json', JSON.stringify(buildDeviceConfig(), null, 2));
+          log('✓ Sincronitzat al dispositiu.', 'ok');
+        } catch (e) { log(`Error sincronitzant: ${e.message}`, 'warn'); }
+      }
+    });
+    document.getElementById('btn-chord-types-all')?.addEventListener('click', () => document.querySelectorAll('.chord-type-chk').forEach(c => c.checked = true));
+    document.getElementById('btn-chord-types-none')?.addEventListener('click', () => document.querySelectorAll('.chord-type-chk').forEach(c => c.checked = false));
 
     document.getElementById('btn-save-pots')?.addEventListener('click', async () => {
       const mc = _loadModesConfig();

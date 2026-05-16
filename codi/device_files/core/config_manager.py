@@ -62,6 +62,29 @@ class ConfigManager:
                             bank['modes'] = modes[:16]
                 except Exception as e:
                     print(f"Avís: No s'ha pogut netejar la configuració: {e}")
+                
+                # Migració: copiar camps de nivell superior als bancs si no hi són
+                # (configs antigues generades per versions anteriors de la web)
+                try:
+                    top_pot = config.get('potentiometer_functions')
+                    top_arp_pot = config.get('arp_potentiometer_functions')
+                    top_scales = config.get('keyboard_scales')
+                    top_arp_modes = config.get('arpeggiator_modes')
+                    top_chord_types = config.get('chord_types')
+                    for bank in config.get('banks', []):
+                        if top_pot and 'potentiometer_functions' not in bank:
+                            bank['potentiometer_functions'] = top_pot
+                        if top_arp_pot and 'arp_potentiometer_functions' not in bank:
+                            bank['arp_potentiometer_functions'] = top_arp_pot
+                        if top_scales and 'keyboard_scales' not in bank:
+                            bank['keyboard_scales'] = top_scales
+                        if top_arp_modes and 'arpeggiator_modes' not in bank:
+                            bank['arpeggiator_modes'] = top_arp_modes
+                        if top_chord_types and 'chord_types' not in bank:
+                            bank['chord_types'] = top_chord_types
+                except Exception as e:
+                    print(f"Avís: No s'ha pogut migrar la configuració: {e}")
+                
                 return config
         except (OSError, ValueError) as e:  # ValueError atrapa errors de JSON en CircuitPython
             # Retorna una configuració per defecte si hi ha algun error
@@ -110,7 +133,13 @@ class ConfigManager:
                     'pot_x': 'Velocity/Arp Speed (dual)',
                     'pot_y': 'Modulation (CC1)',
                     'pot_z': 'Sustain (CC64)'
-                }
+                },
+                'arp_potentiometer_functions': {
+                    'arp_pot_x': 'Arp Speed (BPM)',
+                    'arp_pot_y': 'Arp Pattern Selector',
+                    'arp_pot_z': 'Gate Length'
+                },
+                'chord_types': ['Major']
                 # NOTE: efectos_temporales ara són globals, no per banc
             }
             banks.append(bank)
@@ -548,6 +577,28 @@ class ConfigManager:
                 # Si no es pot guardar, restaurar els valors anteriors
                 bank['potentiometer_functions'] = previous_functions
                 print("Error: No s'han pogut desar les funcions dels potenciòmetres")
+        return False
+    
+    def get_chord_types(self, bank_index=None):
+        """Retorna les tipologies d'acord activades per al mode acords del banc actual"""
+        bank_idx = self.current_bank_index if bank_index is None else bank_index
+        if 0 <= bank_idx < len(self.config['banks']):
+            bank = self.config['banks'][bank_idx]
+            return bank.get('chord_types', ['Major'])
+        return ['Major']
+    
+    def set_chord_types(self, chord_types, bank_index=None):
+        """Assigna les tipologies d'acord disponibles per al mode acords del banc actual"""
+        bank_idx = self.current_bank_index if bank_index is None else bank_index
+        if 0 <= bank_idx < len(self.config['banks']):
+            bank = self.config['banks'][bank_idx]
+            previous = bank.get('chord_types', ['Major'])
+            bank['chord_types'] = chord_types
+            if self.save_config():
+                return True
+            else:
+                bank['chord_types'] = previous
+                return False
         return False
     
     def get_arp_potentiometer_functions(self, bank_index=None):
