@@ -1213,6 +1213,18 @@ class KeyboardMode:
             current_note = self.arp_notes[self.arp_index % num_notes]
             self._note_on(current_note, -1)
             self.arp_index = (self.arp_index + jump) % num_notes
+            
+        elif direction == 'custom':
+            # Custom: llegir patr\u00f3 de config_manager
+            custom_pattern = self.config_manager.get_custom_arp_by_id(self.arp_mode_index) if self.config_manager else None
+            sequence = custom_pattern.get('sequence', [0]) if custom_pattern else [0]
+            if not sequence:
+                sequence = [0]
+            idx = sequence[self.arp_index % len(sequence)]
+            if idx != -1 and idx is not None:
+                current_note = self.arp_notes[min(idx, num_notes - 1)]
+                self._note_on(current_note, -1)
+            self.arp_index = (self.arp_index + 1) % len(sequence)
         
         else:
             # Fallback: mode up
