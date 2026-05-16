@@ -1919,14 +1919,15 @@
       </div>
 
       <div class="card" style="margin-top:14px">
-        <div class="card-title">Tipologies d'Acords (Botó 11)</div>
-        <p style="font-size:11px;color:var(--text3);margin:0 0 10px">Selecciona quines tipologies es ciclen al fer clic al botó 11 (mode acords). Click=activa/cicla · Click mantingut=desactiva.</p>
-        <div class="cb-grid" id="chord-types-list"></div>
-        <div style="display:flex;gap:6px;margin-top:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div class="card-title" style="margin:0">Tipologies d'Acords <span style="font-size:10px;font-weight:normal;color:var(--text3)">(Botó 11)</span></div>
           <button class="btn btn-sm btn-primary" id="btn-save-chord-types">Guardar</button>
-          <button class="btn btn-sm" id="btn-chord-types-all">Tots</button>
-          <button class="btn btn-sm" id="btn-chord-types-none">Cap</button>
         </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <select id="chord-type-add-select" style="flex:1;min-width:0"></select>
+          <button class="btn btn-sm" id="btn-chord-type-add" style="padding:0 10px;font-size:16px;line-height:1">+</button>
+        </div>
+        <div id="chord-types-tags" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;min-height:24px"></div>
       </div>
 
       <div class="panel-grid cols2" style="margin-top:14px">
@@ -3340,28 +3341,49 @@
     document.getElementById('btn-arp-none')?.addEventListener('click', () => document.querySelectorAll('.arp-chk').forEach(c => c.checked = false));
 
     // ── Chord Types (Botó 11) ──────────────────────────────────────
-    const CHORD_TYPE_LIST = [
-      ['Major', 'Major (0,4,7)'], ['m', 'Menor (0,3,7)'], ['7', 'Dom7 (0,4,7,10)'],
-      ['maj7', 'Maj7 (0,4,7,11)'], ['m7', 'Men7 (0,3,7,10)'], ['dim', 'Disminuït (0,3,6)'],
-      ['aug', 'Augmentat (0,4,8)'], ['sus4', 'Sus4 (0,5,7)'], ['sus2', 'Sus2 (0,2,7)']
-    ];
-
     function _rebuildChordTypesList() {
-      const cont = document.getElementById('chord-types-list');
-      if (!cont) return;
-      const mc = _loadModesConfig();
-      const enabled = new Set(mc.chord_types ?? ['Major']);
-      cont.innerHTML = CHORD_TYPE_LIST.map(([id, name]) =>
-        `<label class="cb"><input type="checkbox" class="chord-type-chk" value="${id}" ${enabled.has(id) ? 'checked' : ''}>
-         <span>${name}</span></label>`).join('');
+      const sel = document.getElementById('chord-type-add-select');
+      if (sel && sel.children.length === 0) {
+        sel.innerHTML = _CHORD_TYPES.map(t => `<option value="${t}">${t}</option>`).join('');
+      }
+      _renderChordTypeTags();
     }
 
-    document.getElementById('btn-save-chord-types')?.addEventListener('click', async () => {
-      const enabled = [...document.querySelectorAll('.chord-type-chk:checked')].map(c => c.value);
-      if (enabled.length === 0) { alert('Selecciona almenys una tipologia.'); return; }
+    function _renderChordTypeTags() {
+      const cont = document.getElementById('chord-types-tags');
+      if (!cont) return;
       const mc = _loadModesConfig();
-      mc.chord_types = enabled;
-      _saveModesConfig(mc);
+      const list = mc.chord_types ?? ['Major'];
+      cont.innerHTML = list.map((t, i) =>
+        `<span style="display:inline-flex;align-items:center;gap:3px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:500">
+           ${t}
+           <button data-idx="${i}" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:0 0 0 3px;line-height:1" title="Eliminar">×</button>
+         </span>`).join('');
+      cont.querySelectorAll('button[data-idx]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const mc2 = _loadModesConfig();
+          const l = [...(mc2.chord_types ?? ['Major'])];
+          if (l.length <= 1) return;
+          l.splice(+btn.dataset.idx, 1);
+          mc2.chord_types = l;
+          _saveModesConfig(mc2);
+          _renderChordTypeTags();
+        });
+      });
+    }
+
+    document.getElementById('btn-chord-type-add')?.addEventListener('click', () => {
+      const val = document.getElementById('chord-type-add-select')?.value;
+      if (!val) return;
+      const mc = _loadModesConfig();
+      const l = [...(mc.chord_types ?? ['Major'])];
+      if (!l.includes(val)) { l.push(val); mc.chord_types = l; _saveModesConfig(mc); _renderChordTypeTags(); }
+    });
+
+    document.getElementById('btn-save-chord-types')?.addEventListener('click', async () => {
+      const mc = _loadModesConfig();
+      const enabled = mc.chord_types ?? ['Major'];
+      if (enabled.length === 0) { alert('Selecciona almenys una tipologia.'); return; }
       log(`Tipologies d'acords guardades: ${enabled.join(', ')}`, 'ok');
       showGlobalToast('Guardat correctament');
       if (device.isConnected()) {
@@ -3371,8 +3393,6 @@
         } catch (e) { log(`Error sincronitzant: ${e.message}`, 'warn'); }
       }
     });
-    document.getElementById('btn-chord-types-all')?.addEventListener('click', () => document.querySelectorAll('.chord-type-chk').forEach(c => c.checked = true));
-    document.getElementById('btn-chord-types-none')?.addEventListener('click', () => document.querySelectorAll('.chord-type-chk').forEach(c => c.checked = false));
 
     document.getElementById('btn-save-pots')?.addEventListener('click', async () => {
       const mc = _loadModesConfig();
