@@ -547,3 +547,10 @@ def main():
 
 if __name__ == "__main__":
     main()
+    # Si main() surt per qualsevol motiu (Ctrl+C d'inici, error), reiniciar automàticament
+    # Això fa que el dispositiu sigui plug-and-play fins i tot amb Thonny connectat
+    try:
+        import supervisor as _sv
+        _sv.reload()
+    except Exception:
+        pass
