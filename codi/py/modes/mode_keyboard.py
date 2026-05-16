@@ -15,7 +15,7 @@ from adafruit_midi.pitch_bend import PitchBend
 try:
     import sys
     sys.path.insert(0, '/sd' if '/sd' in sys.path else '.')
-    from music_constants import SCALES, SCALE_NAMES, ARP_DIRS, KEYS, NOTES, CHORDS, note_offset
+    from music_constants import SCALES, SCALE_NAMES, ARP_DIRS, KEYS, NOTES, get_chord, note_offset
 except ImportError:
     # Fallback si no es troba el mòdul (desenvolupament)
     SCALES = ((0, 2, 4, 5, 7, 9, 11),)  # Només Major
@@ -23,17 +23,11 @@ except ImportError:
     ARP_DIRS = ('up', 'down', 'pingpong')
     KEYS = (0, 7, 2, 9, 4, 11, 6, 1, 8, 3, 10, 5)
     NOTES = ('C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B')
-    CHORDS = {
-        'Major':(0,4,7),'m':(0,3,7),'7':(0,4,7,10),'maj7':(0,4,7,11),'m7':(0,3,7,10),
-        'dim':(0,3,6),'aug':(0,4,8),'sus4':(0,5,7),'sus2':(0,2,7),'m7b5':(0,3,6,10),
-        'add9':(0,4,7,14),'6':(0,4,7,9),'add11':(0,4,7,17),'add13':(0,4,7,21),
-        '9':(0,4,7,10,14),'9#5':(0,4,8,10,14),'9b5':(0,4,6,10,14),
-        '9#11':(0,4,7,10,14,18),'11':(0,4,7,10,14,17),'13':(0,4,7,10,14,21),
-        '13b9':(0,4,7,10,13,21),'13#9':(0,4,7,10,15,21),
-        '7b9':(0,4,7,10,13),'7#9':(0,4,7,10,15),'7sus4':(0,5,7,10),'7b13':(0,4,7,10,20),
-        '69':(0,4,7,9,14),'m9':(0,3,7,10,14),'m11':(0,3,7,10,14,17),
-        'm13':(0,3,7,10,14,21),'m69':(0,3,7,9,14),
-    }
+    _CN=('Major','m','7','maj7','m7','dim','aug','sus4','sus2','m7b5','add9','6','add11','add13','9','9#5','9b5','9#11','11','13','13b9','13#9','7b9','7#9','7sus4','7b13','69','m9','m11','m13','m69')
+    _CI=((0,4,7),(0,3,7),(0,4,7,10),(0,4,7,11),(0,3,7,10),(0,3,6),(0,4,8),(0,5,7),(0,2,7),(0,3,6,10),(0,4,7,14),(0,4,7,9),(0,4,7,17),(0,4,7,21),(0,4,7,10,14),(0,4,8,10,14),(0,4,6,10,14),(0,4,7,10,14,18),(0,4,7,10,14,17),(0,4,7,10,14,21),(0,4,7,10,13,21),(0,4,7,10,15,21),(0,4,7,10,13),(0,4,7,10,15),(0,5,7,10),(0,4,7,10,20),(0,4,7,9,14),(0,3,7,10,14),(0,3,7,10,14,17),(0,3,7,10,14,21),(0,3,7,9,14))
+    def get_chord(n):
+        try: return _CI[_CN.index(n)]
+        except: return (0,4,7)
     def note_offset(n):
         try:
             return NOTES.index(n)
@@ -719,7 +713,7 @@ class KeyboardMode:
         base_note = (self.octave + config_octave - 4) * 12 + root_offset_val
         
         # Obtenir intervals de l'acord
-        chord_intervals = CHORDS.get(chord_type, (0, 4, 7))
+        chord_intervals = get_chord(chord_type)
         
         # Generar les notes de l'acord
         for interval in chord_intervals:
@@ -872,7 +866,7 @@ class KeyboardMode:
         
         # Intervals cromàtics des de la tipologia d'acord activa
         chord_type = self.available_chord_types[self.chord_type_index] if self.available_chord_types else 'Major'
-        chord_intervals = CHORDS.get(chord_type, (0, 4, 7))
+        chord_intervals = get_chord(chord_type)
         chord_notes = [root_note + interval for interval in chord_intervals]
         
         # Tocar les notes de l'acord
@@ -978,7 +972,7 @@ class KeyboardMode:
                     root_offset = note_offset(root_note_name)
                     base_note = (self.octave + config_octave - 4) * 12 + root_offset
                     
-                    chord_intervals = CHORDS.get(chord_type, (0, 4, 7))
+                    chord_intervals = get_chord(chord_type)
                     for interval in chord_intervals:
                         note = base_note + interval
                         note = max(0, min(127, note))
@@ -995,7 +989,7 @@ class KeyboardMode:
                     octave_offset = btn_idx // len(scale_intervals)
                     root_note = (self.octave + octave_offset) * 12 + key_offset + scale_intervals[scale_degree]
                     chord_type = self.available_chord_types[self.chord_type_index] if self.available_chord_types else 'Major'
-                    chord_intervals = CHORDS.get(chord_type, (0, 4, 7))
+                    chord_intervals = get_chord(chord_type)
                     for interval in chord_intervals:
                         all_notes.append(root_note + interval)
                 else:
@@ -1023,7 +1017,7 @@ class KeyboardMode:
                     octave_offset = btn_idx // len(scale_intervals)
                     root_note = (self.octave + octave_offset) * 12 + key_offset + scale_intervals[scale_degree]
                     chord_type = self.available_chord_types[self.chord_type_index] if self.available_chord_types else 'Major'
-                    chord_intervals = CHORDS.get(chord_type, (0, 4, 7))
+                    chord_intervals = get_chord(chord_type)
                     for interval in chord_intervals:
                         ordered_notes.append(max(0, min(127, root_note + interval)))
                 else:
