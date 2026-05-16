@@ -105,6 +105,7 @@ class KeyboardMode:
         
         # Detecció de click mantingut per desactivar arpegiador
         self.arp_btn_press_time = 0.0
+        self._arp_pat_sel_last_val = None  # Tracking del pot per evitar sobreescriptura
         
         # Sustain hold: quan està actiu, no s'envien NoteOff (sustain indefinit)
         self.sustain_hold_enabled = False
@@ -571,6 +572,7 @@ class KeyboardMode:
                             self.arp_mode_active = True
                             self.arp_notes = []
                             self.arp_button_order = []
+                            self._arp_pat_sel_last_val = None  # Anchor pot, no override
                             if self.arp_mode_index not in self.available_arp_modes:
                                 self.arp_mode_index = self.available_arp_modes[0] if self.available_arp_modes else 2
                             print(f"🎶 Arpeggiador: {self._get_arp_name(self.arp_mode_index)}")
@@ -584,6 +586,7 @@ class KeyboardMode:
                                 self.arp_index = 0
                                 self.arp_direction = 1
                                 self.arp_button_order = []
+                                self._arp_pat_sel_last_val = None  # Anchor pot after button cycle
                                 print(f"🎶 Arpeggiador: {self._get_arp_name(self.arp_mode_index)}")
                         self._reapply_active_ccs()
                     

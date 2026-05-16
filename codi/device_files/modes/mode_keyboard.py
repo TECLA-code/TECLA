@@ -105,6 +105,7 @@ class KeyboardMode:
         
         # Detecció de click mantingut per desactivar arpegiador
         self.arp_btn_press_time = 0.0
+        self._arp_pat_sel_last_val = None  # Tracking del pot per evitar sobreescriptura
         
         # Sustain hold: quan està actiu, no s'envien NoteOff (sustain indefinit)
         self.sustain_hold_enabled = False
@@ -400,19 +401,25 @@ class KeyboardMode:
             self.arp_speed = 60.0 / bpm
             
         elif function in ('Patró De Direcció', 'Arp Pattern Selector'):
-            # Pattern selector: usar valor del pot per canviar mode
+            # Pattern selector: ONLY apply when pot physically moves (>= 3 units)
+            # This avoids overriding button-based cycling every frame
             if len(self.available_arp_modes) > 0:
-                # Dividir rang 0-127 entre modes disponibles
-                num_modes = len(self.available_arp_modes)
-                mode_idx = int((pot_value / 128.0) * num_modes)
-                mode_idx = min(mode_idx, num_modes - 1)
-                new_mode = self.available_arp_modes[mode_idx]
-                
-                # Només canviar si és diferent
-                if new_mode != self.arp_mode_index:
-                    self.arp_mode_index = new_mode
-                    self.arp_index = 0
-                    self.arp_direction = 1
+                last_val = self._arp_pat_sel_last_val
+                if last_val is None:
+                    # First read after activation: anchor position, do NOT change mode
+                    self._arp_pat_sel_last_val = pot_value
+                elif abs(pot_value - last_val) >= 3:
+                    # Pot physically moved: update mode
+                    self._arp_pat_sel_last_val = pot_value
+                    num_modes = len(self.available_arp_modes)
+                    mode_idx = int((pot_value / 128.0) * num_modes)
+                    mode_idx = min(mode_idx, num_modes - 1)
+                    new_mode = self.available_arp_modes[mode_idx]
+                    if new_mode != self.arp_mode_index:
+                        self.arp_mode_index = new_mode
+                        self.arp_index = 0
+                        self.arp_direction = 1
+                        print(f"🎶 Arpeggiador (pot): {self._get_arp_name(self.arp_mode_index)}")
         
         elif function in ('Brillantor', 'Velocity'):
             # Velocity (brillantor) de les notes de l'arpegiador
@@ -571,6 +578,7 @@ class KeyboardMode:
                             self.arp_mode_active = True
                             self.arp_notes = []
                             self.arp_button_order = []
+                            self._arp_pat_sel_last_val = None  # Anchor pot, no override
                             if self.arp_mode_index not in self.available_arp_modes:
                                 self.arp_mode_index = self.available_arp_modes[0] if self.available_arp_modes else 2
                             print(f"🎶 Arpeggiador: {self._get_arp_name(self.arp_mode_index)}")
@@ -584,6 +592,7 @@ class KeyboardMode:
                                 self.arp_index = 0
                                 self.arp_direction = 1
                                 self.arp_button_order = []
+                                self._arp_pat_sel_last_val = None  # Anchor pot after button cycle
                                 print(f"🎶 Arpeggiador: {self._get_arp_name(self.arp_mode_index)}")
                         self._reapply_active_ccs()
                     
