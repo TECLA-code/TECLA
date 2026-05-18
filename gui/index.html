@@ -77,6 +77,8 @@
     .key-btn.key-type-layer_change.active { border-color: rgba(255,140,0,.9); box-shadow: 0 0 0 2px rgba(255,140,0,.5); }
     .key-btn.key-type-hold_mod { background: rgba(30,180,220,.22); border-color: rgba(30,180,220,.6); box-shadow: 0 3px 0 rgba(30,180,220,.25); }
     .key-btn.key-type-hold_mod.active { border-color: rgba(30,180,220,.9); box-shadow: 0 0 0 2px rgba(30,180,220,.5); }
+    .key-btn.key-type-midi_note { background: rgba(220,60,200,.22); border-color: rgba(220,60,200,.6); box-shadow: 0 3px 0 rgba(220,60,200,.25); }
+    .key-btn.key-type-midi_note.active { border-color: rgba(220,60,200,.9); box-shadow: 0 0 0 2px rgba(220,60,200,.5); }
     .lang-btn.active { border-color: var(--accent); color: var(--accent); }
     .hlang-btn { font-size: 10px; padding: 3px 7px; border-radius: 5px; border: 1px solid var(--border); background: transparent; color: var(--text3); cursor: pointer; font-family: var(--font); letter-spacing: .04em; transition: color .15s, border-color .15s; }
     .hlang-btn:hover { color: var(--text2); border-color: var(--border-h); }
@@ -84,13 +86,10 @@
     /* Capes — checklist */
     label.cb { display:flex; align-items:center; gap:7px; cursor:pointer; font-size:12.5px; padding:3px 0; line-height:1.4; }
     label.cb input[type=checkbox] { width:13px; height:13px; accent-color:var(--accent); cursor:pointer; flex-shrink:0; }
+    .checklist { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; }
+    .checklist label.cb { padding:4px 6px; border-radius:3px; }
+    .checklist label.cb:hover { background:var(--surface2); }
     .preset-desc { font-size:10.5px; color:var(--text3); }
-    /* Mode-row (igual que MIDI app) */
-    .mode-row { display:flex; align-items:center; gap:8px; padding:5px 10px; border-radius:var(--radius); background:var(--surface2); cursor:pointer; transition:background .15s; }
-    .mode-row:hover { background:var(--surface3); }
-    .mode-row input[type=checkbox] { width:13px; height:13px; accent-color:var(--accent); cursor:pointer; flex-shrink:0; }
-    .mode-name { flex:1; font-size:12.5px; color:var(--text); user-select:none; }
-    .modes-list { display:flex; flex-direction:column; gap:3px; }
     .profile-row { display:flex; justify-content:space-between; align-items:center; background:var(--surface2); padding:10px 14px; border-radius:var(--radius); border:1px solid var(--border); }
     .profile-row.profile-row-active { border-color:var(--accent); background:rgba(74,128,240,.08); }
     .profile-row-name { font-size:12px; font-weight:600; color:var(--text); }
@@ -103,8 +102,8 @@
     /* Forms */
     .form-group { margin-bottom: 16px; }
     label { display: block; font-size: 11px; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;}
-    input[type="text"], select { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); padding: 8px 10px; font-size: 12.5px; font-family: var(--font); outline: none; }
-    input[type="text"]:focus, select:focus { border-color: var(--accent); }
+    input[type="text"], input[type="number"], select { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); padding: 8px 10px; font-size: 12.5px; font-family: var(--font); outline: none; }
+    input[type="text"]:focus, input[type="number"]:focus, select:focus { border-color: var(--accent); }
     .checkbox-group { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; cursor: pointer; font-size: 12.5px; color: var(--text); }
     .checkbox-group input { accent-color: var(--accent); width: 14px; height: 14px; }
     .checkbox-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -204,7 +203,6 @@
 <body>
   <header>
     <div style="display: flex; align-items: center; gap: 15px;">
-      <a href="../index.html" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);text-decoration:none;padding:4px 8px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);transition:color .15s,border-color .15s;" onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--border-h)'" onmouseout="this.style.color='var(--text2)';this.style.borderColor='var(--border)'"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H3M7 4l-4 4 4 4"/></svg> Inici</a>
       <div class="logo">T E C L A</div>
       <div class="device-badge" id="device-badge"><span class="dot"></span><span id="device-name">desconnectat</span></div>
     </div>
@@ -248,7 +246,7 @@
       <div class="card">
         <div class="card-title">Configuracions</div>
         <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.65" data-th="profiles_config_desc">Marca les que vols usar i prem <strong>Afegir al dispositiu</strong> per incloure-les com a capes.</p>
-        <div class="modes-list" id="preset-grid" style="margin-bottom:14px"></div>
+        <div class="checklist" id="preset-grid" style="margin-bottom:14px"></div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn btn-sm btn-primary" id="btn-add-presets" data-t="profiles_add">+ Afegir al dispositiu</button>
           <button class="btn btn-sm" id="btn-presets-all" data-t="profiles_all">Totes</button>
@@ -291,6 +289,7 @@
         <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.65" data-th="fw_step2_desc">Descarrega el bundle de llibreries de CircuitPython i copia la carpeta <strong>adafruit_hid</strong> dins la carpeta <strong>lib/</strong> del CIRCUITPY.</p>
         <a class="btn btn-primary" href="https://circuitpython.org/libraries" target="_blank">&darr; Descarregar Bundle de Llibreries</a>
         <p style="font-size:11px;color:var(--text2);margin-top:10px;line-height:1.6" data-th="fw_step2_sub">Cerca <strong>adafruit-circuitpython-bundle</strong> &rarr; descomprimeix &rarr; les llibreries s'instal·laran automàticament.</p>
+        <p style="font-size:11px;color:#f0a020;background:rgba(240,160,32,.08);border-left:2px solid rgba(240,160,32,.5);padding:7px 10px;border-radius:0 4px 4px 0;margin-top:10px;line-height:1.6">&#9888; La versi&oacute; del bundle <strong>ha de coincidir</strong> amb la versi&oacute; de CircuitPython instal&middot;lada (p.ex. CircuitPython 9.x &rarr; bundle 9.x). Si el dispositiu mostra <code style="font-size:10.5px">ValueError: archivo .mpy incompatible</code>, substitueix la carpeta <strong>adafruit_hid</strong> pel bundle de la versi&oacute; correcta.</p>
       </div>
       <div class="card">
         <div class="card-title" data-t="fw_step3_title">Pas 3 &mdash; Actualitzar el firmware</div>
@@ -532,6 +531,36 @@
           </select>
         </div>
       </div>
+      <!-- MIDI CC (Pots) -->
+      <div id="settings-pot-midi_cc" style="display: none; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px;">
+        <div class="checkbox-grid">
+          <div class="form-group" style="margin-bottom:0">
+            <label data-t="drawer_midi_cc_num_label">Número CC (0–127)</label>
+            <input type="number" id="pot-midi-cc-num" min="0" max="127" value="7">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label data-t="drawer_midi_cc_ch_label">Canal (1–16)</label>
+            <input type="number" id="pot-midi-cc-channel" min="1" max="16" value="1">
+          </div>
+        </div>
+      </div>
+      <!-- Nota MIDI (Keys) -->
+      <div id="settings-midi_note" style="display: none; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px;">
+        <div class="form-group">
+          <label data-t="drawer_midi_note_label">Nota MIDI</label>
+          <select id="key-midi-note"></select>
+        </div>
+        <div class="checkbox-grid">
+          <div class="form-group" style="margin-bottom:0">
+            <label data-t="drawer_midi_ch_label">Canal (1–16)</label>
+            <input type="number" id="key-midi-channel" min="1" max="16" value="1">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label data-t="drawer_midi_vel_label">Velocitat (0–127)</label>
+            <input type="number" id="key-midi-velocity" min="0" max="127" value="100">
+          </div>
+        </div>
+      </div>
       <!-- Canvi de Capa (Keys) -->
       <div id="settings-layer_change" style="display: none; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px;">
         <p style="font-size:12px;color:var(--text2);line-height:1.65;margin-bottom:12px" data-t="layer_change_desc">Aquesta tecla canviarà de capa al ser premuda.</p>
@@ -620,7 +649,7 @@
         div.innerHTML = `
           <div class="pot-label">${POT_NAMES[i]}</div>
           <div class="pot-knob" style="transform: rotate(${_potAngle(p.value)}deg); cursor: ns-resize;"><div class="pot-indicator"></div></div>
-          <div style="font-size: 9px; color: var(--text3); font-family: var(--mono);">${p.function === 'none' ? 'Buit' : p.function === 'click_step' ? ('Clic/' + (p.step_size||10)) : p.function === 'volume' ? 'Volum' : p.function === 'brightness' ? 'Brill.' : p.function === 'scroll_y' ? 'Scroll Y' : p.function === 'scroll_x' ? 'Scroll X' : p.function === 'mouse_x' ? 'Ratolí X' : p.function === 'mouse_y' ? 'Ratolí Y' : p.function}</div>
+          <div style="font-size: 9px; color: var(--text3); font-family: var(--mono);">${p.function === 'none' ? 'Buit' : p.function === 'click_step' ? ('Clic/' + (p.step_size||10)) : p.function === 'volume' ? 'Volum' : p.function === 'brightness' ? 'Brill.' : p.function === 'scroll_y' ? 'Scroll Y' : p.function === 'scroll_x' ? 'Scroll X' : p.function === 'mouse_x' ? 'Ratolí X' : p.function === 'mouse_y' ? 'Ratolí Y' : p.function === 'midi_cc' ? ('CC' + (p.midi_cc_num ?? 7)) : p.function}</div>
           <div style="font-size: 9px; color: var(--accent); font-family: var(--mono); min-height:12px;">${p.value}</div>
         `;
         const knobEl = div.querySelector('.pot-knob');
@@ -677,6 +706,10 @@
         } else if (k.type === 'hold_mod') {
           const _ms = {'Keycode.COMMAND':'⌘','Keycode.CONTROL':'⌃','Keycode.ALT':'⌥','Keycode.SHIFT':'⇧','Keycode.LEFT_GUI':'⊞'};
           funcShort = (_ms[k.modifier] || '?') + ' HOLD';
+        } else if (k.type === 'midi_note') {
+          const _nn = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+          const n = k.midi_note ?? 60;
+          funcShort = _nn[n%12] + (Math.floor(n/12)-1);
         }
         btn.innerHTML = `<div class="key-num">${i + 1}</div>${funcShort ? `<div class="key-label">${funcShort}</div>` : ''}`;
         btn.addEventListener('click', () => handleElementClick('key', i));
@@ -695,7 +728,7 @@
     // Carregar el formulari de configuració
     const typeSelect = document.getElementById('elem-type');
     typeSelect.addEventListener('change', (e) => {
-      ['settings-key','settings-string','settings-consumer','settings-mouse','settings-layer_change','settings-hold_mod','settings-pot-click_step'].forEach(id => {
+      ['settings-key','settings-string','settings-consumer','settings-mouse','settings-layer_change','settings-hold_mod','settings-pot-click_step','settings-pot-midi_cc','settings-midi_note'].forEach(id => {
         const el = document.getElementById(id); if (el) el.style.display = 'none';
       });
       const val = e.target.value;
@@ -706,6 +739,8 @@
       if (val === 'layer_change') document.getElementById('settings-layer_change').style.display = 'block';
       if (val === 'hold_mod') document.getElementById('settings-hold_mod').style.display = 'block';
       if (val === 'click_step') document.getElementById('settings-pot-click_step').style.display = 'block';
+      if (val === 'midi_cc') document.getElementById('settings-pot-midi_cc').style.display = 'block';
+      if (val === 'midi_note') document.getElementById('settings-midi_note').style.display = 'block';
     });
 
     function loadConfigForm() {
@@ -729,6 +764,7 @@
           <option value="mouse" data-t="type_mouse">${_i('type_mouse')}</option>
           <option value="layer_change" data-t="type_layer">${_i('type_layer')}</option>
           <option value="hold_mod" data-t="type_hold_mod">${_i('type_hold_mod')}</option>
+          <option value="midi_note" data-t="type_midi_note">${_i('type_midi_note')}</option>
         `;
         typeSelect.value = k.type;
         
@@ -757,6 +793,10 @@
           document.getElementById('key-layer-dir').value = k.layer_dir || 'next';
         } else if (k.type === 'hold_mod') {
           document.getElementById('key-hold-mod').value = k.modifier || 'Keycode.COMMAND';
+        } else if (k.type === 'midi_note') {
+          document.getElementById('key-midi-note').value = k.midi_note ?? 60;
+          document.getElementById('key-midi-channel').value = k.midi_channel ?? 1;
+          document.getElementById('key-midi-velocity').value = k.midi_velocity ?? 100;
         }
       } else if (type === 'pot') {
         const p = config.pots[id];
@@ -772,11 +812,17 @@
           <option value="mouse_x">Ratolí: Moviment X (Esq/Dre)</option>
           <option value="mouse_y">Ratolí: Moviment Y (Dalt/Baix)</option>
           <option value="click_step">Clic per moviment (pas configurable)</option>
+          <option value="midi_cc">MIDI CC (Controlador 0–127)</option>
         `;
         typeSelect.value = p.function;
         if (p.function === 'click_step') {
           document.getElementById('settings-pot-click_step').style.display = 'block';
           document.getElementById('pot-step-size').value = p.step_size || 10;
+        }
+        if (p.function === 'midi_cc') {
+          document.getElementById('settings-pot-midi_cc').style.display = 'block';
+          document.getElementById('pot-midi-cc-num').value = p.midi_cc_num ?? 7;
+          document.getElementById('pot-midi-cc-channel').value = p.midi_cc_channel ?? 1;
         }
       }
       
@@ -808,11 +854,19 @@
           k.layer_dir = document.getElementById('key-layer-dir').value;
         } else if (fType === 'hold_mod') {
           k.modifier = document.getElementById('key-hold-mod').value;
+        } else if (fType === 'midi_note') {
+          k.midi_note = parseInt(document.getElementById('key-midi-note').value) || 60;
+          k.midi_channel = Math.min(16, Math.max(1, parseInt(document.getElementById('key-midi-channel').value) || 1));
+          k.midi_velocity = Math.min(127, Math.max(0, parseInt(document.getElementById('key-midi-velocity').value) || 100));
         }
         config.keys[id] = k;
       } else if (type === 'pot') {
         const potData = { function: fType, label: label || `Pot ${POT_NAMES[id]}`, id, value: config.pots[id]?.value || 0 };
         if (fType === 'click_step') potData.step_size = parseInt(document.getElementById('pot-step-size').value) || 10;
+        if (fType === 'midi_cc') {
+          potData.midi_cc_num = Math.min(127, Math.max(0, parseInt(document.getElementById('pot-midi-cc-num').value) || 7));
+          potData.midi_cc_channel = Math.min(16, Math.max(1, parseInt(document.getElementById('pot-midi-cc-channel').value) || 1));
+        }
         config.pots[id] = potData;
       }
       
@@ -835,12 +889,14 @@
       const needsString   = allKeys.flat().some(k => k.type === 'string');
       const needsConsumer = allKeys.flat().some(k => k.type === 'consumer') || allPots.flat().some(p => p.function === 'volume' || p.function === 'brightness');
       const needsMouse    = allKeys.flat().some(k => k.type === 'mouse') || allPots.flat().some(p => p.function.startsWith('mouse') || p.function.startsWith('scroll') || p.function === 'click_step');
+      const needsMidi     = allKeys.flat().some(k => k.type === 'midi_note') || allPots.flat().some(p => p.function === 'midi_cc');
 
       let code = `# TECLA MacroPad - Codi generat autom\u00e0ticament\nimport time\nimport board\nimport digitalio\nimport usb_hid\nimport analogio\n\n`;
       if (needsKeyboard) code += `from adafruit_hid.keycode import Keycode\nfrom adafruit_hid.keyboard import Keyboard\n`;
       if (needsString)   code += `from adafruit_hid.keyboard_layout_us import KeyboardLayoutUS\n`;
       if (needsConsumer) code += `from adafruit_hid.consumer_control import ConsumerControl\nfrom adafruit_hid.consumer_control_code import ConsumerControlCode\n`;
       if (needsMouse)    code += `from adafruit_hid.mouse import Mouse\n`;
+      if (needsMidi)     code += `import usb_midi\n`;
 
       code += `\n# --- HID Setup ---\n`;
       if (needsKeyboard || needsString) code += `keyboard = Keyboard(usb_hid.devices)\n`;
@@ -851,13 +907,16 @@
       code += `\n# --- Hardware Setup ---\n`;
       code += `btn_pins = [board.GP0, board.GP1, board.GP2, board.GP3, board.GP4, board.GP5, board.GP6, board.GP7, board.GP8, board.GP9, board.GP10, board.GP11, board.GP12, board.GP13, board.GP14, board.GP15]\n`;
       code += `btns = [digitalio.DigitalInOut(pin) for pin in btn_pins]\nfor b in btns:\n    b.direction = digitalio.Direction.INPUT\n    b.pull = digitalio.Pull.DOWN\n`;
-      code += `\npots = [analogio.AnalogIn(board.A1), analogio.AnalogIn(board.A0), analogio.AnalogIn(board.A2)]\nlast_pot_vals = [p.value // 1000 for p in pots]\n`;
+      code += `\npots = [analogio.AnalogIn(board.A1), analogio.AnalogIn(board.A0), analogio.AnalogIn(board.A2)]\n`;
+      const _potInits = [0,1,2].map(p => layers.some(l => l.pots[p] && l.pots[p].function === 'midi_cc') ? `pots[${p}].value >> 9` : `pots[${p}].value // 1000`);
+      code += `last_pot_vals = [${_potInits.join(', ')}]\n`;
       code += `last_btn_states = [False] * 16\n`;
       if (multiLayer) code += `current_layer = 0\nLAYER_COUNT = ${layers.length}\n`;
       if (hasHoldMod) code += `DEBOUNCE_TIME = 0.02\n`;
-      // Click-step bucket init vars
+      // Click-step bucket init vars (scan all layers)
       for (let p = 0; p < 3; p++) {
-        const pp = config.pots[p]; if (!pp || pp.function !== 'click_step') continue;
+        const pp = layers.map(l => l.pots[p]).find(pp => pp && pp.function === 'click_step');
+        if (!pp) continue;
         const step = pp.step_size || 10;
         code += `last_click_bucket_p${p} = pots[${p}].value // 512 // ${step}\n`;
       }
@@ -866,6 +925,10 @@
 
       function _keyAction(k, indent) {
         const i2 = indent + '    ';
+        if (k.type === 'midi_note') {
+          const ch = (k.midi_channel || 1) - 1;
+          return `${indent}usb_midi.ports[1].write(bytes([0x90 | ${ch}, ${k.midi_note ?? 60}, ${k.midi_velocity ?? 100}]))\n`;
+        }
         if (k.type === 'hold_mod') return `${indent}keyboard.press(${k.modifier || 'Keycode.COMMAND'})\n`;
         if (k.type === 'layer_change') {
           const d = k.layer_dir === 'prev' ? '-1' : '1';
@@ -875,12 +938,16 @@
           const pmods = (k.mods||[]).map(m => ({'Ctrl':'Keycode.CONTROL','Shift':'Keycode.SHIFT','Alt':'Keycode.ALT','Cmd':'Keycode.COMMAND'})[m]||'').filter(Boolean);
           return `${indent}keyboard.press(${pmods.length ? pmods.join(', ') + ', ' : ''}${k.keycode})\n`;
         }
-        if (k.type === 'string') return `${indent}layout.write(${JSON.stringify(k.string || '')})\n`;
+        if (k.type === 'string') return `${indent}layout.write("${k.string}")\n`;
         if (k.type === 'consumer') return `${indent}cc.send(${k.consumer})\n`;
         if (k.type === 'mouse') return `${indent}mouse.click(${k.mouse})\n`;
         return `${indent}pass\n`;
       }
       function _keyRelease(k, indent) {
+        if (k.type === 'midi_note') {
+          const ch = (k.midi_channel || 1) - 1;
+          return `${indent}usb_midi.ports[1].write(bytes([0x80 | ${ch}, ${k.midi_note ?? 60}, 0]))\n`;
+        }
         if (k.type === 'hold_mod') return `${indent}keyboard.release(${k.modifier || 'Keycode.COMMAND'})\n`;
         if (k.type === 'key') {
           if (hasHoldMod) {
@@ -920,26 +987,55 @@
         }
       }
 
-      code += `\n    # POTS\n`;
-      for (let p = 0; p < 3; p++) {
-        const pp = config.pots[p]; if (!pp) continue;
-        const pf = pp.function; if (pf === 'none') continue;
+      function _potCode(pp, p, ind) {
+        const pf = pp.function;
+        const i2 = ind + '    ';
+        let c = '';
         if (pf === 'click_step') {
           const step = pp.step_size || 10;
-          code += `    curr_bucket_p${p} = pots[${p}].value // 512 // ${step}\n`;
-          code += `    if curr_bucket_p${p} != last_click_bucket_p${p}:\n`;
-          code += `        mouse.click(Mouse.LEFT_BUTTON)\n`;
-          code += `        last_click_bucket_p${p} = curr_bucket_p${p}\n\n`;
+          c += `${ind}curr_bucket_p${p} = pots[${p}].value // 512 // ${step}\n`;
+          c += `${ind}if curr_bucket_p${p} != last_click_bucket_p${p}:\n`;
+          c += `${i2}mouse.click(Mouse.LEFT_BUTTON)\n`;
+          c += `${i2}last_click_bucket_p${p} = curr_bucket_p${p}\n\n`;
+        } else if (pf === 'midi_cc') {
+          const ccNum = pp.midi_cc_num ?? 7;
+          const ccCh  = (pp.midi_cc_channel || 1) - 1;
+          c += `${ind}curr_p${p} = pots[${p}].value >> 9\n`;
+          c += `${ind}if curr_p${p} != last_pot_vals[${p}]:\n`;
+          c += `${i2}usb_midi.ports[1].write(bytes([0xB0 | ${ccCh}, ${ccNum}, curr_p${p}]))\n`;
+          c += `${i2}last_pot_vals[${p}] = curr_p${p}\n\n`;
         } else {
-          code += `    curr_p${p} = pots[${p}].value // 1000\n    if abs(curr_p${p} - last_pot_vals[${p}]) > 2:\n`;
-          if (pf === 'volume') code += `        cc.send(ConsumerControlCode.VOLUME_INCREMENT if curr_p${p} > last_pot_vals[${p}] else ConsumerControlCode.VOLUME_DECREMENT)\n`;
-          else if (pf === 'scroll_y') code += `        mouse.move(wheel=1 if curr_p${p} > last_pot_vals[${p}] else -1)\n`;
-          else if (pf === 'scroll_x') code += `        mouse.move(wheel=0, x=1 if curr_p${p} > last_pot_vals[${p}] else -1)\n`;
-          else if (pf === 'mouse_x') code += `        mouse.move(x=int((curr_p${p} - 32) * 0.5))\n`;
-          else if (pf === 'mouse_y') code += `        mouse.move(y=int((curr_p${p} - 32) * 0.5))\n`;
-          else if (pf === 'brightness') code += `        cc.send(ConsumerControlCode.BRIGHTNESS_INCREMENT if curr_p${p} > last_pot_vals[${p}] else ConsumerControlCode.BRIGHTNESS_DECREMENT)\n`;
-          else code += `        pass\n`;
-          code += `        last_pot_vals[${p}] = curr_p${p}\n\n`;
+          c += `${ind}curr_p${p} = pots[${p}].value // 1000\n${ind}if abs(curr_p${p} - last_pot_vals[${p}]) > 2:\n`;
+          if (pf === 'volume') c += `${i2}cc.send(ConsumerControlCode.VOLUME_INCREMENT if curr_p${p} > last_pot_vals[${p}] else ConsumerControlCode.VOLUME_DECREMENT)\n`;
+          else if (pf === 'scroll_y') c += `${i2}mouse.move(wheel=1 if curr_p${p} > last_pot_vals[${p}] else -1)\n`;
+          else if (pf === 'scroll_x') c += `${i2}mouse.move(wheel=0, x=1 if curr_p${p} > last_pot_vals[${p}] else -1)\n`;
+          else if (pf === 'mouse_x') c += `${i2}mouse.move(x=int((curr_p${p} - 32) * 0.5))\n`;
+          else if (pf === 'mouse_y') c += `${i2}mouse.move(y=int((curr_p${p} - 32) * 0.5))\n`;
+          else if (pf === 'brightness') c += `${i2}cc.send(ConsumerControlCode.BRIGHTNESS_INCREMENT if curr_p${p} > last_pot_vals[${p}] else ConsumerControlCode.BRIGHTNESS_DECREMENT)\n`;
+          else c += `${i2}pass\n`;
+          c += `${i2}last_pot_vals[${p}] = curr_p${p}\n\n`;
+        }
+        return c;
+      }
+
+      code += `\n    # POTS\n`;
+      if (multiLayer) {
+        let _firstPL = true;
+        for (let li = 0; li < layers.length; li++) {
+          const lPots = layers[li].pots;
+          const hasActive = lPots.some(pp => pp && pp.function !== 'none');
+          if (!hasActive) continue;
+          code += `    ${_firstPL ? 'if' : 'elif'} current_layer == ${li}:\n`;
+          _firstPL = false;
+          for (let p = 0; p < 3; p++) {
+            const pp = lPots[p]; if (!pp || pp.function === 'none') continue;
+            code += _potCode(pp, p, '        ');
+          }
+        }
+      } else {
+        for (let p = 0; p < 3; p++) {
+          const pp = config.pots[p]; if (!pp || pp.function === 'none') continue;
+          code += _potCode(pp, p, '    ');
         }
       }
       code += `    time.sleep(0.01)\n`;
@@ -1032,15 +1128,8 @@
     function _renderPresetsGrid() {
       const grid = document.getElementById('preset-grid'); if (!grid) return;
       grid.innerHTML = _PRESETS.map((p, i) =>
-        `<div class="mode-row"><input type="checkbox" class="preset-chk" value="${i}"><span class="mode-name" title="${p.desc}">${p.name}</span></div>`
+        `<label class="cb"><input type="checkbox" class="preset-chk" value="${i}"><span title="${p.desc}">${p.name}</span></label>`
       ).join('');
-      grid.querySelectorAll('.mode-row').forEach(row => {
-        row.addEventListener('click', e => {
-          if (e.target.type === 'checkbox') return;
-          const chk = row.querySelector('.preset-chk');
-          chk.checked = !chk.checked;
-        });
-      });
     }
 
     document.getElementById('btn-add-presets')?.addEventListener('click', () => {
@@ -1489,8 +1578,8 @@
         fw_step1_desc:'Entra al mode bootloader mantenint <strong>BOOTSEL</strong> mentre connectes el USB-C. El dispositiu apareixerà com <strong>RPI-RP2</strong>.',
         fw_step1_sub:'Obre el Finder &rarr; arrossega el fitxer <strong>.uf2</strong> al volum <strong>RPI-RP2</strong>. El dispositiu es reiniciarà com <strong>CIRCUITPY</strong>.',
         fw_step2_title:'Pas 2 — Instal·lar les llibreries',
-        fw_step2_desc:"Descarrega el bundle de llibreries de CircuitPython i les llibreries s'instal·laran automàticament.",
-        fw_step2_sub:"Cerca <strong>adafruit-circuitpython-bundle</strong> &rarr; descomprimeix &rarr; les llibreries s'instal·laran automàticament.",
+        fw_step2_desc:'Descarrega el bundle de llibreries de CircuitPython i copia la carpeta <strong>adafruit_hid</strong> dins la carpeta <strong>lib/</strong> del CIRCUITPY.',
+        fw_step2_sub:'Cerca <strong>adafruit-circuitpython-bundle</strong> &rarr; descomprimeix &rarr; les llibreries s\'instal·laran autom\u00e0ticament.',
         fw_step3_title:'Pas 3 — Actualitzar el firmware',
         fw_step3_desc:'Un cop el CIRCUITPY és visible, genera i exporta el fitxer <strong>code.py</strong> amb la teva configuració al dispositiu.',
         profiles_new:'+ Nova capa', profiles_export:'↓ Exportar', profiles_import:'↑ Importar',
@@ -1506,7 +1595,9 @@
         drawer_click_step_label:'Densitat (1 clic cada N unitats)',
         drawer_click_step_desc:'Envia un clic esquerre cada vegada que el potenciòmetre canvia N unitats (rang 0–127).',
         type_none:'Cap (Desactivada)', type_key:'Tecla / Drecera', type_string:'Escriure Text',
-        type_consumer:'Control Multimèdia', type_mouse:'Ratolí (Clics)', type_layer:'Canviar de Capa', type_hold_mod:'Modificador Mantingut',
+        type_consumer:'Control Multimèdia', type_mouse:'Ratolí (Clics)', type_layer:'Canviar de Capa', type_hold_mod:'Modificador Mantingut', type_midi_note:'Nota MIDI',
+        drawer_midi_note_label:'Nota MIDI (0–127)', drawer_midi_ch_label:'Canal (1–16)', drawer_midi_vel_label:'Velocitat (0–127)',
+        drawer_midi_cc_num_label:'Número CC (0–127)', drawer_midi_cc_ch_label:'Canal MIDI (1–16)',
         layer_change_desc:'Aquesta tecla canviarà de capa al ser premuda.',
         layer_dir_label:'Direcció', layer_dir_next:'Capa Següent (→)', layer_dir_prev:'Capa Anterior (←)',
         theme_title:'Aparença', theme_editor:'Editor de temes', theme_new:'+ Nou tema',
@@ -1526,7 +1617,7 @@
         fw_step1_sub:'Abre el Finder &rarr; arrastra el archivo <strong>.uf2</strong> al volumen <strong>RPI-RP2</strong>. El dispositivo se reiniciará como <strong>CIRCUITPY</strong>.',
         fw_step2_title:'Paso 2 — Instalar las librerías',
         fw_step2_desc:'Descarga el bundle de librerías de CircuitPython y las librerías se instalarán automáticamente.',
-        fw_step2_sub:'Busca <strong>adafruit-circuitpython-bundle</strong> &rarr; descomprime &rarr; las librerías se instalarán automáticamente.',
+        fw_step2_sub:'Busca <strong>adafruit-circuitpython-bundle</strong> &rarr; descomprime &rarr; copia la carpeta <strong>adafruit_hid</strong> a <strong>CIRCUITPY/lib/</strong>.',
         fw_step3_title:'Paso 3 — Actualizar el firmware',
         fw_step3_desc:'Una vez CIRCUITPY está visible, genera y exporta el archivo <strong>code.py</strong> con tu configuración al dispositivo.',
         profiles_new:'+ Nueva capa', profiles_export:'↓ Exportar', profiles_import:'↑ Importar',
@@ -1542,7 +1633,9 @@
         drawer_click_step_label:'Densidad (1 clic cada N unidades)',
         drawer_click_step_desc:'Envía un clic izquierdo cada vez que el potenciómetro cambia N unidades (rango 0–127).',
         type_none:'Ninguna (Desactivada)', type_key:'Tecla / Atajo', type_string:'Escribir Texto',
-        type_consumer:'Control Multimedia', type_mouse:'Ratón (Clics)', type_layer:'Cambiar de Capa', type_hold_mod:'Modificador Mantenido',
+        type_consumer:'Control Multimedia', type_mouse:'Ratón (Clics)', type_layer:'Cambiar de Capa', type_hold_mod:'Modificador Mantenido', type_midi_note:'Nota MIDI',
+        drawer_midi_note_label:'Nota MIDI (0–127)', drawer_midi_ch_label:'Canal (1–16)', drawer_midi_vel_label:'Velocidad (0–127)',
+        drawer_midi_cc_num_label:'Número CC (0–127)', drawer_midi_cc_ch_label:'Canal MIDI (1–16)',
         layer_change_desc:'Esta tecla cambiará de capa al ser pulsada.',
         layer_dir_label:'Dirección', layer_dir_next:'Capa Siguiente (→)', layer_dir_prev:'Capa Anterior (←)',
         theme_title:'Apariencia', theme_editor:'Editor de temas', theme_new:'+ Nuevo tema',
@@ -1562,7 +1655,7 @@
         fw_step1_sub:'Open Finder &rarr; drag the <strong>.uf2</strong> file to the <strong>RPI-RP2</strong> volume. The device will reboot as <strong>CIRCUITPY</strong>.',
         fw_step2_title:'Step 2 — Install libraries',
         fw_step2_desc:'Download the CircuitPython library bundle and libraries will be installed automatically.',
-        fw_step2_sub:'Find <strong>adafruit-circuitpython-bundle</strong> &rarr; unzip &rarr; libraries will be installed automatically.',
+        fw_step2_sub:'Find <strong>adafruit-circuitpython-bundle</strong> &rarr; unzip &rarr; copy the <strong>adafruit_hid</strong> folder to <strong>CIRCUITPY/lib/</strong>.',
         fw_step3_title:'Step 3 — Update firmware',
         fw_step3_desc:'Once CIRCUITPY is visible, generate and export the <strong>code.py</strong> file with your configuration to the device.',
         profiles_new:'+ New layer', profiles_export:'↓ Export', profiles_import:'↑ Import',
@@ -1578,7 +1671,9 @@
         drawer_click_step_label:'Density (1 click every N units)',
         drawer_click_step_desc:'Sends a left click each time the potentiometer changes by N units (range 0–127).',
         type_none:'None (Disabled)', type_key:'Key / Shortcut', type_string:'Type Text',
-        type_consumer:'Media Control', type_mouse:'Mouse (Clicks)', type_layer:'Switch Layer', type_hold_mod:'Held Modifier',
+        type_consumer:'Media Control', type_mouse:'Mouse (Clicks)', type_layer:'Switch Layer', type_hold_mod:'Held Modifier', type_midi_note:'MIDI Note',
+        drawer_midi_note_label:'MIDI Note (0–127)', drawer_midi_ch_label:'Channel (1–16)', drawer_midi_vel_label:'Velocity (0–127)',
+        drawer_midi_cc_num_label:'CC Number (0–127)', drawer_midi_cc_ch_label:'MIDI Channel (1–16)',
         layer_change_desc:'This key will switch layer when pressed.',
         layer_dir_label:'Direction', layer_dir_next:'Next Layer (→)', layer_dir_prev:'Previous Layer (←)',
         theme_title:'Appearance', theme_editor:'Theme editor', theme_new:'+ New theme',
@@ -1620,6 +1715,19 @@
       document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
     }
     document.querySelectorAll('.lang-btn').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
+
+    // Inicialitzar selector de notes MIDI
+    (function() {
+      const _nn = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+      const sel = document.getElementById('key-midi-note');
+      for (let n = 0; n <= 127; n++) {
+        const name = _nn[n % 12] + (Math.floor(n / 12) - 1);
+        const opt = document.createElement('option');
+        opt.value = n; opt.textContent = `${n} – ${name}`;
+        sel.appendChild(opt);
+      }
+      sel.value = 60;
+    })();
 
     // Inici
     if (_currentLang !== 'ca') setLang(_currentLang);
