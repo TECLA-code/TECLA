@@ -1938,9 +1938,9 @@
             <div style="font-size:11px;color:var(--text3);margin-top:2px">Instantànies de la configuració de la pestanya Tecles</div>
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
-            <button class="btn btn-sm btn-primary" id="btn-save-current-layer">💾 Guardar capa actual</button>
-            <button class="btn btn-sm" id="btn-export-all-layers">📤 Exportar tot</button>
-            <button class="btn btn-sm" id="btn-import-layer-file">📂 Importar</button>
+            <button class="btn btn-sm btn-primary" id="btn-save-current-layer">Guardar capa actual</button>
+            <button class="btn btn-sm" id="btn-export-all-layers">Exportar selecció</button>
+            <button class="btn btn-sm" id="btn-import-layer-file">Importar</button>
             <input type="file" id="input-import-layer" accept=".json" style="display:none">
           </div>
         </div>
@@ -2830,20 +2830,21 @@
         const div = document.createElement('div');
         div.className = 'saved-layer-item';
         div.innerHTML = `
+          <label style="display:flex;align-items:center;gap:0;cursor:pointer;flex-shrink:0" title="Seleccionar per exportar">
+            <input type="checkbox" class="layer-export-chk" data-id="${layer.id}" style="margin:0 8px 0 2px;cursor:pointer">
+          </label>
           <div class="saved-layer-info">
             <span class="saved-layer-name">${layer.name}</span>
             <span class="saved-layer-meta">${assigned}/12 tecles assignades · ${dateStr}</span>
           </div>
           <div class="saved-layer-actions">
             <button class="btn btn-sm btn-primary" data-action="load" data-id="${layer.id}">Carregar</button>
-            <button class="btn btn-sm" data-action="export" data-id="${layer.id}">Exportar</button>
             <button class="btn btn-sm btn-danger" data-action="delete" data-id="${layer.id}">✕</button>
           </div>`;
         div.querySelectorAll('[data-action]').forEach(btn => {
           btn.addEventListener('click', () => {
             const id = btn.dataset.id;
             if (btn.dataset.action === 'load') _loadSavedLayer(id);
-            else if (btn.dataset.action === 'export') _exportSavedLayer(id);
             else if (btn.dataset.action === 'delete') _deleteSavedLayer(id);
           });
         });
@@ -3390,9 +3391,11 @@
     document.getElementById('btn-modes-none')?.addEventListener('click', () => document.querySelectorAll('#modes-list-check input').forEach(c => c.checked = false));
 
     function _exportAllLayers() {
-      const layers = _loadSavedLayers();
-      if (!layers.length) { showGlobalToast('No hi ha capes guardades per exportar.'); return; }
-      const blob = new Blob([JSON.stringify(layers, null, 2)], { type: 'application/json' });
+      const checked = [...document.querySelectorAll('.layer-export-chk:checked')].map(c => c.dataset.id);
+      if (!checked.length) { showGlobalToast('Selecciona almenys una capa per exportar.'); return; }
+      const all = _loadSavedLayers();
+      const toExport = all.filter(l => checked.includes(String(l.id)));
+      const blob = new Blob([JSON.stringify(toExport, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       const date = new Date().toISOString().slice(0, 10);
