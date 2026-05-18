@@ -3933,6 +3933,22 @@
       5: 'Alberti', 6: 'Alberti Alt', 7: 'Waltz', 8: 'Trencat', 9: 'Tremolo',
       10: 'Zigzag', 11: 'Bloc', 12: 'Rodat', 13: 'Octaves', 14: 'Contrari', 15: 'Spread'
     };
+    const CHORDS_JS = {
+      'Major':[0,4,7],'m':[0,3,7],'7':[0,4,7,10],'maj7':[0,4,7,11],'m7':[0,3,7,10],
+      'dim':[0,3,6],'aug':[0,4,8],'sus4':[0,5,7],'sus2':[0,2,7],'m7b5':[0,3,6,10],
+      'add9':[0,4,7,14],'6':[0,4,7,9],'add11':[0,4,7,17],'add13':[0,4,7,21],
+      '9':[0,4,7,10,14],'9#5':[0,4,8,10,14],'9b5':[0,4,6,10,14],
+      '9#11':[0,4,7,10,14,18],'11':[0,4,7,10,14,17],'13':[0,4,7,10,14,21],
+      '13b9':[0,4,7,10,13,21],'13#9':[0,4,7,10,15,21],
+      '7b9':[0,4,7,10,13],'7#9':[0,4,7,10,15],'7sus4':[0,5,7,10],'7b13':[0,4,7,10,20],
+      '69':[0,4,7,9,14],'m9':[0,3,7,10,14],'m11':[0,3,7,10,14,17],
+      'm13':[0,3,7,10,14,21],'m69':[0,3,7,9,14]
+    };
+    function _getChordIntervals(name) { return CHORDS_JS[name] || [0,4,7]; }
+    function _getArpName(id) {
+      if (id >= 2000) { const c = _customArps.find(a => a.id === id); return c ? c.name : `Custom ${id-2000}`; }
+      return ARP_NAMES_JS[id] ?? `Arp ${id}`;
+    }
 
     // ══════════════════════════════════════════════════════════════
     // SYSTEM VOLUME HELPER (via server.py local, macOS only)
@@ -3987,6 +4003,12 @@
         // Config (loaded from localStorage)
         this.availableScales = [0];
         this.availableArpModes = [0, 1, 2];
+        this.availableChordTypes = ['Major'];
+        this.chordTypeIndex = 0;
+        this.longPressThreshold = 0.5;
+        this.chordBtnPressTime = 0;
+        this.arpBtnPressTime = 0;
+        this._arpBlockNotes = [];
         this.potXFn = 'Brillantor'; this.potYFn = 'Modulació'; this.potZFn = 'Sustain';
         this.arpPotXFn = 'Velocitat (BPM)'; this.arpPotYFn = 'Patró De Direcció'; this.arpPotZFn = 'Modulació';
         this._reloadConfig();
@@ -3996,9 +4018,12 @@
         const mc = _loadModesConfig();
         const scales = mc.keyboard_scales || [];
         this.availableScales = scales.length ? scales : [0];
-        const arps = mc.arp_modes || [];
+        const arps = mc.arpeggiator_modes || [];
         this.availableArpModes = arps.length ? arps : [0, 1, 2];
-        const pf = mc.pot_functions || {};
+        const chords = mc.chord_types || [];
+        this.availableChordTypes = chords.length ? chords : ['Major'];
+        if (this.chordTypeIndex >= this.availableChordTypes.length) this.chordTypeIndex = 0;
+        const pf = mc.potentiometer_functions || mc.pot_functions || {};
         this.potXFn = pf.pot_x || 'Brillantor';
         this.potYFn = pf.pot_y || 'Modulació';
         this.potZFn = pf.pot_z || 'Sustain';
@@ -4053,30 +4078,10 @@
           this.keyIndex = (this.keyIndex + 1) % 12;
           this.onLog(`🎵 Tonalitat: ${this.keyName}`, 'info');
           this._updateHUD();
-        } else if (idx === 10) { // T11: chord mode toggle
-          this._allNotesOff();
-          this.chordMode = !this.chordMode;
-          this.onLog(`🎹 Acords: ${this.chordMode ? 'ACTIVAT' : 'DESACTIVAT'}`, 'info');
-          this._updateHUD();
-        } else if (idx === 11) { // T12: arpeggiator
-          this._allNotesOff();
-          const dt = now - this.lastArpBtnPress;
-          this.lastArpBtnPress = now;
-          if (dt < 0.35 && this.arpMode) {
-            this.arpMode = false; this.arpNotes = []; this.arpButtonOrder = [];
-            if (this._lastArpNote !== undefined) { this.webMidi.send('note_off', this._lastArpNote, 0, 0); this._lastArpNote = undefined; }
-            this.onLog('🎶 Arpegiador DESACTIVAT (doble clic)', 'info');
-          } else if (!this.arpMode) {
-            this.arpMode = true; this.arpNotes = []; this.arpButtonOrder = []; this.arpPos = 0; this.arpDir = 1;
-            if (!this.availableArpModes.includes(this.arpModeIndex)) this.arpModeIndex = this.availableArpModes[0] ?? 2;
-            this.onLog(`🎶 Arpegiador: ${ARP_NAMES_JS[this.arpModeIndex] ?? this.arpModeIndex}`, 'info');
-          } else {
-            const ci = this.availableArpModes.indexOf(this.arpModeIndex);
-            this.arpModeIndex = this.availableArpModes[(ci + 1) % this.availableArpModes.length] ?? 2;
-            this.arpPos = 0; this.arpDir = 1; this.arpButtonOrder = [];
-            this.onLog(`🎶 Arpegiador: ${ARP_NAMES_JS[this.arpModeIndex] ?? this.arpModeIndex}`, 'info');
-          }
-          this._updateHUD();
+        } else if (idx === 10) { // T11: acords — registra temps inici (llarg=desact, curt=act/cicle)
+          this.chordBtnPressTime = performance.now() / 1000;
+        } else if (idx === 11) { // T12: arpegiador — registra temps inici (llarg=desact, curt=act/cicle)
+          this.arpBtnPressTime = performance.now() / 1000;
         } else if (idx === 12) { // T13: switch to modes layer
           this.onLog('T13 → selecciona un mode de la llista lateral per canviar de capa', 'info');
         } else if (idx === 13) { // T14: octave down
@@ -4094,7 +4099,42 @@
       }
 
       releaseButton(idx) {
-        if (!this.active || idx >= 8) return;
+        if (!this.active) return;
+        const now = performance.now() / 1000;
+        if (idx === 10) { // T11: acords
+          const dur = now - this.chordBtnPressTime;
+          this._allNotesOff();
+          if (dur >= this.longPressThreshold && this.chordMode) {
+            this.chordMode = false;
+            this.onLog('🎹 Acords DESACTIVAT (premuda llarga)', 'info');
+          } else if (!this.chordMode) {
+            this.chordMode = true;
+            this.onLog(`🎹 Acords: ${this.availableChordTypes[this.chordTypeIndex] || 'Major'} (ACTIVAT)`, 'info');
+          } else {
+            this.chordTypeIndex = (this.chordTypeIndex + 1) % this.availableChordTypes.length;
+            this.onLog(`🎹 Acords: ${this.availableChordTypes[this.chordTypeIndex]}`, 'info');
+          }
+          this._updateHUD(); return;
+        }
+        if (idx === 11) { // T12: arpegiador
+          const dur = now - this.arpBtnPressTime;
+          this._allNotesOff();
+          if (dur >= this.longPressThreshold && this.arpMode) {
+            this.arpMode = false; this.arpNotes = []; this.arpButtonOrder = [];
+            this.onLog('🎶 Arpegiador DESACTIVAT (premuda llarga)', 'info');
+          } else if (!this.arpMode) {
+            this.arpMode = true; this.arpNotes = []; this.arpButtonOrder = []; this.arpPos = 0; this.arpDir = 1;
+            if (!this.availableArpModes.includes(this.arpModeIndex)) this.arpModeIndex = this.availableArpModes[0] ?? 0;
+            this.onLog(`🎶 Arpegiador: ${_getArpName(this.arpModeIndex)}`, 'info');
+          } else {
+            const ci = this.availableArpModes.indexOf(this.arpModeIndex);
+            this.arpModeIndex = this.availableArpModes[(ci + 1) % this.availableArpModes.length] ?? 0;
+            this.arpPos = 0; this.arpDir = 1; this.arpButtonOrder = [];
+            this.onLog(`🎶 Arpegiador: ${_getArpName(this.arpModeIndex)}`, 'info');
+          }
+          this._updateHUD(); return;
+        }
+        if (idx >= 8) return;
         if (!this.arpMode) this._noteOff(idx);
         else {
           const removed = this.chordMode ? this._chordNotesForBtn(idx) : [this._noteForBtn(idx)].filter(n => n !== null);
@@ -4148,12 +4188,8 @@
 
       _chordNotesForBtn(btnIdx) {
         const root = this._noteForBtn(btnIdx); if (root === null) return [];
-        const id = this.availableScales[this.scaleIdx] ?? 0;
-        const intervals = SCALES_JS[id] ?? SCALES_JS[0];
-        const deg = btnIdx % intervals.length;
-        const third = ((intervals[(deg + 2) % intervals.length] - intervals[deg]) + 12) % 12 || 4;
-        const fifth = ((intervals[(deg + 4) % intervals.length] - intervals[deg]) + 12) % 12 || 7;
-        return [root, root + third, root + fifth].map(x => Math.max(0, Math.min(127, x)));
+        const chordType = this.availableChordTypes[this.chordTypeIndex] || 'Major';
+        return _getChordIntervals(chordType).map(i => Math.max(0, Math.min(127, root + i)));
       }
 
       _noteOn(btnIdx) {
@@ -4170,12 +4206,8 @@
       _playChord(btnIdx) {
         this._noteOff(btnIdx);
         const root = this._noteForBtn(btnIdx); if (root === null) return;
-        const id = this.availableScales[this.scaleIdx] ?? 0;
-        const intervals = SCALES_JS[id] ?? SCALES_JS[0];
-        const deg = btnIdx % intervals.length;
-        const third = ((intervals[(deg + 2) % intervals.length] - intervals[deg]) + 12) % 12 || 4;
-        const fifth = ((intervals[(deg + 4) % intervals.length] - intervals[deg]) + 12) % 12 || 7;
-        for (const n of [root, root + third, root + fifth].map(x => Math.max(0, Math.min(127, x)))) {
+        const chordType = this.availableChordTypes[this.chordTypeIndex] || 'Major';
+        for (const n of _getChordIntervals(chordType).map(i => Math.max(0, Math.min(127, root + i)))) {
           this.buttonNotes[btnIdx].add(n); this.activeNotes.add(n);
           this.webMidi.send('note_on', n, this.velocity, 0);
         }
@@ -4183,6 +4215,8 @@
 
       _allNotesOff() {
         if (this._lastArpNote !== undefined) { try { this.webMidi.send('note_off', this._lastArpNote, 0, 0); } catch { } this._lastArpNote = undefined; }
+        for (const an of (this._arpBlockNotes || [])) { try { this.webMidi.send('note_off', an, 0, 0); } catch { } }
+        this._arpBlockNotes = [];
         for (const n of this.activeNotes) { try { this.webMidi.send('note_off', n, 0, 0); } catch { } }
         this.activeNotes.clear();
         for (const s of this.buttonNotes) s.clear();
@@ -4205,14 +4239,51 @@
       _arpTick() {
         const notes = [...this.arpNotes]; const n = notes.length; if (!n) return;
         if (this.arpPos >= n) this.arpPos = 0;
-        let idx;
         const m = this.arpModeIndex;
-        if (m === 0) { idx = this.arpPos; this.arpPos = (this.arpPos + 1) % n; }
-        else if (m === 1) { idx = n - 1 - this.arpPos; this.arpPos = (this.arpPos + 1) % n; }
-        else if (m === 2) {
+        // Patrons amb notes múltiples simultànies
+        if (m === 11) { // Bloc: totes les notes alhora
+          for (const an of this._arpBlockNotes) try { this.webMidi.send('note_off', an, 0, 0); } catch {}
+          this._arpBlockNotes = [...notes];
+          for (const an of notes) this.webMidi.send('note_on', an, this.velocity, 0);
+          this.arpPos = (this.arpPos + 1) % n; return;
+        }
+        if (m === 14) { // Contrari: amunt i avall simultàniament
+          for (const an of this._arpBlockNotes) try { this.webMidi.send('note_off', an, 0, 0); } catch {}
+          const ui = this.arpPos % n; const di = n - 1 - ui;
+          this._arpBlockNotes = ui === di ? [notes[ui]] : [notes[ui], notes[di]];
+          for (const an of this._arpBlockNotes) this.webMidi.send('note_on', an, this.velocity, 0);
+          if (this._lastArpNote !== undefined) this.webMidi.send('note_off', this._lastArpNote, 0, 0);
+          this._lastArpNote = notes[ui]; this.arpPos = (this.arpPos + 1) % n; return;
+        }
+        // Patrons de nota única
+        let idx = 0;
+        if (m === 0 || m === 4) { idx = this.arpPos % n; this.arpPos = (this.arpPos + 1) % n; }
+        else if (m === 1) { idx = n - 1 - (this.arpPos % n); this.arpPos = (this.arpPos + 1) % n; }
+        else if (m === 2) { // Ping-Pong
           if (n === 1) { idx = 0; }
           else { if (this.arpPos >= n) { this.arpDir = -1; this.arpPos = n - 2; } if (this.arpPos < 0) { this.arpDir = 1; this.arpPos = 1; } idx = this.arpPos; this.arpPos += this.arpDir; }
-        } else if (m === 3) { idx = Math.floor(Math.random() * n); }
+        }
+        else if (m === 3) { idx = Math.floor(Math.random() * n); }
+        else if (m === 5) { const p=[0,n>1?n-1:0,n>2?1:0,n>1?n-1:0]; idx=p[this.arpPos%p.length]; this.arpPos++; } // Alberti
+        else if (m === 6) { const p=[0,n>2?1:0,n>1?n-1:0,n>2?1:0]; idx=p[this.arpPos%p.length]; this.arpPos++; } // Alberti Alt
+        else if (m === 7) { const p=[0,n>1?n-1:0,n>2?Math.floor(n/2):0]; idx=p[this.arpPos%p.length]; this.arpPos++; } // Waltz
+        else if (m === 8) { const o=[...Array(n).keys()].filter((_,i)=>i%2===0).concat([...Array(n).keys()].filter((_,i)=>i%2!==0)); idx=o[this.arpPos%o.length]; this.arpPos++; } // Trencat
+        else if (m === 9) { idx=this.arpPos%2===0?0:Math.min(1,n-1); this.arpPos++; } // Tremolo
+        else if (m === 10) { const p=this.arpPos%(n*2); idx=p<n?p:n*2-1-p; this.arpPos++; } // Zigzag
+        else if (m === 12 || m === 15) { idx=this.arpPos%n; this.arpPos=(this.arpPos+1)%n; } // Rodat/Spread
+        else if (m === 13) { // Octaves
+          const bi=Math.floor(this.arpPos/2)%n;
+          if (this.arpPos%2===1) { const on=Math.min(127,notes[bi]+12); if(this._lastArpNote!==undefined)this.webMidi.send('note_off',this._lastArpNote,0,0); this.webMidi.send('note_on',on,this.velocity,0); this._lastArpNote=on; this.arpPos++; return; }
+          idx=bi; this.arpPos++;
+        }
+        else if (m >= 2000) { // Patró personalitzat
+          const ca = _customArps.find(a => a.id === m);
+          if (ca?.sequence?.length) {
+            const si = this.arpPos % ca.sequence.length; const val = ca.sequence[si]; this.arpPos++;
+            if (val === -1) return; // rest
+            idx = Math.max(0, Math.min(n - 1, val));
+          } else { idx = this.arpPos % n; this.arpPos = (this.arpPos + 1) % n; }
+        }
         else { idx = this.arpPos % n; this.arpPos = (this.arpPos + 1) % n; }
         const note = notes[Math.max(0, Math.min(n - 1, idx))];
         if (this._lastArpNote !== undefined) this.webMidi.send('note_off', this._lastArpNote, 0, 0);
@@ -4235,8 +4306,9 @@
         // Function buttons 9-12
         const fn9 = document.getElementById('key-ml-8'); if (fn9) fn9.textContent = this.scaleName.substring(0, 9);
         const fn10 = document.getElementById('key-ml-9'); if (fn10) fn10.textContent = this.keyName;
-        const fn11 = document.getElementById('key-ml-10'); if (fn11) fn11.textContent = this.chordMode ? '▣ Acords' : 'Acords';
-        const fn12 = document.getElementById('key-ml-11'); if (fn12) fn12.textContent = this.arpMode ? `♩ ${(ARP_NAMES_JS[this.arpModeIndex] ?? '').substring(0, 7)}` : 'Arp.';
+        const chordLabel = this.chordMode ? `▣ ${(this.availableChordTypes[this.chordTypeIndex] || 'Major').substring(0, 6)}` : 'Acords';
+        const fn11 = document.getElementById('key-ml-10'); if (fn11) fn11.textContent = chordLabel;
+        const fn12 = document.getElementById('key-ml-11'); if (fn12) fn12.textContent = this.arpMode ? `♩ ${_getArpName(this.arpModeIndex).substring(0, 7)}` : 'Arp.';
         for (let i = 8; i < 12; i++) document.querySelector(`.sim-key[data-idx="${i}"]`)?.classList.toggle('key-fn', true);
         // Special keys 13-16 labels (capa teclat)
         const sl = [['key-ml-12', '→ Modes'], ['key-ml-13', `Oct−`], ['key-ml-14', `Oct+`], ['key-ml-15', 'STOP']];
