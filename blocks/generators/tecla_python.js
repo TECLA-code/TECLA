@@ -216,16 +216,40 @@ Creat per programació visual amb blocs
 
 import time
 import board
-import usb_midi
-from adafruit_midi import MIDI
-from adafruit_midi.note_on import NoteOn
-from adafruit_midi.note_off import NoteOff
-from adafruit_midi.control_change import ControlChange
-from adafruit_midi.program_change import ProgramChange
 import random
 
-# Inicialitzar MIDI
-midi = MIDI(midi_out=usb_midi.ports[1])
+# MIDI (opcional - depèn del hardware i firmware del dispositiu)
+try:
+    import usb_midi
+    from adafruit_midi import MIDI
+    from adafruit_midi.note_on import NoteOn
+    from adafruit_midi.note_off import NoteOff
+    from adafruit_midi.control_change import ControlChange
+    from adafruit_midi.program_change import ProgramChange
+    midi = MIDI(midi_out=usb_midi.ports[1])
+    _has_midi = True
+except ImportError:
+    midi = None
+    _has_midi = False
+
+# HID Teclat/Ratolí (opcional - per enviar tecles i clics)
+try:
+    import usb_hid
+    from adafruit_hid.keyboard import Keyboard
+    from adafruit_hid.keycode import Keycode
+    from adafruit_hid.keyboard_layout_us import KeyboardLayoutUS
+    _keyboard = Keyboard(usb_hid.devices)
+    _keyboard_layout = KeyboardLayoutUS(_keyboard)
+    _has_hid = True
+except ImportError:
+    _keyboard = None
+    _keyboard_layout = None
+    _has_hid = False
+    class Keycode:
+        A=4;B=5;C=6;D=7;E=8;F=9;G=10;H=11;I=12;J=13;K=14;L=15;M=16
+        N=17;O=18;P=19;Q=20;R=21;S=22;T=23;U=24;V=25;W=26;X=27;Y=28;Z=29
+        SPACE=44;ENTER=40;ESCAPE=41;BACKSPACE=42;TAB=43
+        LEFT_CTRL=224;LEFT_SHIFT=225;LEFT_ALT=226;LEFT_GUI=227
 
 # Variables globals
 current_octave = 4
@@ -248,9 +272,13 @@ def main():
     except Exception as e:
         print(f"Error: {e}")
     finally:
-        # Aturar totes les notes
-        for note in range(128):
-            midi.send(NoteOff(note, 0))
+        # Aturar totes les notes si MIDI disponible
+        if _has_midi and midi:
+            try:
+                for note in range(128):
+                    midi.send(NoteOff(note, 0))
+            except:
+                pass
         print("Programa finalitzat")
 
 if __name__ == "__main__":
@@ -642,3 +670,4 @@ Blockly.Python['tecla_key_combo'] = function (block) {
 
 // Exportar la funció
 window.generateCompletePythonCode = generateCompletePythonCode;
+window._fullGenerateCode = generateCompletePythonCode;

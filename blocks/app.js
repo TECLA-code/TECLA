@@ -1911,10 +1911,16 @@ function initThemeSystem() {
 }
 
 // ── Python code generator (depends on generators/*.js) ────────
+// Uses the full generator from generators/tecla_python.js (with imports header)
+// Falls back to raw workspaceToCode if the full generator is not loaded yet
 function generateCompletePythonCode(ws) {
   try {
     if (typeof Blockly.Python === 'undefined') {
       return '# Error: generador Python no carregat';
+    }
+    // _fullGenerateCode is set by generators/tecla_python.js
+    if (typeof window._fullGenerateCode === 'function') {
+      return window._fullGenerateCode(ws);
     }
     return Blockly.Python.workspaceToCode(ws) || '# (sense blocs)';
   } catch (e) {
