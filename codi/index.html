@@ -2890,17 +2890,53 @@
 
     function _importLayerFromFile(file) {
       const reader = new FileReader();
-      reader.onload = e => {
+      reader.onload = async e => {
         try {
           const data = JSON.parse(e.target.result);
-          const incoming = Array.isArray(data) ? data : [data];
-          const valid = incoming.filter(l => l.name && Array.isArray(l.bank?.modes));
-          if (!valid.length) { showGlobalToast('Fitxer invàlid: no conté capes vàlides.'); return; }
+
+          // ── Bundle format: single object with embedded_modes ──────
+          const isSingleBundle = !Array.isArray(data) && data.type === 'tecla-layer-bundle' && data.embedded_modes;
+          const bundleList = isSingleBundle ? [data] : (Array.isArray(data) ? data : [data]);
+          let modesInstalled = 0;
+
+          for (const item of bundleList) {
+            if (!item.embedded_modes) continue;
+            const entries = Object.entries(item.embedded_modes);
+            for (const [filename, src] of entries) {
+              if (!/^mode_[a-zA-Z0-9_]+\.py$/.test(filename)) continue;
+              _saveLocalModeSrc(filename, src);
+              const hidden = JSON.parse(localStorage.getItem('tecla-hidden-modes') || '[]');
+              localStorage.setItem('tecla-hidden-modes', JSON.stringify(hidden.filter(f => f !== filename)));
+              const extra = JSON.parse(localStorage.getItem('tecla-extra-modes') || '[]');
+              if (!extra.find(m => m.file === filename)) {
+                extra.push({ name: _parseModeNameFromSrc(src, filename), file: filename });
+                localStorage.setItem('tecla-extra-modes', JSON.stringify(extra));
+              }
+              modesInstalled++;
+            }
+          }
+
+          if (modesInstalled > 0) {
+            _modesIndex = [];
+            await buildModesTab();
+            await loadBuiltinModes();
+            refreshKeyDropdowns();
+          }
+
+          // ── Import layer configs ──────────────────────────────────
+          const valid = bundleList.filter(l => l.name && Array.isArray(l.bank?.modes));
+          if (!valid.length) {
+            showGlobalToast(modesInstalled ? `${modesInstalled} mode(s) instal·lats.` : 'Fitxer invàlid: no conté capes vàlides.');
+            return;
+          }
           const layers = _loadSavedLayers();
           valid.forEach(l => layers.push({ id: Date.now() + Math.round(Math.random() * 1000), name: l.name, savedAt: l.savedAt || new Date().toISOString(), bank: l.bank }));
           _persistSavedLayers(layers);
           _renderSavedLayers();
-          showGlobalToast(`${valid.length} capa(es) importada(es).`);
+          const msg = modesInstalled
+            ? `${valid.length} capa(es) + ${modesInstalled} mode(s) importats.`
+            : `${valid.length} capa(es) importada(es).`;
+          showGlobalToast(msg);
         } catch { showGlobalToast('Error llegint el fitxer JSON.'); }
       };
       reader.readAsText(file);
