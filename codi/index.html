@@ -534,6 +534,48 @@
       background: rgba(74, 128, 240, .07)
     }
 
+    .saved-layer-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 7px 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      flex-wrap: wrap
+    }
+
+    .saved-layer-item:hover { border-color: var(--border-h) }
+
+    .saved-layer-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+      flex: 1
+    }
+
+    .saved-layer-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .saved-layer-meta {
+      font-size: 10.5px;
+      color: var(--text3)
+    }
+
+    .saved-layer-actions {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0
+    }
+
     .crud-item-name {
       flex: 1;
       font-size: 12.5px;
@@ -1888,6 +1930,23 @@
         </div>
       </div>
 
+      <!-- ══ CAPES GUARDADES ══════════════════════════════════════ -->
+      <div class="card" style="margin-top:14px" id="card-saved-layers">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+          <div>
+            <div class="card-title" style="margin:0">Capes Guardades</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">Instantànies de la configuració de la pestanya Tecles</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-sm btn-primary" id="btn-save-current-layer">💾 Guardar capa actual</button>
+            <button class="btn btn-sm" id="btn-import-layer-file">📂 Importar</button>
+            <input type="file" id="input-import-layer" accept=".json" style="display:none">
+          </div>
+        </div>
+        <div id="saved-layers-list" style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto"></div>
+        <div id="saved-layers-empty" style="font-size:11.5px;color:var(--text3);padding:6px 0">Cap capa guardada encara.</div>
+      </div>
+
       <div class="panel-grid cols2" style="margin-top:14px">
         <div class="card">
           <div class="card-title">Efectes temporals — Tecles 14 i 15 (capa modes)</div>
@@ -2751,6 +2810,108 @@
     let _keysConfig = _loadKeysConfig() || _defaultKeysConfig();
     _keysConfig.banks.forEach(b => { if (!b.efectos) b.efectos = { '13': 'Sustain', '14': 'Pausa' }; });
 
+    // ══════════════════════════════════════════════════════════════
+    // CAPES GUARDADES — snapshots de la pestanya Tecles
+    // ══════════════════════════════════════════════════════════════
+    function _loadSavedLayers() { try { return JSON.parse(localStorage.getItem('tecla-saved-layers') || '[]'); } catch { return []; } }
+    function _persistSavedLayers(layers) { localStorage.setItem('tecla-saved-layers', JSON.stringify(layers)); }
+
+    function _renderSavedLayers() {
+      const list = document.getElementById('saved-layers-list');
+      const empty = document.getElementById('saved-layers-empty');
+      if (!list) return;
+      const layers = _loadSavedLayers();
+      list.innerHTML = '';
+      if (empty) empty.style.display = layers.length ? 'none' : '';
+      layers.forEach(layer => {
+        const assigned = (layer.bank?.modes || []).filter(Boolean).length;
+        const dateStr = layer.savedAt ? new Date(layer.savedAt).toLocaleDateString('ca-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '';
+        const div = document.createElement('div');
+        div.className = 'saved-layer-item';
+        div.innerHTML = `
+          <div class="saved-layer-info">
+            <span class="saved-layer-name">${layer.name}</span>
+            <span class="saved-layer-meta">${assigned}/12 tecles assignades · ${dateStr}</span>
+          </div>
+          <div class="saved-layer-actions">
+            <button class="btn btn-sm btn-primary" data-action="load" data-id="${layer.id}">Carregar</button>
+            <button class="btn btn-sm" data-action="export" data-id="${layer.id}">Exportar</button>
+            <button class="btn btn-sm btn-danger" data-action="delete" data-id="${layer.id}">✕</button>
+          </div>`;
+        div.querySelectorAll('[data-action]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.dataset.id;
+            if (btn.dataset.action === 'load') _loadSavedLayer(id);
+            else if (btn.dataset.action === 'export') _exportSavedLayer(id);
+            else if (btn.dataset.action === 'delete') _deleteSavedLayer(id);
+          });
+        });
+        list.appendChild(div);
+      });
+    }
+
+    function _saveCurrentLayerAsNew() {
+      const bank = _keysConfig.banks[_keysConfig.currentBank];
+      const defaultName = bank.name || `Capa ${_loadSavedLayers().length + 1}`;
+      const name = prompt('Nom per a la capa guardada:', defaultName);
+      if (!name?.trim()) return;
+      const layers = _loadSavedLayers();
+      layers.push({ id: Date.now(), name: name.trim(), savedAt: new Date().toISOString(), bank: JSON.parse(JSON.stringify(bank)) });
+      _persistSavedLayers(layers);
+      _renderSavedLayers();
+      showGlobalToast(`Capa "${name.trim()}" guardada!`);
+    }
+
+    function _loadSavedLayer(id) {
+      const layers = _loadSavedLayers();
+      const layer = layers.find(l => String(l.id) === String(id));
+      if (!layer) return;
+      if (!confirm(`Carregar la capa "${layer.name}"?\nEs sobreescriurà la configuració de la capa activa a la pestanya Tecles.`)) return;
+      const bank = _keysConfig.banks[_keysConfig.currentBank];
+      bank.modes = [...(layer.bank.modes || Array(12).fill(''))];
+      bank.efectos = { ...(layer.bank.efectos || { '13': 'Sustain', '14': 'Pausa' }) };
+      _saveKeysConfig(_keysConfig);
+      renderDeviceKeys();
+      showGlobalToast(`Capa "${layer.name}" carregada.`);
+    }
+
+    function _exportSavedLayer(id) {
+      const layers = _loadSavedLayers();
+      const layer = layers.find(l => String(l.id) === String(id));
+      if (!layer) return;
+      const blob = new Blob([JSON.stringify(layer, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `tecla-layer-${layer.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.json`;
+      a.click(); URL.revokeObjectURL(url);
+    }
+
+    function _importLayerFromFile(file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const data = JSON.parse(e.target.result);
+          const incoming = Array.isArray(data) ? data : [data];
+          const valid = incoming.filter(l => l.name && Array.isArray(l.bank?.modes));
+          if (!valid.length) { showGlobalToast('Fitxer invàlid: no conté capes vàlides.'); return; }
+          const layers = _loadSavedLayers();
+          valid.forEach(l => layers.push({ id: Date.now() + Math.round(Math.random() * 1000), name: l.name, savedAt: l.savedAt || new Date().toISOString(), bank: l.bank }));
+          _persistSavedLayers(layers);
+          _renderSavedLayers();
+          showGlobalToast(`${valid.length} capa(es) importada(es).`);
+        } catch { showGlobalToast('Error llegint el fitxer JSON.'); }
+      };
+      reader.readAsText(file);
+    }
+
+    function _deleteSavedLayer(id) {
+      const layers = _loadSavedLayers();
+      const layer = layers.find(l => String(l.id) === String(id));
+      if (!layer || !confirm(`Eliminar la capa "${layer.name}"?`)) return;
+      _persistSavedLayers(layers.filter(l => String(l.id) !== String(id)));
+      _renderSavedLayers();
+    }
+
     function _syncBankSelect() {
       const sel = document.getElementById('bank-select'); if (!sel) return;
       sel.innerHTML = _keysConfig.banks.map((b, i) => `<option value="${i}">${b.name}</option>`).join('');
@@ -3226,6 +3387,15 @@
     });
     document.getElementById('btn-modes-all')?.addEventListener('click', () => document.querySelectorAll('#modes-list-check input').forEach(c => c.checked = true));
     document.getElementById('btn-modes-none')?.addEventListener('click', () => document.querySelectorAll('#modes-list-check input').forEach(c => c.checked = false));
+
+    // Capes guardades
+    document.getElementById('btn-save-current-layer')?.addEventListener('click', _saveCurrentLayerAsNew);
+    document.getElementById('btn-import-layer-file')?.addEventListener('click', () => document.getElementById('input-import-layer')?.click());
+    document.getElementById('input-import-layer')?.addEventListener('change', e => {
+      const file = e.target.files?.[0]; if (!file) return;
+      _importLayerFromFile(file); e.target.value = '';
+    });
+    _renderSavedLayers();
 
     document.getElementById('btn-import-modes')?.addEventListener('click', () => {
       const input = document.createElement('input');
