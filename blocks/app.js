@@ -1601,7 +1601,11 @@ function _buildDeviceCode() {
   c += `from adafruit_midi.note_off import NoteOff\n`;
   c += `from adafruit_midi.control_change import ControlChange\n\n`;
   c += `# Detectar port MIDI de sortida\n`;
-  c += `_midi_out = next((p for p in usb_midi.ports if hasattr(p, 'write')), usb_midi.ports[1])\n`;
+  c += `_midi_out = usb_midi.ports[1]\n`;
+  c += `for _p in usb_midi.ports:\n`;
+  c += `    if hasattr(_p, 'write'):\n`;
+  c += `        _midi_out = _p\n`;
+  c += `        break\n`;
   c += `midi = adafruit_midi.MIDI(midi_out=_midi_out, out_channel=0)\n\n`;
   c += `# Variables Globals\n`;
   c += `current_octave = 4\n`;
