@@ -1939,6 +1939,7 @@
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
             <button class="btn btn-sm btn-primary" id="btn-save-current-layer">💾 Guardar capa actual</button>
+            <button class="btn btn-sm" id="btn-export-all-layers">📤 Exportar tot</button>
             <button class="btn btn-sm" id="btn-import-layer-file">📂 Importar</button>
             <input type="file" id="input-import-layer" accept=".json" style="display:none">
           </div>
@@ -3388,8 +3389,20 @@
     document.getElementById('btn-modes-all')?.addEventListener('click', () => document.querySelectorAll('#modes-list-check input').forEach(c => c.checked = true));
     document.getElementById('btn-modes-none')?.addEventListener('click', () => document.querySelectorAll('#modes-list-check input').forEach(c => c.checked = false));
 
+    function _exportAllLayers() {
+      const layers = _loadSavedLayers();
+      if (!layers.length) { showGlobalToast('No hi ha capes guardades per exportar.'); return; }
+      const blob = new Blob([JSON.stringify(layers, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const date = new Date().toISOString().slice(0, 10);
+      a.href = url; a.download = `tecla-layers-${date}.json`;
+      a.click(); URL.revokeObjectURL(url);
+    }
+
     // Capes guardades
     document.getElementById('btn-save-current-layer')?.addEventListener('click', _saveCurrentLayerAsNew);
+    document.getElementById('btn-export-all-layers')?.addEventListener('click', _exportAllLayers);
     document.getElementById('btn-import-layer-file')?.addEventListener('click', () => document.getElementById('input-import-layer')?.click());
     document.getElementById('input-import-layer')?.addEventListener('change', e => {
       const file = e.target.files?.[0]; if (!file) return;
