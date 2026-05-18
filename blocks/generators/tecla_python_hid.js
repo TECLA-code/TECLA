@@ -32,7 +32,15 @@ Blockly.Python['tecla_type_text'] = function(block) {
 
 Blockly.Python['tecla_media'] = function(block) {
   const action = block.getFieldValue('ACTION');
-  return `_cc.send(ConsumerControlCode.${action})\n`;
+  // Map actions that changed name between adafruit_hid versions
+  const safeMap = {
+    'SCAN_NEXT_TRACK':     '_SCAN_NEXT',
+    'SCAN_PREVIOUS_TRACK': '_SCAN_PREV'
+  };
+  const code = safeMap[action] ? `ConsumerControlCode.${action} if hasattr(ConsumerControlCode, '${action}') else _SCAN_${action.includes('NEXT') ? 'NEXT' : 'PREV'}` : `ConsumerControlCode.${action}`;
+  // Simpler: use pre-computed compat vars set at boot
+  const useVar = safeMap[action] || `ConsumerControlCode.${action}`;
+  return `_cc.send(${useVar})\n`;
 };
 
 Blockly.Python['tecla_open_app'] = function(block) {

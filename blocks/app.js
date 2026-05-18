@@ -1195,6 +1195,32 @@ function _addExamplesToLib() {
   toast(`✓ ${added} exemple${added !== 1 ? 's' : ''} afegit${added !== 1 ? 's' : ''} a la biblioteca`, 'ok');
 }
 
+function _startRenameProject(card, projId) {
+  const nameDiv = card.querySelector('.proj-name');
+  if (!nameDiv) return;
+  const currentName = nameDiv.textContent;
+  const input = document.createElement('input');
+  input.value = currentName;
+  input.style.cssText = 'width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--accent);border-radius:4px;padding:2px 6px;font-size:13px;';
+  nameDiv.replaceWith(input);
+  input.focus();
+  input.select();
+  const save = () => {
+    const newName = input.value.trim() || currentName;
+    const proj = projectsLib.find(p => p.id === projId);
+    if (proj && newName !== proj.name) {
+      proj.name = newName;
+      _saveProjectsLib();
+    }
+    renderProjectsPanel();
+  };
+  input.addEventListener('blur', save);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); save(); }
+    if (e.key === 'Escape') { e.preventDefault(); renderProjectsPanel(); }
+  });
+}
+
 function renderProjectsPanel() {
   _renderExamplesSection();
   const list = document.getElementById('proj-list');
@@ -1218,6 +1244,7 @@ function renderProjectsPanel() {
       </div>
       <div class="proj-actions">
         <button class="btn" data-act="open" title="${t('dev.load')}">${t('proj.open')}</button>
+        <button class="btn" data-act="rename" title="${t('proj.rename')||'Reanomenar'}" style="font-size:11px">✏️</button>
         <button class="btn" data-act="assign" title="${t('proj.assignto')}" style="color:var(--accent)">${t('proj.assign')}</button>
         <button class="btn btn-danger" data-act="del" title="✕">✕</button>
       </div>
@@ -1229,6 +1256,7 @@ function renderProjectsPanel() {
     card.querySelector('[data-act="open"]').addEventListener('click', () => _openProjectFromLib(proj.id));
     card.querySelector('[data-act="assign"]').addEventListener('click', e => { e.stopPropagation(); _toggleAssignPicker(proj.id); });
     card.querySelector('[data-act="del"]').addEventListener('click', () => _deleteProjectFromLib(proj.id));
+    card.querySelector('[data-act="rename"]').addEventListener('click', () => _startRenameProject(card, proj.id));
     if (isAssignOpen) _fillAssignPicker(card.querySelector(`#picker-${proj.id}`), proj.id);
     list.appendChild(card);
   });
@@ -1572,7 +1600,9 @@ function _buildDeviceCode() {
   c += `from adafruit_midi.note_on import NoteOn\n`;
   c += `from adafruit_midi.note_off import NoteOff\n`;
   c += `from adafruit_midi.control_change import ControlChange\n\n`;
-  c += `midi = adafruit_midi.MIDI(midi_out=usb_midi.ports[1], out_channel=0)\n\n`;
+  c += `# Detectar port MIDI de sortida\n`;
+  c += `_midi_out = next((p for p in usb_midi.ports if hasattr(p, 'write')), usb_midi.ports[1])\n`;
+  c += `midi = adafruit_midi.MIDI(midi_out=_midi_out, out_channel=0)\n\n`;
   c += `# Variables Globals\n`;
   c += `current_octave = 4\n`;
   c += `bpm = 120\n`;
@@ -1608,7 +1638,10 @@ function _buildDeviceCode() {
     c += `from adafruit_hid.consumer_control_code import ConsumerControlCode\n`;
     c += `_keyboard = Keyboard(usb_hid.devices)\n`;
     c += `_layout = KeyboardLayoutUS(_keyboard)\n`;
-    c += `_cc = ConsumerControl(usb_hid.devices)\n\n`;
+    c += `_cc = ConsumerControl(usb_hid.devices)\n`;
+    c += `# Compat adafruit_hid: SCAN_NEXT/PREV noms canvien entre versions\n`;
+    c += `_SCAN_NEXT = getattr(ConsumerControlCode, 'SCAN_NEXT_TRACK', getattr(ConsumerControlCode, 'NEXT_TRACK', None))\n`;
+    c += `_SCAN_PREV = getattr(ConsumerControlCode, 'SCAN_PREVIOUS_TRACK', getattr(ConsumerControlCode, 'PREVIOUS_TRACK', None))\n\n`;
   }
 
   // Button GPIO pins (GP0..GP7)
@@ -1625,6 +1658,8 @@ function _buildDeviceCode() {
     c += `from adafruit_hid.consumer_control import ConsumerControl\n`;
     c += `from adafruit_hid.consumer_control_code import ConsumerControlCode\n`;
     c += `_cc = ConsumerControl(usb_hid.devices)\n`;
+    c += `_SCAN_NEXT = getattr(ConsumerControlCode, 'SCAN_NEXT_TRACK', getattr(ConsumerControlCode, 'NEXT_TRACK', None))\n`;
+    c += `_SCAN_PREV = getattr(ConsumerControlCode, 'SCAN_PREVIOUS_TRACK', getattr(ConsumerControlCode, 'PREVIOUS_TRACK', None))\n\n`;
   } else if (_needsHID && !_allCode.includes('_cc.')) {
     c += `# _cc already initialised above\n`;
   }
@@ -1670,7 +1705,10 @@ function _buildDeviceCode() {
 
   // Main loop
   c += `_prev = [False] * ${N}\n`;
-  c += `_ppot = [0] * 3\n\n`;
+  c += `_ppot  = [0] * 3      # Última posició de cada pot (CC MIDI)\n`;
+  c += `_bv    = [0, 0, 0]   # Nivell virtual brillantor (0-16)\n`;
+  c += `_vv    = [0, 0, 0]   # Nivell virtual volum (0-16)\n`;
+  c += `_stmr  = [0.0, 0.0, 0.0]  # Temporitzador scroll\n\n`;
   c += `def _rpot(p, mn, mx):\n    return mn + int((p.value >> 9) * (mx - mn) / 127)\n\n`;
   c += `while True:\n`;
   c += `    for i in range(${N}):\n`;
@@ -1693,23 +1731,29 @@ function _buildDeviceCode() {
       c += `        adafruit_midi.MIDI(midi_out=usb_midi.ports[1], out_channel=${(pot.channel||1)-1}).send(ControlChange(${pot.cc||0}, max(0, min(127, ${pot.min||0} + int(_rv${i} * ${range} / 127)))))\n`;
       c += `        _ppot[${i}] = _rv${i}\n`;
     } else if (pf === 'hid_vol') {
-      c += `    if _rv${i} > _ppot[${i}] + 4:\n`;
-      c += `        _cc.send(ConsumerControlCode.VOLUME_INCREMENT)\n`;
-      c += `        _ppot[${i}] = _rv${i}\n`;
-      c += `    elif _rv${i} < _ppot[${i}] - 4:\n`;
-      c += `        _cc.send(ConsumerControlCode.VOLUME_DECREMENT)\n`;
-      c += `        _ppot[${i}] = _rv${i}\n`;
+      c += `    _tgv${i} = _rv${i} * 16 // 127\n`;
+      c += `    _dv${i}  = _tgv${i} - _vv[${i}]\n`;
+      c += `    if _dv${i} != 0:\n`;
+      c += `        for _ in range(abs(_dv${i})):\n`;
+      c += `            _cc.send(ConsumerControlCode.VOLUME_INCREMENT if _dv${i} > 0 else ConsumerControlCode.VOLUME_DECREMENT)\n`;
+      c += `            time.sleep(0.02)\n`;
+      c += `        _vv[${i}] = _tgv${i}\n`;
     } else if (pf === 'hid_bright') {
-      c += `    if _rv${i} > _ppot[${i}] + 4:\n`;
-      c += `        _cc.send(ConsumerControlCode.BRIGHTNESS_INCREMENT)\n`;
-      c += `        _ppot[${i}] = _rv${i}\n`;
-      c += `    elif _rv${i} < _ppot[${i}] - 4:\n`;
-      c += `        _cc.send(ConsumerControlCode.BRIGHTNESS_DECREMENT)\n`;
-      c += `        _ppot[${i}] = _rv${i}\n`;
+      c += `    _tgb${i} = _rv${i} * 16 // 127\n`;
+      c += `    _db${i}  = _tgb${i} - _bv[${i}]\n`;
+      c += `    if _db${i} != 0:\n`;
+      c += `        for _ in range(abs(_db${i})):\n`;
+      c += `            _cc.send(ConsumerControlCode.BRIGHTNESS_INCREMENT if _db${i} > 0 else ConsumerControlCode.BRIGHTNESS_DECREMENT)\n`;
+      c += `            time.sleep(0.02)\n`;
+      c += `        _bv[${i}] = _tgb${i}\n`;
     } else if (pf === 'hid_scroll') {
-      c += `    if abs(_rv${i} - _ppot[${i}]) > 8:\n`;
-      c += `        _mouse.move(wheel=(_rv${i} - _ppot[${i}]) // 16)\n`;
-      c += `        _ppot[${i}] = _rv${i}\n`;
+      c += `    _scpos${i} = _rv${i} - 64\n`;
+      c += `    if abs(_scpos${i}) > 12:\n`;
+      c += `        _scspd${i} = max(1, (abs(_scpos${i}) - 12) // 20)\n`;
+      c += `        _scnow${i} = time.monotonic()\n`;
+      c += `        if _scnow${i} - _stmr[${i}] >= 0.08:\n`;
+      c += `            _mouse.move(wheel=(1 if _scpos${i} > 0 else -1) * _scspd${i})\n`;
+      c += `            _stmr[${i}] = _scnow${i}\n`;
     }
   });
   c += `    time.sleep(0.01)\n`;
