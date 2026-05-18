@@ -65,6 +65,34 @@ Un cop executat el servidor:
 - **Temes personalitzables**: Crea i desa temes de colors il·limitats
 - **Connexió MIDI**: Connecta amb dispositius MIDI externs
 
+## 🎛️ Simulador — Guia de controls
+
+### Capa Teclat (T13 per activar)
+
+| Botó | Click curt | Click llarg (≥0.5s) |
+|------|-----------|---------------------|
+| **T9** | Cicla escala (de les seleccionades a Modes i Escales) | — |
+| **T10** | Cicla tonalitat (C → C# → D → …) | — |
+| **T11 — Acords** | Inactiu → activa. Actiu → cicla tipologia (Major, m, m7, 9#11…) | Desactiva el mode acords |
+| **T12 — Arpegiador** | Inactiu → activa. Actiu → cicla patró (dels seleccionats a Modes i Escales) | Desactiva l'arpegiador |
+| **T14** | Baixa octava | — |
+| **T15** | Puja octava | — |
+| **T16** | All Notes Off | — |
+
+> Les tipologies d'acords i els patrons d'arpegiador disponibles als botons T11/T12 es configuren a la pestanya **Modes i Escales**. El botó mostra la tipologia/patró actiu (p. ex. `▣ m7` o `♩ Alberti`).
+
+### Capa Modes (T13 per tornar al teclat)
+
+| Botó | Click curt | Doble clic |
+|------|-----------|------------|
+| **T1–T12** | Activa el mode assignat | — |
+| **T13** | Torna a la Capa Teclat | — |
+| **T14 — FX 1** | Activa l'efecte mentre es manté premut | Cicla al següent efecte disponible |
+| **T15 — FX 2** | Activa l'efecte mentre es manté premut | Cicla al següent efecte disponible |
+| **T16** | Atura el simulador / All Notes Off | — |
+
+> Els efectes disponibles (Sustain, Pausa, Gate, Modulation, PitchBend) es gestionen a la pestanya **Modes i Escales → Efectes**. El botó mostra l'efecte assignat (p. ex. `⚡ Gate`).
+
 ## 🔧 Solució de problemes
 
 ### El servidor no s'inicia

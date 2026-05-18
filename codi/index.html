@@ -4377,21 +4377,30 @@
     // Efecte temporal actiu als botons 14 (idx 13) i 15 (idx 14)
     const _fxActive = { 13: false, 14: false };
     const _fxDblClick = { 13: 0, 14: 0 };
-    function _cycleEffect(btnIdx) {
-      const sel = document.getElementById(`key-effect-${btnIdx}`);
-      if (!sel || sel.options.length === 0) return;
-      sel.selectedIndex = (sel.selectedIndex + 1) % sel.options.length;
-      simlog(`FX ${btnIdx === 13 ? '14' : '15'}: ${sel.value} (ciclat)`, 'ok');
+    const _fxSelected = { 13: null, 14: null }; // efecte actiu per botó (null = no inicialitzat)
+    function _initFxEffects() {
+      const bank = _keysConfig.banks[_keysConfig.currentBank] || {};
+      const ef = bank.efectos || {};
+      _fxSelected[13] = ef['13'] || 'Sustain';
+      _fxSelected[14] = ef['14'] || 'Pausa';
     }
     function _getEffectForBtn(btnIdx) {
-      // Mapeja botó 14→key-effect-13, botó 15→key-effect-14 (indices 13 i 14)
-      const selId = `key-effect-${btnIdx}`;
-      const sel = document.getElementById(selId);
-      if (sel) return sel.value;
-      // Fallback: des de available_effects de la config
-      const mc = _loadModesConfig();
-      const avail = mc.available_effects || ['Sustain', 'Pausa'];
-      return avail[0] || 'Sustain';
+      if (!_fxSelected[btnIdx]) _initFxEffects();
+      return _fxSelected[btnIdx] || 'Sustain';
+    }
+    function _updateFxLabels() {
+      const l13 = document.getElementById('key-ml-13');
+      const l14 = document.getElementById('key-ml-14');
+      if (l13) l13.textContent = `⚡ ${_getEffectForBtn(13)}`;
+      if (l14) l14.textContent = `⚡ ${_getEffectForBtn(14)}`;
+    }
+    function _cycleEffect(btnIdx) {
+      const avail = _availableEffects();
+      const cur = _getEffectForBtn(btnIdx);
+      const ci = avail.indexOf(cur);
+      _fxSelected[btnIdx] = avail[(ci + 1) % avail.length];
+      simlog(`FX ${btnIdx === 13 ? '14' : '15'}: ${_fxSelected[btnIdx]} (doble clic)`, 'ok');
+      _updateFxLabels();
     }
 
     function _applyTemporalEffect(btnIdx, active) {
@@ -4525,8 +4534,10 @@
         document.querySelector(`.sim-key[data-idx="${i}"]`)?.classList.remove('key-fn', 'key-arp-active', 'key-chord-active');
       }
       // Etiquetes botons especials capa modes
-      const modesLabels = [['key-ml-12', '← Teclat'], ['key-ml-13', 'FX 1'], ['key-ml-14', 'FX 2'], ['key-ml-15', 'STOP']];
+      _initFxEffects();
+      const modesLabels = [['key-ml-12', '← Teclat'], ['key-ml-15', 'STOP']];
       for (const [id_, txt] of modesLabels) { const el = document.getElementById(id_); if (el) el.textContent = txt; }
+      _updateFxLabels();
       // Actualitzar llista lateral: desseleccionar Mode Teclat
       document.getElementById('sim-kb-item')?.classList.remove('selected');
       // Actualitzar estat
