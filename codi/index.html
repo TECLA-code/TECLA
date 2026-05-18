@@ -4145,7 +4145,7 @@
 
       setPot(idx, value) {
         if (!this.active) return;
-        const hwIdx = idx === 0 ? 1 : idx === 1 ? 0 : 2;  // swap X↔Y (hardware mapping)
+        const hwIdx = idx;  // X=0, Y=1, Z=2
         const fns = this.arpMode
           ? [this.arpPotXFn, this.arpPotYFn, this.arpPotZFn]
           : [this.potXFn, this.potYFn, this.potZFn];
