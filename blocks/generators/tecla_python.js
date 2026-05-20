@@ -264,9 +264,11 @@ def main():
     print("Iniciant programa TECLA Blocks...")
     
     try:
+        while True:
 `;
 
   const footer = `
+            time.sleep(0.01)
     except KeyboardInterrupt:
         print("\\nPrograma aturat per l'usuari")
     except Exception as e:
@@ -287,9 +289,9 @@ if __name__ == "__main__":
 
   // Indentar el codi generat (sempre mínim 'pass' per evitar try: buit → SyntaxError)
   const _rawIndented = code.split('\n')
-    .map(line => line ? '        ' + line : '')
+    .map(line => line ? '            ' + line : '')
     .join('\n');
-  const indentedCode = _rawIndented.trim() ? _rawIndented : '        pass  # Afegeix blocs al workspace';
+  const indentedCode = _rawIndented.trim() ? _rawIndented : '            pass  # Afegeix blocs al workspace';
 
   // SERIALITZACIÓ INTEGADA (Bedded Blocks)
   // Guardem l'estat dels blocs dins el propi arxiu Python com a comentari
