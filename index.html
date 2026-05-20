@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-left: 10px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 10px;
+            border-radius: 15px;
+        }
+
+        .toggle-container input {
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+
+        .toggle-label {
+            color: #FFEB3B;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+    </style>
+    <title>TECLA Blocks - Programa amb blocs</title>
+    <script src="node_modules/blockly/blockly_compressed.js"></script>
+    <script src="node_modules/blockly/blocks_compressed.js"></script>
+    <script src="node_modules/blockly/python_compressed.js"></script>
+    <script src="node_modules/blockly/msg/ca.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo">
+                <h1>🎹 TECLA Blocks</h1>
+                <p class="subtitle">Programa música amb blocs</p>
+            </div>
+            <div class="header-actions">
+                <button id="btn-new" class="btn btn-secondary" title="Nou projecte">
+                    📄 Nou
+                </button>
+                <button id="btn-open" class="btn btn-secondary" title="Obrir projecte">
+                    📂 Obrir
+                </button>
+                <button id="btn-save" class="btn btn-primary" title="Guardar projecte">
+                    💾 Guardar
+                </button>
+                <button id="btn-export" class="btn btn-secondary" title="Exportar Python">
+                    📥 Exportar
+                </button>
+                <button id="btn-upload" class="btn btn-success" title="Pujar a TECLA">
+                    ⬆️ Pujar a TECLA
+                </button>
+                <button id="btn-theme" class="btn btn-secondary" title="Personalitzar Tema">
+                    🎨 Tema
+                </button>
+            </div>
+        </header>
+
+        <!-- Main content -->
+        <div class="main-content">
+            <!-- Blockly workspace -->
+            <div class="workspace-container">
+                <div id="blocklyDiv"></div>
+            </div>
+
+            <!-- Side panel -->
+            <aside class="side-panel">
+                <div class="panel-tabs">
+                    <button class="tab-btn active" data-tab="code">🐍 Codi</button>
+                    <button class="tab-btn" data-tab="projectes">📁 Projectes</button>
+                    <button class="tab-btn" data-tab="tecles">🎹 Tecles</button>
+                    <button class="tab-btn" data-tab="simulator">🎮 Sim</button>
+                    <button class="tab-btn" data-tab="help">❓ Ajuda</button>
+                </div>
+
+                <!-- Code panel -->
+                <div id="panel-code" class="panel-content active">
+                    <div class="code-header">
+                        <h3>Codi Python Generat</h3>
+                        <button id="btn-copy-code" class="btn-icon" title="Copiar codi">📋</button>
+                    </div>
+                    <pre id="generatedCode" class="code-display">// El teu codi apareixerà aquí...</pre>
+                </div>
+
+                <!-- Simulator panel -->
+                <div id="panel-simulator" class="panel-content">
+                    <h3>Simulador TECLA</h3>
+                    <div class="simulator">
+                        <div class="device-display">
+                            <canvas id="simulatorCanvas" width="400" height="300"></canvas>
+                        </div>
+                        <div class="simulator-controls">
+                            <button id="btn-simulate" class="btn btn-primary">▶️ Executar</button>
+                            <button id="btn-stop-sim" class="btn btn-secondary">⏹️ Aturar</button>
+
+                            <!-- Live Mode Toggle -->
+                            <label class="toggle-container"
+                                title="Activar Mode Live (Reinici automàtic al canviar blocs)">
+                                <input type="checkbox" id="toggle-live-mode">
+                                <span class="toggle-label">⚡ Live</span>
+                            </label>
+                            <select id="midi-output-select" class="midi-select" title="Selecciona Sortida MIDI">
+                                <option value="">🔌 Sortida MIDI (Desactivada)</option>
+                            </select>
+                            <button id="btn-midi-config" class="btn btn-icon" title="Obrir Configuració MIDI del Mac"
+                                style="background: #607D8B;">⚙️</button>
+                        </div>
+                        <div class="simulator-output">
+                            <h4>Sortida del simulador:</h4>
+                            <div id="simulatorOutput" class="output-console"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Projectes panel -->
+                <div id="panel-projectes" class="panel-content">
+                    <div class="projects-header">
+                        <h3>📁 Projectes Guardats</h3>
+                        <div class="projects-actions">
+                            <input type="text" id="project-name-input" placeholder="Nom del projecte..." class="project-name-input" />
+                            <button id="btn-save-to-library" class="btn btn-primary btn-small">💾 Desa</button>
+                        </div>
+                    </div>
+                    <div id="projects-list" class="projects-list">
+                        <div class="empty-state">Cap projecte guardat.<br>Crea blocs i desa el projecte.</div>
+                    </div>
+                </div>
+
+                <!-- Tecles panel -->
+                <div id="panel-tecles" class="panel-content">
+                    <div class="tecles-header">
+                        <h3>🎹 Assignació de Tecles</h3>
+                        <button id="btn-upload-all" class="btn btn-success btn-small">⬆️ Pujar tot al dispositiu</button>
+                    </div>
+                    <p class="tecles-hint">Selecciona un projecte guardat i clica una tecla per assignar-lo.</p>
+                    <div class="keys-grid" id="keys-grid">
+                        <!-- Generated by JS -->
+                    </div>
+                    <div class="tecles-legend">
+                        <span class="legend-item legend-assigned">● Assignada</span>
+                        <span class="legend-item legend-empty">○ Buida</span>
+                    </div>
+                </div>
+
+                <!-- Help panel -->
+                <div id="panel-help" class="panel-content">
+                    <h3>Ajuda i Tutorials</h3>
+                    <div class="help-content">
+                        <div class="help-section">
+                            <h4>🎵 Com començar</h4>
+                            <ol>
+                                <li>Arrossega blocs de la caixa d'eines</li>
+                                <li>Connecta'ls per crear el teu programa</li>
+                                <li>Veure el codi generat al panell Python</li>
+                                <li>Prova-ho al simulador</li>
+                                <li>Puja-ho al teu dispositiu TECLA</li>
+                            </ol>
+                        </div>
+
+                        <div class="help-section">
+                            <h4>🎹 Blocs disponibles</h4>
+                            <ul>
+                                <li><strong>Música:</strong> Notes, acords, escales</li>
+                                <li><strong>Control:</strong> Botons i potenciòmetres</li>
+                                <li><strong>Efectes:</strong> Delay, reverb, filtres</li>
+                                <li><strong>Temps:</strong> Esperar, repetir</li>
+                                <li><strong>Lògica:</strong> Si/Aleshores, bucles</li>
+                            </ul>
+                        </div>
+
+                        <div class="help-section">
+                            <h4>💡 Exemples</h4>
+                            <button id="btn-ex-melody" class="btn btn-secondary btn-small">🎼 Melodia simple</button>
+                            <button id="btn-ex-sequencer" class="btn btn-secondary btn-small">🎸 Seqüenciador</button>
+                            <button id="btn-ex-buttons" class="btn btn-secondary btn-small">🎛️ Control per
+                                botons</button>
+                            <button id="btn-ex-complex" class="btn btn-secondary btn-small">🌌 Sintetitzador
+                                Modular</button>
+                            <button id="btn-ex-rhythmic" class="btn btn-secondary btn-small">🥁 Mode Rítmic
+                                (Classic)</button>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Status bar -->
+        <footer class="status-bar">
+            <div class="status-info">
+                <span id="status-device">📡 Dispositiu: No connectat</span>
+                <span id="status-blocks">📦 Blocs: 0</span>
+            </div>
+            <div class="status-actions">
+                <span id="status-message">Llest per programar!</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Toolbox XML (defineix els blocs disponibles) -->
+    <xml id="toolbox" style="display: none">
+        <category name="🎵 Música Bàsica" colour="#E91E63">
+            <block type="tecla_play_note">
+                <value name="NOTE">
+                    <shadow type="math_number">
+                        <field name="NUM">60</field>
+                    </shadow>
+                </value>
+                <value name="VELOCITY">
+                    <shadow type="math_number">
+                        <field name="NUM">100</field>
+                    </shadow>
+                </value>
+                <value name="DURATION">
+                    <shadow type="math_number">
+                        <field name="NUM">1.0</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_play_chord"></block>
+            <block type="tecla_play_scale"></block>
+            <block type="tecla_set_octave"></block>
+        </category>
+
+        <category name="🌊 Síntesi Avançada" colour="#673AB7">
+            <block type="tecla_oscillator">
+                <value name="FREQUENCY">
+                    <shadow type="math_number">
+                        <field name="NUM">440</field>
+                    </shadow>
+                </value>
+                <value name="AMPLITUDE">
+                    <shadow type="math_number">
+                        <field name="NUM">100</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_lfo">
+                <value name="RATE">
+                    <shadow type="math_number">
+                        <field name="NUM">2</field>
+                    </shadow>
+                </value>
+                <value name="DEPTH">
+                    <shadow type="math_number">
+                        <field name="NUM">50</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_envelope">
+                <value name="ATTACK">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+                <value name="DECAY">
+                    <shadow type="math_number">
+                        <field name="NUM">50</field>
+                    </shadow>
+                </value>
+                <value name="SUSTAIN">
+                    <shadow type="math_number">
+                        <field name="NUM">70</field>
+                    </shadow>
+                </value>
+                <value name="RELEASE">
+                    <shadow type="math_number">
+                        <field name="NUM">100</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_modulation">
+                <value name="CARRIER">
+                    <shadow type="math_number">
+                        <field name="NUM">440</field>
+                    </shadow>
+                </value>
+                <value name="MODULATOR">
+                    <shadow type="math_number">
+                        <field name="NUM">220</field>
+                    </shadow>
+                </value>
+                <value name="DEPTH">
+                    <shadow type="math_number">
+                        <field name="NUM">50</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_waveshaper">
+                <value name="AMOUNT">
+                    <shadow type="math_number">
+                        <field name="NUM">50</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+
+        <category name="🎛️ Control Hardware" colour="#2196F3">
+            <label text="Botons i Potenciòmetres"></label>
+            <block type="tecla_read_button"></block>
+            <block type="tecla_read_pot"></block>
+            <block type="tecla_on_button_press"></block>
+        </category>
+
+        <category name="✨ Efectes Àudio" colour="#9C27B0">
+            <block type="tecla_effect_delay"></block>
+            <block type="tecla_effect_reverb"></block>
+            <block type="tecla_effect_filter"></block>
+        </category>
+
+        <category name="💡 GPIO (Pins)" colour="#00BCD4">
+            <label text="Digital"></label>
+            <block type="tecla_digital_write"></block>
+            <block type="tecla_digital_read"></block>
+            <label text="Analògic / PWM"></label>
+            <block type="tecla_analog_write">
+                <value name="VALUE">
+                    <shadow type="math_number">
+                        <field name="NUM">32768</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_analog_read"></block>
+        </category>
+
+        <category name="📡 Sensors" colour="#03A9F4">
+            <block type="tecla_sensor_temperature"></block>
+            <block type="tecla_sensor_accelerometer"></block>
+            <block type="tecla_sensor_distance"></block>
+        </category>
+
+        <category name="⏱️ Temps i Bucles" colour="#FF9800">
+            <block type="tecla_wait">
+                <value name="TIME">
+                    <shadow type="math_number">
+                        <field name="NUM">1.0</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_repeat_forever"></block>
+            <block type="controls_repeat_ext">
+                <value name="TIMES">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="controls_whileUntil"></block>
+            <block type="controls_for">
+                <value name="FROM">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+                <value name="TO">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+                <value name="BY">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+
+        <category name="🎛️ Generatiu" colour="#E91E63">
+            <block type="tecla_probability">
+                <value name="PERCENT">
+                    <shadow type="math_number">
+                        <field name="NUM">50</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_software_lfo">
+                <value name="RATE">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+                <value name="MIN">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="MAX">
+                    <shadow type="math_number">
+                        <field name="NUM">100</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_euclidean_rhythm">
+                <value name="STEP">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="PULSES">
+                    <shadow type="math_number">
+                        <field name="NUM">4</field>
+                    </shadow>
+                </value>
+                <value name="STEPS">
+                    <shadow type="math_number">
+                        <field name="NUM">16</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_scale_quantize">
+                <value name="VALUE">
+                    <shadow type="math_number">
+                        <field name="NUM">60</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+
+        <category name="🔧 Lògica" colour="#4CAF50">
+            <block type="controls_if"></block>
+            <block type="controls_ifelse"></block>
+            <block type="logic_compare"></block>
+            <block type="logic_operation"></block>
+            <block type="logic_negate"></block>
+            <block type="logic_boolean"></block>
+            <block type="logic_null"></block>
+            <block type="logic_ternary"></block>
+        </category>
+
+        <category name="🔢 Matemàtiques" colour="#4CAF50">
+            <block type="math_number"></block>
+            <block type="math_arithmetic">
+                <value name="A">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+                <value name="B">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_math_random_int">
+                <value name="FROM">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="TO">
+                    <shadow type="math_number">
+                        <field name="NUM">100</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_math_map">
+                <value name="VALUE">
+                    <shadow type="math_number">
+                        <field name="NUM">512</field>
+                    </shadow>
+                </value>
+                <value name="FROM_MIN">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="FROM_MAX">
+                    <shadow type="math_number">
+                        <field name="NUM">1023</field>
+                    </shadow>
+                </value>
+                <value name="TO_MIN">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="TO_MAX">
+                    <shadow type="math_number">
+                        <field name="NUM">127</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_math_constrain">
+                <value name="VALUE">
+                    <shadow type="math_number">
+                        <field name="NUM">50</field>
+                    </shadow>
+                </value>
+                <value name="MIN">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="MAX">
+                    <shadow type="math_number">
+                        <field name="NUM">100</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_math_trig">
+                <value name="NUM">
+                    <shadow type="math_number">
+                        <field name="NUM">45</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="math_single">
+                <value name="NUM">
+                    <shadow type="math_number">
+                        <field name="NUM">9</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="math_round">
+                <value name="NUM">
+                    <shadow type="math_number">
+                        <field name="NUM">3.1</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+
+        <category name="📝 Text" colour="#FFC107">
+            <block type="text"></block>
+            <block type="text_print">
+                <value name="TEXT">
+                    <shadow type="text">
+                        <field name="TEXT">Hola</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_text_join"></block>
+            <block type="tecla_text_length"></block>
+            <block type="tecla_text_contains"></block>
+            <block type="text_append">
+                <value name="TEXT">
+                    <shadow type="text"></shadow>
+                </value>
+            </block>
+        </category>
+
+        <category name="📋 Llistes" colour="#795548">
+            <block type="tecla_list_create"></block>
+            <block type="lists_create_with">
+                <mutation items="3"></mutation>
+            </block>
+            <block type="tecla_list_add"></block>
+            <block type="tecla_list_get"></block>
+            <block type="tecla_list_length"></block>
+            <block type="lists_isEmpty"></block>
+        </category>
+
+        <category name="📊 Variables" colour="#FF6F00" custom="VARIABLE"></category>
+
+        <category name="🔧 Funcions" colour="#8BC34A">
+            <block type="tecla_function_define"></block>
+            <block type="tecla_function_call"></block>
+        </category>
+
+        <category name="📡 Comunicació" colour="#009688">
+            <label text="Serial (USB)"></label>
+            <block type="tecla_serial_print">
+                <value name="TEXT">
+                    <shadow type="text">
+                        <field name="TEXT">Hola</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_serial_read"></block>
+            <label text="I2C (Comunicació)"></label>
+            <block type="tecla_i2c_write">
+                <value name="ADDRESS">
+                    <shadow type="math_number">
+                        <field name="NUM">0x48</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_i2c_read">
+                <value name="ADDRESS">
+                    <shadow type="math_number">
+                        <field name="NUM">0x48</field>
+                    </shadow>
+                </value>
+                <value name="BYTES">
+                    <shadow type="math_number">
+                        <field name="NUM">2</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+
+        <!-- Control Avançat -->
+        <category name="⚙️ Control Avançat" colour="#FF9800">
+            <block type="tecla_break"></block>
+            <block type="tecla_continue"></block>
+            <block type="tecla_try_except"></block>
+        </category>
+
+        <!-- Temps i Temporitzadors -->
+        <category name="⏰ Temps" colour="#607D8B">
+            <block type="tecla_time_now"></block>
+            <block type="tecla_time_millis"></block>
+            <block type="tecla_timer_start"></block>
+            <block type="tecla_timer_elapsed"></block>
+            <block type="tecla_sleep_ms">
+                <value name="TIME">
+                    <shadow type="math_number">
+                        <field name="NUM">100</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+
+        <!-- String Avançat -->
+        <category name="📝 String Avançat" colour="#4CAF50">
+            <block type="tecla_string_replace"></block>
+            <block type="tecla_string_split"></block>
+            <block type="tecla_string_join"></block>
+            <block type="tecla_string_format"></block>
+            <block type="tecla_string_contains"></block>
+            <block type="tecla_string_startswith"></block>
+            <block type="tecla_string_endswith"></block>
+        </category>
+
+        <!-- Matemàtiques Avançades -->
+        <category name="📐 Matemàtiques Avançades" colour="#2196F3">
+            <block type="tecla_math_sin"></block>
+            <block type="tecla_math_cos"></block>
+            <block type="tecla_math_tan"></block>
+            <block type="tecla_math_log"></block>
+            <block type="tecla_math_exp"></block>
+            <block type="tecla_math_degrees"></block>
+            <block type="tecla_math_radians"></block>
+            <block type="tecla_math_bitwise"></block>
+        </category>
+
+        <!-- NeoPixels -->
+        <category name="💡 NeoPixels" colour="#E91E63">
+            <block type="tecla_neopixel_setup">
+                <value name="PIN">
+                    <shadow type="math_number">
+                        <field name="NUM">5</field>
+                    </shadow>
+                </value>
+                <value name="COUNT">
+                    <shadow type="math_number">
+                        <field name="NUM">30</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_neopixel_set">
+                <value name="INDEX">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="R">
+                    <shadow type="math_number">
+                        <field name="NUM">255</field>
+                    </shadow>
+                </value>
+                <value name="G">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="B">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_neopixel_show"></block>
+            <block type="tecla_neopixel_clear"></block>
+            <block type="tecla_neopixel_rainbow">
+                <value name="OFFSET">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+
+        <!-- Display -->
+        <category name="🖥️ Display" colour="#00BCD4">
+            <block type="tecla_display_setup"></block>
+            <block type="tecla_display_text">
+                <value name="TEXT">
+                    <shadow type="text">
+                        <field name="TEXT">Hola</field>
+                    </shadow>
+                </value>
+                <value name="X">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="Y">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_display_clear"></block>
+            <block type="tecla_display_pixel"></block>
+            <block type="tecla_display_line"></block>
+            <block type="tecla_display_rect"></block>
+        </category>
+
+        <!-- Motors i Servos -->
+        <category name="🎛️ Motors i Servos" colour="#795548">
+            <block type="tecla_servo_setup">
+                <value name="PIN">
+                    <shadow type="math_number">
+                        <field name="NUM">5</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_servo_angle">
+                <value name="PIN">
+                    <shadow type="math_number">
+                        <field name="NUM">5</field>
+                    </shadow>
+                </value>
+                <value name="ANGLE">
+                    <shadow type="math_number">
+                        <field name="NUM">90</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_motor_setup"></block>
+            <block type="tecla_motor_speed">
+                <value name="SPEED">
+                    <shadow type="math_number">
+                        <field name="NUM">50</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+
+        <!-- Sensors Adicionals -->
+        <category name="👁️ Sensors Extra" colour="#9C27B0">
+            <block type="tecla_sensor_light">
+                <value name="PIN">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_sensor_sound">
+                <value name="PIN">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_sensor_moisture">
+                <value name="PIN">
+                    <shadow type="math_number">
+                        <field name="NUM">2</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_sensor_pir">
+                <value name="PIN">
+                    <shadow type="math_number">
+                        <field name="NUM">15</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_sensor_button_external">
+                <value name="PIN">
+                    <shadow type="math_number">
+                        <field name="NUM">16</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+
+        <!-- PWM Avançat -->
+        <category name="📶 PWM" colour="#FF5722">
+            <block type="tecla_pwm_setup">
+                <value name="PIN">
+                    <shadow type="math_number">
+                        <field name="NUM">5</field>
+                    </shadow>
+                </value>
+                <value name="FREQ">
+                    <shadow type="math_number">
+                        <field name="NUM">1000</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tecla_pwm_duty">
+                <value name="PIN">
+                    <shadow type="math_number">
+                        <field name="NUM">5</field>
+                    </shadow>
+                </value>
+                <value name="DUTY">
+                    <shadow type="math_number">
+                        <field name="NUM">50</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+
+        <!-- Emmagatzematge -->
+        <category name="💾 Emmagatzematge" colour="#9E9E9E">
+            <block type="tecla_storage_write"></block>
+            <block type="tecla_storage_read"></block>
+            <block type="tecla_storage_exists"></block>
+            <block type="tecla_storage_delete"></block>
+        </category>
+
+        <!-- Sistema -->
+        <category name="🔧 Sistema" colour="#424242">
+            <block type="tecla_system_reset"></block>
+            <block type="tecla_system_memory"></block>
+            <block type="tecla_system_cpu_temp"></block>
+            <block type="tecla_system_voltage"></block>
+        </category>
+
+        <sep></sep>
+
+        <!-- ===== BLOCS COMPATIBLES SCRATCH ===== -->
+
+        <!-- Events Scratch -->
+        <category name="🚩 Events Scratch" colour="#FFBF00">
+            <block type="scratch_when_flag_clicked"></block>
+            <block type="scratch_when_key_pressed"></block>
+            <block type="scratch_broadcast">
+                <field name="MESSAGE">missatge1</field>
+            </block>
+            <block type="scratch_when_receive">
+                <field name="MESSAGE">missatge1</field>
+            </block>
+            <block type="scratch_when_button_pressed">
+                <value name="BUTTON">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+
+        <!-- Looks Scratch -->
+        <category name="💬 Looks Scratch" colour="#9966FF">
+            <block type="scratch_say">
+                <value name="MESSAGE">
+                    <shadow type="text">
+                        <field name="TEXT">Hola!</field>
+                    </shadow>
+                </value>
+                <value name="SECONDS">
+                    <shadow type="math_number">
+                        <field name="NUM">2</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="scratch_think">
+                <value name="MESSAGE">
+                    <shadow type="text">
+                        <field name="TEXT">Hmm...</field>
+                    </shadow>
+                </value>
+                <value name="SECONDS">
+                    <shadow type="math_number">
+                        <field name="NUM">2</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="scratch_show"></block>
+            <block type="scratch_hide"></block>
+            <block type="scratch_change_size">
+                <value name="CHANGE">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="scratch_set_size">
+                <value name="SIZE">
+                    <shadow type="math_number">
+                        <field name="NUM">100</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+
+        <!-- Sound Scratch -->
+        <category name="🔊 Sound Scratch" colour="#D65CD6">
+            <block type="scratch_play_sound"></block>
+            <block type="scratch_play_sound_until_done"></block>
+            <block type="scratch_stop_all_sounds"></block>
+            <block type="scratch_change_volume">
+                <value name="CHANGE">
+                    <shadow type="math_number">
+                        <field name="NUM">-10</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="scratch_set_volume">
+                <value name="VOLUME">
+                    <shadow type="math_number">
+                        <field name="NUM">100</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+
+        <!-- Sensing Scratch -->
+        <category name="👁️ Sensing Scratch" colour="#4CBFE6">
+            <block type="scratch_touching"></block>
+            <block type="scratch_key_pressed"></block>
+            <block type="scratch_mouse_x"></block>
+            <block type="scratch_mouse_y"></block>
+            <block type="scratch_loudness"></block>
+            <block type="scratch_timer"></block>
+            <block type="scratch_reset_timer"></block>
+            <block type="scratch_current_time"></block>
+            <block type="scratch_days_since_2000"></block>
+        </category>
+
+        <!-- Operators Scratch -->
+        <category name="🔢 Operators Scratch" colour="#40BF4A">
+            <block type="scratch_join">
+                <value name="STRING1">
+                    <shadow type="text">
+                        <field name="TEXT">hola </field>
+                    </shadow>
+                </value>
+                <value name="STRING2">
+                    <shadow type="text">
+                        <field name="TEXT">món</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="scratch_letter_of">
+                <value name="LETTER">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+                <value name="STRING">
+                    <shadow type="text">
+                        <field name="TEXT">món</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="scratch_length_of">
+                <value name="STRING">
+                    <shadow type="text">
+                        <field name="TEXT">món</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="scratch_contains"></block>
+            <block type="scratch_mod"></block>
+            <block type="scratch_round"></block>
+            <block type="scratch_mathop"></block>
+        </category>
+
+        <!-- Variables Scratch -->
+        <category name="📊 Variables Scratch" colour="#FF8C1A">
+            <block type="scratch_change_var">
+                <value name="VALUE">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="scratch_show_variable"></block>
+            <block type="scratch_hide_variable"></block>
+        </category>
+
+        <!-- Control Scratch -->
+        <category name="⚙️ Control Scratch" colour="#FFAB19">
+            <block type="scratch_stop"></block>
+            <block type="scratch_when_start_as_clone"></block>
+            <block type="scratch_create_clone"></block>
+            <block type="scratch_delete_clone"></block>
+        </category>
+
+        <!-- My Blocks Scratch -->
+        <category name="🧩 My Blocks Scratch" colour="#FF6680">
+            <block type="scratch_define_custom">
+                <field name="NAME">el_meu_bloc</field>
+            </block>
+            <block type="scratch_custom_block">
+                <field name="NAME">el_meu_bloc</field>
+            </block>
+        </category>
+
+    </xml>
+
+    <!-- Theme Modal -->
+    <div id="theme-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🎨 Personalitzar Tema</h2>
+                <button id="btn-close-theme" class="btn-icon">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="theme-option">
+                    <label>Color Principal (Elements):</label>
+                    <input type="color" id="input-color-primary">
+                </div>
+                <div class="theme-option">
+                    <label>Color Secundari (Botons):</label>
+                    <input type="color" id="input-color-secondary">
+                </div>
+                <div class="theme-option">
+                    <label>Fons General (App):</label>
+                    <input type="color" id="input-bg-darker">
+                </div>
+                <div class="theme-option">
+                    <label>Fons Panell Lateral:</label>
+                    <input type="color" id="input-bg-dark">
+                </div>
+                <div class="theme-option">
+                    <label>Fons Caixa (Toolbox):</label>
+                    <input type="color" id="input-bg-toolbox">
+                </div>
+                <div class="theme-option">
+                    <label>Fons Simulador:</label>
+                    <input type="color" id="input-bg-simulator">
+                </div>
+                <div class="theme-option">
+                    <label>Fons Blocs (Workspace):</label>
+                    <input type="color" id="input-bg-workspace">
+                </div>
+                <div class="theme-option">
+                    <label>Color Text General:</label>
+                    <input type="color" id="input-text-primary">
+                </div>
+                <div class="theme-option">
+                    <label>Fons Menú Blocs (Flyout):</label>
+                    <input type="color" id="input-bg-flyout">
+                </div>
+                <div class="theme-option">
+                    <label>Color Barres de Desplaçament:</label>
+                    <input type="color" id="input-color-scrollbar">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-import-theme" class="btn btn-secondary">📂 Importar</button>
+                <button id="btn-export-theme" class="btn btn-secondary">💾 Exportar</button>
+                <button id="btn-reset-theme" class="btn btn-secondary">🔄 Restablir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="blocks/tecla_blocks.js"></script>
+    <script src="blocks/scratch_compatible.js"></script>
+    <script src="generators/tecla_python.js"></script>
+    <script src="generators/tecla_python_extended.js"></script>
+    <script src="generators/scratch_python.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

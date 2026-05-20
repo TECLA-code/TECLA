@@ -1,0 +1,34 @@
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <block type="tecla_repeat_forever" x="50" y="50">
+    <statement name="DO">
+       <!-- Generative Melody -->
+       <block type="tecla_probability">
+         <value name="PERCENT"><shadow type="math_number"><field name="NUM">80</field></shadow></value>
+         <statement name="DO">
+           <block type="tecla_play_note">
+             <value name="NOTE">
+                <block type="tecla_scale_quantize">
+                    <field name="SCALE">minor</field>
+                    <field name="ROOT">C</field>
+                    <value name="VALUE">
+                        <block type="tecla_software_lfo">
+                            <value name="RATE"><shadow type="math_number"><field name="NUM">0.2</field></shadow></value>
+                            <value name="MIN"><shadow type="math_number"><field name="NUM">48</field></shadow></value>
+                            <value name="MAX"><shadow type="math_number"><field name="NUM">72</field></shadow></value>
+                        </block>
+                    </value>
+                </block>
+             </value>
+             <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+             <value name="DURATION"><shadow type="math_number"><field name="NUM">0.2</field></shadow></value>
+           </block>
+         </statement>
+         <next>
+            <block type="tecla_wait">
+                <value name="TIME"><shadow type="math_number"><field name="NUM">0.125</field></shadow></value>
+            </block>
+         </next>
+       </block>
+    </statement>
+  </block>
+</xml>

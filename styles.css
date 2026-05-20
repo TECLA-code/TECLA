@@ -1,0 +1,718 @@
+/**
+ * TECLA Blocks - Estils principals
+ */
+
+:root {
+  --color-primary: #2196F3;
+  --color-secondary: #607D8B;
+  --color-success: #4CAF50;
+  --color-danger: #F44336;
+  --color-warning: #FF9800;
+
+  --bg-dark: #1E1E1E;
+  --bg-darker: #121212;
+  --bg-light: #2E2E2E;
+  --text-primary: #FFFFFF;
+  --text-secondary: #B0B0B0;
+
+  --header-height: 70px;
+  --footer-height: 40px;
+  --sidebar-width: 450px;
+  --bg-workspace: #1E1E1E;
+  --bg-toolbox: #2E2E2E;
+  --bg-simulator: #000000;
+  --bg-flyout: #2E2E2E;
+  --color-scrollbar: #607D8B;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--bg-darker);
+  color: var(--text-primary);
+  overflow: hidden;
+}
+
+/* Layout principal */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* Header */
+.app-header {
+  height: var(--header-height);
+  background: var(--bg-dark);
+  border-bottom: 2px solid var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.logo h1 {
+  font-size: 24px;
+  margin: 0;
+  color: var(--color-primary);
+}
+
+.logo .subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* Botons */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.btn-secondary {
+  background: var(--color-secondary);
+  color: white;
+}
+
+.btn-success {
+  background: var(--color-success);
+  color: white;
+}
+
+.btn-small {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.btn-icon {
+  background: transparent;
+  border: 1px solid var(--text-secondary);
+  color: var(--text-primary);
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-icon:hover {
+  background: var(--color-secondary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+/* Main content */
+.main-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.workspace-container {
+  flex: 1;
+  position: relative;
+  background: var(--bg-darker);
+}
+
+#blocklyDiv {
+  width: 100%;
+  height: 100%;
+}
+
+/* Custom Workspace Background for Theme */
+.blocklySvg {
+  background-color: var(--bg-workspace) !important;
+}
+
+.blocklyToolboxDiv {
+  background-color: var(--bg-toolbox) !important;
+}
+
+.blocklyTreeLabel {
+  color: var(--text-primary) !important;
+}
+
+/* Flyout Background */
+.blocklyFlyoutBackground {
+  fill: var(--bg-flyout) !important;
+}
+
+/* Scrollbar Handle */
+.blocklyScrollbarHandle {
+  fill: var(--color-scrollbar) !important;
+}
+
+/* Side panel */
+.side-panel {
+  width: var(--sidebar-width);
+  background: var(--bg-dark);
+  border-left: 1px solid var(--bg-light);
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-tabs {
+  display: flex;
+  background: var(--bg-darker);
+  border-bottom: 1px solid var(--bg-light);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 10px 4px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.2s;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tab-btn:hover {
+  background: var(--color-secondary);
+  color: white;
+}
+
+.tab-btn.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  background: var(--bg-dark);
+}
+
+.panel-content {
+  display: none;
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.panel-content.active {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Code display */
+.code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.code-header h3 {
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.code-display {
+  flex: 1;
+  background: var(--bg-darker);
+  border: 1px solid var(--bg-light);
+  border-radius: 6px;
+  padding: 15px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  color: #A9B7C6;
+  overflow: auto;
+  line-height: 1.5;
+}
+
+/* Simulador */
+.simulator {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.device-display {
+  background: var(--bg-darker);
+  border: 2px solid var(--bg-light);
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#simulatorCanvas {
+  background: var(--bg-simulator);
+  border-radius: 4px;
+}
+
+.simulator-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.simulator-controls .btn {
+  flex: 1;
+}
+
+.simulator-output h4 {
+  font-size: 14px;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+}
+
+.output-console {
+  background: var(--bg-darker);
+  border: 1px solid var(--bg-light);
+  border-radius: 4px;
+  padding: 10px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  min-height: 100px;
+  max-height: 200px;
+  overflow-y: auto;
+  color: var(--text-secondary);
+}
+
+/* Help section */
+.help-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.help-section {
+  background: var(--bg-darker);
+  padding: 15px;
+  border-radius: 6px;
+  border-left: 3px solid var(--color-primary);
+}
+
+.help-section h4 {
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: var(--color-primary);
+}
+
+.help-section ul,
+.help-section ol {
+  margin-left: 20px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.help-section button {
+  margin-top: 10px;
+  margin-right: 8px;
+}
+
+/* Status bar */
+.status-bar {
+  height: var(--footer-height);
+  background: var(--bg-dark);
+  border-top: 1px solid var(--bg-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.status-info {
+  display: flex;
+  gap: 20px;
+}
+
+.status-info span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Scrollbar personalitzada */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-darker);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-scrollbar);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-secondary);
+}
+
+/* Animacions */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.panel-content.active {
+  animation: fadeIn 0.3s ease;
+}
+
+/* Responsivitat */
+@media (max-width: 1024px) {
+  :root {
+    --sidebar-width: 350px;
+  }
+
+  .header-actions .btn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.modal-content {
+  background: var(--bg-dark);
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid var(--bg-light);
+  width: 400px;
+  max-width: 90%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-header h2 {
+  font-size: 18px;
+  color: var(--text-primary);
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.theme-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.theme-option label {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.theme-option input[type="color"] {
+  border: none;
+  width: 40px;
+  height: 30px;
+  cursor: pointer;
+  background: transparent;
+}
+
+.modal-footer {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* ==================== PROJECTES PANEL ==================== */
+
+.projects-header {
+  margin-bottom: 12px;
+}
+
+.projects-header h3 {
+  font-size: 15px;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.projects-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.project-name-input {
+  flex: 1;
+  padding: 6px 10px;
+  background: var(--bg-darker);
+  border: 1px solid var(--bg-light);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.project-name-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.projects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+}
+
+.empty-state {
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-align: center;
+  padding: 20px;
+  background: var(--bg-darker);
+  border-radius: 6px;
+  line-height: 1.6;
+}
+
+.project-item {
+  background: var(--bg-darker);
+  border: 1px solid var(--bg-light);
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: border-color 0.2s;
+}
+
+.project-item:hover {
+  border-color: var(--color-primary);
+}
+
+.project-item.selected {
+  border-color: var(--color-primary);
+  background: rgba(33, 150, 243, 0.1);
+}
+
+.project-item-name {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-item-date {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.project-item-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.btn-load, .btn-delete {
+  padding: 3px 8px;
+  font-size: 11px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+
+.btn-load {
+  background: var(--color-primary);
+  color: white;
+}
+
+.btn-delete {
+  background: var(--color-danger);
+  color: white;
+}
+
+.btn-load:hover, .btn-delete:hover {
+  opacity: 0.8;
+}
+
+/* ==================== TECLES PANEL ==================== */
+
+.tecles-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.tecles-header h3 {
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+.tecles-hint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.keys-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.key-slot {
+  background: var(--bg-darker);
+  border: 2px solid var(--bg-light);
+  border-radius: 8px;
+  padding: 8px 6px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  min-height: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.key-slot:hover {
+  border-color: var(--color-primary);
+  transform: scale(1.03);
+}
+
+.key-slot.assigned {
+  border-color: var(--color-success);
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.key-slot.selected-key {
+  border-color: var(--color-warning);
+  background: rgba(255, 152, 0, 0.1);
+}
+
+.key-num {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--text-secondary);
+  line-height: 1;
+}
+
+.key-slot.assigned .key-num {
+  color: var(--color-success);
+}
+
+.key-project-name {
+  font-size: 10px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.key-slot.assigned .key-project-name {
+  color: var(--color-success);
+}
+
+.key-clear-btn {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  background: var(--color-danger);
+  border: none;
+  border-radius: 3px;
+  color: white;
+  font-size: 10px;
+  cursor: pointer;
+  padding: 1px 4px;
+  line-height: 1.4;
+  display: none;
+}
+
+.key-slot.assigned .key-clear-btn {
+  display: block;
+}
+
+.key-clear-btn:hover {
+  opacity: 0.8;
+}
+
+.tecles-legend {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  justify-content: center;
+}
+
+.legend-assigned {
+  color: var(--color-success);
+}
+
+.legend-empty {
+  color: var(--text-secondary);
+}

@@ -1,0 +1,21 @@
+{
+  "name": "Exemple TECLA",
+  "version": "2.0",
+  "format": "json",
+  "blocks": {
+    "languageVersion": 0,
+    "blocks": [
+      {
+        "type": "tecla_play_note",
+        "id": "test_block_1",
+        "x": 100,
+        "y": 100,
+        "fields": {
+          "NOTE": "60",
+          "VELOCITY": 100,
+          "DURATION": 0.5
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,42 @@
+# Node modules
+node_modules/
+
+# Build outputs
+dist/
+build/
+out/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Electron
+.webpack/
+
+# Projectes de prova
+*.tblocks
+!EXEMPLE_PROJECTE.tblocks
+!EXEMPLE_XML.tblocks
+!COMPLEXE_PROGRAMA.tblocks
+!SINTETITZADOR.py
+!TEST_MIDI.py
+!LIVE_GENERATIVE.py
+!examples/translated_modes/*.tblocks
+
+# Temporary files
+*.tmp
+*.temp

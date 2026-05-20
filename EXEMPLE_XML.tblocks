@@ -1,0 +1,6 @@
+{
+  "name": "Exemple TECLA XML",
+  "version": "1.0",
+  "format": "legacy",
+  "blocks": "<xml xmlns=\"https://developers.google.com/blockly/xml\"><block type=\"tecla_play_note\" id=\"NOTESIMPLE\" x=\"100\" y=\"100\"><field name=\"NOTE\">60</field><field name=\"VELOCITY\">100</field><field name=\"DURATION\">0.5</field></block></xml>"
+}

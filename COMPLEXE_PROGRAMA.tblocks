@@ -1,0 +1,6 @@
+{
+  "name": "Arpeggiator Simple",
+  "version": "1.0",
+  "format": "legacy",
+  "blocks": "<xml xmlns=\"https://developers.google.com/blockly/xml\"><block type=\"tecla_repeat_forever\" x=\"50\" y=\"50\"><statement name=\"DO\"><block type=\"controls_if\"><value name=\"IF0\"><block type=\"tecla_read_button\"><field name=\"BUTTON\">1</field></block></value><statement name=\"DO0\"><block type=\"tecla_play_note\"><field name=\"NOTE\">60</field><field name=\"VELOCITY\">100</field><field name=\"DURATION\">0.2</field><next><block type=\"tecla_wait\"><field name=\"SECONDS\">0.2</field><next><block type=\"tecla_play_note\"><field name=\"NOTE\">64</field><field name=\"VELOCITY\">100</field><field name=\"DURATION\">0.2</field><next><block type=\"tecla_wait\"><field name=\"SECONDS\">0.2</field><next><block type=\"tecla_play_note\"><field name=\"NOTE\">67</field><field name=\"VELOCITY\">100</field><field name=\"DURATION\">0.2</field><next><block type=\"tecla_wait\"><field name=\"SECONDS\">0.2</field></block></next></block></next></block></next></block></next></block></next></block></statement></block></statement></block></xml>"
+}

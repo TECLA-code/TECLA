@@ -1,0 +1,65 @@
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <block type="tecla_repeat_forever" x="50" y="50">
+    <statement name="DO">
+      <!-- Mode Ona Sinusoidal Translation -->
+      <!-- Note = Base (Pot 0) + LFO Mod -->
+      <block type="tecla_play_note">
+        <value name="NOTE">
+          <block type="math_arithmetic">
+            <field name="OP">ADD</field>
+            <value name="A">
+              <!-- Base Note from Pot X (0) -->
+              <block type="tecla_math_map">
+                <value name="VALUE"><block type="tecla_read_pot"><field name="POT">0</field></block></value> <!-- Pot X -->
+                <value name="FROM_MIN"><block type="math_number"><field name="NUM">0</field></block></value>
+                <value name="FROM_MAX"><block type="math_number"><field name="NUM">127</field></block></value>
+                <value name="TO_MIN"><block type="math_number"><field name="NUM">36</field></block></value>
+                <value name="TO_MAX"><block type="math_number"><field name="NUM">84</field></block></value> <!-- C2 to C6 -->
+              </block>
+            </value>
+            <value name="B">
+              <!-- LFO Modulation -->
+              <!-- Rate from Pot Z (2), Depth from Pot Y (1) -->
+              <block type="tecla_software_lfo">
+                <value name="RATE">
+                    <block type="tecla_math_map">
+                        <value name="VALUE"><block type="tecla_read_pot"><field name="POT">2</field></block></value> 
+                        <value name="FROM_MIN"><block type="math_number"><field name="NUM">0</field></block></value>
+                        <value name="FROM_MAX"><block type="math_number"><field name="NUM">127</field></block></value>
+                        <value name="TO_MIN"><block type="math_number"><field name="NUM">0.1</field></block></value>
+                        <value name="TO_MAX"><block type="math_number"><field name="NUM">10</field></block></value>
+                    </block>
+                </value>
+                <value name="MIN">
+                    <block type="math_single">
+                        <field name="OP">NEG</field>
+                        <value name="NUM">
+                            <block type="tecla_math_map">
+                                <value name="VALUE"><block type="tecla_read_pot"><field name="POT">1</field></block></value> 
+                                <value name="FROM_MIN"><block type="math_number"><field name="NUM">0</field></block></value>
+                                <value name="FROM_MAX"><block type="math_number"><field name="NUM">127</field></block></value>
+                                <value name="TO_MIN"><block type="math_number"><field name="NUM">0</field></block></value>
+                                <value name="TO_MAX"><block type="math_number"><field name="NUM">12</field></block></value> <!-- Up to 1 octave depth -->
+                            </block>
+                        </value>
+                    </block>
+                </value>
+                <value name="MAX">
+                    <block type="tecla_math_map">
+                        <value name="VALUE"><block type="tecla_read_pot"><field name="POT">1</field></block></value>
+                        <value name="FROM_MIN"><block type="math_number"><field name="NUM">0</field></block></value>
+                        <value name="FROM_MAX"><block type="math_number"><field name="NUM">127</field></block></value>
+                        <value name="TO_MIN"><block type="math_number"><field name="NUM">0</field></block></value>
+                        <value name="TO_MAX"><block type="math_number"><field name="NUM">12</field></block></value>
+                    </block>
+                </value>
+              </block>
+            </value>
+          </block>
+        </value>
+        <value name="VELOCITY"><ballock type="math_number"><field name="NUM">100</field></block></value>
+        <value name="DURATION"><block type="math_number"><field name="NUM">0.1</field></block></value>
+      </block>
+    </statement>
+  </block>
+</xml>

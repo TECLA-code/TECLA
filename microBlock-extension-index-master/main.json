@@ -1,0 +1,1198 @@
+{
+  "microBlock-IDE_WiFi-extension": {
+    "name": "WiFi",
+    "description": "Connect to WiFi",
+    "author": "microBlock",
+    "category": "Communication",
+    "version": "1.2.0",
+    "icon": "/static/icon.png",
+    "color": "#3498DB",
+    "chip": [
+      "ESP32",
+      "RP2-WiFi",
+      "Uno-R4-WiFi"
+    ],
+    "supportArduinoPlatform": true,
+    "depends": [],
+    "github": "https://github.com/microBlock-IDE/WiFi-extension"
+  },
+  "microBlock-IDE_LINENotify-extension": {
+    "name": "LINE Notify",
+    "description": "Send notification from everywhere to LINE",
+    "author": "microBlock",
+    "category": "Communication",
+    "version": "1.2.0",
+    "icon": "/static/icon.png",
+    "color": "#28B463",
+    "chip": [
+      "ESP32",
+      "RP2-WiFi",
+      "Uno-R4-WiFi"
+    ],
+    "supportArduinoPlatform": true,
+    "depends": [
+      "ArtronShop_LineNotify@1.1.0"
+    ],
+    "github": "https://github.com/microBlock-IDE/LINENotify-extension"
+  },
+  "microBlock-IDE_Blynk-extension": {
+    "name": "Blynk-IoT",
+    "description": "Blynk IoT platform: for businesses and developers",
+    "author": "microBlock",
+    "category": "Communication",
+    "version": "1.4.0",
+    "icon": "/static/icon.png",
+    "color": "#1ABC9C",
+    "chip": [
+      "ESP32",
+      "RP2-WiFi",
+      "Uno-R4-WiFi"
+    ],
+    "supportArduinoPlatform": true,
+    "depends": [
+      "Blynk@1.3.2",
+      "BlynkNcpDriver@0.6.3"
+    ],
+    "github": "https://github.com/microBlock-IDE/Blynk-extension"
+  },
+  "microBlock-IDE_MQTT-extension": {
+    "name": "MQTT",
+    "description": "Connect things via MQTT",
+    "author": "microBlock",
+    "category": "Communication",
+    "version": "1.1.0",
+    "icon": "/static/icon.png",
+    "color": "#F39C12",
+    "chip": [
+      "ESP32",
+      "RP2-WiFi"
+    ],
+    "github": "https://github.com/microBlock-IDE/MQTT-extension"
+  },
+  "microBlock-IDE_NeoPixel-extension": {
+    "name": "NeoPixel",
+    "description": "Write light to NeoPixel",
+    "author": "microBlock",
+    "category": "Device Control",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#27AE60",
+    "chip": [
+      "ESP32"
+    ],
+    "github": "https://github.com/microBlock-IDE/NeoPixel-extension"
+  },
+  "microBlock-IDE_Buzzer-extension": {
+    "name": "Buzzer",
+    "description": "Make buzzer beep sound",
+    "author": "microBlock",
+    "category": "Device Control",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#F39C12",
+    "supportArduinoPlatform": true,
+    "depends": [],
+    "github": "https://github.com/microBlock-IDE/Buzzer-extension"
+  },
+  "microBlock-IDE_HTTP-extension": {
+    "name": "HTTP",
+    "description": "GET POST PUT to REST API",
+    "author": "microBlock",
+    "category": "Communication",
+    "version": "1.1.0",
+    "icon": "/static/icon.png",
+    "color": "#2ECC71",
+    "chip": [
+      "ESP32",
+      "RP2-WiFi"
+    ],
+    "github": "https://github.com/microBlock-IDE/HTTP-extension"
+  },
+  "microBlock-IDE_Servo-extension": {
+    "name": "Servo",
+    "description": "Set angle to Servo motor",
+    "author": "microBlock",
+    "category": "Device Control",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#0271D9",
+    "supportArduinoPlatform": true,
+    "depends": [
+      "Servo@1.2.1"
+    ],
+    "github": "https://github.com/microBlock-IDE/Servo-extension"
+  },
+  "microBlock-IDE_MPU6050-extension": {
+    "name": "MPU6050",
+    "description": "6-Axis (Gyro + Accelerometer) MEMS MotionTracking Devices",
+    "author": "microBlock",
+    "category": "Sensors",
+    "version": "1.1.0",
+    "icon": "/static/icon.png",
+    "color": "#E74C3C",
+    "supportArduinoPlatform": true,
+    "depends": [
+      "MPU6050@1.3.0"
+    ],
+    "github": "https://github.com/microBlock-IDE/MPU6050-extension"
+  },
+  "microBlock-IDE_TM1637-extension": {
+    "name": "TM1637",
+    "description": "Show number on TM1637",
+    "author": "IOXhop.com",
+    "category": "Display",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#3498DB",
+    "github": "https://github.com/microBlock-IDE/TM1637-extension"
+  },
+  "ioxhop_PMS7003-extension": {
+    "name": "PMS7003",
+    "description": "Digital universal particle concentration sensor",
+    "author": "IOXhop.com",
+    "category": "Sensors",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#E67E22",
+    "github": "https://github.com/ioxhop/PMS7003-extension"
+  },
+  "ioxhop_SDS011-extension": {
+    "name": "SDS011",
+    "description": "Laser PM2.5 Sensor",
+    "author": "IOXhop.com",
+    "category": "Sensors",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#2C3E50",
+    "github": "https://github.com/ioxhop/SDS011-extension"
+  },
+  "microBlock-IDE_Senses-extension": {
+    "name": "Senses IoT",
+    "description": "Industrial Internet of Things platform (IIoT)",
+    "author": "microBlock",
+    "category": "Communication",
+    "version": "2.1.0",
+    "icon": "/static/icon.png",
+    "color": "#3498DB",
+    "chip": [
+      "ESP32",
+      "RP2-WiFi"
+    ],
+    "github": "https://github.com/microBlock-IDE/Senses-extension"
+  },
+  "microBlock-IDE_IFTTT-Webhooks-extension": {
+    "name": "IFTTT Webhooks",
+    "description": "allows you to integrate other services on IFTTT",
+    "author": "microBlock",
+    "category": "Communication",
+    "version": "1.1.0",
+    "icon": "/static/icon.png",
+    "color": "#3498DB",
+    "chip": [
+      "ESP32",
+      "RP2-WiFi"
+    ],
+    "github": "https://github.com/microBlock-IDE/IFTTT-Webhooks-extension"
+  },
+  "microBlock-IDE_Firebase-extension": {
+    "name": "Firebase Realtime Database",
+    "description": "Get Set and Push data to Firebase Realtime Database",
+    "author": "microBlock",
+    "category": "Communication",
+    "version": "1.1.0",
+    "icon": "/static/icon.png",
+    "color": "#F1C40F",
+    "chip": [
+      "ESP32",
+      "RP2-WiFi"
+    ],
+    "github": "https://github.com/microBlock-IDE/Firebase-extension"
+  },
+  "microBlock-IDE_IR-Remote-extension": {
+    "name": "IR Remote",
+    "description": "Get data from Sony Remote",
+    "author": "microBlock",
+    "category": "Communication",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#515A5A",
+    "github": "https://github.com/microBlock-IDE/IR-Remote-extension"
+  },
+  "microBlock-IDE_Ultrasonic-extension": {
+    "name": "Ultrasonic",
+    "description": "Get distance from HC-SR04p",
+    "author": "microBlock",
+    "category": "Sensors",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#004098",
+    "github": "https://github.com/microBlock-IDE/Ultrasonic-extension"
+  },
+  "microBlock-IDE_HX711-extension": {
+    "name": "HX711",
+    "description": "Get weight value from Load Cell",
+    "author": "microBlock",
+    "category": "Sensors",
+    "version": "1.1.0",
+    "icon": "/static/icon.png",
+    "color": "#f45858",
+    "supportArduinoPlatform": true,
+    "depends": [
+      "HX711 Arduino Library@0.7.5"
+    ],
+    "github": "https://github.com/microBlock-IDE/HX711-extension"
+  },
+  "microBlock-IDE_OLED-extension": {
+    "name": "OLED",
+    "description": "Show text and image on OLED Display",
+    "author": "microBlock",
+    "category": "Display",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#2980B9",
+    "github": "https://github.com/microBlock-IDE/OLED-extension"
+  },
+  "microBlock-IDE_BH1750-extension": {
+    "name": "BH1750",
+    "description": "Ambient Light Sensor",
+    "author": "microBlock",
+    "category": "Sensors",
+    "version": "1.1.0",
+    "icon": "/static/icon.png",
+    "color": "#006a99",
+    "supportArduinoPlatform": true,
+    "depends": [
+      "ArtronShop_BH1750@1.0.0"
+    ],
+    "github": "https://github.com/microBlock-IDE/BH1750-extension"
+  },
+  "ioxhop_PAJ7620-extension": {
+    "name": "PAJ7620",
+    "description": "Gesture Recognition",
+    "author": "IOXhop.com",
+    "category": "Sensors",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#8b507c",
+    "github": "https://github.com/ioxhop/PAJ7620-extension"
+  },
+  "ioxhop_HMC5883-extension": {
+    "name": "HMC5883",
+    "description": "3-Axis Digital Compass",
+    "author": "IOXhop.com",
+    "category": "Sensors",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#0f3058",
+    "github": "https://github.com/ioxhop/HMC5883-extension"
+  },
+  "ioxhop_DHT12-extension": {
+    "name": "DHT12",
+    "description": "Digital temperature and humidity sensor",
+    "author": "IOXhop.com",
+    "category": "Sensors",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#3498DB",
+    "github": "https://github.com/ioxhop/DHT12-extension"
+  },
+  "microBlock-IDE_iKB-1-extension": {
+    "name": "iKB-1",
+    "description": "Universal I/O board",
+    "author": "microBlock",
+    "category": "Signal Input/Output",
+    "version": "1.1.0",
+    "icon": "/static/icon.png",
+    "color": "#191e3e",
+    "github": "https://github.com/microBlock-IDE/iKB-1-extension"
+  },
+  "ioxhop_GPS-extension": {
+    "name": "GPS",
+    "description": "Get latitude longitude and speed from GPS module",
+    "author": "IOXhop.com",
+    "category": "Sensors",
+    "version": "1.1.0",
+    "icon": "/static/icon.png",
+    "color": "#5DADE2",
+    "github": "https://github.com/ioxhop/GPS-extension"
+  },
+  "microBlock-IDE_HUSKYLENS-extension": {
+    "name": "HUSKYLENS",
+    "description": "An Easy-to-use AI Machine Vision Sensor",
+    "author": "INEX",
+    "category": "Sensors",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#17202A",
+    "github": "https://github.com/microBlock-IDE/HUSKYLENS-extension"
+  },
+  "ioxhop_SerialMP3-extension": {
+    "name": "Serial MP3",
+    "description": "Play MP3 with OpenSmart Serial MP3 Player",
+    "author": "IOXhop.com",
+    "category": "Sensors",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#E74C3C",
+    "github": "https://github.com/ioxhop/SerialMP3-extension"
+  },
+  "microBlock-IDE_ESP-NOW-extension": {
+    "name": "ESP-NOW",
+    "description": "Communication between KidBright32 via ESP-NOW",
+    "author": "microBlock",
+    "category": "Communication",
+    "version": "1.0.1",
+    "icon": "/static/icon.png",
+    "color": "#E74C3C",
+    "chip": [
+      "ESP32"
+    ],
+    "github": "https://github.com/microBlock-IDE/ESP-NOW-extension"
+  },
+  "microBlock-IDE_LCDI2C-extension": {
+    "name": "LCDI2C",
+    "description": "Character LCD I2C",
+    "author": "microBlock",
+    "category": "Display",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#27AE60",
+    "github": "https://github.com/microBlock-IDE/LCDI2C-extension"
+  },
+  "ioxhop_DotMatrix-extension": {
+    "name": "Dot Matrix",
+    "description": "Show text with animation to MAX7219 Dot Matrix",
+    "author": "IOXhop.com",
+    "category": "Display",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#3498DB",
+    "github": "https://github.com/ioxhop/DotMatrix-extension"
+  },
+  "ioxhop_Kid4Relay-extension": {
+    "name": "Kid4Relay",
+    "description": "Extension for Kid4Relay",
+    "author": "IOXhop.com",
+    "category": "Signal Input/Output",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#273746",
+    "github": "https://github.com/ioxhop/Kid4Relay-extension"
+  },
+  "ioxhop_KidMotorV3-extension": {
+    "name": "KidMotorV3",
+    "description": "Extension for KidMotor V3",
+    "author": "IOXhop.com",
+    "category": "Signal Input/Output",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#27AE60",
+    "github": "https://github.com/ioxhop/KidMotorV3-extension"
+  },
+  "microBlock-IDE_ZX-THERMO-extension": {
+    "name": "ZX-THERMO",
+    "description": "Non-Contact Temperature Sensor",
+    "author": "INEX",
+    "category": "Sensors",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#27AE60",
+    "github": "https://github.com/microBlock-IDE/ZX-THERMO-extension"
+  },
+  "artronshop_EasyDim-extension": {
+    "name": "EasyDim",
+    "description": "Dimmer light on lamp",
+    "author": "ArtronShop",
+    "category": "Device Control",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#2ECC71",
+    "github": "https://github.com/artronshop/EasyDim-extension"
+  },
+  "maxpromer_AHT20-extension": {
+    "name": "AHT20",
+    "description": "Temperature and Humidity Sensor",
+    "author": "INEX",
+    "category": "Sensors",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#3498DB",
+    "github": "https://github.com/maxpromer/AHT20-extension"
+  },
+  "maxpromer_iRELAY-5-extension": {
+    "name": "iRELAY-5",
+    "description": "Extension for iRELAY-5",
+    "author": "INEX",
+    "category": "Signal Input/Output",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#2ECC71",
+    "github": "https://github.com/maxpromer/iRELAY-5-extension"
+  },
+  "AJtrakan_DS18x20-extension": {
+    "name": "DS18x20",
+    "description": "DS18x20 temperature sensor",
+    "author": "AJ.TAY",
+    "category": "Sensors",
+    "version": "1.1.0",
+    "icon": "/static/icon.png",
+    "color": "#0f3058",
+    "github": "https://github.com/AJtrakan/DS18x20-extension"
+  },
+  "javanesse_Ultrasonic-extension": {
+    "name": "Ultrasonic Custom Pin",
+    "description": "Attach your HC-SR04 to custom Pin",
+    "author": "javanesse.net",
+    "category": "Sensors",
+    "version": "1.0.1",
+    "icon": "/static/icon.png",
+    "color": "#004098",
+    "github": "https://github.com/javanesse/Ultrasonic-extension"
+  },
+  "microBlock-IDE_NeoPixelRP2-extension": {
+    "name": "NeoPixel",
+    "description": "Write light to NeoPixel for RP2 chip",
+    "author": "microBlock",
+    "category": "Device Control",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#27AE60",
+    "chip": [
+      "RP2"
+    ],
+    "github": "https://github.com/microBlock-IDE/NeoPixelRP2-extension"
+  },
+  "iPAS_Blynk-extension": {
+    "name": "Blynk-IoT",
+    "description": "Blynk IoT platform: for businesses and developers",
+    "author": "microBlock",
+    "category": "Communication",
+    "version": "1.0.3",
+    "icon": "/static/icon.png",
+    "color": "#1ABC9C",
+    "chip": [
+      "ESP32"
+    ],
+    "github": "https://github.com/iPAS/Blynk-extension"
+  },
+  "ArtronShop_BMP280-extension": {
+    "name": "BMP280",
+    "description": "Pressure sensor",
+    "author": "ArtronShop",
+    "category": "Sensors",
+    "version": "1.1.0",
+    "icon": "/static/icon.png",
+    "color": "#672e58",
+    "supportArduinoPlatform": true,
+    "depends": [
+      "Adafruit BMP280 Library@2.6.8",
+      "Adafruit Unified Sensor@1.1.14",
+      "Adafruit BusIO@1.15.0"
+    ],
+    "github": "https://github.com/ArtronShop/BMP280-extension"
+  },
+  "maxpromer_iBIT-extension": {
+    "name": "iBIT V2A",
+    "description": "iBIT package for microBlock, Robot board control by Mbits, OpenBit",
+    "author": "INEX",
+    "category": "Device Control",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#3498DB",
+    "chip": [
+      "ESP32"
+    ],
+    "github": "https://github.com/maxpromer/iBIT-extension"
+  },
+  "maxpromer_ZX-RFID-extension": {
+    "name": "ZX-RFID",
+    "description": "RFID reader Mifare 13.56MHz I2C interface",
+    "author": "INEX",
+    "category": "Sensors",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#3498DB",
+    "github": "https://github.com/maxpromer/ZX-RFID-extension"
+  },
+  "maxpromer_iSERVO-extension": {
+    "name": "iSERVO",
+    "description": "iSERVO-16 Servo motor driver boards",
+    "author": "INEX",
+    "category": "Device Control",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#3498DB",
+    "github": "https://github.com/maxpromer/iSERVO-extension"
+  },
+  "maxpromer_iLED4-extension": {
+    "name": "iLED4",
+    "description": "4-digit LED display I2C interface",
+    "author": "INEX",
+    "category": "Display",
+    "version": "1.1.0",
+    "icon": "/static/icon.png",
+    "color": "#3498DB",
+    "github": "https://github.com/maxpromer/iLED4-extension"
+  },
+  "ArtronShop_KidMotorV4-extension": {
+    "name": "KidMotor V4",
+    "description": "Extension for KidMotor V4",
+    "author": "ArtronShop, INEX",
+    "category": "Signal Input/Output",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#27AE60",
+    "github": "https://github.com/ArtronShop/KidMotorV4-extension"
+  },
+  "microBlock-extension-by-thanatip-cg_EMG-AD8211-extension": {
+    "name": "EMG-AD8211",
+    "description": "SG00165 EMG Sensors",
+    "author": "AJ.TAY",
+    "category": "Sensors",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#16b5aa",
+    "github": "https://github.com/microBlock-extension-by-thanatip-cg/EMG-AD8211-extension"
+  },
+  "microBlock-extension-by-thanatip-cg_ECG-AD8232-extension": {
+    "name": "ECG-AD8232",
+    "description": "ADB8232 ECG Sensors",
+    "author": "AJ.TAY",
+    "category": "Sensors",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#004098",
+    "github": "https://github.com/microBlock-extension-by-thanatip-cg/ECG-AD8232-extension"
+  },
+  "microBlock-extension-by-thanatip-cg_pluse-heartrate-extension": {
+    "name": "Pluse HeartRate",
+    "description": "Pulse Sensor or heart-rate sensor",
+    "author": "AJ.TAY",
+    "category": "Sensors",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#0f3058",
+    "github": "https://github.com/microBlock-extension-by-thanatip-cg/pluse-heartrate-extension"
+  },
+  "microBlock-IDE_Airri-extension": {
+    "name": "Airri",
+    "description": "Send air quality value to Airri",
+    "author": "microBlock",
+    "category": "Communication",
+    "version": "1.0.2",
+    "icon": "/static/icon.png",
+    "color": "#2ecc71",
+    "github": "https://github.com/microBlock-IDE/Airri-extension"
+  },
+  "microBlock-IDE_GoGo-Bright-extension": {
+    "name": "GoGo Bright",
+    "description": "Go more with GoGo Bright",
+    "author": "microBlock",
+    "category": "Signal Input/Output",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#db3f8d",
+    "github": "https://github.com/microBlock-IDE/GoGo-Bright-extension"
+  },
+  "Pramotjonsungnoen_zx_sonar-extension": {
+    "name": "sonar",
+    "description": "Get distance from ZX-sonar",
+    "author": "mazlogyzop",
+    "category": "Sensors",
+    "version": "1.0.1",
+    "icon": "/static/sonar.png",
+    "color": "#004098",
+    "github": "https://github.com/Pramotjonsungnoen/zx_sonar-extension"
+  },
+  "Aphibun_distance-extension": {
+    "name": "DISTANCE",
+    "description": "ZX-Distance Sensor",
+    "author": "Aphibun",
+    "category": "Sensors",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#27AE60",
+    "github": "https://github.com/Aphibun/distance-extension"
+  },
+  "Pramotjonsungnoen_input": {
+    "name": "analog electronics",
+    "description": "Get  distance from  ZX-sonar",
+    "author": "mazlogyzop",
+    "category": "Sensors",
+    "version": "1.0.1",
+    "icon": "/static/sonar.png",
+    "color": "#004098",
+    "github": "https://github.com/Pramotjonsungnoen/input"
+  },
+  "Pramotjonsungnoen_Sensing": {
+    "name": "Function Map",
+    "description": " Get Function map ",
+    "author": "mazlogyzop",
+    "category": "Sensors",
+    "version": "1.0.2",
+    "icon": "/static/analog.png",
+    "color": "#004098",
+    "github": "https://github.com/Pramotjonsungnoen/Sensing"
+  },
+  "Anutas_distance-extension-master": {
+    "name": "DISTANCE-KidBright32i",
+    "description": "ZX-Distance Sensor support KidBright32i",
+    "author": "Anutas",
+    "category": "Sensors",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#27AE60",
+    "github": "https://github.com/Anutas/distance-extension-master"
+  },
+  "ArtronShop_Ultrasonic-KidMotor-extension": {
+    "name": "Ultrasonic-KidMotor",
+    "description": "Get distance from HC-SR04p (only KidMotor board)",
+    "author": "microBlock",
+    "category": "Sensors",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#004098",
+    "github": "https://github.com/ArtronShop/Ultrasonic-KidMotor-extension"
+  },
+  "ESPGyro_ULN2003-extension": {
+    "name": "步進馬達",
+    "description": "Set angle to stepper motor",
+    "author": "Mason",
+    "category": "Device Control",
+    "version": "1.0.0",
+    "icon": "/static/uln2003.png",
+    "color": "#0271D9",
+    "github": "https://github.com/ESPGyro/ULN2003-extension"
+  },
+  "ESPGyro_WebSocketController-2e": {
+    "name": "網頁遙控器",
+    "description": "WebSocket_Server",
+    "author": "YP & Mason",
+    "category": "Communication",
+    "version": "1.0.0",
+    "icon": "/static/joystick.png",
+    "color": "#F39C12",
+    "github": "https://github.com/ESPGyro/WebSocketController-2e"
+  },
+  "ESPGyro_UDP-Server-extension-1": {
+    "name": "UDP伺服器",
+    "description": "",
+    "author": "YP",
+    "category": "Communication",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#F39C12",
+    "github": "https://github.com/ESPGyro/UDP-Server-extension-1"
+  },
+  "maxpromer_PuppyPID-extension": {
+    "name": "PuppyPID",
+    "description": "PID line following for PuppyBot",
+    "author": "PrinceBot",
+    "category": "Sensors",
+    "version": "1.1.0",
+    "icon": "/static/icon.png",
+    "color": "#28B463",
+    "chip": [
+      "RP2"
+    ],
+    "github": "https://github.com/maxpromer/PuppyPID-extension"
+  },
+  "chavee_microBlock-NETPIE-extension": {
+    "name": "NETPIE",
+    "description": "Connect your device to NETPIE IoT platform",
+    "author": "Chavee Issariyapat",
+    "category": "Communication",
+    "version": "1.0.5",
+    "icon": "/static/icon.png",
+    "color": "#4A7CCC",
+    "chip": [
+      "ESP32",
+      "RP2-WiFi"
+    ],
+    "github": "https://github.com/chavee/microBlock-NETPIE-extension"
+  },
+  "KJEducator_DB5883-extension": {
+    "name": "DB5883",
+    "description": "3-Axis Digital Compass",
+    "author": "K",
+    "category": "Sensors",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#0f3058",
+    "github": "https://github.com/KJEducator/DB5883-extension"
+  },
+  "AJtrakan_MAX30102-extension": {
+    "name": "MAX30102",
+    "description": "MAX30102 Heart Rate & SPO2 sensor",
+    "author": "AJ.TAY",
+    "category": "Sensors",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#0f3058",
+    "github": "https://github.com/AJtrakan/MAX30102-extension"
+  },
+  "AJtrakan_TimeDelay-extension": {
+    "name": "TimeDelay",
+    "description": "TimeDelay",
+    "author": "AJ.TAY",
+    "category": "Timing",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#0f3058",
+    "github": "https://github.com/AJtrakan/TimeDelay-extension"
+  },
+  "AJtrakan_EMG-extension": {
+    "name": "EMG Sensors",
+    "description": "SG00165 EMG Sensors",
+    "author": "AJ.TAY",
+    "category": "Sensors",
+    "version": "1.5.0",
+    "icon": "/static/icon.png",
+    "color": "#0f3058",
+    "github": "https://github.com/AJtrakan/EMG-extension"
+  },
+  "AJtrakan_heartrate-extension": {
+    "name": "heart rate",
+    "description": "Pulse Sensor or heart-rate sensor",
+    "author": "AJ.TAY",
+    "category": "Sensors",
+    "version": "2.1.0",
+    "icon": "/static/icon.png",
+    "color": "#0f3058",
+    "github": "https://github.com/AJtrakan/heartrate-extension"
+  },
+  "AJtrakan_T-ZX-THERMO-extension": {
+    "name": "T-ZX-THERMO",
+    "description": "Non-Contact Temperature Sensor *>Edit I2C<*",
+    "author": "AJ.TAY_By_INEX",
+    "category": "Sensors",
+    "version": "1.0.1",
+    "icon": "/static/icon.png",
+    "color": "#27AE60",
+    "github": "https://github.com/AJtrakan/T-ZX-THERMO-extension"
+  },
+  "ArtronShop_SHT30-extension": {
+    "name": "SHT30",
+    "description": "Temperature and Humidity Sensor",
+    "author": "ArtronShop",
+    "category": "Sensors",
+    "version": "1.1.0",
+    "icon": "/static/icon.png",
+    "color": "#8b507c",
+    "supportArduinoPlatform": true,
+    "depends": [
+      "ArtronShop_SHT3x@1.0.0"
+    ],
+    "github": "https://github.com/ArtronShop/SHT30-extension"
+  },
+  "maxpromer_TCS34725-extension": {
+    "name": "TCS34725",
+    "description": "Color Sensor for PuppyBot",
+    "author": "PrinceBot",
+    "category": "Sensors",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#3498DB",
+    "chip": [
+      "RP2"
+    ],
+    "github": "https://github.com/maxpromer/TCS34725-extension"
+  },
+  "Thanaphon06_beetlecar_extention": {
+    "name": "betlecar",
+    "description": "",
+    "author": "UP-SKILL",
+    "category": "",
+    "version": "1.0.0",
+    "icon": "/static/beetlecar.png",
+    "color": "#4A7CCC",
+    "chip": [
+      "ESP32",
+      "RP2-WiFi"
+    ],
+    "github": "https://github.com/Thanaphon06/beetlecar_extention"
+  },
+  "maxpromer_microDriver-extension": {
+    "name": "microDriver",
+    "description": "OpenBit Driver Expansion Board",
+    "author": "INEX",
+    "category": "Device Control",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#3498DB",
+    "github": "https://github.com/maxpromer/microDriver-extension"
+  },
+  "microBlock-IDE_oled-extension-arduino": {
+    "name": "OLED",
+    "description": "Display text, number, image on OLED display",
+    "author": "ArtronShop",
+    "category": "Display",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#2980B9",
+    "supportArduinoPlatform": true,
+    "depends": [
+      "Adafruit SSD1306@2.5.9",
+      "Adafruit GFX Library@1.11.9",
+      "Adafruit BusIO@1.15.0"
+    ],
+    "github": "https://github.com/microBlock-IDE/oled-extension-arduino"
+  },
+  "microBlock-IDE_Ultrasonic2-extension": {
+    "name": "Ultrasonic2",
+    "description": "Get distance from ultrasonic sensor (support any boards)",
+    "author": "microBlock",
+    "category": "Sensors",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#004098",
+    "supportArduinoPlatform": true,
+    "depends": [],
+    "github": "https://github.com/microBlock-IDE/Ultrasonic2-extension"
+  },
+  "ArtronShop_GPS-extension": {
+    "name": "GPS",
+    "description": "Get latitude longitude and speed from GPS module",
+    "author": "ArtronShop",
+    "category": "Sensors",
+    "version": "1.2.0",
+    "icon": "/static/icon.png",
+    "color": "#5DADE2",
+    "supportArduinoPlatform": true,
+    "depends": [
+      "TinyGPS@13.0.0"
+    ],
+    "github": "https://github.com/ArtronShop/GPS-extension"
+  },
+  "microBlock-IDE_DS18B20-extension": {
+    "name": "DS18B20",
+    "description": "get the temperature from DS18B20",
+    "author": "microBlock",
+    "category": "Sensors",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#2C3E50",
+    "supportArduinoPlatform": true,
+    "depends": [
+      "DS18B20@1.0.0",
+      "OneWire@2.3.7"
+    ],
+    "github": "https://github.com/microBlock-IDE/DS18B20-extension"
+  },
+  "microBlock-IDE_DHTxx-extension": {
+    "name": "DHT11/DHT22",
+    "description": "Temperature and Humidity Sensor",
+    "author": "ArtronShop",
+    "category": "Sensors",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#3498DB",
+    "supportArduinoPlatform": true,
+    "depends": [
+      "DHT sensor library@1.4.6",
+      "Adafruit Unified Sensor@1.1.14"
+    ],
+    "github": "https://github.com/microBlock-IDE/DHTxx-extension"
+  },
+  "nawaphan123_gps": {
+    "name": "GPS",
+    "description": "Get latitude longitude and speed from GPS module (gy-neo6mv2)",
+    "author": "Nawa Phansaen",
+    "category": "Sensors",
+    "version": "1.2.0",
+    "icon": "/static/icon2.png",
+    "color": "#5DADE2",
+    "supportArduinoPlatform": true,
+    "depends": [
+      "TinyGPS@13.0.0"
+    ],
+    "github": "https://github.com/nawaphan123/gps"
+  },
+  "nawaphan123_Blynk-Legacy": {
+    "name": "Blynk-Legacy",
+    "description": "Use For Old Blynk",
+    "author": "Nawa Phansaen",
+    "category": "Communication",
+    "version": "2.0.1",
+    "icon": "/static/icon.png",
+    "color": "#bc991a",
+    "chip": [
+      "ESP32",
+      "RP2-WiFi",
+      "Uno-R4-WiFi"
+    ],
+    "supportArduinoPlatform": true,
+    "depends": [
+      "Blynk@1.3.2",
+      "BlynkNcpDriver@0.6.3"
+    ],
+    "github": "https://github.com/nawaphan123/Blynk-Legacy"
+  },
+  "Thanaphon06_warp_IoT_extentionn": {
+    "name": "Warp IoT",
+    "description": "",
+    "author": "UP-SKILL",
+    "category": "",
+    "version": "1.0.0",
+    "icon": "/static/1.png",
+    "color": "#4A7CCC",
+    "github": "https://github.com/Thanaphon06/warp_IoT_extentionn"
+  },
+  "nawaphan123_MotorDriveTB6612FNG": {
+    "name": "MotorDriver",
+    "description": "MOTOR DRIVER TB6612FNG for every board and use only 4 pin(PWM)",
+    "author": "Nawa Phansaen",
+    "category": "Device Control",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#d63838",
+    "github": "https://github.com/nawaphan123/MotorDriveTB6612FNG"
+  },
+  "nawaphan123_OLED-0.96": {
+    "name": "OLED 0.96",
+    "description": "Oled 0.96 I2C With Anyboard(default is esp32)",
+    "author": "Nawa Phansaen",
+    "category": "Display",
+    "version": "1.0.1",
+    "icon": "/static/icon.png",
+    "color": "#4ca9e6",
+    "github": "https://github.com/nawaphan123/OLED-0.96"
+  },
+  "ArtronShop_DotMatrix-extension": {
+    "name": "Dot Matrix",
+    "description": "Show text with animation to MAX7219 Dot Matrix",
+    "author": "IOXhop.com",
+    "category": "Display",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#3498DB",
+    "github": "https://github.com/ArtronShop/DotMatrix-extension"
+  },
+  "nawaphan123_mpu6050-Extention": {
+    "name": "MPU6050",
+    "description": "Read gyro data from mpu6050",
+    "author": "Nawa Phansaen",
+    "category": "Sensors",
+    "version": "1.1.0",
+    "icon": "/static/icon.png",
+    "color": "#E74C3C",
+    "github": "https://github.com/nawaphan123/mpu6050-Extention"
+  },
+  "nawaphan123_NTP-client-Extention": {
+    "name": "NTP Client",
+    "description": "Get Real Time Clock from internet",
+    "author": "Nawa Phansaen",
+    "category": "Timing",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#FF5757",
+    "github": "https://github.com/nawaphan123/NTP-client-Extention"
+  },
+  "nawaphan123_Math-Extension": {
+    "name": "Math",
+    "description": "Calculate Text like '1+2+3' and output is 6",
+    "author": "Nawa Phansaen",
+    "category": "Data Processing",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#0570fc",
+    "github": "https://github.com/nawaphan123/Math-Extension"
+  },
+  "nawaphan123_OLED-0.96-Extension": {
+    "name": "OLED 0.96",
+    "description": "Oled 0.96 I2C With Anyboard(default is esp32)",
+    "author": "Nawa Phansaen",
+    "category": "Display",
+    "version": "1.0.1",
+    "icon": "/static/icon.png",
+    "color": "#4ca9e6",
+    "github": "https://github.com/nawaphan123/OLED-0.96-Extension"
+  },
+  "GIPdA_microBlock-IDE_ESP-NOW-extension": {
+    "name": "ESPnow",
+    "description": "Communication between ESP32 via ESPnow",
+    "author": "gipda",
+    "category": "Communication",
+    "version": "2.0.0",
+    "icon": "/static/icon.png",
+    "color": "#E74C3C",
+    "modules": [
+      "modules/ESPNOW.py"
+    ],
+    "chip": [
+      "ESP32"
+    ],
+    "github": "https://github.com/GIPdA/microBlock-IDE_ESP-NOW-extension"
+  },
+  "GIPdA_microBlock-IDE_ESPnow-extension": {
+    "name": "ESPnow",
+    "description": "Communication between ESP32 via ESPnow",
+    "author": "gipda",
+    "category": "Communication",
+    "version": "2.0.0",
+    "icon": "/static/icon.png",
+    "color": "#E74C3C",
+    "modules": [
+      "modules/ESPNOW.py"
+    ],
+    "chip": [
+      "ESP32"
+    ],
+    "github": "https://github.com/GIPdA/microBlock-IDE_ESPnow-extension"
+  },
+  "jira-edu_SPI-RFID-extension": {
+    "name": "SPI-RFID",
+    "description": "ESP32 RFID reader Mifare 13.56MHz SPI interface",
+    "author": "Jira-edu",
+    "category": "Sensors",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#3498DB",
+    "github": "https://github.com/jira-edu/SPI-RFID-extension"
+  },
+  "EasyKidsRoboticsDev_App": {
+    "name": "App",
+    "description": "ESP32 BLE UART",
+    "author": "microBlock",
+    "category": "Communication",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#F39C12",
+    "github": "https://github.com/EasyKidsRoboticsDev/App"
+  },
+  "nawaphan123_N-CHEAP": {
+    "name": "N-CHEAP",
+    "description": "Extention for N-CHEAP BOARD",
+    "author": "Nawa Phansaen",
+    "category": "Device Control",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#d63838",
+    "github": "https://github.com/nawaphan123/N-CHEAP"
+  },
+  "nawaphan123_N-CHEAP-BLOCK": {
+    "name": "N-CHEAP",
+    "description": "Extention for N-CHEAP BOARD",
+    "author": "Nawa Phansaen",
+    "category": "Device Control",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#d63838",
+    "github": "https://github.com/nawaphan123/N-CHEAP-BLOCK"
+  },
+  "ArtronShop_DHT12-extension": {
+    "name": "DHT12",
+    "description": "Digital temperature and humidity sensor",
+    "author": "IOXhop.com",
+    "category": "Sensors",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#3498DB",
+    "github": "https://github.com/ArtronShop/DHT12-extension"
+  },
+  "natheelic_WiFi-extension": {
+    "name": "WiFi",
+    "description": "Connect to WiFi",
+    "author": "microBlock",
+    "category": "Communication",
+    "version": "1.2.0",
+    "icon": "/static/icon.png",
+    "color": "#3498DB",
+    "chip": [
+      "ESP32",
+      "RP2-WiFi",
+      "Uno-R4-WiFi"
+    ],
+    "supportArduinoPlatform": true,
+    "depends": [],
+    "github": "https://github.com/natheelic/WiFi-extension"
+  },
+  "nawaphan123_Gps-neo6m-Extension": {
+    "name": "GPS",
+    "description": "Get latitude longitude and speed from GPS module (gy-neo6mv2)",
+    "author": "Nawa Phansaen",
+    "category": "Sensors",
+    "version": "1.2.0",
+    "icon": "/static/icon2.png",
+    "color": "#5DADE2",
+    "supportArduinoPlatform": true,
+    "depends": [
+      "TinyGPS@13.0.0"
+    ],
+    "github": "https://github.com/nawaphan123/Gps-neo6m-Extension"
+  },
+  "ArtronShop_AmAlert-extension": {
+    "name": "Am Alert",
+    "description": "Send notification from everywhere via Am Alert",
+    "author": "ArtronShop",
+    "category": "Communication",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#28B463",
+    "chip": [
+      "ESP32",
+      "RP2-WiFi",
+      "Uno-R4-WiFi"
+    ],
+    "supportArduinoPlatform": true,
+    "depends": [
+      "AmAlert-Arduino@1.0.1"
+    ],
+    "github": "https://github.com/ArtronShop/AmAlert-extension"
+  },
+  "siwakorn-1978_microblock_robotdd": {
+    "name": "RobotDD Serial",
+    "description": "UART helper blocks for RobotDD (ESP32 DevKit)",
+    "author": "siwakorn-1978",
+    "category": "Communication",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#FF9800",
+    "chip": [
+      "ESP32"
+    ],
+    "supportArduinoPlatform": false,
+    "depends": [],
+    "github": "https://github.com/siwakorn-1978/microblock_robotdd"
+  },
+  "siwakorn-1978_robotdd_extension": {
+    "name": "RobotDD",
+    "description": "RobotDD Serial control",
+    "author": "Siwakorn",
+    "category": "RobotDD",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#FFAA00",
+    "chip": [
+      "ESP32"
+    ],
+    "supportArduinoPlatform": false,
+    "depends": [],
+    "github": "https://github.com/siwakorn-1978/robotdd_extension"
+  },
+  "siwakorn-1978_robotdd_extension2": {
+    "name": "RobotDD",
+    "description": "RobotDD Serial control",
+    "author": "Siwakorn",
+    "category": "RobotDD",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#FFAA00",
+    "chip": [
+      "ESP32"
+    ],
+    "supportArduinoPlatform": false,
+    "depends": [],
+    "github": "https://github.com/siwakorn-1978/robotdd_extension2"
+  },
+  "microBlock-IDE_oled-extension": {
+    "name": "OLED",
+    "description": "Show text and image on OLED Display",
+    "author": "microBlock",
+    "category": "Display",
+    "version": "1.0.0",
+    "icon": "/static/icon.png",
+    "color": "#2980B9",
+    "github": "https://github.com/microBlock-IDE/oled-extension"
+  }
+}
