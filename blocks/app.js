@@ -1504,14 +1504,48 @@ function _renderDCConfigArea() {
     if (!pot) return;
     const fn = pot.fnType || 'midi';
     const isMidi = fn === 'midi';
+    const _ccPresetNums = [7,11,10,1,2,74,71,73,75,72,91,93,92,95,94,64,5];
+    const _ccIsPreset = _ccPresetNums.includes(pot.cc);
     const midiFields = isMidi ? `
       <div class="dev-pot-fields">
-        <div class="dev-pot-field"><label>${t('dev.cc')}</label><input type="number" id="dcf-pcc" value="${pot.cc}" min="0" max="127"></div>
+        <div class="dev-pot-field" style="flex:2;min-width:160px">
+          <label>${t('dev.cc')}</label>
+          <div style="display:flex;gap:4px;align-items:center;flex:1">
+            <select id="dcf-pcc-sel" style="flex:1;padding:4px 5px;font-size:11px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text)">
+              <optgroup label="Bàsics">
+                <option value="7" ${pot.cc===7?'selected':''}>Volum (CC 7)</option>
+                <option value="11" ${pot.cc===11?'selected':''}>Expressió (CC 11)</option>
+                <option value="10" ${pot.cc===10?'selected':''}>Panoràmica (CC 10)</option>
+                <option value="1" ${pot.cc===1?'selected':''}>Modulació (CC 1)</option>
+                <option value="2" ${pot.cc===2?'selected':''}>Respiració (CC 2)</option>
+              </optgroup>
+              <optgroup label="Síntesi">
+                <option value="74" ${pot.cc===74?'selected':''}>Brillantor / Cutoff (CC 74)</option>
+                <option value="71" ${pot.cc===71?'selected':''}>Timbre / Resonància (CC 71)</option>
+                <option value="73" ${pot.cc===73?'selected':''}>Attack (CC 73)</option>
+                <option value="75" ${pot.cc===75?'selected':''}>Decay (CC 75)</option>
+                <option value="72" ${pot.cc===72?'selected':''}>Release (CC 72)</option>
+              </optgroup>
+              <optgroup label="Efectes">
+                <option value="91" ${pot.cc===91?'selected':''}>Reverb (CC 91)</option>
+                <option value="93" ${pot.cc===93?'selected':''}>Chorus (CC 93)</option>
+                <option value="92" ${pot.cc===92?'selected':''}>Tremolo (CC 92)</option>
+                <option value="95" ${pot.cc===95?'selected':''}>Phaser (CC 95)</option>
+                <option value="94" ${pot.cc===94?'selected':''}>Detune (CC 94)</option>
+              </optgroup>
+              <optgroup label="Altres">
+                <option value="64" ${pot.cc===64?'selected':''}>Sustain (CC 64)</option>
+                <option value="5" ${pot.cc===5?'selected':''}>Portamento (CC 5)</option>
+              </optgroup>
+              <option value="-1" ${!_ccIsPreset?'selected':''}>Personalitzat...</option>
+            </select>
+            <input type="number" id="dcf-pcc" value="${pot.cc}" min="0" max="127" style="width:52px;padding:4px 5px;font-size:11px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);display:${_ccIsPreset?'none':''}">
+          </div>
+        </div>
         <div class="dev-pot-field"><label>${t('dev.min')}</label><input type="number" id="dcf-pmin" value="${pot.min}" min="0" max="127"></div>
         <div class="dev-pot-field"><label>${t('dev.max')}</label><input type="number" id="dcf-pmax" value="${pot.max}" min="0" max="127"></div>
         <div class="dev-pot-field"><label>${t('dev.chan')}</label><input type="number" id="dcf-pch" value="${pot.channel}" min="1" max="16"></div>
-      </div>
-      <div id="dcf-cclbl" style="font-size:10px;color:var(--text3);margin-bottom:8px">${_ccLabel(pot.cc)}</div>` : 
+      </div>` : 
       `<div style="font-size:11px;color:var(--text3);padding:4px 0 8px">${t('dev.mode.' + fn)} — ${fn==='hid_vol'?'Controla el volum del sistema':fn==='hid_bright'?'Controla la brillantor de la pantalla':'Controla el scroll del ratolí'}</div>`;
     area.innerHTML = `
       <div class="dev-cfg-head">${t('dev.pot')} <span>${pot.name}</span></div>
@@ -1533,15 +1567,22 @@ function _renderDCConfigArea() {
     });
     if (isMidi) {
       const upd = () => {
-        const cc = parseInt(area.querySelector('#dcf-pcc').value) || 0;
+        const selEl = area.querySelector('#dcf-pcc-sel');
+        const numEl = area.querySelector('#dcf-pcc');
+        const selVal = selEl ? parseInt(selEl.value) : -1;
+        const cc = selVal >= 0 ? selVal : (parseInt(numEl?.value) || 0);
         pot.cc      = cc;
         pot.min     = parseInt(area.querySelector('#dcf-pmin').value) || 0;
         pot.max     = parseInt(area.querySelector('#dcf-pmax').value) || 127;
         pot.channel = parseInt(area.querySelector('#dcf-pch').value)  || 1;
-        const lbl = area.querySelector('#dcf-cclbl');
-        if (lbl) lbl.textContent = _ccLabel(cc);
         _saveDC(); _renderDCHardware();
       };
+      area.querySelector('#dcf-pcc-sel')?.addEventListener('change', e => {
+        const numEl = area.querySelector('#dcf-pcc');
+        if (parseInt(e.target.value) < 0) { numEl.style.display = ''; numEl.focus(); }
+        else { numEl.style.display = 'none'; }
+        upd();
+      });
       ['#dcf-pcc','#dcf-pmin','#dcf-pmax','#dcf-pch'].forEach(id => area.querySelector(id)?.addEventListener('change', upd));
     }
     area.querySelector('#dcf-pname').addEventListener('change', e => {
@@ -1733,7 +1774,7 @@ function _buildDeviceCode() {
     if (pf === 'midi') {
       const range = Math.max(1, (pot.max||127) - (pot.min||0));
       c += `    if abs(_rv${i} - _ppot[${i}]) > 1:\n`;
-      c += `        adafruit_midi.MIDI(midi_out=usb_midi.ports[1], out_channel=${(pot.channel||1)-1}).send(ControlChange(${pot.cc||0}, max(0, min(127, ${pot.min||0} + int(_rv${i} * ${range} / 127)))))\n`;
+      c += `        midi.send(ControlChange(${pot.cc||0}, max(0, min(127, ${pot.min||0} + int(_rv${i} * ${range} / 127)))))\n`;
       c += `        _ppot[${i}] = _rv${i}\n`;
     } else if (pf === 'hid_vol') {
       c += `    _tgv${i} = _rv${i} * 16 // 127\n`;
