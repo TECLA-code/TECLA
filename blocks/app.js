@@ -1727,8 +1727,13 @@ function _buildDeviceCode() {
       try {
         const tempWs = new Blockly.Workspace();
         Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(btn.project.xml), tempWs);
-        const codeBlocks = Blockly.Python.workspaceToCode(tempWs);
+        let codeBlocks = Blockly.Python.workspaceToCode(tempWs);
         tempWs.dispose();
+        // Post-procés: variables inicialitzades a None usades en aritmètica → 0
+        codeBlocks = codeBlocks.replace(/^(\s*)(\w+) = None$/gm, (m, indent, vname) => {
+          const arith = new RegExp(`\\b${vname}\\b\\s*[+\\-*/%]|[+\\-*/%]\\s*\\b${vname}\\b|\\b${vname}\\s*[+\\-*/%]=`);
+          return arith.test(codeBlocks) ? `${indent}${vname} = 0` : m;
+        });
         if (codeBlocks.trim()) {
           codeBlocks.split('\n').forEach(line => {
             if (line.trim() !== '') c += `    ${line}\n`;
