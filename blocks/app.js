@@ -1407,6 +1407,29 @@ const _CC_NAMES = {
 };
 function _ccLabel(cc) { return _CC_NAMES[cc] ? _CC_NAMES[cc] : `CC ${cc}`; }
 
+function _buildCCOptions(selCC) {
+  const names = {
+    0:'Bank Select',1:'Modulació (Mod Wheel)',2:'Respiració (Breath)',4:'Foot Pedal',
+    5:'Portamento Time',6:'Data Entry MSB',7:'Volum (Volume)',8:'Balance',
+    10:'Panoràmica (Pan)',11:'Expressió (Expression)',12:'FX 1',13:'FX 2',
+    16:'GP 1',17:'GP 2',18:'GP 3',19:'GP 4',
+    32:'Bank Select LSB',38:'Data Entry LSB',64:'Sustain Pedal',
+    65:'Portamento on/off',66:'Sostenuto',67:'Soft Pedal',68:'Legato',69:'Hold 2',
+    71:'Timbre / Resonància',72:'Release Time',73:'Attack Time',
+    74:'Brillantor / Cutoff',75:'Decay Time',
+    76:'Vibrato Rate',77:'Vibrato Depth',78:'Vibrato Delay',
+    84:'Portamento Control',91:'Reverb Depth',92:'Tremolo Depth',
+    93:'Chorus Depth',94:'Detune / Celeste',95:'Phaser Depth',
+    120:'Tots Sons Off',121:'Reset All Controllers',123:'Totes Notes Off'
+  };
+  let out = '';
+  for (let i = 0; i <= 127; i++) {
+    const lbl = names[i] ? `${names[i]} (CC ${i})` : `CC ${i}`;
+    out += `<option value="${i}"${selCC===i?' selected':''}>${lbl}</option>`;
+  }
+  return out;
+}
+
 function renderDevicePanel() {
   if (!deviceConfig) return;
   _renderDCHardware();
@@ -1504,43 +1527,11 @@ function _renderDCConfigArea() {
     if (!pot) return;
     const fn = pot.fnType || 'midi';
     const isMidi = fn === 'midi';
-    const _ccPresetNums = [7,11,10,1,2,74,71,73,75,72,91,93,92,95,94,64,5];
-    const _ccIsPreset = _ccPresetNums.includes(pot.cc);
     const midiFields = isMidi ? `
       <div class="dev-pot-fields">
-        <div class="dev-pot-field" style="flex:2;min-width:160px">
+        <div class="dev-pot-field" style="flex:2;min-width:180px">
           <label>${t('dev.cc')}</label>
-          <div style="display:flex;gap:4px;align-items:center;flex:1">
-            <select id="dcf-pcc-sel" style="flex:1;padding:4px 5px;font-size:11px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text)">
-              <optgroup label="Bàsics">
-                <option value="7" ${pot.cc===7?'selected':''}>Volum (CC 7)</option>
-                <option value="11" ${pot.cc===11?'selected':''}>Expressió (CC 11)</option>
-                <option value="10" ${pot.cc===10?'selected':''}>Panoràmica (CC 10)</option>
-                <option value="1" ${pot.cc===1?'selected':''}>Modulació (CC 1)</option>
-                <option value="2" ${pot.cc===2?'selected':''}>Respiració (CC 2)</option>
-              </optgroup>
-              <optgroup label="Síntesi">
-                <option value="74" ${pot.cc===74?'selected':''}>Brillantor / Cutoff (CC 74)</option>
-                <option value="71" ${pot.cc===71?'selected':''}>Timbre / Resonància (CC 71)</option>
-                <option value="73" ${pot.cc===73?'selected':''}>Attack (CC 73)</option>
-                <option value="75" ${pot.cc===75?'selected':''}>Decay (CC 75)</option>
-                <option value="72" ${pot.cc===72?'selected':''}>Release (CC 72)</option>
-              </optgroup>
-              <optgroup label="Efectes">
-                <option value="91" ${pot.cc===91?'selected':''}>Reverb (CC 91)</option>
-                <option value="93" ${pot.cc===93?'selected':''}>Chorus (CC 93)</option>
-                <option value="92" ${pot.cc===92?'selected':''}>Tremolo (CC 92)</option>
-                <option value="95" ${pot.cc===95?'selected':''}>Phaser (CC 95)</option>
-                <option value="94" ${pot.cc===94?'selected':''}>Detune (CC 94)</option>
-              </optgroup>
-              <optgroup label="Altres">
-                <option value="64" ${pot.cc===64?'selected':''}>Sustain (CC 64)</option>
-                <option value="5" ${pot.cc===5?'selected':''}>Portamento (CC 5)</option>
-              </optgroup>
-              <option value="-1" ${!_ccIsPreset?'selected':''}>Personalitzat...</option>
-            </select>
-            <input type="number" id="dcf-pcc" value="${pot.cc}" min="0" max="127" style="width:52px;padding:4px 5px;font-size:11px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);display:${_ccIsPreset?'none':''}">
-          </div>
+          <select id="dcf-pcc-sel" style="flex:1;width:100%;padding:4px 5px;font-size:11px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text)">${_buildCCOptions(pot.cc)}</select>
         </div>
         <div class="dev-pot-field"><label>${t('dev.min')}</label><input type="number" id="dcf-pmin" value="${pot.min}" min="0" max="127"></div>
         <div class="dev-pot-field"><label>${t('dev.max')}</label><input type="number" id="dcf-pmax" value="${pot.max}" min="0" max="127"></div>
@@ -1567,23 +1558,13 @@ function _renderDCConfigArea() {
     });
     if (isMidi) {
       const upd = () => {
-        const selEl = area.querySelector('#dcf-pcc-sel');
-        const numEl = area.querySelector('#dcf-pcc');
-        const selVal = selEl ? parseInt(selEl.value) : -1;
-        const cc = selVal >= 0 ? selVal : (parseInt(numEl?.value) || 0);
-        pot.cc      = cc;
+        pot.cc      = parseInt(area.querySelector('#dcf-pcc-sel')?.value) || 0;
         pot.min     = parseInt(area.querySelector('#dcf-pmin').value) || 0;
         pot.max     = parseInt(area.querySelector('#dcf-pmax').value) || 127;
         pot.channel = parseInt(area.querySelector('#dcf-pch').value)  || 1;
         _saveDC(); _renderDCHardware();
       };
-      area.querySelector('#dcf-pcc-sel')?.addEventListener('change', e => {
-        const numEl = area.querySelector('#dcf-pcc');
-        if (parseInt(e.target.value) < 0) { numEl.style.display = ''; numEl.focus(); }
-        else { numEl.style.display = 'none'; }
-        upd();
-      });
-      ['#dcf-pcc','#dcf-pmin','#dcf-pmax','#dcf-pch'].forEach(id => area.querySelector(id)?.addEventListener('change', upd));
+      ['#dcf-pcc-sel','#dcf-pmin','#dcf-pmax','#dcf-pch'].forEach(id => area.querySelector(id)?.addEventListener('change', upd));
     }
     area.querySelector('#dcf-pname').addEventListener('change', e => {
       pot.name = e.target.value.trim() || pot.name; _saveDC(); _renderDCHardware();
@@ -1664,6 +1645,7 @@ function _buildDeviceCode() {
   c += `        for _b in _btns:\n`;
   c += `            if _b.value:\n`;
   c += `                raise TeclaInterrupt()\n`;
+  c += `        _pot_update()\n`;
   c += `        time.sleep(0.005)\n\n`;
   c += `def tecla_yield():\n`;
   c += `    for _b in _btns:\n`;
@@ -1719,6 +1701,45 @@ function _buildDeviceCode() {
   c += `_POT_PINS = [board.A1, board.A0, board.A2]\n`;
   c += `_pots = [analogio.AnalogIn(p) for p in _POT_PINS]\n\n`;
 
+  // _pot_update() function: llegeix pots i envia CC/HID (cridada des de tecla_sleep i bucle principal)
+  c += `def _pot_update():\n`;
+  cfg.pots.forEach((pot, i) => {
+    const pf = pot.fnType || 'midi';
+    c += `    _rv${i} = int(_pots[${i}].value >> 9)\n`;
+    c += `    pot_values[${i}] = _rv${i}\n`;
+    if (pf === 'midi') {
+      const range = Math.max(1, (pot.max||127) - (pot.min||0));
+      c += `    if abs(_rv${i} - _ppot[${i}]) > 1:\n`;
+      c += `        midi.send(ControlChange(${pot.cc||0}, max(0, min(127, ${pot.min||0} + int(_rv${i} * ${range} / 127)))))\n`;
+      c += `        _ppot[${i}] = _rv${i}\n`;
+    } else if (pf === 'hid_vol') {
+      c += `    _tgv${i} = _rv${i} * 16 // 127\n`;
+      c += `    _dv${i}  = _tgv${i} - _vv[${i}]\n`;
+      c += `    if _dv${i} != 0:\n`;
+      c += `        for _ in range(abs(_dv${i})):\n`;
+      c += `            _cc.send(ConsumerControlCode.VOLUME_INCREMENT if _dv${i} > 0 else ConsumerControlCode.VOLUME_DECREMENT)\n`;
+      c += `            time.sleep(0.02)\n`;
+      c += `        _vv[${i}] = _tgv${i}\n`;
+    } else if (pf === 'hid_bright') {
+      c += `    _tgb${i} = _rv${i} * 16 // 127\n`;
+      c += `    _db${i}  = _tgb${i} - _bv[${i}]\n`;
+      c += `    if _db${i} != 0:\n`;
+      c += `        for _ in range(abs(_db${i})):\n`;
+      c += `            _cc.send(ConsumerControlCode.BRIGHTNESS_INCREMENT if _db${i} > 0 else ConsumerControlCode.BRIGHTNESS_DECREMENT)\n`;
+      c += `            time.sleep(0.02)\n`;
+      c += `        _bv[${i}] = _tgb${i}\n`;
+    } else if (pf === 'hid_scroll') {
+      c += `    _scpos${i} = _rv${i} - 64\n`;
+      c += `    if abs(_scpos${i}) > 12:\n`;
+      c += `        _scspd${i} = max(1, (abs(_scpos${i}) - 12) // 20)\n`;
+      c += `        _scnow${i} = time.monotonic()\n`;
+      c += `        if _scnow${i} - _stmr[${i}] >= 0.08:\n`;
+      c += `            _mouse.move(wheel=(1 if _scpos${i} > 0 else -1) * _scspd${i})\n`;
+      c += `            _stmr[${i}] = _scnow${i}\n`;
+    }
+  });
+  c += `\n`;
+
   // Project functions
   cfg.buttons.forEach((btn, i) => {
     c += `# --- Botó ${btn.id}: ${btn.project ? btn.project.name : 'sense assignar'} ---\n`;
@@ -1772,41 +1793,7 @@ function _buildDeviceCode() {
   c += `            except TeclaInterrupt:\n`;
   c += `                _midi_panic()  # Silenci MIDI instant\n`;
   c += `        _prev[i] = s\n`;
-  cfg.pots.forEach((pot, i) => {
-    const pf = pot.fnType || 'midi';
-    c += `    _rv${i} = int(_pots[${i}].value >> 9)\n`;
-    c += `    pot_values[${i}] = _rv${i}\n`;
-    if (pf === 'midi') {
-      const range = Math.max(1, (pot.max||127) - (pot.min||0));
-      c += `    if abs(_rv${i} - _ppot[${i}]) > 1:\n`;
-      c += `        midi.send(ControlChange(${pot.cc||0}, max(0, min(127, ${pot.min||0} + int(_rv${i} * ${range} / 127)))))\n`;
-      c += `        _ppot[${i}] = _rv${i}\n`;
-    } else if (pf === 'hid_vol') {
-      c += `    _tgv${i} = _rv${i} * 16 // 127\n`;
-      c += `    _dv${i}  = _tgv${i} - _vv[${i}]\n`;
-      c += `    if _dv${i} != 0:\n`;
-      c += `        for _ in range(abs(_dv${i})):\n`;
-      c += `            _cc.send(ConsumerControlCode.VOLUME_INCREMENT if _dv${i} > 0 else ConsumerControlCode.VOLUME_DECREMENT)\n`;
-      c += `            time.sleep(0.02)\n`;
-      c += `        _vv[${i}] = _tgv${i}\n`;
-    } else if (pf === 'hid_bright') {
-      c += `    _tgb${i} = _rv${i} * 16 // 127\n`;
-      c += `    _db${i}  = _tgb${i} - _bv[${i}]\n`;
-      c += `    if _db${i} != 0:\n`;
-      c += `        for _ in range(abs(_db${i})):\n`;
-      c += `            _cc.send(ConsumerControlCode.BRIGHTNESS_INCREMENT if _db${i} > 0 else ConsumerControlCode.BRIGHTNESS_DECREMENT)\n`;
-      c += `            time.sleep(0.02)\n`;
-      c += `        _bv[${i}] = _tgb${i}\n`;
-    } else if (pf === 'hid_scroll') {
-      c += `    _scpos${i} = _rv${i} - 64\n`;
-      c += `    if abs(_scpos${i}) > 12:\n`;
-      c += `        _scspd${i} = max(1, (abs(_scpos${i}) - 12) // 20)\n`;
-      c += `        _scnow${i} = time.monotonic()\n`;
-      c += `        if _scnow${i} - _stmr[${i}] >= 0.08:\n`;
-      c += `            _mouse.move(wheel=(1 if _scpos${i} > 0 else -1) * _scspd${i})\n`;
-      c += `            _stmr[${i}] = _scnow${i}\n`;
-    }
-  });
+  c += `    _pot_update()\n`;
   c += `    time.sleep(0.01)\n`;
   return c;
 }
