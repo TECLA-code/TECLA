@@ -1633,7 +1633,7 @@ function _buildDeviceCode() {
   c += `        midi.send(NoteOff(_n, 0))\n\n`;
 
   const _allCode = cfg.buttons.map(b => b.project?.xml || '').join('\n');
-  if (_allCode.includes('tecla_key_combo') || _allCode.includes('tecla_type_text') || _allCode.includes('tecla_media')) {
+  if (_allCode.includes('tecla_key_press') || _allCode.includes('tecla_key_combo') || _allCode.includes('tecla_type_text') || _allCode.includes('tecla_media') || _allCode.includes('tecla_open_app')) {
     c += `import usb_hid\n`;
     c += `from adafruit_hid.keyboard import Keyboard\n`;
     c += `from adafruit_hid.keycode import Keycode\n`;
@@ -1720,6 +1720,7 @@ function _buildDeviceCode() {
   c += `        s = _btns[i].value\n`;
   c += `        button_states[i] = s\n`;
   c += `        if s and not _prev[i]:\n`;
+  c += `            while _btns[i].value: time.sleep(0.005)  # espera alliberament\n`;
   c += `            try:\n`;
   c += `                _PROJECTS[i]()\n`;
   c += `            except TeclaInterrupt:\n`;
