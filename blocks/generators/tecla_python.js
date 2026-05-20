@@ -285,10 +285,11 @@ if __name__ == "__main__":
     main()
 `;
 
-  // Indentar el codi generat
-  const indentedCode = code.split('\n')
+  // Indentar el codi generat (sempre mínim 'pass' per evitar try: buit → SyntaxError)
+  const _rawIndented = code.split('\n')
     .map(line => line ? '        ' + line : '')
     .join('\n');
+  const indentedCode = _rawIndented.trim() ? _rawIndented : '        pass  # Afegeix blocs al workspace';
 
   // SERIALITZACIÓ INTEGADA (Bedded Blocks)
   // Guardem l'estat dels blocs dins el propi arxiu Python com a comentari
