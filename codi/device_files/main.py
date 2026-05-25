@@ -20,11 +20,7 @@ def midi_to_frequency(midi_note):
 
 # Importar només el gestor de modes
 from modes.mode_manager import ModeManager
-try:
-    import gc as _gc; _gc.collect()  # Desfragmentar heap abans del mòdul gran
-except Exception:
-    pass
-from modes.mode_keyboard import KeyboardMode
+# mode_keyboard s'importa de forma lazy (sota demanda) per estalviar RAM a l'inici
 
 # Configuració de pins
 # Nova versió del hardware: pins ordenats correctament (GP0, GP1, GP2, GP3...)
@@ -172,6 +168,8 @@ class TeclaHardware:
                     # Bloquejar toggle per 0.5 segons
                     self.keyboard_toggle_blocked_until = time.monotonic() + 0.5
                     if not self.keyboard_mode:
+                        import gc; gc.collect()
+                        from modes.mode_keyboard import KeyboardMode
                         self.keyboard_mode = KeyboardMode(
                             self.midi_out, 
                             {'octave': self.keyboard_octave},
@@ -279,6 +277,8 @@ class TeclaHardware:
             if not self.keyboard_mode:
                 try:
                     print("🎹 Inicialitzant Mode Teclat...")
+                    import gc; gc.collect()
+                    from modes.mode_keyboard import KeyboardMode
                     self.keyboard_mode = KeyboardMode(
                         self.midi_out,
                         {'octave': self.keyboard_octave},

@@ -70,6 +70,8 @@
     "modes/mode_hardtechno.py",
     "modes/mode_industrial.py",
     "modes/mode_jazz_chords.py",
+    "modes/kbd_arp.py",
+    "modes/kbd_pots.py",
     "modes/mode_keyboard.py",
     "modes/mode_makina.py",
     "modes/mode_manager.py",
