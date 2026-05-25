@@ -34,6 +34,11 @@ except ImportError:
 # Ordre cromàtic (C, C#, D, ... B) — més intuïtiu que el cercle de quintes
 KEY_CIRCLE = ('C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B')
 _KEY_OFFSET = {'C':0,'C#':1,'D':2,'Eb':3,'E':4,'F':5,'F#':6,'G':7,'Ab':8,'A':9,'Bb':10,'B':11}
+_SCALE_NAMES = (
+    'Major', 'Doric', 'Frigi', 'Lidi', 'Mixolidi', 'Menor', 'Locri',
+    'Pentat.Maj', 'Pentat.Men', 'Japonesa', 'Egipcia', 'Arabiga', 'Hongaresa',
+    'Lidia Dom', 'Alterada', 'Men.Melod', 'Bhairav', 'Todi',
+    'Flamenca', 'Catalana', 'Frigia', 'Balcanica', 'Tons Senc', 'Harm.Maj')
 
 class KeyboardMode:
     """Mode teclat que converteix botons 1-12 en notes MIDI"""
@@ -110,6 +115,10 @@ class KeyboardMode:
         self.arp_btn_press_time = 0.0
         self._scale_btn_press_time = 0.0
         self._key_btn_press_time = 0.0
+        self._chord_last_release = 0.0
+        self._arp_last_release = 0.0
+        self._chord_just_activated = False
+        self._arp_just_activated = False
         self._arp_pat_sel_last_val = None  # Tracking del pot per evitar sobreescriptura
         
         # Sustain hold: quan està actiu, no s'envien NoteOff (sustain indefinit)
@@ -337,7 +346,6 @@ class KeyboardMode:
                     if btn_idx == 8:  # Botó 9: Escales (tap=▶, mantingut≥0.6s=◀)
                         elapsed = current_time - self._scale_btn_press_time
                         backward = elapsed >= 0.6
-                        self.stop_all_notes()
                         if len(self.available_scales) > 0:
                             if backward:
                                 self.scale_mode_index = (self.scale_mode_index - 1) % len(self.available_scales)
@@ -354,12 +362,12 @@ class KeyboardMode:
                                 pname = progression.get('name', 'Sense nom') if progression else f'#{actual_scale_id - 1000}'
                                 print(f"♪{d} Progressió: {pname} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
                             else:
-                                print(f"🎼{d} Escala #{actual_scale_id} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
+                                sname = _SCALE_NAMES[actual_scale_id] if actual_scale_id < len(_SCALE_NAMES) else f'#{actual_scale_id}'
+                                print(f"🎼{d} {sname} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
                     
                     elif btn_idx == 9:  # Botó 10: Tonalitat (tap=▶, mantingut≥0.6s=◀)
                         elapsed = current_time - self._key_btn_press_time
                         backward = elapsed >= 0.6
-                        self.stop_all_notes()
                         n = len(self.available_keys)
                         if n > 0:
                             if backward:
@@ -369,14 +377,32 @@ class KeyboardMode:
                             d = '◀' if backward else '▶'
                             print(f"🎵{d} Tonalitat: {self.available_keys[self.key_index]}")
                     
-                    elif btn_idx == 11:  # Botó 12: Arpeggiador (tap=activa/▶, 0.5-1.2s=desactiva, ≥1.2s+actiu=◀)
+                    elif btn_idx == 11:  # Botó 12: Arpegiador (tap=activa/▶, mantingut≥0.5s=desactiva, doble tap=◀)
                         elapsed = current_time - self.arp_btn_press_time
-                        self.stop_all_notes()
-                        if elapsed >= 1.2 and self.arp_mode_active:  # Molt llarg + actiu → ciclar enrere
+                        since_last = current_time - self._arp_last_release
+                        self._arp_last_release = current_time
+                        if elapsed >= 0.5:  # Mantingut → desactivar
+                            self.stop_all_notes()
+                            self.arp_mode_active = False
+                            self.arp_notes = []
+                            self.arp_button_order = []
+                            self._arp_just_activated = False
+                            print(f"🎶 Arpeggiador DESACTIVAT")
+                        elif not self.arp_mode_active:  # Curt + inactiu → activar
+                            self.arp_mode_active = True
+                            self.arp_notes = []
+                            self.arp_button_order = []
+                            self._arp_pat_sel_last_val = None
+                            self._arp_just_activated = True
+                            if self.arp_mode_index not in self.available_arp_modes:
+                                self.arp_mode_index = self.available_arp_modes[0] if self.available_arp_modes else 2
+                            print(f"🎶 Arpeggiador: {self._get_arp_name(self.arp_mode_index)}")
+                        elif since_last < 0.4 and not self._arp_just_activated:  # Doble tap + actiu → ciclar enrere
+                            self._arp_just_activated = False
                             if self.available_arp_modes:
                                 try:
                                     current_idx = self.available_arp_modes.index(self.arp_mode_index)
-                                    self.arp_mode_index = self.available_arp_modes[(current_idx - 1) % len(self.available_arp_modes)]
+                                    self.arp_mode_index = self.available_arp_modes[(current_idx - 2) % len(self.available_arp_modes)]
                                 except ValueError:
                                     self.arp_mode_index = self.available_arp_modes[-1]
                                 self.arp_index = 0
@@ -384,20 +410,8 @@ class KeyboardMode:
                                 self.arp_button_order = []
                                 self._arp_pat_sel_last_val = None
                                 print(f"🎶◀ Arpeggiador: {self._get_arp_name(self.arp_mode_index)}")
-                        elif elapsed >= 0.5:  # Mantingut → desactivar
-                            self.arp_mode_active = False
-                            self.arp_notes = []
-                            self.arp_button_order = []
-                            print(f"🎶 Arpeggiador DESACTIVAT")
-                        elif not self.arp_mode_active:  # Curt + inactiu → activar
-                            self.arp_mode_active = True
-                            self.arp_notes = []
-                            self.arp_button_order = []
-                            self._arp_pat_sel_last_val = None
-                            if self.arp_mode_index not in self.available_arp_modes:
-                                self.arp_mode_index = self.available_arp_modes[0] if self.available_arp_modes else 2
-                            print(f"🎶 Arpeggiador: {self._get_arp_name(self.arp_mode_index)}")
                         else:  # Curt + actiu → ciclar endavant
+                            self._arp_just_activated = False
                             if self.available_arp_modes:
                                 try:
                                     current_idx = self.available_arp_modes.index(self.arp_mode_index)
@@ -411,23 +425,30 @@ class KeyboardMode:
                                 print(f"🎶▶ Arpeggiador: {self._get_arp_name(self.arp_mode_index)}")
                         self._reapply_active_ccs()
                     
-                    elif btn_idx == 10:  # Botó 11: Acords (tap=activa/▶, 0.5-1.2s=desactiva, ≥1.2s+actiu=◀)
+                    elif btn_idx == 10:  # Botó 11: Acords (tap=activa/▶, mantingut≥0.5s=desactiva, doble tap=◀)
                         elapsed = current_time - self.chord_btn_press_time
-                        self.stop_all_notes()
-                        if elapsed >= 1.2 and self.chord_mode_active:  # Molt llarg + actiu → ciclar enrere
-                            if self.available_chord_types:
-                                self.chord_type_index = (self.chord_type_index - 1) % len(self.available_chord_types)
-                                ct = self.available_chord_types[self.chord_type_index]
-                                print(f"🎹◀ Acord: {ct}")
-                        elif elapsed >= 0.5:  # Mantingut → desactivar
+                        since_last = current_time - self._chord_last_release
+                        self._chord_last_release = current_time
+                        if elapsed >= 0.5:  # Mantingut → desactivar
+                            self.stop_all_notes()
                             self.chord_mode_active = False
                             self.chord_type_index = 0
+                            self._chord_just_activated = False
                             print(f"🎹 Mode Acords DESACTIVAT")
                         elif not self.chord_mode_active:  # Curt + inactiu → activar
                             self.chord_mode_active = True
+                            self._chord_just_activated = True
                             ct = self.available_chord_types[self.chord_type_index] if self.available_chord_types else 'Major'
                             print(f"🎹 Mode Acords ACTIVAT ({ct})")
+                        elif since_last < 0.4 and not self._chord_just_activated:  # Doble tap + actiu → ciclar enrere
+                            self._chord_just_activated = False
+                            if self.available_chord_types:
+                                n = len(self.available_chord_types)
+                                self.chord_type_index = (self.chord_type_index - 2) % n
+                                ct = self.available_chord_types[self.chord_type_index]
+                                print(f"🎹◀ Acord: {ct}")
                         else:  # Curt + actiu → ciclar endavant
+                            self._chord_just_activated = False
                             if self.available_chord_types:
                                 self.chord_type_index = (self.chord_type_index + 1) % len(self.available_chord_types)
                                 ct = self.available_chord_types[self.chord_type_index]

@@ -1930,23 +1930,6 @@
         </div>
       </div>
 
-      <!-- ══ TONALITATS BOTÓ 10 ═══════════════════════════════════ -->
-      <div class="card" style="margin-top:14px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <div>
-            <div class="card-title" style="margin:0">Tonalitats del botó 10</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:2px">Selecciona i arrossega per canviar l'ordre de ciclat</div>
-          </div>
-          <button class="btn btn-sm btn-primary" id="btn-save-keys-order">Guardar</button>
-        </div>
-        <div id="keyboard-keys-list" style="display:flex;flex-direction:column;gap:4px"></div>
-        <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
-          <button class="btn btn-sm" id="btn-keys-all">Totes</button>
-          <button class="btn btn-sm" id="btn-keys-none">Cap</button>
-          <button class="btn btn-sm" id="btn-keys-reset">Predeterminat</button>
-        </div>
-      </div>
-
       <!-- ══ CAPES GUARDADES ══════════════════════════════════════ -->
       <div class="card" style="margin-top:14px" id="card-saved-layers">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
@@ -2085,6 +2068,23 @@
 
       <div style="margin-top:14px;display:flex;justify-content:flex-end">
         <button class="btn btn-primary" id="btn-save-pots">Guardar i aplicar funcions dels potenciòmetres</button>
+      </div>
+
+      <!-- ══ TONALITATS BOTÓ 10 ═══════════════════════════════════ -->
+      <div class="card" style="margin-top:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div>
+            <div class="card-title" style="margin:0">Tonalitats del botó 10</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">Selecciona i arrossega per canviar l'ordre de ciclat</div>
+          </div>
+          <button class="btn btn-sm btn-primary" id="btn-save-keys-order">Guardar</button>
+        </div>
+        <div id="keyboard-keys-list" style="display:flex;flex-direction:column;gap:4px"></div>
+        <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+          <button class="btn btn-sm" id="btn-keys-all">Totes</button>
+          <button class="btn btn-sm" id="btn-keys-none">Cap</button>
+          <button class="btn btn-sm" id="btn-keys-reset">Predeterminat</button>
+        </div>
       </div>
     </div>
 
@@ -2266,8 +2266,6 @@
             com <strong>CIRCUITPY</strong>, connecta'l a la pestanya <strong>Tecles</strong> i instal·la el firmware.
           </p>
           <div style="display:flex;flex-direction:column;gap:8px">
-            <label class="cb"><input type="checkbox" id="fw-preserve" checked><span style="font-size:12px">Preservar
-                configuració existent</span></label>
             <button class="btn btn-sm btn-primary" id="btn-install-fw" disabled>Instal·lar / Actualitzar
               firmware</button>
             <button class="btn btn-sm" id="btn-verify-fw" disabled>Verificar instal·lació</button>
@@ -5101,10 +5099,9 @@
     document.getElementById('btn-install-fw')?.addEventListener('click', async () => {
       if (!device.isConnected()) { alert('Connecta el dispositiu (CIRCUITPY) a la pestanya "Tecles" primer.'); return; }
 
-      const preserve = document.getElementById('fw-preserve')?.checked ?? true;
       if (!confirm(`Instal·lar/actualitzar el firmware TECLA al dispositiu?\n\n` +
         `• Es copiaran TOTS els fitxers del firmware (core, effects, lib, modes…)\n` +
-        `• ${preserve ? 'La configuració existent es preservarà' : 'La configuració es sobreescriurà'}\n` +
+        `• La configuració del dispositiu s'actualitzarà amb la de l'app web\n` +
         `• Els modes no seleccionats a "Modes i Escales" no es copiaran\n\n` +
         `Vols continuar?`)) return;
 
@@ -5158,12 +5155,7 @@
           }
         } catch (e) { console.warn('Error llistant modes del dispositiu:', e.message); }
 
-        // 5. Backup config if preserve
-        let configBackup = null;
-        if (preserve) {
-          try { configBackup = await device.readFile('config/tecla_config.json'); }
-          catch { /* no config yet */ }
-        }
+        // 5. (Config always overwritten by web app config)
 
         // 6. Copy files
         let done = 0; const errors = [];
@@ -5186,7 +5178,7 @@
           const cfgData = JSON.stringify(buildDeviceConfig(), null, 2);
           await device.writeFile('config/tecla_config.json', cfgData);
         } catch (e) {
-          if (configBackup) { try { await device.writeFile('config/tecla_config.json', configBackup); } catch { } }
+          /* config write failed, no backup available */
           errors.push(`config/tecla_config.json: ${e.message}`);
         }
 
