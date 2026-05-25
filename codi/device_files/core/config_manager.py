@@ -372,6 +372,28 @@ class ConfigManager:
                 print("Error: No s'ha pogut desar la configuració d'escales")
         return False
     
+    def get_keyboard_keys(self, bank_index=None):
+        """Retorna les tonalitats configurades i el seu ordre per al mode teclat del banc actual"""
+        bank_idx = self.current_bank_index if bank_index is None else bank_index
+        default = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B']
+        if 0 <= bank_idx < len(self.config['banks']):
+            return self.config['banks'][bank_idx].get('keyboard_keys', default)
+        return default
+
+    def set_keyboard_keys(self, keys, bank_index=None):
+        """Assigna les tonalitats disponibles (i el seu ordre) per al mode teclat d'un banc"""
+        bank_idx = self.current_bank_index if bank_index is None else bank_index
+        if 0 <= bank_idx < len(self.config['banks']):
+            bank = self.config['banks'][bank_idx]
+            previous = bank.get('keyboard_keys', ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'])
+            bank['keyboard_keys'] = keys
+            if self.save_config():
+                return True
+            else:
+                bank['keyboard_keys'] = previous
+                print("Error: No s'ha pogut desar la configuració de tonalitats")
+        return False
+
     def get_arpeggiator_modes(self, bank_index=None):
         """Retorna els modes d'arpegiador configurats per al mode teclat del banc actual"""
         bank_idx = self.current_bank_index if bank_index is None else bank_index

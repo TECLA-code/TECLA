@@ -1930,6 +1930,23 @@
         </div>
       </div>
 
+      <!-- ══ TONALITATS BOTÓ 10 ═══════════════════════════════════ -->
+      <div class="card" style="margin-top:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div>
+            <div class="card-title" style="margin:0">Tonalitats del botó 10</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">Selecciona i arrossega per canviar l'ordre de ciclat</div>
+          </div>
+          <button class="btn btn-sm btn-primary" id="btn-save-keys-order">Guardar</button>
+        </div>
+        <div id="keyboard-keys-list" style="display:flex;flex-direction:column;gap:4px"></div>
+        <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+          <button class="btn btn-sm" id="btn-keys-all">Totes</button>
+          <button class="btn btn-sm" id="btn-keys-none">Cap</button>
+          <button class="btn btn-sm" id="btn-keys-reset">Predeterminat</button>
+        </div>
+      </div>
+
       <!-- ══ CAPES GUARDADES ══════════════════════════════════════ -->
       <div class="card" style="margin-top:14px" id="card-saved-layers">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
@@ -3260,6 +3277,7 @@
       // Convert file names ("mode_mandelbrot.py") → display names ("Mandelbrot") that mode_manager.py expects
       const fileToName = Object.fromEntries(_modesIndex.map(m => [m.file, m.name]));
       const kbScales = mc.keyboard_scales || [];
+      const kbKeys = mc.keyboard_keys || ALL_KEYS;
       const arpModes = mc.arpeggiator_modes || Array.from({ length: 16 }, (_, i) => i);
       const potFns = mc.potentiometer_functions || {};
       const arpPotFns = mc.arp_potentiometer_functions || {};
@@ -3270,6 +3288,7 @@
           modes: b.modes.map(f => f ? (fileToName[f] || f) : ''),
           efectos_temporales: b.efectos || {},
           keyboard_scales: kbScales,
+          keyboard_keys: kbKeys,
           arpeggiator_modes: arpModes,
           potentiometer_functions: potFns,
           arp_potentiometer_functions: arpPotFns,
@@ -3279,6 +3298,7 @@
         enabled_modes: mc.enabled_modes || [],
         available_effects: mc.available_effects || ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend'],
         keyboard_scales: kbScales,
+        keyboard_keys: kbKeys,
         arpeggiator_modes: arpModes,
         custom_arpeggiator_patterns: _customArps,
         custom_chord_progressions: _getProgressions(),
@@ -3293,6 +3313,8 @@
     // ══════════════════════════════════════════════════════════════
     function _loadModesConfig() { try { return JSON.parse(localStorage.getItem('tecla-modes-config') || '{}'); } catch { return {}; } }
     function _saveModesConfig(cfg) { localStorage.setItem('tecla-modes-config', JSON.stringify(cfg)); }
+
+    const ALL_KEYS = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
 
     const KEYBOARD_SCALES = [
       [0, "Jònic (Major)"], [1, "Dòric"], [2, "Frigi"], [3, "Lidi"],
@@ -3386,6 +3408,9 @@
 
       // Keyboard scales checklist (predefined + progressions + custom scales)
       _rebuildKeyboardScalesList();
+
+      // Keyboard keys sortable list
+      _rebuildKeyboardKeysList();
 
       // Effects checklist
       const effCont = document.getElementById('effects-list');
@@ -3529,6 +3554,61 @@
       _modesIndex = [];  // force reload
       await buildModesTab();
       refreshKeyDropdowns();
+    });
+
+    // ── Keyboard Keys (Botó 10) ─────────────────────────────────
+    function _rebuildKeyboardKeysList() {
+      const cont = document.getElementById('keyboard-keys-list');
+      if (!cont) return;
+      const mc = _loadModesConfig();
+      const savedKeys = mc.keyboard_keys || ALL_KEYS;
+      const activeSet = new Set(savedKeys);
+      const orderedKeys = [...savedKeys];
+      for (const k of ALL_KEYS) { if (!activeSet.has(k)) orderedKeys.push(k); }
+      cont.innerHTML = '';
+      for (const key of orderedKeys) {
+        const active = activeSet.has(key);
+        const row = document.createElement('div');
+        row.className = 'keys-sort-row';
+        row.draggable = true;
+        row.dataset.key = key;
+        row.style.cssText = `display:flex;align-items:center;padding:5px 10px;border:1px solid var(--border);border-radius:5px;background:var(--bg2);gap:8px;opacity:${active ? '1' : '0.5'};transition:opacity .15s`;
+        row.innerHTML = `<span style="cursor:grab;color:var(--text3);font-size:18px;line-height:1">&#8801;</span><label style="display:flex;align-items:center;gap:6px;flex:1;cursor:pointer;margin:0"><input type="checkbox" class="kb-key-chk" value="${key}" ${active ? 'checked' : ''}><span style="font-weight:600;min-width:28px">${key}</span></label>`;
+        cont.appendChild(row);
+      }
+      _initKeysDragSort(cont);
+    }
+    function _initKeysDragSort(cont) {
+      let drag = null;
+      cont.querySelectorAll('.keys-sort-row').forEach(row => {
+        row.addEventListener('dragstart', () => { drag = row; setTimeout(() => row.style.opacity = '0.3', 0); });
+        row.addEventListener('dragend', () => { if (drag) drag.style.opacity = drag.querySelector('.kb-key-chk').checked ? '1' : '0.5'; drag = null; });
+        row.addEventListener('dragover', e => e.preventDefault());
+        row.addEventListener('drop', e => {
+          e.preventDefault();
+          if (drag && drag !== row) {
+            const all = [...cont.querySelectorAll('.keys-sort-row')];
+            cont.insertBefore(drag, all.indexOf(drag) < all.indexOf(row) ? row.nextSibling : row);
+          }
+        });
+        row.querySelector('.kb-key-chk').addEventListener('change', e => { row.style.opacity = e.target.checked ? '1' : '0.5'; });
+      });
+    }
+    document.getElementById('btn-save-keys-order')?.addEventListener('click', () => {
+      const keys = [...document.querySelectorAll('#keyboard-keys-list .keys-sort-row')]
+        .filter(r => r.querySelector('.kb-key-chk').checked).map(r => r.dataset.key);
+      if (!keys.length) { alert('Selecciona almenys una tonalitat.'); return; }
+      const mc = _loadModesConfig(); mc.keyboard_keys = keys; _saveModesConfig(mc);
+      log(`${keys.length} tonalitats guardades: ${keys.join(', ')}`, 'ok');
+      showGlobalToast('Guardat correctament');
+    });
+    document.getElementById('btn-keys-all')?.addEventListener('click', () =>
+      document.querySelectorAll('#keyboard-keys-list .kb-key-chk').forEach(c => { c.checked = true; c.closest('.keys-sort-row').style.opacity = '1'; }));
+    document.getElementById('btn-keys-none')?.addEventListener('click', () =>
+      document.querySelectorAll('#keyboard-keys-list .kb-key-chk').forEach(c => { c.checked = false; c.closest('.keys-sort-row').style.opacity = '0.5'; }));
+    document.getElementById('btn-keys-reset')?.addEventListener('click', () => {
+      const mc = _loadModesConfig(); delete mc.keyboard_keys; _saveModesConfig(mc);
+      _rebuildKeyboardKeysList(); showGlobalToast('Reiniciat a predeterminat');
     });
 
     document.getElementById('btn-save-scales')?.addEventListener('click', () => {
