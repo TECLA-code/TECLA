@@ -1902,6 +1902,25 @@
 
     <!-- ══ MODES I ESCALES ════════════════════════════════════════ -->
     <div class="tab-panel" id="tab-modes">
+
+      <!-- ══ CANAL MIDI ═══════════════════════════════════════════ -->
+      <div class="card" style="margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div>
+          <div class="card-title" style="margin:0">Canal MIDI del dispositiu</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Si tens dos dispositius, assigna un canal diferent a cada un (1–16) i configura els instruments del DAW en conseqüència</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <label style="font-size:12px;font-weight:500">Canal:</label>
+          <select id="midi-channel-select" style="width:70px">
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+            <option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
+            <option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
+            <option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option>
+          </select>
+          <button class="btn btn-sm btn-primary" id="btn-save-midi-channel">Guardar</button>
+        </div>
+      </div>
+
       <div class="panel-grid cols2">
         <div class="card">
           <div class="card-title">Modes a instal·lar al dispositiu</div>
@@ -3274,6 +3293,7 @@
       const mc = _loadModesConfig();
       // Convert file names ("mode_mandelbrot.py") → display names ("Mandelbrot") that mode_manager.py expects
       const fileToName = Object.fromEntries(_modesIndex.map(m => [m.file, m.name]));
+      const midiChannel = mc.midi_channel || 1;
       const kbScales = mc.keyboard_scales || [];
       const kbKeys = mc.keyboard_keys || ALL_KEYS;
       const arpModes = mc.arpeggiator_modes || Array.from({ length: 16 }, (_, i) => i);
@@ -3293,6 +3313,7 @@
           chord_types: chordTypes
         })),
         current_bank: _keysConfig.currentBank,
+        midi_channel: midiChannel,
         enabled_modes: mc.enabled_modes || [],
         available_effects: mc.available_effects || ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend'],
         keyboard_scales: kbScales,
@@ -3404,6 +3425,9 @@
         });
       }
 
+      // MIDI channel
+      setSelectVal('midi-channel-select', String(mc.midi_channel || 1));
+
       // Keyboard scales checklist (predefined + progressions + custom scales)
       _rebuildKeyboardScalesList();
 
@@ -3438,6 +3462,19 @@
       setSelectVal('arp-pot-y', apf.arp_pot_y || 'Patró De Direcció');
       setSelectVal('arp-pot-z', apf.arp_pot_z || 'Modulació');
     }
+
+    document.getElementById('btn-save-midi-channel')?.addEventListener('click', async () => {
+      const ch = parseInt(document.getElementById('midi-channel-select')?.value || '1', 10);
+      const mc = _loadModesConfig(); mc.midi_channel = ch; _saveModesConfig(mc);
+      log(`Canal MIDI: ${ch}`, 'ok');
+      showGlobalToast('Guardat correctament');
+      if (device.isConnected()) {
+        try {
+          await device.writeFile('tecla_web_config.json', JSON.stringify(buildDeviceConfig(), null, 2));
+          log('✓ Sincronitzat al dispositiu.', 'ok');
+        } catch (e) { log(`Error sincronitzant: ${e.message}`, 'warn'); }
+      }
+    });
 
     document.getElementById('btn-save-modes')?.addEventListener('click', (e) => {
       const enabled = [...document.querySelectorAll('#modes-list-check input:checked')].map(c => c.value);

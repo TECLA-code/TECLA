@@ -723,3 +723,14 @@ class ConfigManager:
         
         return self.set_global_temporal_effects(effects)
 
+    def get_midi_channel(self):
+        """Retorna el canal MIDI del dispositiu (1-16)"""
+        return self.config.get('midi_channel', 1)
+
+    def set_midi_channel(self, channel):
+        """Assigna el canal MIDI del dispositiu (1-16)"""
+        if not 1 <= channel <= 16:
+            return False
+        self.config['midi_channel'] = channel
+        return self.save_config()
+

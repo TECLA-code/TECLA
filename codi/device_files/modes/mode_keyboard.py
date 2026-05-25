@@ -188,9 +188,8 @@ class KeyboardMode:
         # IMPORTANT: Inicialitzar tots els CC MIDI a valors per defecte
         # Això assegura que no hi ha efectes residuals del sintetitzador
         try:
-            for ch in range(16):
-                for cc_num, default_value in self.cc_values.items():
-                    self.midi.send(ControlChange(cc_num, default_value, channel=ch))
+            for cc_num, default_value in self.cc_values.items():
+                self.midi.send(ControlChange(cc_num, default_value))
         except Exception:
             pass
         
@@ -203,11 +202,10 @@ class KeyboardMode:
         
         # Desactivar tots els CC al sortir
         try:
-            for ch in range(16):
-                self.midi.send(ControlChange(1, 0, channel=ch))   # Modulation OFF
-                self.midi.send(ControlChange(64, 0, channel=ch))  # Sustain OFF
-                self.midi.send(ControlChange(91, 0, channel=ch))  # Reverb OFF
-                self.midi.send(ControlChange(93, 0, channel=ch))  # Chorus OFF
+            self.midi.send(ControlChange(1, 0))   # Modulation OFF
+            self.midi.send(ControlChange(64, 0))  # Sustain OFF
+            self.midi.send(ControlChange(91, 0))  # Reverb OFF
+            self.midi.send(ControlChange(93, 0))  # Chorus OFF
         except Exception:
             pass
         
@@ -225,9 +223,8 @@ class KeyboardMode:
         """Para totes les notes actives i neteja tot el tracking"""
         # Primer, desactivar sustain per assegurar que cap nota queda enganxada
         try:
-            for ch in range(16):
-                self.midi.send(ControlChange(64, 0, channel=ch))  # Sustain OFF
-            self.sustain_level = 0  # Actualitzar el tracking del sustain
+            self.midi.send(ControlChange(64, 0))  # Sustain OFF
+            self.sustain_level = 0
         except Exception:
             pass
         
@@ -284,12 +281,10 @@ class KeyboardMode:
             self._send_cc(cc_num, new_value)
     
     def _send_cc(self, cc_num, value):
-        """Envia un CC MIDI a tots els canals"""
+        """Envia un CC MIDI al canal configurat"""
         self.cc_values[cc_num] = value
-        
         try:
-            for ch in range(16):
-                self.midi.send(ControlChange(cc_num, value, channel=ch))
+            self.midi.send(ControlChange(cc_num, value))
         except Exception:
             pass
     
@@ -297,8 +292,7 @@ class KeyboardMode:
         """Re-aplica tots els CC MIDI actius (útil després de stop_all_notes)"""
         try:
             for cc_num, value in self.cc_values.items():
-                for ch in range(16):
-                    self.midi.send(ControlChange(cc_num, value, channel=ch))
+                self.midi.send(ControlChange(cc_num, value))
         except Exception:
             pass
     
@@ -314,9 +308,7 @@ class KeyboardMode:
         # PitchBend és silenciós, no cal print constant
         
         try:
-            # Enviar PitchBend a tots els canals
-            for ch in range(16):
-                self.midi.send(PitchBend(pitch_value, channel=ch))
+            self.midi.send(PitchBend(pitch_value))
         except Exception as e:
             if self.debug:
                 print(f"Error enviant PitchBend: {e}")

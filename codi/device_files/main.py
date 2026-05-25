@@ -331,6 +331,12 @@ def main():
     # Assignar sortida MIDI al maquinari i inicialitzar el gestor de modes i el gestor de configuració
     from core.config_manager import ConfigManager
     config_manager = ConfigManager()
+    try:
+        _midi_ch = config_manager.get_midi_channel()
+        midi_out.out_channel = max(0, min(15, _midi_ch - 1))
+        print(f"Canal MIDI: {_midi_ch}")
+    except Exception:
+        pass
     hardware.midi_out = midi_out
     mode_manager = ModeManager(midi_out)
     hardware.mode_manager = mode_manager
