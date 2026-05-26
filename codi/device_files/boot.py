@@ -1,3 +1,14 @@
+import storage
+
+try:
+    with open('/config/disk_label.txt', 'r') as f:
+        label = f.read().strip()[:11].upper()
+    if label:
+        m = storage.getmount("/")
+        m.label = label
+except Exception:
+    pass
+
 try:
     with open('/config/device_name.txt', 'r') as f:
         name = f.read().strip()

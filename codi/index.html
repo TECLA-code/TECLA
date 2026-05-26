@@ -1925,6 +1925,12 @@
             <button class="btn btn-sm btn-primary" id="btn-save-device-name">Guardar al dispositiu</button>
             <span style="font-size:11px;color:var(--text3)">Apareix a Logic/Ableton · requereix reinici</span>
           </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <label style="font-size:12px;font-weight:500;min-width:110px">Nom del disc:</label>
+            <input type="text" id="disk-label-input" maxlength="11" placeholder="Ex: TECLA" style="width:130px;text-transform:uppercase">
+            <button class="btn btn-sm btn-primary" id="btn-save-disk-label">Guardar al dispositiu</button>
+            <span style="font-size:11px;color:var(--text3)">Reemplaça "CIRCUITPY" · màx 11 caràcters · requereix reinici</span>
+          </div>
         </div>
       </div>
 
@@ -2746,6 +2752,11 @@
           const inp = document.getElementById('device-name-input');
           if (inp && savedName?.trim()) inp.value = savedName.trim();
         } catch { /* fitxer no existeix encara */ }
+        try {
+          const savedLabel = await device.readFile('config/disk_label.txt');
+          const inp2 = document.getElementById('disk-label-input');
+          if (inp2 && savedLabel?.trim()) inp2.value = savedLabel.trim().toUpperCase();
+        } catch { /* fitxer no existeix encara */ }
       } else if (!result.aborted) {
         log(`Error: ${result.error}`, 'err');
       }
@@ -3497,6 +3508,21 @@
         log(`✓ Nom del port USB desat: "${name}". Desconnecta i reconnecta el dispositiu per aplicar.`, 'ok');
         showGlobalToast(`Nom "${name}" desat. Reinicia el dispositiu.`);
       } catch (e) { log(`Error desant nom: ${e.message}`, 'warn'); }
+    });
+
+    document.getElementById('btn-save-disk-label')?.addEventListener('click', async () => {
+      const raw = (document.getElementById('disk-label-input')?.value || '').trim().toUpperCase().slice(0, 11);
+      if (!raw) { alert('Escriu un nom per al disc (ex: TECLA).'); return; }
+      if (!device.isConnected()) { alert('Connecta el dispositiu primer (pestanya Tecles).'); return; }
+      try {
+        await device.writeFile('config/disk_label.txt', raw);
+        log(`✓ Nom del disc desat: "${raw}". Desconnecta i reconnecta el dispositiu per aplicar.`, 'ok');
+        showGlobalToast(`Disc "${raw}" desat. Reinicia el dispositiu.`);
+      } catch (e) { log(`Error desant etiqueta: ${e.message}`, 'warn'); }
+    });
+
+    document.getElementById('disk-label-input')?.addEventListener('input', function() {
+      this.value = this.value.toUpperCase().replace(/[^A-Z0-9_\- ]/g, '').slice(0, 11);
     });
 
     document.getElementById('btn-save-modes')?.addEventListener('click', (e) => {
