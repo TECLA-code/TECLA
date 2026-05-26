@@ -1,5 +1,6 @@
 {
   "files": [
+    "boot.py",
     "main.py",
     "music_constants.py",
     "reset.py",

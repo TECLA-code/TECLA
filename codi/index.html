@@ -1903,21 +1903,28 @@
     <!-- ══ MODES I ESCALES ════════════════════════════════════════ -->
     <div class="tab-panel" id="tab-modes">
 
-      <!-- ══ CANAL MIDI ═══════════════════════════════════════════ -->
-      <div class="card" style="margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-        <div>
-          <div class="card-title" style="margin:0">Canal MIDI del dispositiu</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">Si tens dos dispositius, assigna un canal diferent a cada un (1–16) i configura els instruments del DAW en conseqüència</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <label style="font-size:12px;font-weight:500">Canal:</label>
-          <select id="midi-channel-select" style="width:70px">
-            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
-            <option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
-            <option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
-            <option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option>
-          </select>
-          <button class="btn btn-sm btn-primary" id="btn-save-midi-channel">Guardar</button>
+      <!-- ══ CONFIGURACIÓ DEL DISPOSITIU ══════════════════════════ -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title" style="margin-bottom:4px">Configuració del dispositiu</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Configura cada dispositiu TECLA de forma independent per usar-los alhora al DAW</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <label style="font-size:12px;font-weight:500;min-width:110px">Canal MIDI:</label>
+            <select id="midi-channel-select" style="width:70px">
+              <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+              <option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
+              <option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
+              <option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option>
+            </select>
+            <button class="btn btn-sm btn-primary" id="btn-save-midi-channel">Guardar</button>
+            <span style="font-size:11px;color:var(--text3)">El DAW filtra l'instrument per canal</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <label style="font-size:12px;font-weight:500;min-width:110px">Nom del port USB:</label>
+            <input type="text" id="device-name-input" maxlength="32" placeholder="Ex: TECLA-1" style="width:130px">
+            <button class="btn btn-sm btn-primary" id="btn-save-device-name">Guardar al dispositiu</button>
+            <span style="font-size:11px;color:var(--text3)">Apareix a Logic/Ableton · requereix reinici</span>
+          </div>
         </div>
       </div>
 
@@ -2734,6 +2741,11 @@
         log(`Dispositiu connectat: ${result.name}`, 'ok');
         await loadModes();
         setTimeout(() => _fwRefresh?.(), 500);
+        try {
+          const savedName = await device.readFile('config/device_name.txt');
+          const inp = document.getElementById('device-name-input');
+          if (inp && savedName?.trim()) inp.value = savedName.trim();
+        } catch { /* fitxer no existeix encara */ }
       } else if (!result.aborted) {
         log(`Error: ${result.error}`, 'err');
       }
@@ -3474,6 +3486,17 @@
           log('✓ Sincronitzat al dispositiu.', 'ok');
         } catch (e) { log(`Error sincronitzant: ${e.message}`, 'warn'); }
       }
+    });
+
+    document.getElementById('btn-save-device-name')?.addEventListener('click', async () => {
+      const name = (document.getElementById('device-name-input')?.value || '').trim();
+      if (!name) { alert('Escriu un nom per al dispositiu (ex: TECLA-1).'); return; }
+      if (!device.isConnected()) { alert('Connecta el dispositiu primer (pestanya Tecles).'); return; }
+      try {
+        await device.writeFile('config/device_name.txt', name);
+        log(`✓ Nom del port USB desat: "${name}". Desconnecta i reconnecta el dispositiu per aplicar.`, 'ok');
+        showGlobalToast(`Nom "${name}" desat. Reinicia el dispositiu.`);
+      } catch (e) { log(`Error desant nom: ${e.message}`, 'warn'); }
     });
 
     document.getElementById('btn-save-modes')?.addEventListener('click', (e) => {
