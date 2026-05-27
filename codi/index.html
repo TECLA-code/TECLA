@@ -2016,7 +2016,7 @@
     <!-- ══ MODES I ESCALES ════════════════════════════════════════ -->
     <div class="tab-panel" id="tab-modes">
 
-      <div class="panel-grid cols2">
+      <div class="panel-grid cols3">
         <div class="card">
           <div class="card-title">Escales del mode teclat</div>
           <div class="checklist c3" id="keyboard-scales-list"></div>
@@ -2026,9 +2026,6 @@
             <button class="btn btn-sm" id="btn-scales-none">Cap</button>
           </div>
         </div>
-      </div>
-
-      <div class="panel-grid cols2" style="margin-top:14px">
         <div class="card">
           <div class="card-title">Patrons direccionals de l'arpegiador</div>
           <div class="arp-grid" id="arp-list"></div>
@@ -2043,6 +2040,21 @@
             <button class="btn btn-sm btn-primary" id="btn-save-arp">Guardar</button>
             <button class="btn btn-sm" id="btn-arp-all">Tots</button>
             <button class="btn btn-sm" id="btn-arp-none">Cap</button>
+          </div>
+        </div>
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <div>
+              <div class="card-title" style="margin:0">Tonalitats del botó 10</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px">Selecciona i arrossega per canviar l'ordre de ciclat</div>
+            </div>
+            <button class="btn btn-sm btn-primary" id="btn-save-keys-order">Guardar</button>
+          </div>
+          <div id="keyboard-keys-list" style="display:flex;flex-direction:column;gap:4px"></div>
+          <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+            <button class="btn btn-sm" id="btn-keys-all">Totes</button>
+            <button class="btn btn-sm" id="btn-keys-none">Cap</button>
+            <button class="btn btn-sm" id="btn-keys-reset">Predeterminat</button>
           </div>
         </div>
       </div>
@@ -2139,22 +2151,6 @@
         <button class="btn btn-primary" id="btn-save-pots">Guardar i aplicar funcions dels potenciòmetres</button>
       </div>
 
-      <!-- ══ TONALITATS BOTÓ 10 ═══════════════════════════════════ -->
-      <div class="card" style="margin-top:14px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <div>
-            <div class="card-title" style="margin:0">Tonalitats del botó 10</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:2px">Selecciona i arrossega per canviar l'ordre de ciclat</div>
-          </div>
-          <button class="btn btn-sm btn-primary" id="btn-save-keys-order">Guardar</button>
-        </div>
-        <div id="keyboard-keys-list" style="display:flex;flex-direction:column;gap:4px"></div>
-        <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
-          <button class="btn btn-sm" id="btn-keys-all">Totes</button>
-          <button class="btn btn-sm" id="btn-keys-none">Cap</button>
-          <button class="btn btn-sm" id="btn-keys-reset">Predeterminat</button>
-        </div>
-      </div>
     </div>
 
     <!-- ══ PROGRESSIONS ══════════════════════════════════════════ -->
