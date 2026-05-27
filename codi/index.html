@@ -1396,6 +1396,18 @@
       display: block
     }
 
+    .keys-tab-layout { display: flex; gap: 16px; align-items: flex-start; }
+    .keys-main { flex: 1; min-width: 0; }
+    .modes-panel { width: 196px; flex-shrink: 0; }
+    .modes-panel-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--text2); margin-bottom: 8px; }
+    .mode-panel-item { display: flex; align-items: center; gap: 7px; padding: 7px 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; font-size: 12px; cursor: grab; margin-bottom: 4px; user-select: none; transition: background .1s, border-color .1s; }
+    .mode-panel-item:hover { background: var(--bg3); border-color: var(--border-h); }
+    .mode-panel-item:active { cursor: grabbing; }
+    .mode-panel-item.selected { border-color: var(--accent); }
+    .mode-panel-grip { color: var(--text3); font-size: 13px; line-height: 1; }
+    .key-btn.drag-over { background: color-mix(in srgb, var(--accent) 30%, var(--sim-key)) !important; border-color: var(--accent) !important; }
+    @media (max-width: 600px) { .keys-tab-layout { flex-direction: column; } .modes-panel { width: 100%; } }
+
     .modes-list {
       display: flex;
       flex-direction: column;
@@ -1837,7 +1849,6 @@
 
   <nav>
     <span class="nav-tab active" data-tab="keys" data-i18n="nav_keys">Tecles</span>
-    <span class="nav-tab" data-tab="config">Configuració</span>
     <span class="nav-tab" data-tab="modes" data-i18n="nav_modes">Modes i Escales</span>
     <span class="nav-tab" data-tab="progressions" data-i18n="nav_progressions">Progressions</span>
     <span class="nav-tab" data-tab="scales" data-i18n="nav_scales">Escales</span>
@@ -1845,6 +1856,7 @@
     <span class="nav-tab" data-tab="firmware">Firmware</span>
     <span class="nav-tab" data-tab="theme" data-i18n="nav_theme">Aparença</span>
     <span class="nav-tab" data-tab="guide" data-i18n="nav_guide">Guia</span>
+    <span class="nav-tab" data-tab="config">Configuració</span>
   </nav>
 
   <main>
@@ -1862,25 +1874,77 @@
         </div>
       </div>
 
-      <div class="section">
-        <div class="device-wrap">
-          <div class="keys-grid" id="device-keys">
-            <!-- JS renders keys here -->
+      <div class="keys-tab-layout">
+        <div class="keys-main">
+          <div class="section">
+            <div class="device-wrap">
+              <div class="keys-grid" id="device-keys">
+                <!-- JS renders keys here -->
+              </div>
+            </div>
           </div>
+          <div class="modes-section" id="modes-section" style="margin-top:16px">
+            <div class="section-title">Modes al dispositiu &nbsp;<span id="modes-count"
+                style="font-weight:400;text-transform:none;letter-spacing:0;font-size:12px">—</span></div>
+            <div id="modes-toolbar" style="display:none;gap:6px;margin:8px 0 4px;flex-wrap:wrap;align-items:center">
+              <button class="btn btn-sm" id="btn-modes-sel-all">Tots</button>
+              <button class="btn btn-sm" id="btn-modes-sel-none">Cap</button>
+              <button class="btn btn-sm btn-danger" id="btn-del-selected" disabled>Eliminar seleccionats (<span
+                  id="modes-sel-count">0</span>)</button>
+            </div>
+            <div class="modes-list" id="modes-list">
+              <div class="empty">Carregant…</div>
+            </div>
+          </div>
+        </div>
+        <div class="modes-panel">
+          <div class="modes-panel-title">Modes disponibles</div>
+          <div id="modes-panel-list"><div class="empty" style="font-size:11px">Carregant...</div></div>
+          <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+            <button class="btn btn-sm" id="btn-import-modes">+ Afegir</button>
+            <button class="btn btn-sm btn-danger" id="btn-del-mode" disabled>Eliminar</button>
+          </div>
+          <div id="mode-selected-indicator" style="display:none;margin-top:6px;font-size:11px;color:var(--accent)">Seleccionat: <strong id="mode-selected-name"></strong></div>
         </div>
       </div>
 
-      <div class="modes-section" id="modes-section" style="margin-top:16px">
-        <div class="section-title">Modes al dispositiu &nbsp;<span id="modes-count"
-            style="font-weight:400;text-transform:none;letter-spacing:0;font-size:12px">—</span></div>
-        <div id="modes-toolbar" style="display:none;gap:6px;margin:8px 0 4px;flex-wrap:wrap;align-items:center">
-          <button class="btn btn-sm" id="btn-modes-sel-all">Tots</button>
-          <button class="btn btn-sm" id="btn-modes-sel-none">Cap</button>
-          <button class="btn btn-sm btn-danger" id="btn-del-selected" disabled>Eliminar seleccionats (<span
-              id="modes-sel-count">0</span>)</button>
+      <div class="card" style="margin-top:14px">
+        <div class="card-title">Modes a instal·lar al dispositiu</div>
+        <div class="checklist" id="modes-list-check">
+          <div class="empty"><span class="spinner"></span></div>
         </div>
-        <div class="modes-list" id="modes-list">
-          <div class="empty">Carregant…</div>
+        <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
+          <button class="btn btn-sm btn-primary" id="btn-save-modes">Guardar</button>
+          <button class="btn btn-sm" id="btn-modes-all">Tots</button>
+          <button class="btn btn-sm" id="btn-modes-none">Cap</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px" id="card-saved-layers">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+          <div>
+            <div class="card-title" style="margin:0">Capes Guardades</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">Instantànies de la configuració de la pestanya Tecles</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-sm btn-primary" id="btn-save-current-layer">Guardar capa actual</button>
+            <button class="btn btn-sm" id="btn-export-all-layers">Exportar selecció</button>
+            <button class="btn btn-sm" id="btn-import-layer-file">Importar</button>
+            <input type="file" id="input-import-layer" accept=".json" style="display:none">
+          </div>
+        </div>
+        <div id="saved-layers-list" style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto"></div>
+        <div id="saved-layers-empty" style="font-size:11.5px;color:var(--text3);padding:6px 0">Cap capa guardada encara.</div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="card-title">Efectes temporals — Tecles 14 i 15 (capa modes)</div>
+        <p style="font-size:11.5px;color:var(--text2);margin-bottom:10px">Cicla amb doble clic a les tecles 14 i 15</p>
+        <div class="effects-row" id="effects-list"></div>
+        <div style="display:flex;gap:6px;margin-top:12px">
+          <button class="btn btn-sm btn-primary" id="btn-save-effects">Guardar</button>
+          <button class="btn btn-sm" id="btn-effects-all">Tots</button>
+          <button class="btn btn-sm" id="btn-effects-none">Cap</button>
         </div>
       </div>
 
@@ -1949,22 +2013,6 @@
 
       <div class="panel-grid cols2">
         <div class="card">
-          <div class="card-title">Modes a instal·lar al dispositiu</div>
-          <div class="checklist" id="modes-list-check">
-            <div class="empty"><span class="spinner"></span></div>
-          </div>
-          <div id="mode-selected-indicator"
-            style="display:none;margin-top:8px;font-size:11.5px;color:var(--accent);padding:3px 0">Seleccionat: <strong
-              id="mode-selected-name"></strong></div>
-          <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
-            <button class="btn btn-sm btn-primary" id="btn-save-modes">Guardar</button>
-            <button class="btn btn-sm" id="btn-modes-all">Tots</button>
-            <button class="btn btn-sm" id="btn-modes-none">Cap</button>
-            <button class="btn btn-sm" id="btn-import-modes">+ Afegir Modes</button>
-            <button class="btn btn-sm btn-danger" id="btn-del-mode" disabled>Eliminar</button>
-          </div>
-        </div>
-        <div class="card">
           <div class="card-title">Escales del mode teclat</div>
           <div class="checklist c3" id="keyboard-scales-list"></div>
           <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
@@ -1975,36 +2023,7 @@
         </div>
       </div>
 
-      <!-- ══ CAPES GUARDADES ══════════════════════════════════════ -->
-      <div class="card" style="margin-top:14px" id="card-saved-layers">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
-          <div>
-            <div class="card-title" style="margin:0">Capes Guardades</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:2px">Instantànies de la configuració de la pestanya Tecles</div>
-          </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap">
-            <button class="btn btn-sm btn-primary" id="btn-save-current-layer">Guardar capa actual</button>
-            <button class="btn btn-sm" id="btn-export-all-layers">Exportar selecció</button>
-            <button class="btn btn-sm" id="btn-import-layer-file">Importar</button>
-            <input type="file" id="input-import-layer" accept=".json" style="display:none">
-          </div>
-        </div>
-        <div id="saved-layers-list" style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto"></div>
-        <div id="saved-layers-empty" style="font-size:11.5px;color:var(--text3);padding:6px 0">Cap capa guardada encara.</div>
-      </div>
-
       <div class="panel-grid cols2" style="margin-top:14px">
-        <div class="card">
-          <div class="card-title">Efectes temporals — Tecles 14 i 15 (capa modes)</div>
-          <p style="font-size:11.5px;color:var(--text2);margin-bottom:10px">Cicla amb doble clic a les tecles 14 i 15
-          </p>
-          <div class="effects-row" id="effects-list"></div>
-          <div style="display:flex;gap:6px;margin-top:12px">
-            <button class="btn btn-sm btn-primary" id="btn-save-effects">Guardar</button>
-            <button class="btn btn-sm" id="btn-effects-all">Tots</button>
-            <button class="btn btn-sm" id="btn-effects-none">Cap</button>
-          </div>
-        </div>
         <div class="card">
           <div class="card-title">Patrons direccionals de l'arpegiador</div>
           <div class="arp-grid" id="arp-list"></div>
@@ -3112,6 +3131,17 @@
         btn.innerHTML = `<div class="key-num">${i+1}</div>
                          <div class="key-label">${modeName}</div>`;
         btn.onclick = () => openConfigDrawer(i, 'mode');
+        const _dropIdx = i;
+        btn.addEventListener('dragover', e => { e.preventDefault(); btn.classList.add('drag-over'); });
+        btn.addEventListener('dragleave', () => btn.classList.remove('drag-over'));
+        btn.addEventListener('drop', e => {
+          e.preventDefault();
+          btn.classList.remove('drag-over');
+          const modeFile = e.dataTransfer.getData('text/plain');
+          bank.modes[_dropIdx] = modeFile;
+          _saveKeysConfig(_keysConfig);
+          renderDeviceKeys();
+        });
         container.appendChild(btn);
       }
       
@@ -3223,13 +3253,44 @@
       return mc.available_effects || ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend'];
     }
 
+    async function _buildModesPanel() {
+      const container = document.getElementById('modes-panel-list');
+      if (!container) return;
+      container.innerHTML = '<div class="empty" style="font-size:11px">Carregant...</div>';
+      const mds = await _getEffectiveModes();
+      if (!mds.length) { container.innerHTML = '<div class="empty" style="font-size:11px">Cap mode disponible</div>'; return; }
+      container.innerHTML = mds.map(m =>
+        `<div class="mode-panel-item" draggable="true" data-file="${m.file}" data-name="${m.name}">` +
+        `<span class="mode-panel-grip">&#x283f;</span><span>${m.name}</span></div>`
+      ).join('');
+      container.querySelectorAll('.mode-panel-item').forEach(el => {
+        el.addEventListener('dragstart', e => {
+          e.dataTransfer.setData('text/plain', el.dataset.file);
+          e.dataTransfer.effectAllowed = 'copy';
+          el.style.opacity = '.45';
+        });
+        el.addEventListener('dragend', () => { el.style.opacity = ''; });
+        el.addEventListener('click', () => {
+          container.querySelectorAll('.mode-panel-item').forEach(i => i.classList.remove('selected'));
+          el.classList.add('selected');
+          _selectedModeFile = el.dataset.file;
+          _selectedModeName = el.dataset.name;
+          const ind = document.getElementById('mode-selected-indicator');
+          const nm = document.getElementById('mode-selected-name');
+          if (ind) ind.style.display = '';
+          if (nm) nm.textContent = el.dataset.name;
+          document.getElementById('btn-del-mode')?.removeAttribute('disabled');
+        });
+      });
+    }
+
     // Grid is static HTML — just populate selects and wire bank events.
     async function buildKeysGrid() {
-      // Populate the 12 mode selects with enabled modes
       await refreshKeyDropdowns();
-      // Restore saved values for the current bank
       _syncBankSelect();
       _loadBankIntoGrid(_keysConfig.currentBank);
+      _buildModesPanel();
+      buildModesTab();
     }
 
     // Wire bank controls once at startup (outside buildKeysGrid so they're always active)
@@ -3650,6 +3711,7 @@
           await buildModesTab();
           await loadBuiltinModes();
           refreshKeyDropdowns();
+          _buildModesPanel();
         } catch (e) { log(`✗ Error: ${e.message}`, 'err'); }
         finally { btn.disabled = false; btn.textContent = '+ Afegir Modes'; input.remove(); }
       });
@@ -3695,6 +3757,7 @@
       _modesIndex = [];  // force reload
       await buildModesTab();
       refreshKeyDropdowns();
+      _buildModesPanel();
     });
 
     // ── Keyboard Keys (Botó 10) ─────────────────────────────────
@@ -5815,10 +5878,17 @@ body{background:var(--sim-bg,#0a0a0a);color:var(--text,#e0e0e0);font-family:syst
 
     // Llengua
     (function() {
+      const I18N = {
+        ca: { device_disconnected: 'desconnectat', btn_connect: 'connecta dispositiu', btn_disconnect: 'desconnectar', nav_keys: 'Tecles', nav_modes: 'Modes i Escales', nav_progressions: 'Progressions', nav_scales: 'Escales', nav_simulator: 'Simulador', nav_theme: 'Aparença', nav_guide: 'Guia' },
+        es: { device_disconnected: 'desconectado', btn_connect: 'conectar dispositivo', btn_disconnect: 'desconectar', nav_keys: 'Teclas', nav_modes: 'Modos y Escalas', nav_progressions: 'Progresiones', nav_scales: 'Escalas', nav_simulator: 'Simulador', nav_theme: 'Apariencia', nav_guide: 'Guía' },
+        en: { device_disconnected: 'disconnected', btn_connect: 'connect device', btn_disconnect: 'disconnect', nav_keys: 'Keys', nav_modes: 'Modes & Scales', nav_progressions: 'Progressions', nav_scales: 'Scales', nav_simulator: 'Simulator', nav_theme: 'Appearance', nav_guide: 'Guide' }
+      };
       const _savedLang = localStorage.getItem('tecla-midi-lang') || 'ca';
       function _applyLang(lang) {
         localStorage.setItem('tecla-midi-lang', lang);
         document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+        const d = I18N[lang] || I18N.ca;
+        document.querySelectorAll('[data-i18n]').forEach(el => { const k = el.dataset.i18n; if (d[k]) el.textContent = d[k]; });
       }
       document.querySelectorAll('.lang-btn').forEach(b => b.addEventListener('click', () => _applyLang(b.dataset.lang)));
       _applyLang(_savedLang);
