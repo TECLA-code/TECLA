@@ -1400,6 +1400,11 @@
     .keys-main { flex: 1; min-width: 0; }
     .modes-panel { width: 196px; flex-shrink: 0; }
     .modes-panel-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--text2); margin-bottom: 8px; }
+    #modes-panel-list { max-height: 272px; overflow-y: auto; }
+    details.modes-install-drawer summary { font-size: 11px; color: var(--text3); cursor: pointer; list-style: none; display: flex; align-items: center; gap: 4px; padding: 4px 0; user-select: none; }
+    details.modes-install-drawer summary::before { content: '▶'; font-size: 9px; transition: transform .15s; }
+    details.modes-install-drawer[open] summary::before { transform: rotate(90deg); }
+    details.modes-install-drawer summary::-webkit-details-marker { display: none; }
     .mode-panel-item { display: flex; align-items: center; gap: 7px; padding: 7px 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; font-size: 12px; cursor: grab; margin-bottom: 4px; user-select: none; transition: background .1s, border-color .1s; }
     .mode-panel-item:hover { background: var(--bg3); border-color: var(--border-h); }
     .mode-panel-item:active { cursor: grabbing; }
@@ -1849,7 +1854,7 @@
 
   <nav>
     <span class="nav-tab active" data-tab="keys" data-i18n="nav_keys">Tecles</span>
-    <span class="nav-tab" data-tab="modes" data-i18n="nav_modes">Modes i Escales</span>
+    <span class="nav-tab" data-tab="modes" data-i18n="nav_modes">Teclat</span>
     <span class="nav-tab" data-tab="progressions" data-i18n="nav_progressions">Progressions</span>
     <span class="nav-tab" data-tab="scales" data-i18n="nav_scales">Escales</span>
     <span class="nav-tab" data-tab="simulator" data-i18n="nav_simulator">Simulador</span>
@@ -1908,9 +1913,9 @@
         </div>
       </div>
 
-      <div class="card" style="margin-top:14px">
-        <div class="card-title">Modes a instal·lar al dispositiu</div>
-        <div class="checklist" id="modes-list-check">
+      <details class="modes-install-drawer card" style="margin-top:14px">
+        <summary>Modes a instal·lar al dispositiu</summary>
+        <div class="checklist" id="modes-list-check" style="margin-top:10px">
           <div class="empty"><span class="spinner"></span></div>
         </div>
         <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
@@ -1918,7 +1923,7 @@
           <button class="btn btn-sm" id="btn-modes-all">Tots</button>
           <button class="btn btn-sm" id="btn-modes-none">Cap</button>
         </div>
-      </div>
+      </details>
 
       <div class="card" style="margin-top:14px" id="card-saved-layers">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
@@ -5879,9 +5884,9 @@ body{background:var(--sim-bg,#0a0a0a);color:var(--text,#e0e0e0);font-family:syst
     // Llengua
     (function() {
       const I18N = {
-        ca: { device_disconnected: 'desconnectat', btn_connect: 'connecta dispositiu', btn_disconnect: 'desconnectar', nav_keys: 'Tecles', nav_modes: 'Modes i Escales', nav_progressions: 'Progressions', nav_scales: 'Escales', nav_simulator: 'Simulador', nav_theme: 'Aparença', nav_guide: 'Guia' },
-        es: { device_disconnected: 'desconectado', btn_connect: 'conectar dispositivo', btn_disconnect: 'desconectar', nav_keys: 'Teclas', nav_modes: 'Modos y Escalas', nav_progressions: 'Progresiones', nav_scales: 'Escalas', nav_simulator: 'Simulador', nav_theme: 'Apariencia', nav_guide: 'Guía' },
-        en: { device_disconnected: 'disconnected', btn_connect: 'connect device', btn_disconnect: 'disconnect', nav_keys: 'Keys', nav_modes: 'Modes & Scales', nav_progressions: 'Progressions', nav_scales: 'Scales', nav_simulator: 'Simulator', nav_theme: 'Appearance', nav_guide: 'Guide' }
+        ca: { device_disconnected: 'desconnectat', btn_connect: 'connecta dispositiu', btn_disconnect: 'desconnectar', nav_keys: 'Tecles', nav_modes: 'Teclat', nav_progressions: 'Progressions', nav_scales: 'Escales', nav_simulator: 'Simulador', nav_theme: 'Aparença', nav_guide: 'Guia' },
+        es: { device_disconnected: 'desconectado', btn_connect: 'conectar dispositivo', btn_disconnect: 'desconectar', nav_keys: 'Teclas', nav_modes: 'Teclado', nav_progressions: 'Progresiones', nav_scales: 'Escalas', nav_simulator: 'Simulador', nav_theme: 'Apariencia', nav_guide: 'Guía' },
+        en: { device_disconnected: 'disconnected', btn_connect: 'connect device', btn_disconnect: 'disconnect', nav_keys: 'Keys', nav_modes: 'Keyboard', nav_progressions: 'Progressions', nav_scales: 'Scales', nav_simulator: 'Simulator', nav_theme: 'Appearance', nav_guide: 'Guide' }
       };
       const _savedLang = localStorage.getItem('tecla-midi-lang') || 'ca';
       function _applyLang(lang) {
