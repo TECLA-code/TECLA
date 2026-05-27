@@ -3499,13 +3499,25 @@
       }
     });
 
+    async function _deployBootPy() {
+      try {
+        const res = await fetch('./device_files/boot.py');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const content = await res.text();
+        await device.writeFile('boot.py', content);
+        log('✓ boot.py instal·lat al dispositiu.', 'ok');
+        return true;
+      } catch (e) { log(`Error instal·lant boot.py: ${e.message}`, 'warn'); return false; }
+    }
+
     document.getElementById('btn-save-device-name')?.addEventListener('click', async () => {
       const name = (document.getElementById('device-name-input')?.value || '').trim();
       if (!name) { alert('Escriu un nom per al dispositiu (ex: TECLA-1).'); return; }
       if (!device.isConnected()) { alert('Connecta el dispositiu primer (pestanya Tecles).'); return; }
       try {
         await device.writeFile('config/device_name.txt', name);
-        log(`✓ Nom del port USB desat: "${name}". Desconnecta i reconnecta el dispositiu per aplicar.`, 'ok');
+        await _deployBootPy();
+        log(`✓ Nom del port MIDI: "${name}". Desconnecta i reconnecta el dispositiu per aplicar.`, 'ok');
         showGlobalToast(`Nom "${name}" desat. Reinicia el dispositiu.`);
       } catch (e) { log(`Error desant nom: ${e.message}`, 'warn'); }
     });
@@ -3516,6 +3528,7 @@
       if (!device.isConnected()) { alert('Connecta el dispositiu primer (pestanya Tecles).'); return; }
       try {
         await device.writeFile('config/disk_label.txt', raw);
+        await _deployBootPy();
         log(`✓ Nom del disc desat: "${raw}". Desconnecta i reconnecta el dispositiu per aplicar.`, 'ok');
         showGlobalToast(`Disc "${raw}" desat. Reinicia el dispositiu.`);
       } catch (e) { log(`Error desant etiqueta: ${e.message}`, 'warn'); }
