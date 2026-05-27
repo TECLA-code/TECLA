@@ -1872,6 +1872,7 @@
         <button class="btn btn-sm" id="btn-new-bank">+ Nova capa</button>
         <button class="btn btn-sm" id="btn-rename-bank">Reanomenar</button>
         <button class="btn btn-sm btn-danger" id="btn-del-bank">Eliminar</button>
+        <button class="btn btn-sm" id="btn-clear-all-keys" title="Buida totes les tecles de la capa actual">Buidar totes</button>
         <div style="margin-left:auto;display:flex;gap:8px">
           <button class="btn btn-sm btn-primary" id="btn-save-keys">Guardar configuració</button>
         </div>
@@ -3330,6 +3331,15 @@
       _loadBankIntoGrid(_keysConfig.currentBank);
       _saveKeysConfig(_keysConfig);
       log(`Capa '${_keysConfig.banks[_keysConfig.currentBank].name}' creada.`, 'ok');
+    });
+    document.getElementById('btn-clear-all-keys')?.addEventListener('click', () => {
+      const bank = _keysConfig.banks[_keysConfig.currentBank];
+      if (!bank.modes.some(m => m)) return;
+      if (!confirm('Buidar totes les tecles de la capa actual?')) return;
+      bank.modes = Array(12).fill('');
+      _saveKeysConfig(_keysConfig);
+      renderDeviceKeys();
+      _buildModesPanel();
     });
     document.getElementById('btn-del-bank')?.addEventListener('click', () => {
       if (_keysConfig.banks.length <= 1) { log('Ha d\'haver-hi com a mínim una capa.', 'warn'); return; }
