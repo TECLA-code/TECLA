@@ -1911,17 +1911,6 @@
         </div>
       </div>
 
-      <details class="modes-install-drawer card" style="margin-top:14px">
-        <summary>Modes a instal·lar al dispositiu</summary>
-        <div class="checklist" id="modes-list-check" style="margin-top:10px">
-          <div class="empty"><span class="spinner"></span></div>
-        </div>
-        <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
-          <button class="btn btn-sm btn-primary" id="btn-save-modes">Guardar</button>
-          <button class="btn btn-sm" id="btn-modes-all">Tots</button>
-          <button class="btn btn-sm" id="btn-modes-none">Cap</button>
-        </div>
-      </details>
 
       <div class="card" style="margin-top:14px" id="card-saved-layers">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
@@ -2876,12 +2865,7 @@
     // Returns only the modes enabled in the Modes tab, as [{name, file}].
     // Falls back to all modes if none have been saved yet.
     async function _getEnabledModesForKeys() {
-      const allModes = await _getEffectiveModes();
-      const mc = _loadModesConfig();
-      const enabled = mc.enabled_modes;
-      if (!enabled || !enabled.length) return allModes;
-      const byFile = Object.fromEntries(allModes.map(m => [m.file, m]));
-      return enabled.map(f => byFile[f] || {file: f, name: f.replace(/^mode_/, '').replace(/\.py$/, '')});
+      return _getEffectiveModes();
     }
 
     // Not needed anymore, replaced by renderDeviceKeys()
@@ -3137,6 +3121,7 @@
           bank.modes[_dropIdx] = modeFile;
           _saveKeysConfig(_keysConfig);
           renderDeviceKeys();
+          _buildModesPanel();
         });
         container.appendChild(btn);
       }
@@ -3196,8 +3181,10 @@
         drawerBody.querySelectorAll('.mode-sel-item').forEach(el => {
           el.onclick = () => {
             bank.modes[index] = el.dataset.val;
+            _saveKeysConfig(_keysConfig);
             closeConfigDrawer();
             renderDeviceKeys();
+            _buildModesPanel();
           };
         });
       } else if (type === 'effect') {
@@ -3249,12 +3236,24 @@
       return mc.available_effects || ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend'];
     }
 
+    function _getAssignedModes() {
+      const assigned = new Set();
+      (_keysConfig.banks || []).forEach(bank => {
+        (bank.modes || []).forEach(f => { if (f) assigned.add(f); });
+      });
+      return [...assigned];
+    }
+
     async function _buildModesPanel() {
       const container = document.getElementById('modes-panel-list');
       if (!container) return;
-      container.innerHTML = '<div class="empty" style="font-size:11px">Carregant...</div>';
-      const mds = await _getEffectiveModes();
-      if (!mds.length) { container.innerHTML = '<div class="empty" style="font-size:11px">Cap mode disponible</div>'; return; }
+      const allModes = await _getEffectiveModes();
+      const assignedSet = new Set(_getAssignedModes());
+      const mds = allModes.filter(m => !assignedSet.has(m.file));
+      if (!mds.length) {
+        container.innerHTML = `<div class="empty" style="font-size:11px">${allModes.length ? 'Tots els modes assignats ✓' : 'Cap mode disponible'}</div>`;
+        return;
+      }
       container.innerHTML = mds.map(m =>
         `<div class="mode-panel-item" draggable="true" data-file="${m.file}" data-name="${m.name}">` +
         `<span class="mode-panel-grip">&#x283f;</span><span>${m.name}</span></div>`
@@ -3406,7 +3405,7 @@
         })),
         current_bank: _keysConfig.currentBank,
         midi_channel: midiChannel,
-        enabled_modes: mc.enabled_modes || [],
+        enabled_modes: _getAssignedModes(),
         available_effects: mc.available_effects || ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend'],
         keyboard_scales: kbScales,
         keyboard_keys: kbKeys,
@@ -3639,15 +3638,6 @@
     document.getElementById('btn-install-cp')?.addEventListener('click', () =>
       _transferUf2('adafruit-circuitpython-raspberry_pi_pico-es-10.0.3.uf2', 'CircuitPython 10.0.3'));
 
-    document.getElementById('btn-save-modes')?.addEventListener('click', (e) => {
-      const enabled = [...document.querySelectorAll('#modes-list-check input:checked')].map(c => c.value);
-      const mc = _loadModesConfig(); mc.enabled_modes = enabled; _saveModesConfig(mc);
-      log(`${enabled.length} modes guardats. Actualitzant desplegables de tecles…`, 'ok');
-      refreshKeyDropdowns();
-      showGlobalToast('Guardat correctament');
-    });
-    document.getElementById('btn-modes-all')?.addEventListener('click', () => document.querySelectorAll('#modes-list-check input').forEach(c => c.checked = true));
-    document.getElementById('btn-modes-none')?.addEventListener('click', () => document.querySelectorAll('#modes-list-check input').forEach(c => c.checked = false));
 
     function _exportAllLayers() {
       const checked = [...document.querySelectorAll('.layer-export-chk:checked')].map(c => c.dataset.id);
@@ -5311,9 +5301,8 @@
         if (!manifestRes.ok) throw new Error('No s\'ha trobat device_files_manifest.json al servidor');
         const manifest = await manifestRes.json();
 
-        // 2. Determine enabled modes
-        const mc = _loadModesConfig();
-        const enabledSet = new Set(mc.enabled_modes || []);  // set of filenames like 'mode_einaudi.py'
+        // 2. Determine enabled modes (those assigned to keys)
+        const enabledSet = new Set(_getAssignedModes());
         const ESSENTIAL_MODES = new Set(['base_mode.py', 'mode_manager.py', '__init__.py', 'mode_keyboard.py']);
 
         const filesToCopy = manifest.files.filter(relPath => {
