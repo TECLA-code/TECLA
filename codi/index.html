@@ -1837,6 +1837,7 @@
 
   <nav>
     <span class="nav-tab active" data-tab="keys" data-i18n="nav_keys">Tecles</span>
+    <span class="nav-tab" data-tab="config">Configuració</span>
     <span class="nav-tab" data-tab="modes" data-i18n="nav_modes">Modes i Escales</span>
     <span class="nav-tab" data-tab="progressions" data-i18n="nav_progressions">Progressions</span>
     <span class="nav-tab" data-tab="scales" data-i18n="nav_scales">Escales</span>
@@ -1900,16 +1901,13 @@
       </div>
     </div>
 
-    <!-- ══ MODES I ESCALES ════════════════════════════════════════ -->
-    <div class="tab-panel" id="tab-modes">
-
-      <!-- ══ CONFIGURACIÓ DEL DISPOSITIU ══════════════════════════ -->
-      <div class="card" style="margin-bottom:14px">
-        <div class="card-title" style="margin-bottom:4px">Configuració del dispositiu</div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Configura cada dispositiu TECLA de forma independent per usar-los alhora al DAW</div>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <label style="font-size:12px;font-weight:500;min-width:110px">Canal MIDI:</label>
+    <!-- ══ CONFIGURACIÓ ═══════════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-config">
+      <div style="max-width:440px;display:flex;flex-direction:column;gap:14px;padding-top:4px">
+        <div class="card">
+          <div class="card-title">Canal MIDI</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+            <label style="font-size:12px;font-weight:500;min-width:80px">Canal:</label>
             <select id="midi-channel-select" style="width:70px">
               <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
               <option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
@@ -1917,22 +1915,37 @@
               <option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option>
             </select>
             <button class="btn btn-sm btn-primary" id="btn-save-midi-channel">Guardar</button>
-            <span style="font-size:11px;color:var(--text3)">El DAW filtra l'instrument per canal</span>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <label style="font-size:12px;font-weight:500;min-width:110px">Nom del port USB:</label>
-            <input type="text" id="device-name-input" maxlength="32" placeholder="Ex: TECLA-1" style="width:130px">
-            <button class="btn btn-sm btn-primary" id="btn-save-device-name">Guardar al dispositiu</button>
-            <span style="font-size:11px;color:var(--text3)">Apareix a Logic/Ableton · requereix reinici</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Identitat USB</div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <label style="font-size:12px;font-weight:500;min-width:80px">Nom del port:</label>
+              <input type="text" id="device-name-input" maxlength="32" placeholder="Ex: TECLA-1" style="width:130px">
+              <button class="btn btn-sm btn-primary" id="btn-save-device-name">Guardar</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <label style="font-size:12px;font-weight:500;min-width:80px">Nom del disc:</label>
+              <div style="display:flex;align-items:center;gap:4px">
+                <span style="font-size:12px;font-weight:600;padding:5px 7px;background:var(--bg3);border:1px solid var(--border);border-radius:5px">TECLA</span>
+                <input type="text" id="disk-label-suffix" maxlength="6" placeholder="-1" style="width:64px;text-transform:uppercase">
+              </div>
+              <button class="btn btn-sm btn-primary" id="btn-save-disk-label">Guardar</button>
+            </div>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <label style="font-size:12px;font-weight:500;min-width:110px">Nom del disc:</label>
-            <input type="text" id="disk-label-input" maxlength="11" placeholder="Ex: TECLA" style="width:130px;text-transform:uppercase">
-            <button class="btn btn-sm btn-primary" id="btn-save-disk-label">Guardar al dispositiu</button>
-            <span style="font-size:11px;color:var(--text3)">Reemplaça "CIRCUITPY" · màx 11 caràcters · requereix reinici</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Dispositiu</div>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button class="btn btn-sm" id="btn-config-disconnect">Desconnectar</button>
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- ══ MODES I ESCALES ════════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-modes">
 
       <div class="panel-grid cols2">
         <div class="card">
@@ -2266,7 +2279,7 @@
           <div class="card-title">Estat del sistema</div>
           <div class="fw-status-row"><span class="fw-status-key">Mode Bootloader</span><span
               class="fw-status-val fw-unk" id="fw-bootloader">?</span></div>
-          <div class="fw-status-row"><span class="fw-status-key">Volum CIRCUITPY</span><span
+          <div class="fw-status-row"><span class="fw-status-key">Volum</span><span
               class="fw-status-val fw-unk" id="fw-circuitpy">?</span></div>
           <div class="fw-status-row"><span class="fw-status-key">CircuitPython</span><span class="fw-status-val fw-unk"
               id="fw-cpython">?</span></div>
@@ -2276,21 +2289,12 @@
         </div>
         <div class="card">
           <div class="card-title">Pas 1 — Instal·lar CircuitPython</div>
-          <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.65">Descarrega el fitxer i
-            <strong>arrossega'l al volum RPI-RP2</strong> al Finder. El dispositiu es reiniciarà automàticament.
-          </p>
+          <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.65">Connecta la Pico mantenint premut <strong>BOOTSEL</strong>. Selecciona el volum <strong>RPI-RP2</strong> quan el diàleg ho demani.</p>
           <div style="display:flex;flex-direction:column;gap:8px">
-            <a class="btn btn-sm" id="btn-flash-nuke" href="/firmware/flash_nuke.uf2" download="flash_nuke.uf2">⚠
-              Descarregar flash_nuke.uf2</a>
-            <a class="btn btn-sm btn-primary" id="btn-install-cp"
-              href="/firmware/adafruit-circuitpython-raspberry_pi_pico-es-10.0.3.uf2"
-              download="circuitpython-pico-10.0.3.uf2">⬇ Descarregar CircuitPython 10.0.3</a>
+            <button class="btn btn-sm" id="btn-flash-nuke">⚠ Transferir Flash Nuke al RPI-RP2</button>
+            <button class="btn btn-sm btn-primary" id="btn-install-cp">⬇ Transferir CircuitPython 10.0.3 al RPI-RP2</button>
             <button class="btn btn-sm" id="btn-fw-instructions">ℹ Instruccions completes</button>
           </div>
-          <p style="font-size:11px;color:var(--text2);margin-top:10px;line-height:1.6">
-            <strong>Per entrar al mode bootloader:</strong><br>Mantén premut BOOTSEL mentre connectes el USB-C.<br>
-            <strong>Després de descarregar:</strong><br>Obre el Finder → arrossega el .uf2 al volum RPI-RP2.
-          </p>
         </div>
         <div class="card">
           <div class="card-title">Pas 2 — Firmware TECLA</div>
@@ -2642,10 +2646,15 @@
         if (t === 'simulator' && !simulator) initSimulator();
         if (t === 'keys' && !_builtKeys) { buildKeysGrid(); _builtKeys = true; }
         if (t === 'modes' && !_builtModes) { buildModesTab(); _builtModes = true; }
+        if (t === 'config') _buildConfigTab();
       });
     });
     buildKeysGrid(); // async: populates selects, syncs bank select, restores saved values
     _builtKeys = true;
+
+    navigator.usb?.addEventListener('disconnect', () => {
+      if (device.isConnected()) { modes = null; setDisconnected(); log('Dispositiu desconnectat.', 'info'); }
+    });
 
     // ── API compat ─────────────────────────────────────────────────
     if (!('showDirectoryPicker' in window)) {
@@ -2754,8 +2763,11 @@
         } catch { /* fitxer no existeix encara */ }
         try {
           const savedLabel = await device.readFile('config/disk_label.txt');
-          const inp2 = document.getElementById('disk-label-input');
-          if (inp2 && savedLabel?.trim()) inp2.value = savedLabel.trim().toUpperCase();
+          const inp2 = document.getElementById('disk-label-suffix');
+          if (inp2 && savedLabel?.trim()) {
+            const full = savedLabel.trim().toUpperCase();
+            inp2.value = full.startsWith('TECLA') ? full.slice(5) : full;
+          }
         } catch { /* fitxer no existeix encara */ }
       } else if (!result.aborted) {
         log(`Error: ${result.error}`, 'err');
@@ -3448,9 +3460,6 @@
         });
       }
 
-      // MIDI channel
-      setSelectVal('midi-channel-select', String(mc.midi_channel || 1));
-
       // Keyboard scales checklist (predefined + progressions + custom scales)
       _rebuildKeyboardScalesList();
 
@@ -3499,6 +3508,11 @@
       }
     });
 
+    function _buildConfigTab() {
+      const mc = _loadModesConfig();
+      setSelectVal('midi-channel-select', String(mc.midi_channel || 1));
+    }
+
     async function _deployBootPy() {
       try {
         const res = await fetch('./device_files/boot.py');
@@ -3523,20 +3537,50 @@
     });
 
     document.getElementById('btn-save-disk-label')?.addEventListener('click', async () => {
-      const raw = (document.getElementById('disk-label-input')?.value || '').trim().toUpperCase().slice(0, 11);
-      if (!raw) { alert('Escriu un nom per al disc (ex: TECLA).'); return; }
-      if (!device.isConnected()) { alert('Connecta el dispositiu primer (pestanya Tecles).'); return; }
+      const suffix = (document.getElementById('disk-label-suffix')?.value || '').trim().toUpperCase().replace(/[^A-Z0-9_\- ]/g, '').slice(0, 6);
+      const label = 'TECLA' + suffix;
+      if (!device.isConnected()) { alert('Connecta el dispositiu primer (pestanya Configuració).'); return; }
       try {
-        await device.writeFile('config/disk_label.txt', raw);
+        await device.writeFile('config/disk_label.txt', label);
         await _deployBootPy();
-        log(`✓ Nom del disc desat: "${raw}". Desconnecta i reconnecta el dispositiu per aplicar.`, 'ok');
-        showGlobalToast(`Disc "${raw}" desat. Reinicia el dispositiu.`);
+        log(`✓ Nom del disc desat: "${label}". Desconnecta i reconnecta el dispositiu per aplicar.`, 'ok');
+        showGlobalToast(`Disc "${label}" desat. Reinicia el dispositiu.`);
       } catch (e) { log(`Error desant etiqueta: ${e.message}`, 'warn'); }
     });
 
-    document.getElementById('disk-label-input')?.addEventListener('input', function() {
-      this.value = this.value.toUpperCase().replace(/[^A-Z0-9_\- ]/g, '').slice(0, 11);
+    document.getElementById('disk-label-suffix')?.addEventListener('input', function() {
+      this.value = this.value.toUpperCase().replace(/[^A-Z0-9_\- ]/g, '').slice(0, 6);
     });
+
+    document.getElementById('btn-config-disconnect')?.addEventListener('click', () => {
+      if (device.isConnected()) { device.disconnect(); modes = null; setDisconnected(); }
+      log('Dispositiu desconnectat.', 'info');
+    });
+
+    async function _transferUf2(filename, label) {
+      try {
+        _fwMsg(`Carregant ${label}...`);
+        const res = await fetch(`./firmware/${filename}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}: fitxer no trobat`);
+        const data = await res.arrayBuffer();
+        const handle = await window.showSaveFilePicker({
+          suggestedName: filename,
+          types: [{ description: 'UF2 Firmware', accept: { 'application/octet-stream': ['.uf2'] } }]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(data);
+        await writable.close();
+        _fwMsg(`✓ ${label} transferit. El dispositiu es reiniciarà automàticament.`);
+        log(`✓ ${label} transferit.`, 'ok');
+      } catch (e) {
+        if (e.name !== 'AbortError') { _fwMsg(`Error: ${e.message}`); log(`Error transferint ${label}: ${e.message}`, 'err'); }
+      }
+    }
+
+    document.getElementById('btn-flash-nuke')?.addEventListener('click', () =>
+      _transferUf2('flash_nuke.uf2', 'Flash Nuke'));
+    document.getElementById('btn-install-cp')?.addEventListener('click', () =>
+      _transferUf2('adafruit-circuitpython-raspberry_pi_pico-es-10.0.3.uf2', 'CircuitPython 10.0.3'));
 
     document.getElementById('btn-save-modes')?.addEventListener('click', (e) => {
       const enabled = [...document.querySelectorAll('#modes-list-check input:checked')].map(c => c.value);
@@ -5179,19 +5223,14 @@
         `PAS 1 — CircuitPython (mode bootloader RPI-RP2):\n` +
         `  a. Connecta la Pico mantenint premut BOOTSEL\n` +
         `     → Apareix com "RPI-RP2" al Finder\n` +
-        `  b. (Opcional) Descarrega flash_nuke.uf2 i arrossega'l\n` +
-        `     al volum RPI-RP2 per esborrar tot el contingut\n` +
-        `  c. Descarrega CircuitPython 10.0.3 i arrossega'l\n` +
-        `     al volum RPI-RP2 → el dispositiu es reinicia com CIRCUITPY\n\n` +
-        `PAS 2 — Firmware TECLA (volum CIRCUITPY):\n` +
+        `  b. (Opcional) Prem "Transferir Flash Nuke",\n` +
+        `     selecciona el volum RPI-RP2 al diàleg\n` +
+        `  c. Prem "Transferir CircuitPython 10.0.3",\n` +
+        `     selecciona el volum RPI-RP2 → es reinicia com TECLA/CIRCUITPY\n\n` +
+        `PAS 2 — Firmware TECLA:\n` +
         `  a. A la pestanya "Tecles", prem "Connectar"\n` +
-        `     → Selecciona el volum CIRCUITPY\n` +
-        `  b. Torna a "Firmware" → prem "Refrescar estat"\n` +
-        `  c. Prem "Instal·lar / Actualitzar firmware"\n` +
-        `  d. Reinicia el dispositiu per aplicar els canvis\n\n` +
-        `NOTA: Els fitxers .uf2 s'han d'arrossegar manualment\n` +
-        `des del Finder al volum RPI-RP2 (no es poden escriure\n` +
-        `via web per limitacions del sistema operatiu).`);
+        `  b. Torna a "Firmware" → prem "Instal·lar / Actualitzar firmware"\n` +
+        `  c. Reinicia el dispositiu per aplicar els canvis`);
     });
 
     // ── Instal·lar / Actualitzar firmware TECLA ──────────────────────
@@ -5205,7 +5244,7 @@
         `Vols continuar?`)) return;
 
       document.getElementById('btn-install-fw').disabled = true;
-      _fwProgress(0); _fwMsg('Llegint manifest de fitxers…');
+      _fwProgress(0); _fwMsg('');
 
       try {
         // 1. Load manifest
@@ -5227,10 +5266,10 @@
           return true;
         });
 
-        _fwMsg(`Preparant ${filesToCopy.length} fitxers…`); _fwProgress(3);
+        _fwProgress(3);
 
         // 3. Pre-create all directories (fixes NotFoundError on FAT32/macOS Chrome .crswap issue)
-        _fwMsg('Creant directoris…'); _fwProgress(5);
+        _fwProgress(5);
         const DIRS = ['config', 'core', 'core/animations', 'effects', 'lib',
           'lib/adafruit_hid', 'lib/adafruit_midi', 'modes'];
         for (const dir of DIRS) {
@@ -5240,7 +5279,6 @@
         await new Promise(r => setTimeout(r, 400));
 
         // 4. Clean unused modes already on device (mirror desktop _clean_unused_modes)
-        _fwMsg('Netejant modes no seleccionats…');
         try {
           const modesEntries = await device.listDir('modes');
           for (const entry of modesEntries) {
@@ -5259,7 +5297,6 @@
         // 6. Copy files
         let done = 0; const errors = [];
         for (const relPath of filesToCopy) {
-          _fwMsg(`Copiant ${relPath}…`);
           try {
             const isBinary = relPath.endsWith('.mpy');
             const res = await fetch(`./device_files/${relPath}`);
@@ -5272,7 +5309,7 @@
         }
 
         // 6. Write local config (from buildDeviceConfig) → config/tecla_config.json
-        _fwMsg('Escrivint configuració…'); _fwProgress(90);
+        _fwProgress(90);
         try {
           const cfgData = JSON.stringify(buildDeviceConfig(), null, 2);
           await device.writeFile('config/tecla_config.json', cfgData);
