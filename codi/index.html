@@ -2826,12 +2826,22 @@
       try { const r = await fetch('py/modes_index.json'); const d = await r.json(); _modesIndex = d.modes || []; } catch { }
       return _modesIndex;
     }
+    function _getModeNames() {
+      try { return JSON.parse(localStorage.getItem('tecla-mode-names') || '{}'); } catch { return {}; }
+    }
+    function _setModeName(file, name) {
+      const n = _getModeNames(); n[file] = name.trim();
+      localStorage.setItem('tecla-mode-names', JSON.stringify(n));
+    }
+
     async function _getEffectiveModes() {
       const base = await _loadModesIndex();
       const extra = JSON.parse(localStorage.getItem('tecla-extra-modes') || '[]');
       const hidden = new Set(JSON.parse(localStorage.getItem('tecla-hidden-modes') || '[]'));
+      const names = _getModeNames();
       const merged = [...base, ...extra.filter(m => !base.find(b => b.file === m.file))];
-      return merged.filter(m => !hidden.has(m.file));
+      return merged.filter(m => !hidden.has(m.file))
+        .map(m => names[m.file] ? { ...m, name: names[m.file] } : m);
     }
 
     // ── Mode source helpers (localStorage) ────────────────────────
@@ -3165,28 +3175,44 @@
       drawerBody.innerHTML = '';
       
       if (type === 'mode') {
-        drawerTitle.textContent = `Assignar Tecla ${index + 1}`;
-        const enabledModes = await _getEnabledModesForKeys();
-        
-        let html = '<div class="mode-sel-list">';
-        html += `<div class="mode-sel-item ${!bank.modes[index] ? 'active' : ''}" data-val="">— Buit —</div>`;
-        enabledModes.forEach(m => {
-          const isActive = bank.modes[index] === m.file;
-          html += `<div class="mode-sel-item ${isActive ? 'active' : ''}" data-val="${m.file}"><span>${m.name}</span></div>`;
+        const modeFile = bank.modes[index];
+        if (!modeFile) return; // empty key — assign via drag-and-drop
+        drawerTitle.textContent = `Tecla ${index + 1}`;
+        const allModes = await _getEffectiveModes();
+        const mode = allModes.find(m => m.file === modeFile) || { name: modeFile, file: modeFile };
+        drawerBody.innerHTML = `
+          <div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Fitxer</div>
+            <div style="font-size:11px;color:var(--text2);font-family:monospace">${mode.file}</div>
+          </div>
+          <div style="margin-bottom:16px">
+            <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Reanomenar</label>
+            <div style="display:flex;gap:6px">
+              <input type="text" id="drawer-rename-input" value="${mode.name}" style="flex:1;min-width:0">
+              <button class="btn btn-sm btn-primary" id="drawer-btn-rename">OK</button>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-danger" id="drawer-btn-clear" style="width:100%">✕ Buidar tecla</button>
+        `;
+        document.getElementById('drawer-rename-input').addEventListener('keydown', e => {
+          if (e.key === 'Enter') document.getElementById('drawer-btn-rename').click();
         });
-        html += '</div>';
-        
-        drawerBody.innerHTML = html;
-        
-        drawerBody.querySelectorAll('.mode-sel-item').forEach(el => {
-          el.onclick = () => {
-            bank.modes[index] = el.dataset.val;
-            _saveKeysConfig(_keysConfig);
-            closeConfigDrawer();
-            renderDeviceKeys();
-            _buildModesPanel();
-          };
-        });
+        document.getElementById('drawer-btn-rename').onclick = () => {
+          const newName = document.getElementById('drawer-rename-input').value.trim();
+          if (!newName) return;
+          _setModeName(modeFile, newName);
+          closeConfigDrawer();
+          renderDeviceKeys();
+          _buildModesPanel();
+          showGlobalToast('Mode reanomenat');
+        };
+        document.getElementById('drawer-btn-clear').onclick = () => {
+          bank.modes[index] = '';
+          _saveKeysConfig(_keysConfig);
+          closeConfigDrawer();
+          renderDeviceKeys();
+          _buildModesPanel();
+        };
       } else if (type === 'effect') {
         const keyNum = index === 13 ? 14 : 15;
         drawerTitle.textContent = `Efecte Temporal - Tecla ${keyNum}`;
@@ -3383,7 +3409,8 @@
     function buildDeviceConfig() {
       const mc = _loadModesConfig();
       // Convert file names ("mode_mandelbrot.py") → display names ("Mandelbrot") that mode_manager.py expects
-      const fileToName = Object.fromEntries(_modesIndex.map(m => [m.file, m.name]));
+      const customNames = _getModeNames();
+      const fileToName = Object.fromEntries(_modesIndex.map(m => [m.file, customNames[m.file] || m.name]));
       const midiChannel = mc.midi_channel || 1;
       const kbScales = mc.keyboard_scales || [];
       const kbKeys = mc.keyboard_keys || ALL_KEYS;
