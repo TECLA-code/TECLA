@@ -470,6 +470,53 @@
       gap: 2px
     }
 
+    /* PILL TOGGLES — modern checkbox pills for scales & arp */
+    .pill-toggles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      align-content: flex-start
+    }
+    .pill-toggles label.cb {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 13px;
+      border-radius: 100px;
+      border: 1.5px solid var(--border);
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--text3);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+      transition: background .12s, border-color .12s, color .12s;
+      background: transparent;
+      letter-spacing: .01em
+    }
+    .pill-toggles label.cb:hover {
+      border-color: var(--accent);
+      color: var(--text1);
+      background: color-mix(in srgb, var(--accent) 8%, transparent)
+    }
+    .pill-toggles label.cb:has(input:checked) {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      font-weight: 600
+    }
+    .pill-toggles label.cb input[type="checkbox"] { display: none }
+    .pill-divider {
+      flex-basis: 100%;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text3);
+      padding: 7px 0 3px;
+      border-top: 1px solid var(--border);
+      margin-top: 3px;
+      letter-spacing: .07em;
+      text-transform: uppercase
+    }
+
     /* POTS */
     .pots-row {
       display: flex;
@@ -2007,7 +2054,7 @@
       <div class="panel-grid cols3">
         <div class="card">
           <div class="card-title">Escales del mode teclat</div>
-          <div class="checklist c3" id="keyboard-scales-list"></div>
+          <div class="pill-toggles" id="keyboard-scales-list"></div>
           <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
             <button class="btn btn-sm btn-primary" id="btn-save-scales">Guardar</button>
             <button class="btn btn-sm" id="btn-scales-all">Totes</button>
@@ -2016,7 +2063,7 @@
         </div>
         <div class="card">
           <div class="card-title">Patrons direccionals de l'arpegiador</div>
-          <div class="arp-grid" id="arp-list"></div>
+          <div class="pill-toggles" id="arp-list"></div>
           <div class="card-title" style="margin-top: 16px; font-size: 11px;">Patrons Personalitzats</div>
           <div class="crud-toolbar" style="margin-bottom: 6px;">
             <button class="btn btn-sm btn-primary" id="btn-new-arp">+ Nou Patró</button>
@@ -3503,7 +3550,7 @@
       // Progressions (IDs 1000 + index)
       const progs = _getProgressions();
       if (progs.length) {
-        html += `<div style="grid-column:1/-1;font-size:10px;font-weight:600;color:var(--text3);padding:6px 0 2px;border-top:1px solid var(--border);margin-top:4px;letter-spacing:.05em;text-transform:uppercase">Progressions</div>`;
+        html += `<div class="pill-divider">Progressions</div>`;
         html += progs.map((p, i) => {
           const id = 1000 + i;
           return `<label class="cb"><input type="checkbox" class="kb-scale-chk" value="${id}" ${enabled.has(id) ? 'checked' : ''}>
@@ -3513,7 +3560,7 @@
       // Custom scales (IDs 2000 + index)
       _loadCustomScales();
       if (_customScales.length) {
-        html += `<div style="grid-column:1/-1;font-size:10px;font-weight:600;color:var(--text3);padding:6px 0 2px;border-top:1px solid var(--border);margin-top:4px;letter-spacing:.05em;text-transform:uppercase">Escales personalitzades</div>`;
+        html += `<div class="pill-divider">Escales personalitzades</div>`;
         html += _customScales.map((s, i) => {
           const id = 2000 + i;
           return `<label class="cb"><input type="checkbox" class="kb-scale-chk" value="${id}" ${enabled.has(id) ? 'checked' : ''}>
