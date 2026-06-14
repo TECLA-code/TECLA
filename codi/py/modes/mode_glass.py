@@ -4,6 +4,7 @@ X: Velocitat del cicle (ràpid/lent)
 Y: Motiu (Metamorphosis, Glassworks, Koyaanisqatsi, Mad Rush, Akhnaten)
 Z: Octava + densitat harmònica
 Doble click: canvi de tonalitat
+Mantenir premut botó 16: harmonia negativa (pot Z tria l'eix; les dues veus es reflecteixen)
 """
 import time
 from modes.base_mode import BaseMode
@@ -61,6 +62,9 @@ class ModeGlass(BaseMode):
     def _root(self, oct_offset=0):
         return (self.octave + oct_offset) * 12 + _OFF[self.key_idx]
 
+    def _nh(self, note):
+        return self.negharm(note, self._root() % 12)
+
     def _cc(self, cc, val):
         try:
             self.midi_out.send(ControlChange(cc, max(0, min(127, val))))
@@ -73,6 +77,7 @@ class ModeGlass(BaseMode):
         root = self._root()
 
         note = max(24, min(108, root + pat[idx]))
+        note = self._nh(note)
         vel  = 80 if idx % 2 == 0 else 65  # accent alt/baix, típic Glass
 
         if self.last_note >= 0:
@@ -84,6 +89,7 @@ class ModeGlass(BaseMode):
         # Segon veu: veu harmònica una octava avall (density > 0.4)
         if density > 0.4:
             harm = max(24, min(108, root - 12 + pat[(idx + len(pat)//2) % len(pat)]))
+            harm = self._nh(harm)
             if self.harmony_note >= 0:
                 self.midi_out.send(self.note_off(self.harmony_note, 0))
             self.midi_out.send(self.note_on(harm, max(1, int(vel * 0.6))))
@@ -99,6 +105,7 @@ class ModeGlass(BaseMode):
     def update(self, pot_values, button_states):
         x, y, z = pot_values
         now = time.monotonic()
+        self.poll_negharm(button_states, z)
 
         # X: Velocitat (0.35s lent → 0.08s ràpid, Glass és intens)
         self.speed = max(0.08, 0.35 - (x / 127.0) * 0.27)
@@ -110,18 +117,23 @@ class ModeGlass(BaseMode):
             self.step = 0
             self.cycle_count = 0
 
-        # Z: Octava + densitat (si Z > 64 activa segon veu)
-        new_oct = 3 + int((z / 127.0) * 3.99)
-        if new_oct != self.octave:
-            self.octave = new_oct
-        density = z / 127.0
+        # Z: Octava + densitat — congelades mentre Z tria l'eix d'harmonia negativa
+        if self.neg_active:
+            density = 0.0
+        else:
+            new_oct = 3 + int((z / 127.0) * 3.99)
+            if new_oct != self.octave:
+                self.octave = new_oct
+            density = z / 127.0
 
         if now >= self.next_note_t:
             self._play_step(density)
             self.next_note_t = now + self.speed
 
-        # Doble click: tonalitat
+        # Doble click: tonalitat (botó 16 reservat per harmonia negativa)
         for i in range(min(len(button_states), 16)):
+            if i == 15:
+                continue
             cur = bool(button_states[i])
             if self.last_btn[i] and not cur:
                 gap = now - self.last_release[i]
@@ -139,6 +151,8 @@ class ModeGlass(BaseMode):
             'key':    _KEYS[self.key_idx],
             'motiu':  _PNAMES[self.pat_idx],
             'cicle':  self.cycle_count,
+            'neg':    self.neg_active,
+            'axis':   self.negharm_axis_name() if self.neg_active else '-',
         }
 
     def cleanup(self):

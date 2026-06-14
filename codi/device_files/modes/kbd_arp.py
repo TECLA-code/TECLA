@@ -15,6 +15,39 @@ except ImportError:
 KEY_OFFSETS = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
 
 
+def _arp_notes_for_button(kbd, btn_idx, scale_intervals, key_offset, scale_id):
+    """Notes que ha de generar un botó en mode arpegiador.
+
+    Respecta, en aquest ordre de prioritat:
+      - Funcions harmòniques (diatonic_fn_idx >= 0) -> acord de la funció
+      - Mode acords (chord_mode_active) -> acord del tipus seleccionat
+      - Per defecte -> nota simple de l'escala
+    L'harmonia negativa s'aplica més tard, a _note_on (reflect_note).
+    """
+    n = len(scale_intervals)
+    scale_degree = btn_idx % n
+    octave_offset = btn_idx // n
+    root_note = (kbd.octave + octave_offset) * 12 + key_offset + scale_intervals[scale_degree]
+
+    fn_idx = getattr(kbd, 'diatonic_fn_idx', -1)
+    if fn_idx >= 0:
+        try:
+            from modes.kbd_notes import _apply_harmonic_fn
+            fns = getattr(kbd, 'available_diatonic_fns', [])
+            fn = fns[fn_idx] if fns and fn_idx < len(fns) else 'diatonic'
+            root_offset, chord_type = _apply_harmonic_fn(scale_intervals, scale_degree, fn, scale_id)
+            root_note += root_offset
+            intervals = chord_type if isinstance(chord_type, tuple) else get_chord(chord_type)
+            return [max(0, min(127, root_note + iv)) for iv in intervals]
+        except Exception:
+            return [max(0, min(127, root_note))]
+    elif kbd.chord_mode_active:
+        chord_type = kbd.available_chord_types[kbd.chord_type_index] if kbd.available_chord_types else 'Major'
+        return [max(0, min(127, root_note + iv)) for iv in get_chord(chord_type)]
+    else:
+        return [max(0, min(127, root_note))]
+
+
 def get_arp_name(kbd, mode_index):
     if mode_index >= 2000:
         custom = kbd.config_manager.get_custom_arp_by_id(mode_index) if kbd.config_manager else None
@@ -28,7 +61,7 @@ def get_arp_name(kbd, mode_index):
 
 
 def process_arpeggiator(kbd, button_states, current_time):
-    pressed_buttons = [i for i in range(8) if i < len(button_states) and button_states[i]]
+    pressed_buttons = [i for i in range(len(button_states)) if button_states[i]]
 
     if not pressed_buttons:
         kbd.stop_all_notes()
@@ -109,41 +142,17 @@ def process_arpeggiator(kbd, button_states, current_time):
     else:
         scale_intervals = SCALES[current_scale_id]
         key_offset = KEY_OFFSETS[kbd.key_index]
-
         for btn_idx in pressed_buttons:
-            if kbd.chord_mode_active:
-                scale_degree = btn_idx % len(scale_intervals)
-                octave_offset = btn_idx // len(scale_intervals)
-                root_note = (kbd.octave + octave_offset) * 12 + key_offset + scale_intervals[scale_degree]
-                chord_type = kbd.available_chord_types[kbd.chord_type_index] if kbd.available_chord_types else 'Major'
-                chord_intervals = get_chord(chord_type)
-                for interval in chord_intervals:
-                    all_notes.append(root_note + interval)
-            else:
-                scale_degree = btn_idx % len(scale_intervals)
-                octave_offset = btn_idx // len(scale_intervals)
-                note = (kbd.octave + octave_offset) * 12 + key_offset + scale_intervals[scale_degree]
-                note = max(0, min(127, note))
-                all_notes.append(note)
+            all_notes.extend(_arp_notes_for_button(kbd, btn_idx, scale_intervals, key_offset, current_scale_id))
 
     arp_direction = 'custom' if kbd.arp_mode_index >= 2000 else ARP_DIRS[kbd.arp_mode_index]
 
-    if arp_direction == 'order':
+    if arp_direction == 'order' and current_scale_id < 1000:
+        scale_intervals = SCALES[current_scale_id]
+        key_offset = KEY_OFFSETS[kbd.key_index]
         ordered_notes = []
         for btn_idx in kbd.arp_button_order:
-            if kbd.chord_mode_active:
-                scale_degree = btn_idx % len(scale_intervals)
-                octave_offset = btn_idx // len(scale_intervals)
-                root_note = (kbd.octave + octave_offset) * 12 + key_offset + scale_intervals[scale_degree]
-                chord_type = kbd.available_chord_types[kbd.chord_type_index] if kbd.available_chord_types else 'Major'
-                chord_intervals = get_chord(chord_type)
-                for interval in chord_intervals:
-                    ordered_notes.append(max(0, min(127, root_note + interval)))
-            else:
-                scale_degree = btn_idx % len(scale_intervals)
-                octave_offset = btn_idx // len(scale_intervals)
-                note = (kbd.octave + octave_offset) * 12 + key_offset + scale_intervals[scale_degree]
-                ordered_notes.append(max(0, min(127, note)))
+            ordered_notes.extend(_arp_notes_for_button(kbd, btn_idx, scale_intervals, key_offset, current_scale_id))
         kbd.arp_notes = ordered_notes
     else:
         all_notes = sorted(set(max(0, min(127, n)) for n in all_notes))

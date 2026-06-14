@@ -464,7 +464,7 @@ Blockly.Blocks['tecla_digital_write'] = {
   init: function () {
     this.appendDummyInput()
       .appendField("💡 Pin digital")
-      .appendField(new Blockly.FieldNumber(0, 0, 29), "PIN")
+      .appendField(new Blockly.FieldNumber(16, 0, 29), "PIN")
       .appendField("escriure")
       .appendField(new Blockly.FieldDropdown([
         ["HIGH (1)", "1"],
@@ -482,7 +482,7 @@ Blockly.Blocks['tecla_digital_read'] = {
   init: function () {
     this.appendDummyInput()
       .appendField("📥 Llegir pin digital")
-      .appendField(new Blockly.FieldNumber(0, 0, 29), "PIN");
+      .appendField(new Blockly.FieldNumber(16, 0, 29), "PIN");
     this.setOutput(true, "Boolean");
     this.setColour('#00f0ff');
     this.setTooltip("Llegeix el valor d'un pin digital");
@@ -493,8 +493,8 @@ Blockly.Blocks['tecla_digital_read'] = {
 Blockly.Blocks['tecla_analog_write'] = {
   init: function () {
     this.appendDummyInput()
-      .appendField("📊 Pin analògic")
-      .appendField(new Blockly.FieldNumber(0, 0, 2), "PIN");
+      .appendField("📊 Pin PWM GP")
+      .appendField(new Blockly.FieldNumber(16, 0, 29), "PIN");
     this.appendValueInput("VALUE")
       .setCheck("Number")
       .appendField("escriure PWM");
@@ -837,9 +837,7 @@ Blockly.Blocks['tecla_switch'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#ff9100');
-    this.setTooltip("Estructura switch/case per múltiples condicions");
-    this.setMutator(new Blockly.Mutator(['tecla_switch_case']));
-    this.caseCount_ = 1;
+    this.setTooltip("Si el valor coincideix amb el cas, executa el primer bloc; si no, el 'per defecte'");
   }
 };
 
@@ -1214,10 +1212,9 @@ Blockly.Blocks['tecla_neopixel_rainbow'] = {
 Blockly.Blocks['tecla_display_setup'] = {
   init: function () {
     this.appendDummyInput()
-      .appendField("🖥️ Configurar Display")
+      .appendField("🖥️ Configurar pantalla")
       .appendField(new Blockly.FieldDropdown([
-        ["OLED 128x64", "OLED"],
-        ["LCD 16x2", "LCD"]
+        ["OLED 128x64", "OLED"]
       ]), "TYPE");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);

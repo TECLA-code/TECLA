@@ -1,4 +1,5 @@
-"""MarkovGenre - Cadena Markov de genere musical. X:tempo Y:genere Z:expressivitat"""
+"""MarkovGenre - Cadena Markov de genere musical. X:tempo Y:genere Z:expressivitat.
+Mantenir premut botó 16: harmonia negativa (reflexió sobre C; pot Z tria l'eix)."""
 import time, random
 from modes.base_mode import BaseMode
 
@@ -48,6 +49,7 @@ class ModeMarkovGenre(BaseMode):
     def update(self, pot_values, button_states):
         now = time.monotonic()
         x, y, z = pot_values
+        self.poll_negharm(button_states, z)
 
         g = GENRES[int((y / 127.0) * (len(GENRES) - 0.01))]
 
@@ -84,6 +86,7 @@ class ModeMarkovGenre(BaseMode):
 
         note = 12 * self.mk_oct + scale[self.mk_idx]
         note = max(0, min(127, note))
+        note = self.negharm(note, 0)   # reflexió sobre C (les escales són relatives a C)
 
         # Velocitat: random dins rang del genere, accentuat al beat 1
         vel = random.randint(g['vl'], g['vh'])

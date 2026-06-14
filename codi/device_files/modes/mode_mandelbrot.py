@@ -80,6 +80,6 @@ class ModeMandelbrot(BaseMode):
     
     def cleanup(self):
         # Aturar totes les notes en sortir del mode
-        notes_to_stop = list(self.notes_playing)
+        for note in list(self.notes_playing):
+            self.midi_out.send(self.note_off(note, 0))
         self.notes_playing.clear()
-        return [(note, 0) for note in notes_to_stop]

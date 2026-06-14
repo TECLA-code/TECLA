@@ -36,6 +36,8 @@ class ModeLiveGota(BaseMode):
 
     def _dbl(self, button_states, now):
         for i in range(min(len(button_states), 16)):
+            if i == 15:
+                continue
             cur = bool(button_states[i])
             if self.last_btn[i] and not cur:
                 gap = now - self.last_release[i]
@@ -50,9 +52,11 @@ class ModeLiveGota(BaseMode):
     def update(self, pot_values, button_states):
         x, y, z = pot_values
         now = time.monotonic()
+        self.poll_negharm(button_states, z)
         self.min_gap = max(0.12, 2.0 - (x / 127.0) * 1.88)
         self._cc(1, y)
-        self.octave = 3 + int((z / 127.0) * 2.99)
+        if not self.neg_active:  # Z congelada mentre tria l'eix neg.
+            self.octave = 3 + int((z / 127.0) * 2.99)
         still = []
         for (n, off_t) in self.notes_on:
             if now >= off_t:
@@ -63,6 +67,7 @@ class ModeLiveGota(BaseMode):
         if now >= self.next_t:
             iv = _PENTA[random.randint(0, len(_PENTA) - 1)]
             note = max(36, min(108, self._root() + iv))
+            note = self.negharm(note, self._root() % 12)
             vel = random.randint(55, 100)
             dur = random.uniform(0.15, 0.50)
             self.midi_out.send(self.note_on(note, vel))

@@ -4,6 +4,7 @@ X: Velocitat
 Y: Figura (Says, AllMelody, Forest, Spaces, Toilet)
 Z: Octava
 Doble click: canvi de tonalitat
+Mantenir premut botó 16: harmonia negativa (pot Z tria l'eix)
 """
 import time
 from modes.base_mode import BaseMode
@@ -60,6 +61,9 @@ class ModeFrahm(BaseMode):
     def _root(self):
         return self.octave * 12 + _OFF[self.key_idx]
 
+    def _nh(self, note):
+        return self.negharm(note, self._root() % 12)
+
     def _cc(self, cc, val):
         try:
             self.midi_out.send(ControlChange(cc, max(0, min(127, val))))
@@ -69,6 +73,7 @@ class ModeFrahm(BaseMode):
     def _play_step(self):
         pat  = _PATTERNS[self.pat_idx]
         note = max(24, min(108, self._root() + pat[self.step % len(pat)]))
+        note = self._nh(note)
         vel  = _VELS[self.step % len(_VELS)]
         if self.last_note >= 0:
             self.midi_out.send(self.note_off(self.last_note, 0))
@@ -79,6 +84,7 @@ class ModeFrahm(BaseMode):
     def update(self, pot_values, button_states):
         x, y, z = pot_values
         now = time.monotonic()
+        self.poll_negharm(button_states, z)
 
         # X: Velocitat (0.9s lent → 0.07s rapid — Frahm pot ser molt rapid)
         self.speed = max(0.07, 0.9 - (x / 127.0) * 0.83)
@@ -89,16 +95,19 @@ class ModeFrahm(BaseMode):
             self.pat_idx = new_pat
             self.step = 0
 
-        # Z: Octava (3-6)
-        new_oct = 3 + int((z / 127.0) * 3.99)
-        if new_oct != self.octave:
-            self.octave = new_oct
+        # Z: Octava (3-6) — congelada mentre Z tria l'eix d'harmonia negativa
+        if not self.neg_active:
+            new_oct = 3 + int((z / 127.0) * 3.99)
+            if new_oct != self.octave:
+                self.octave = new_oct
 
         if now >= self.next_note_t:
             self._play_step()
             self.next_note_t = now + self.speed
 
         for i in range(min(len(button_states), 16)):
+            if i == 15:
+                continue
             cur = bool(button_states[i])
             if self.last_btn[i] and not cur:
                 gap = now - self.last_release[i]
@@ -111,7 +120,9 @@ class ModeFrahm(BaseMode):
                     self.last_release[i] = now
             self.last_btn[i] = cur
 
-        return {'key': _KEYS[self.key_idx], 'pat': _PNAMES[self.pat_idx], 'oct': self.octave}
+        return {'key': _KEYS[self.key_idx], 'pat': _PNAMES[self.pat_idx],
+                'oct': self.octave, 'neg': self.neg_active,
+                'axis': self.negharm_axis_name() if self.neg_active else '-'}
 
     def cleanup(self):
         if self.last_note >= 0:

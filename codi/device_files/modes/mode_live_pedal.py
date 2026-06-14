@@ -1,4 +1,5 @@
-"""Pedal - Drone de baix sostingut amb gate rítmic. X:gate Y:CC1 Z:octava. Doble clic: tonalitat."""
+"""Pedal - Drone de baix sostingut amb gate rítmic. X:gate Y:CC1 Z:octava. Doble clic: tonalitat.
+Mantenir premut botó 16: harmonia negativa (pot Z tria l'eix; re-voca el drone)."""
 import time
 from modes.base_mode import BaseMode
 from adafruit_midi.control_change import ControlChange
@@ -45,13 +46,15 @@ class ModeLivePedal(BaseMode):
         self._stop()
         root = self._root()
         for iv in (0, 7, 12):
-            note = max(24, min(96, root + iv))
+            note = self.negharm(max(24, min(96, root + iv)), self._root() % 12)
             self.active_notes.append(note)
             self.midi_out.send(self.note_on(note, 80))
         self._cc(11, 127)
 
     def _dbl(self, button_states, now):
         for i in range(min(len(button_states), 16)):
+            if i == 15:
+                continue
             cur = bool(button_states[i])
             if self.last_btn[i] and not cur:
                 gap = now - self.last_release[i]
@@ -67,10 +70,15 @@ class ModeLivePedal(BaseMode):
     def update(self, pot_values, button_states):
         x, y, z = pot_values
         now = time.monotonic()
+        prev_neg = (self.neg_active, self.neg_axis)
+        self.poll_negharm(button_states, z)
         self._cc(1, y)
-        new_oct = 1 + int((z / 127.0) * 2.99)
-        if new_oct != self.octave:
-            self.octave = new_oct
+        if not self.neg_active:  # Z congelada mentre tria l'eix d'harmonia negativa
+            new_oct = 1 + int((z / 127.0) * 2.99)
+            if new_oct != self.octave:
+                self.octave = new_oct
+                self._start()
+        if (self.neg_active, self.neg_axis) != prev_neg:  # re-voca en negatiu
             self._start()
         if x < 8:
             if self.gate_on:
@@ -89,7 +97,9 @@ class ModeLivePedal(BaseMode):
                 self.gate_last = now
                 self._cc(11, 127)
         self._dbl(button_states, now)
-        return {'key': _KEYS[self.key_idx], 'oct': self.octave, 'gate': self.gate_on}
+        return {'key': _KEYS[self.key_idx], 'oct': self.octave, 'gate': self.gate_on,
+                'neg': self.neg_active,
+                'axis': self.negharm_axis_name() if self.neg_active else '-'}
 
     def cleanup(self):
         self._stop()

@@ -4,6 +4,7 @@ X: Tipus d'acord (Major, Menor, Dom7, Maj7, Sus2, Sus4, Dim)
 Y: Modulacio (CC1) - igual que al mode teclat
 Z: Octavador
 Doble click: canvi de tonalitat
+Mantenir premut botó 16: harmonia negativa (pot Z tria l'eix; re-voca l'acord)
 """
 import time
 from modes.base_mode import BaseMode
@@ -74,7 +75,7 @@ class ModeToAcord(BaseMode):
         intervals = _CHORDS[self.chord_idx]
         vel = 85
         for iv in intervals:
-            note = max(24, min(96, root + iv))
+            note = self.negharm(max(24, min(96, root + iv)), self._root() % 12)
             self.active_notes.append(note)
             self.midi_out.send(self.note_on(note, vel))
         self._cc(11, 127)  # Expression al maxim
@@ -83,6 +84,8 @@ class ModeToAcord(BaseMode):
     def update(self, pot_values, button_states):
         x, y, z = pot_values
         now = time.monotonic()
+        prev_neg = (self.neg_active, self.neg_axis)
+        self.poll_negharm(button_states, z)
 
         # POT X: Tipus d'acord (7 acords)
         new_chord = min(6, int((x / 127.0) * 7))
@@ -93,14 +96,21 @@ class ModeToAcord(BaseMode):
         # POT Y: Modulacio (CC1) - igual que al mode teclat i ToDrone
         self._send_cc(1, y)
 
-        # POT Z: Octava (2-5)
-        new_oct = 2 + int((z / 127.0) * 3.99)
-        if new_oct != self.octave:
-            self.octave = new_oct
+        # POT Z: Octava (2-5) — congelada mentre Z tria l'eix d'harmonia negativa
+        if not self.neg_active:
+            new_oct = 2 + int((z / 127.0) * 3.99)
+            if new_oct != self.octave:
+                self.octave = new_oct
+                self._start_chord()
+
+        # Re-voca l'acord si ha canviat l'estat o l'eix d'harmonia negativa
+        if (self.neg_active, self.neg_axis) != prev_neg:
             self._start_chord()
 
-        # Doble click: canviar tonalitat
+        # Doble click: canviar tonalitat (botó 16 reservat per harmonia negativa)
         for i in range(min(len(button_states), 16)):
+            if i == 15:
+                continue
             cur = bool(button_states[i])
             if self.last_btn[i] and not cur:
                 gap = now - self.last_release[i]
@@ -116,6 +126,8 @@ class ModeToAcord(BaseMode):
             'key': _KEYS[self.key_idx],
             'chord': _CNAMES[self.chord_idx],
             'oct': self.octave,
+            'neg': self.neg_active,
+            'axis': self.negharm_axis_name() if self.neg_active else '-',
         }
 
     def cleanup(self):

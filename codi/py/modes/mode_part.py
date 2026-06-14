@@ -5,6 +5,7 @@ X: Velocitat de les campanes (molt lent a lleuger)
 Y: Figura de campana (Fratres, Spiegel, Alina, Tabula Rasa, Fur Alina)
 Z: Profunditat del drone de baix (0=sense drone, 127=drone dens)
 Doble click: canvi de tonalitat
+Mantenir premut botó 16: harmonia negativa (pot Z tria l'eix; veus M+T reflectides, drone com a pedal)
 """
 import time
 from modes.base_mode import BaseMode
@@ -102,11 +103,11 @@ class ModePart(BaseMode):
 
         # Veu M (melodia): graus de l'escala
         mel_interval = pat[self.step % len(pat)]
-        mel = max(24, min(108, root + mel_interval))
+        mel = self.negharm(max(24, min(108, root + mel_interval)), self._root() % 12)
 
         # Veu T (tintinnabuli): sempre dins la tríada
         tin_interval = _TINTINNABULI[self.t_step % len(_TINTINNABULI)]
-        tin = max(24, min(108, root + tin_interval + 12))  # una octava amunt
+        tin = self.negharm(max(24, min(108, root + tin_interval + 12)), self._root() % 12)
 
         # Aturar notes anteriors
         if self.mel_note >= 0:
@@ -132,6 +133,7 @@ class ModePart(BaseMode):
     def update(self, pot_values, button_states):
         x, y, z = pot_values
         now = time.monotonic()
+        self.poll_negharm(button_states, z)
 
         # X: Velocitat (3s molt lent → 0.3s moderat)
         self.speed = max(0.3, 3.0 - (x / 127.0) * 2.7)
@@ -143,15 +145,18 @@ class ModePart(BaseMode):
             self.step = 0
             self.t_step = 0
 
-        # Z: Drone de baix (0=silenci, 127=dens)
-        self._update_drone(z / 127.0)
+        # Z: Drone de baix — congelat mentre Z tria l'eix d'harmonia negativa
+        if not self.neg_active:
+            self._update_drone(z / 127.0)
 
         if now >= self.next_note_t:
             self._play_step()
             self.next_note_t = now + self.speed
 
-        # Doble click: tonalitat
+        # Doble click: tonalitat (botó 16 reservat per harmonia negativa)
         for i in range(min(len(button_states), 16)):
+            if i == 15:
+                continue
             cur = bool(button_states[i])
             if self.last_btn[i] and not cur:
                 gap = now - self.last_release[i]
@@ -171,6 +176,8 @@ class ModePart(BaseMode):
             'key':  _KEYS[self.key_idx],
             'fig':  _PNAMES[self.pat_idx],
             'drone': 'ON' if self.drone_notes else 'OFF',
+            'neg':  self.neg_active,
+            'axis': self.negharm_axis_name() if self.neg_active else '-',
         }
 
     def cleanup(self):

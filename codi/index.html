@@ -504,7 +504,12 @@
       color: #fff;
       font-weight: 600
     }
-    .pill-toggles label.cb input[type="checkbox"] { display: none }
+    .pill-toggles label.cb input[type="checkbox"],
+    .pill-toggles label.cb input[type="radio"] { display: none }
+    .pill-toggles label.cb.custom-arp-label:not(:has(input:checked)) {
+      border-color: var(--accent);
+      color: var(--accent)
+    }
     .pill-divider {
       flex-basis: 100%;
       font-size: 10px;
@@ -516,6 +521,44 @@
       letter-spacing: .07em;
       text-transform: uppercase
     }
+
+    /* KB FUNCTION ASSIGNMENT */
+    .kb-assign-layout { display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap; justify-content:center }
+    .kb-fn-chips-panel { display:flex; flex-direction:column; gap:5px; min-width:130px; flex-shrink:0; order:0 }
+    .kb-fn-chip {
+      display:flex; align-items:center; gap:7px;
+      padding:6px 11px; border-radius:8px;
+      border:1.5px solid var(--border); font-size:11.5px; font-weight:500;
+      cursor:grab; user-select:none; background:var(--surface2);
+      transition:opacity .15s,border-color .12s; white-space:nowrap
+    }
+    .kb-fn-chip:hover { border-color:var(--accent) }
+    .kb-fn-chip:active { cursor:grabbing; opacity:.6 }
+    .kb-fn-chip .chip-icon { font-size:13px; min-width:16px; text-align:center }
+    .kb-assign-grid {
+      display:grid; grid-template-columns:repeat(4,1fr);
+      gap:6px; flex:1; min-width:200px
+    }
+    .kb-assign-btn {
+      display:flex; flex-direction:column; align-items:center;
+      justify-content:center; min-height:58px; border-radius:8px;
+      border:none; background:transparent;
+      text-align:center; cursor:pointer;
+      transition:border-color .12s,background .12s;
+      padding:6px 4px 5px; gap:2px; position:relative; overflow:hidden
+    }
+    .kb-assign-btn .btn-num {
+      position:absolute; top:3px; left:5px;
+      font-size:8px; color:var(--text3); font-weight:700; line-height:1
+    }
+    .kb-assign-btn .btn-fn-icon { font-size:16px; line-height:1 }
+    .kb-assign-btn .btn-fn-name { font-size:9px; font-weight:600; line-height:1.2; color:var(--text2) }
+    .kb-assign-btn .btn-lock { position:absolute; top:2px; right:4px; font-size:8px; opacity:.5 }
+    .kb-assign-btn.drag-over { background:rgba(74,128,240,.08) }
+    .kb-assign-btn.locked { cursor:default; opacity:.55 }
+    .kb-assign-btn.has-fn { background:transparent }
+    .kb-assign-btn.has-fn .btn-fn-icon { color:var(--fn-color,var(--text1)) }
+    .kb-assign-btn.has-fn .btn-fn-name { color:var(--fn-color,var(--text2)); opacity:.9 }
 
     /* POTS */
     .pots-row {
@@ -541,6 +584,35 @@
     .pot-item select {
       min-width: 155px
     }
+
+    /* KB DEVICE DIAGRAM – potentiometer knobs */
+    .kb-device-area { display:flex; flex-direction:column; align-items:center; gap:8px; order:1; flex:1 }
+    .kb-pots-col { display:flex; flex-direction:column; align-items:center; gap:8px; flex-shrink:0; order:2 }
+    .kb-pot-knob {
+      width:72px; display:flex; flex-direction:column; align-items:center;
+      padding:8px 6px 8px; border-radius:9px; border:none; background:transparent;
+      cursor:pointer; transition:border-color .12s,background .12s; gap:4px;
+      user-select:none
+    }
+    .kb-pot-knob:hover { background:transparent }
+    .kb-pot-knob.pot-active { background:transparent }
+    .kb-pot-knob-id { font-size:9px; font-weight:700; color:var(--text3); font-family:var(--mono) }
+    .kb-pot-knob-circle {
+      width:44px; height:44px; border-radius:50%;
+      background:#dde1eb; border:2px solid rgba(0,0,0,.18);
+      box-shadow:0 3px 0 rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.55);
+      position:relative; flex-shrink:0
+    }
+    .kb-pot-knob-indicator {
+      position:absolute; top:5px; left:50%;
+      transform:translateX(-50%);
+      width:2px; height:9px;
+      background:rgba(0,0,0,.45); border-radius:2px
+    }
+    .kb-pot-knob-fn { font-size:8px; color:var(--text2); text-align:center; width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0 2px; line-height:1.3 }
+    .kb-pot-mode-bar { display:flex; gap:4px }
+    .kb-pot-mode-bar .btn { font-size:9px; padding:2px 7px; opacity:.6 }
+    .kb-pot-mode-bar .btn.pot-mode-active { opacity:1; background:var(--accent); color:#fff; border-color:var(--accent) }
 
     /* CRUD LIST */
     .crud-toolbar {
@@ -1900,28 +1972,28 @@
   </header>
 
   <nav>
-    <span class="nav-tab active" data-tab="keys" data-i18n="nav_keys">Tecles</span>
-    <span class="nav-tab" data-tab="modes" data-i18n="nav_modes">Teclat</span>
+    <span class="nav-tab active" data-tab="modes" data-i18n="nav_modes">Teclat</span>
+    <span class="nav-tab" data-tab="keys" data-i18n="nav_keys">Modes</span>
     <span class="nav-tab" data-tab="simulator" data-i18n="nav_simulator">Simulador</span>
-    <span class="nav-tab" data-tab="firmware">Firmware</span>
+    <span class="nav-tab" data-tab="firmware" data-i18n="firmware">Firmware</span>
     <span class="nav-tab" data-tab="theme" data-i18n="nav_theme">Aparença</span>
     <span class="nav-tab" data-tab="guide" data-i18n="nav_guide">Guia</span>
-    <span class="nav-tab" data-tab="config">Configuració</span>
+    <span class="nav-tab" data-tab="config" data-i18n="configuracio">Configuració</span>
   </nav>
 
   <main>
 
     <!-- ══ TECLES ══════════════════════════════════════════════════ -->
-    <div class="tab-panel active" id="tab-keys">
+    <div class="tab-panel" id="tab-keys">
       <div class="bank-bar">
-        <label>Capa:</label>
+        <label data-i18n="capa">Capa:</label>
         <select id="bank-select"></select>
-        <button class="btn btn-sm" id="btn-new-bank">+ Nova capa</button>
-        <button class="btn btn-sm" id="btn-rename-bank">Reanomenar</button>
-        <button class="btn btn-sm btn-danger" id="btn-del-bank">Eliminar</button>
-        <button class="btn btn-sm" id="btn-clear-all-keys" title="Buida totes les tecles de la capa actual">Buidar totes</button>
+        <button class="btn btn-sm" id="btn-new-bank" data-i18n="nova_capa">+ Nova capa</button>
+        <button class="btn btn-sm" id="btn-rename-bank" data-i18n="reanomenar">Reanomenar</button>
+        <button class="btn btn-sm btn-danger" id="btn-del-bank" data-i18n="eliminar">Eliminar</button>
+        <button class="btn btn-sm" id="btn-clear-all-keys" title="Buida totes les tecles de la capa actual" data-i18n="buidar_totes">Buidar totes</button>
         <div style="margin-left:auto;display:flex;gap:8px">
-          <button class="btn btn-sm btn-primary" id="btn-save-keys">Guardar configuració</button>
+          <button class="btn btn-sm btn-primary" id="btn-save-keys" data-i18n="guardar_configuracio">Guardar configuració</button>
         </div>
       </div>
 
@@ -1938,22 +2010,22 @@
             <div class="section-title">Modes al dispositiu &nbsp;<span id="modes-count"
                 style="font-weight:400;text-transform:none;letter-spacing:0;font-size:12px">—</span></div>
             <div id="modes-toolbar" style="display:none;gap:6px;margin:8px 0 4px;flex-wrap:wrap;align-items:center">
-              <button class="btn btn-sm" id="btn-modes-sel-all">Tots</button>
-              <button class="btn btn-sm" id="btn-modes-sel-none">Cap</button>
+              <button class="btn btn-sm" id="btn-modes-sel-all" data-i18n="tots">Tots</button>
+              <button class="btn btn-sm" id="btn-modes-sel-none" data-i18n="cap">Cap</button>
               <button class="btn btn-sm btn-danger" id="btn-del-selected" disabled>Eliminar seleccionats (<span
                   id="modes-sel-count">0</span>)</button>
             </div>
             <div class="modes-list" id="modes-list">
-              <div class="empty">Carregant…</div>
+              <div class="empty" data-i18n="carregant">Carregant…</div>
             </div>
           </div>
         </div>
         <div class="modes-panel">
-          <div class="modes-panel-title">Modes disponibles</div>
-          <div id="modes-panel-list"><div class="empty" style="font-size:11px">Carregant...</div></div>
+          <div class="modes-panel-title" data-i18n="modes_disponibles">Modes disponibles</div>
+          <div id="modes-panel-list"><div class="empty" style="font-size:11px" data-i18n="carregant_2">Carregant...</div></div>
           <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
-            <button class="btn btn-sm" id="btn-import-modes">+ Afegir</button>
-            <button class="btn btn-sm btn-danger" id="btn-del-mode" disabled>Eliminar</button>
+            <button class="btn btn-sm" id="btn-import-modes" data-i18n="afegir">+ Afegir</button>
+            <button class="btn btn-sm btn-danger" id="btn-del-mode" disabled data-i18n="eliminar_2">Eliminar</button>
           </div>
           <div id="mode-selected-indicator" style="display:none;margin-top:6px;font-size:11px;color:var(--accent)">Seleccionat: <strong id="mode-selected-name"></strong></div>
         </div>
@@ -1963,41 +2035,41 @@
       <div class="card" style="margin-top:14px" id="card-saved-layers">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
           <div>
-            <div class="card-title" style="margin:0">Capes Guardades</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:2px">Instantànies de la configuració de la pestanya Tecles</div>
+            <div class="card-title" style="margin:0" data-i18n="capes_guardades">Capes Guardades</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px" data-i18n="instantanies_de_la_configuracio_de">Instantànies de la configuració de la pestanya Tecles</div>
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
-            <button class="btn btn-sm btn-primary" id="btn-save-current-layer">Guardar capa actual</button>
-            <button class="btn btn-sm" id="btn-export-all-layers">Exportar selecció</button>
-            <button class="btn btn-sm" id="btn-import-layer-file">Importar</button>
+            <button class="btn btn-sm btn-primary" id="btn-save-current-layer" data-i18n="guardar_capa_actual">Guardar capa actual</button>
+            <button class="btn btn-sm" id="btn-export-all-layers" data-i18n="exportar_seleccio">Exportar selecció</button>
+            <button class="btn btn-sm" id="btn-import-layer-file" data-i18n="importar">Importar</button>
             <input type="file" id="input-import-layer" accept=".json" style="display:none">
           </div>
         </div>
         <div id="saved-layers-list" style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto"></div>
-        <div id="saved-layers-empty" style="font-size:11.5px;color:var(--text3);padding:6px 0">Cap capa guardada encara.</div>
+        <div id="saved-layers-empty" style="font-size:11.5px;color:var(--text3);padding:6px 0" data-i18n="cap_capa_guardada_encara">Cap capa guardada encara.</div>
       </div>
 
       <div class="card" style="margin-top:14px">
-        <div class="card-title">Efectes temporals — Tecles 14 i 15 (capa modes)</div>
-        <p style="font-size:11.5px;color:var(--text2);margin-bottom:10px">Cicla amb doble clic a les tecles 14 i 15</p>
+        <div class="card-title" data-i18n="efectes_temporals_tecles_14_i_15_c">Efectes temporals — Tecles 14 i 15 (capa modes)</div>
+        <p style="font-size:11.5px;color:var(--text2);margin-bottom:10px" data-i18n="cicla_amb_doble_clic_a_les_tecles">Cicla amb doble clic a les tecles 14 i 15</p>
         <div class="effects-row" id="effects-list"></div>
         <div style="display:flex;gap:6px;margin-top:12px">
-          <button class="btn btn-sm btn-primary" id="btn-save-effects">Guardar</button>
-          <button class="btn btn-sm" id="btn-effects-all">Tots</button>
-          <button class="btn btn-sm" id="btn-effects-none">Cap</button>
+          <button class="btn btn-sm btn-primary" id="btn-save-effects" data-i18n="guardar">Guardar</button>
+          <button class="btn btn-sm" id="btn-effects-all" data-i18n="tots_2">Tots</button>
+          <button class="btn btn-sm" id="btn-effects-none" data-i18n="cap_2">Cap</button>
         </div>
       </div>
 
       <div class="log-wrap" id="log-section">
-        <div class="log-header"><span>Log</span><button class="btn btn-sm"
+        <div class="log-header"><span data-i18n="log">Log</span><button class="btn btn-sm"
             onclick="this.closest('.log-wrap').classList.remove('show')">×</button></div>
         <pre id="log-output"></pre>
       </div>
       
       <div class="config-drawer" id="config-drawer">
         <div class="drawer-header">
-          <span class="drawer-title" id="drawer-title">Assignar Tecla</span>
-          <button class="btn-close" id="btn-close-drawer">&#x2715;</button>
+          <span class="drawer-title" id="drawer-title" data-i18n="assignar_tecla">Assignar Tecla</span>
+          <button class="btn-close" id="btn-close-drawer" data-i18n="x2715">&#x2715;</button>
         </div>
         <div class="drawer-body" id="drawer-body">
           <!-- Modes populated via JS -->
@@ -2009,127 +2081,163 @@
     <div class="tab-panel" id="tab-config">
       <div style="max-width:440px;display:flex;flex-direction:column;gap:14px;padding-top:4px">
         <div class="card">
-          <div class="card-title">Canal MIDI</div>
+          <div class="card-title" data-i18n="canal_midi">Canal MIDI</div>
           <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
-            <label style="font-size:12px;font-weight:500;min-width:80px">Canal:</label>
+            <label style="font-size:12px;font-weight:500;min-width:80px" data-i18n="canal">Canal:</label>
             <select id="midi-channel-select" style="width:70px">
               <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
               <option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
               <option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
               <option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option>
             </select>
-            <button class="btn btn-sm btn-primary" id="btn-save-midi-channel">Guardar</button>
+            <button class="btn btn-sm btn-primary" id="btn-save-midi-channel" data-i18n="guardar_2">Guardar</button>
           </div>
         </div>
         <div class="card">
-          <div class="card-title">Identitat USB</div>
+          <div class="card-title" data-i18n="identitat_usb">Identitat USB</div>
           <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
             <div style="display:flex;align-items:center;gap:8px">
-              <label style="font-size:12px;font-weight:500;min-width:80px">Nom del port:</label>
-              <input type="text" id="device-name-input" maxlength="32" placeholder="Ex: TECLA-1" style="width:130px">
-              <button class="btn btn-sm btn-primary" id="btn-save-device-name">Guardar</button>
+              <label style="font-size:12px;font-weight:500;min-width:80px" data-i18n="nom_del_port">Nom del port:</label>
+              <input type="text" id="device-name-input" maxlength="32" data-i18n-ph="ph_ex_tecla_1" placeholder="Ex: TECLA-1" style="width:130px">
+              <button class="btn btn-sm btn-primary" id="btn-save-device-name" data-i18n="guardar_3">Guardar</button>
             </div>
             <div style="display:flex;align-items:center;gap:8px">
-              <label style="font-size:12px;font-weight:500;min-width:80px">Nom del disc:</label>
+              <label style="font-size:12px;font-weight:500;min-width:80px" data-i18n="nom_del_disc">Nom del disc:</label>
               <div style="display:flex;align-items:center;gap:4px">
-                <span style="font-size:12px;font-weight:600;padding:5px 7px;background:var(--bg3);border:1px solid var(--border);border-radius:5px">TECLA</span>
-                <input type="text" id="disk-label-suffix" maxlength="6" placeholder="-1" style="width:64px;text-transform:uppercase">
+                <span style="font-size:12px;font-weight:600;padding:5px 7px;background:var(--bg3);border:1px solid var(--border);border-radius:5px" data-i18n="tecla">TECLA</span>
+                <input type="text" id="disk-label-suffix" maxlength="6" data-i18n-ph="ph_1" placeholder="-1" style="width:64px;text-transform:uppercase">
               </div>
-              <button class="btn btn-sm btn-primary" id="btn-save-disk-label">Guardar</button>
+              <button class="btn btn-sm btn-primary" id="btn-save-disk-label" data-i18n="guardar_4">Guardar</button>
             </div>
           </div>
         </div>
         <div class="card">
-          <div class="card-title">Dispositiu</div>
+          <div class="card-title" data-i18n="dispositiu">Dispositiu</div>
           <div style="display:flex;gap:8px;margin-top:10px">
-            <button class="btn btn-sm" id="btn-config-disconnect">Desconnectar</button>
+            <button class="btn btn-sm" id="btn-config-disconnect" data-i18n="desconnectar">Desconnectar</button>
           </div>
         </div>
       </div>
     </div>
 
     <!-- ══ MODES I ESCALES ════════════════════════════════════════ -->
-    <div class="tab-panel" id="tab-modes">
+    <div class="tab-panel active" id="tab-modes">
+
+      <div style="margin-bottom:14px">
+        <div style="font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:12px;letter-spacing:.04em;text-transform:uppercase" data-i18n="assignacio_de_funcions_del_mode_te">Assignació de funcions del mode teclat</div>
+        <div class="kb-assign-layout">
+          <div class="kb-fn-chips-panel" id="kb-fn-chips"></div>
+          <div class="kb-device-area">
+            <div class="keys-grid" id="kb-fn-grid"></div>
+          </div>
+          <div class="kb-pots-col">
+            <div class="kb-pot-mode-bar">
+              <button class="btn btn-sm pot-mode-active" id="kb-pot-mode-kbd" data-i18n="teclat">Teclat</button>
+              <button class="btn btn-sm" id="kb-pot-mode-arp" data-i18n="arp">Arp</button>
+              <button class="btn btn-sm" id="kb-pot-mode-chord" data-i18n="acords">Acords</button>
+              <button class="btn btn-sm" id="kb-pot-mode-neg" data-i18n="h_neg">H.Neg</button>
+            </div>
+            <div id="kb-pots-col-knobs"></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;justify-content:center">
+          <button class="btn btn-sm btn-primary" id="btn-save-kb-fn" data-i18n="guardar_5">Guardar</button>
+          <button class="btn btn-sm" id="btn-reset-kb-fn" data-i18n="restablir_per_defecte">Restablir per defecte</button>
+        </div>
+      </div>
 
       <div class="panel-grid cols3">
         <div class="card">
-          <div class="card-title">Escales del mode teclat</div>
+          <div class="card-title" data-i18n="escales_del_mode_teclat">Escales del mode teclat</div>
           <div class="pill-toggles" id="keyboard-scales-list"></div>
           <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
-            <button class="btn btn-sm btn-primary" id="btn-save-scales">Guardar</button>
-            <button class="btn btn-sm" id="btn-scales-all">Totes</button>
-            <button class="btn btn-sm" id="btn-scales-none">Cap</button>
+            <button class="btn btn-sm btn-primary" id="btn-save-scales" data-i18n="guardar_6">Guardar</button>
+            <button class="btn btn-sm" id="btn-scales-all" data-i18n="totes">Totes</button>
+            <button class="btn btn-sm" id="btn-scales-none" data-i18n="cap_3">Cap</button>
           </div>
         </div>
         <div class="card">
-          <div class="card-title">Patrons direccionals de l'arpegiador</div>
+          <div class="card-title" data-i18n="patrons_direccionals_de_l_arpegiad">Patrons direccionals de l'arpegiador</div>
           <div class="pill-toggles" id="arp-list"></div>
-          <div class="card-title" style="margin-top: 16px; font-size: 11px;">Patrons Personalitzats</div>
+          <div class="card-title" style="margin-top: 16px; font-size: 11px;" data-i18n="patrons_personalitzats">Patrons Personalitzats</div>
           <div class="crud-toolbar" style="margin-bottom: 6px;">
-            <button class="btn btn-sm btn-primary" id="btn-new-arp">+ Nou Patró</button>
-            <button class="btn btn-sm" id="btn-edit-arp" disabled>Editar</button>
-            <button class="btn btn-sm btn-danger" id="btn-del-arp" disabled>Eliminar</button>
+            <button class="btn btn-sm btn-primary" id="btn-new-arp" data-i18n="nou_patro">+ Nou Patró</button>
+            <button class="btn btn-sm" id="btn-edit-arp" disabled data-i18n="editar">Editar</button>
+            <button class="btn btn-sm btn-danger" id="btn-del-arp" disabled data-i18n="eliminar_3">Eliminar</button>
           </div>
           <div class="crud-list" id="custom-arp-items" style="max-height: 120px; margin-bottom: 12px;"></div>
           <div style="display:flex;gap:6px;margin-top:12px">
-            <button class="btn btn-sm btn-primary" id="btn-save-arp">Guardar</button>
-            <button class="btn btn-sm" id="btn-arp-all">Tots</button>
-            <button class="btn btn-sm" id="btn-arp-none">Cap</button>
+            <button class="btn btn-sm btn-primary" id="btn-save-arp" data-i18n="guardar_7">Guardar</button>
+            <button class="btn btn-sm" id="btn-arp-all" data-i18n="tots_3">Tots</button>
+            <button class="btn btn-sm" id="btn-arp-none" data-i18n="cap_4">Cap</button>
           </div>
         </div>
         <div class="card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
             <div>
-              <div class="card-title" style="margin:0">Tonalitats del botó 10</div>
-              <div style="font-size:11px;color:var(--text3);margin-top:2px">Selecciona i arrossega per canviar l'ordre de ciclat</div>
+              <div class="card-title" style="margin:0" data-i18n="tonalitats">Tonalitats</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px" data-i18n="selecciona_i_arrossega_per_canviar">Selecciona i arrossega per canviar l'ordre de ciclat</div>
             </div>
-            <button class="btn btn-sm btn-primary" id="btn-save-keys-order">Guardar</button>
+            <button class="btn btn-sm btn-primary" id="btn-save-keys-order" data-i18n="guardar_8">Guardar</button>
           </div>
           <div id="keyboard-keys-list" style="display:flex;flex-direction:column;gap:4px"></div>
           <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
-            <button class="btn btn-sm" id="btn-keys-all">Totes</button>
-            <button class="btn btn-sm" id="btn-keys-none">Cap</button>
-            <button class="btn btn-sm" id="btn-keys-reset">Predeterminat</button>
+            <button class="btn btn-sm" id="btn-keys-all" data-i18n="totes_2">Totes</button>
+            <button class="btn btn-sm" id="btn-keys-none" data-i18n="cap_5">Cap</button>
+            <button class="btn btn-sm" id="btn-keys-reset" data-i18n="predeterminat">Predeterminat</button>
           </div>
         </div>
       </div>
 
+      <div class="card" style="margin-top:14px">
+        <div class="card-title" data-i18n="eix_d_rsquo_harmonia_negativa">Eix d&rsquo;Harmonia Negativa</div>
+        <div class="pill-toggles" id="neg-harmony-types"></div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="card-title" data-i18n="inversions_harmoniques">Inversions Harmòniques</div>
+        <div class="pill-toggles" id="chord-inversions"></div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="card-title" data-i18n="funcions_harmoniques_diatoniques">Δ Funcions Harmòniques Diatòniques</div>
+        <div class="pill-toggles" id="diatonic-fns"></div>
+      </div>
+
       <div class="panel-grid cols2" style="margin-top:14px">
         <div class="card">
-          <div class="card-title">Progressions d'Acords</div>
+          <div class="card-title" data-i18n="progressions_d_acords">Progressions d'Acords</div>
           <div class="crud-toolbar">
-            <button class="btn btn-sm btn-primary" id="btn-new-prog">+ Nova progressió</button>
-            <button class="btn btn-sm" id="btn-edit-prog" disabled>Editar</button>
-            <button class="btn btn-sm btn-danger" id="btn-del-prog" disabled>Eliminar</button>
+            <button class="btn btn-sm btn-primary" id="btn-new-prog" data-i18n="nova_progressio">+ Nova progressió</button>
+            <button class="btn btn-sm" id="btn-edit-prog" disabled data-i18n="editar_2">Editar</button>
+            <button class="btn btn-sm btn-danger" id="btn-del-prog" disabled data-i18n="eliminar_4">Eliminar</button>
           </div>
           <div class="crud-list" id="prog-items"></div>
         </div>
         <div class="card">
-          <div class="card-title">Escales Personalitzades</div>
+          <div class="card-title" data-i18n="escales_personalitzades">Escales Personalitzades</div>
           <div class="crud-toolbar">
-            <button class="btn btn-sm btn-primary" id="btn-new-scale">+ Nova escala</button>
-            <button class="btn btn-sm" id="btn-edit-scale" disabled>Editar</button>
-            <button class="btn btn-sm btn-danger" id="btn-del-scale" disabled>Eliminar</button>
+            <button class="btn btn-sm btn-primary" id="btn-new-scale" data-i18n="nova_escala">+ Nova escala</button>
+            <button class="btn btn-sm" id="btn-edit-scale" disabled data-i18n="editar_3">Editar</button>
+            <button class="btn btn-sm btn-danger" id="btn-del-scale" disabled data-i18n="eliminar_5">Eliminar</button>
           </div>
           <div class="crud-list" id="scale-items"></div>
         </div>
       </div>
 
       <div class="card" style="margin-top:14px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <div class="card-title" style="margin:0">Tipologies d'Acords <span style="font-size:10px;font-weight:normal;color:var(--text3)">(Botó 11)</span></div>
-          <button class="btn btn-sm btn-primary" id="btn-save-chord-types">Guardar</button>
+        <div class="card-title" data-i18n="tipologies_d_acords">Tipologies d'Acords</div>
+        <div class="pill-toggles" id="chord-types-list"></div>
+        <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
+          <button class="btn btn-sm btn-primary" id="btn-save-chord-types" data-i18n="guardar_9">Guardar</button>
+          <button class="btn btn-sm" id="btn-chord-all" data-i18n="tots_4">Tots</button>
+          <button class="btn btn-sm" id="btn-chord-none" data-i18n="cap_6">Cap</button>
         </div>
-        <div style="display:flex;gap:6px;align-items:center">
-          <select id="chord-type-add-select" style="flex:1;min-width:0"></select>
-          <button class="btn btn-sm" id="btn-chord-type-add" style="padding:0 10px;font-size:16px;line-height:1">+</button>
-        </div>
-        <div id="chord-types-tags" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;min-height:24px"></div>
       </div>
 
-      <div class="panel-grid cols2" style="margin-top:14px">
+      <div class="panel-grid cols2" style="margin-top:14px;display:none">
         <div class="card">
-          <div class="card-title">Potenciòmetres — Mode Teclat</div>
+          <div class="card-title" data-i18n="potenciometres_mode_teclat">Potenciòmetres — Mode Teclat</div>
           <div class="pots-row">
             <div class="pot-item"><label>X</label>
               <select id="kb-pot-x">
@@ -2139,6 +2247,10 @@
                 <option>Pitch Bend</option>
                 <option>Volum</option>
                 <option>Gate</option>
+                <option>Octava</option>
+                <option>CC Lliure (CC16)</option>
+                <option>CC Lliure (CC17)</option>
+                <option>CC Lliure (CC18)</option>
               </select>
             </div>
             <div class="pot-item"><label>Y</label>
@@ -2149,6 +2261,10 @@
                 <option>Pitch Bend</option>
                 <option>Volum</option>
                 <option>Gate</option>
+                <option>Octava</option>
+                <option>CC Lliure (CC16)</option>
+                <option>CC Lliure (CC17)</option>
+                <option>CC Lliure (CC18)</option>
               </select>
             </div>
             <div class="pot-item"><label>Z</label>
@@ -2159,12 +2275,16 @@
                 <option>Pitch Bend</option>
                 <option>Volum</option>
                 <option>Gate</option>
+                <option>Octava</option>
+                <option>CC Lliure (CC16)</option>
+                <option>CC Lliure (CC17)</option>
+                <option>CC Lliure (CC18)</option>
               </select>
             </div>
           </div>
         </div>
         <div class="card">
-          <div class="card-title">Potenciòmetres — Arpegiador</div>
+          <div class="card-title" data-i18n="potenciometres_arpegiador">Potenciòmetres — Arpegiador</div>
           <div class="pots-row">
             <div class="pot-item"><label>X</label>
               <select id="arp-pot-x">
@@ -2175,6 +2295,10 @@
                 <option>Volum</option>
                 <option>Pitch Bend</option>
                 <option>Gate</option>
+                <option>Octava</option>
+                <option>CC Lliure (CC16)</option>
+                <option>CC Lliure (CC17)</option>
+                <option>CC Lliure (CC18)</option>
               </select>
             </div>
             <div class="pot-item"><label>Y</label>
@@ -2186,6 +2310,10 @@
                 <option>Volum</option>
                 <option>Pitch Bend</option>
                 <option>Gate</option>
+                <option>Octava</option>
+                <option>CC Lliure (CC16)</option>
+                <option>CC Lliure (CC17)</option>
+                <option>CC Lliure (CC18)</option>
               </select>
             </div>
             <div class="pot-item"><label>Z</label>
@@ -2197,14 +2325,18 @@
                 <option>Volum</option>
                 <option>Pitch Bend</option>
                 <option>Gate</option>
+                <option>Octava</option>
+                <option>CC Lliure (CC16)</option>
+                <option>CC Lliure (CC17)</option>
+                <option>CC Lliure (CC18)</option>
               </select>
             </div>
           </div>
         </div>
       </div>
 
-      <div style="margin-top:14px;display:flex;justify-content:flex-end">
-        <button class="btn btn-primary" id="btn-save-pots">Guardar i aplicar funcions dels potenciòmetres</button>
+      <div style="margin-top:14px;display:flex;justify-content:flex-end;display:none">
+        <button class="btn btn-primary" id="btn-save-pots" data-i18n="guardar_i_aplicar_funcions_dels_po">Guardar i aplicar funcions dels potenciòmetres</button>
       </div>
 
     </div>
@@ -2214,15 +2346,15 @@
     <!-- ══ EDITOR OVERLAY: PROGRESSIONS ══════════════════════════ -->
     <div class="editor-overlay" id="prog-editor-overlay">
       <div class="editor-panel">
-        <div class="editor-panel-title">Nova Progressió</div>
+        <div class="editor-panel-title" data-i18n="nova_progressio_2">Nova Progressió</div>
         <div class="editor-name-row">
-          <label>Nom</label>
-          <input type="text" id="prog-edit-name" placeholder="ex: Blues 12 compassos">
+          <label data-i18n="nom">Nom</label>
+          <input type="text" id="prog-edit-name" data-i18n-ph="ph_ex_blues_12_compassos" placeholder="ex: Blues 12 compassos">
         </div>
         <div class="button-cells-grid" id="prog-cells-grid"></div>
         <div style="display:flex;gap:8px;justify-content:flex-end">
-          <button class="btn btn-sm" id="btn-prog-editor-cancel">Cancel·lar</button>
-          <button class="btn btn-sm btn-primary" id="btn-prog-editor-save">Guardar</button>
+          <button class="btn btn-sm" id="btn-prog-editor-cancel" data-i18n="cancellar">Cancel·lar</button>
+          <button class="btn btn-sm btn-primary" id="btn-prog-editor-save" data-i18n="guardar_10">Guardar</button>
         </div>
       </div>
     </div>
@@ -2230,15 +2362,15 @@
     <!-- ══ EDITOR OVERLAY: ESCALES ════════════════════════════════ -->
     <div class="editor-overlay" id="scale-editor-overlay">
       <div class="editor-panel">
-        <div class="editor-panel-title">Nova Escala</div>
+        <div class="editor-panel-title" data-i18n="nova_escala_2">Nova Escala</div>
         <div class="editor-name-row">
-          <label>Nom</label>
-          <input type="text" id="scale-edit-name" placeholder="ex: Pentatònica de Sol">
+          <label data-i18n="nom_2">Nom</label>
+          <input type="text" id="scale-edit-name" data-i18n-ph="ph_ex_pentatonica_de_sol" placeholder="ex: Pentatònica de Sol">
         </div>
         <div class="button-cells-grid" id="scale-cells-grid"></div>
         <div style="display:flex;gap:8px;justify-content:flex-end">
-          <button class="btn btn-sm" id="btn-scale-editor-cancel">Cancel·lar</button>
-          <button class="btn btn-sm btn-primary" id="btn-scale-editor-save">Guardar</button>
+          <button class="btn btn-sm" id="btn-scale-editor-cancel" data-i18n="cancellar_2">Cancel·lar</button>
+          <button class="btn btn-sm btn-primary" id="btn-scale-editor-save" data-i18n="guardar_11">Guardar</button>
         </div>
       </div>
     </div>
@@ -2246,13 +2378,13 @@
     <!-- ══ EDITOR OVERLAY: ARPEGIADOR ════════════════════════════ -->
     <div class="editor-overlay" id="arp-editor-overlay">
       <div class="editor-panel" style="max-width: 640px; width: 95%;">
-        <div class="editor-panel-title">Nou Patró d'Arpegiador</div>
+        <div class="editor-panel-title" data-i18n="nou_patro_d_arpegiador">Nou Patró d'Arpegiador</div>
         <div class="editor-name-row">
-          <label>Nom</label>
-          <input type="text" id="arp-edit-name" placeholder="ex: Patró Rítmic 1">
+          <label data-i18n="nom_3">Nom</label>
+          <input type="text" id="arp-edit-name" data-i18n-ph="ph_ex_patro_ritmic_1" placeholder="ex: Patró Rítmic 1">
         </div>
         <div class="editor-name-row" style="margin-top: 10px; margin-bottom: 16px;">
-          <label>Passos</label>
+          <label data-i18n="passos">Passos</label>
           <select id="arp-edit-steps" style="width: 80px;">
             <option value="4">4</option>
             <option value="8">8</option>
@@ -2268,8 +2400,8 @@
         </div>
         
         <div style="display:flex;gap:8px;justify-content:flex-end">
-          <button class="btn btn-sm" id="btn-arp-editor-cancel">Cancel·lar</button>
-          <button class="btn btn-sm btn-primary" id="btn-arp-editor-save">Guardar</button>
+          <button class="btn btn-sm" id="btn-arp-editor-cancel" data-i18n="cancellar_3">Cancel·lar</button>
+          <button class="btn btn-sm btn-primary" id="btn-arp-editor-save" data-i18n="guardar_12">Guardar</button>
         </div>
       </div>
     </div>
@@ -2279,33 +2411,33 @@
       <div class="sim-layout">
         <div id="pyodide-loader">
           <div class="spinner" style="width:22px;height:22px;border-width:3px"></div>
-          <div id="loader-msg">Carregant Pyodide…</div>
+          <div id="loader-msg" data-i18n="carregant_pyodide">Carregant Pyodide…</div>
         </div>
         <!-- Sidebar -->
         <div class="sim-sidebar">
-          <div class="sim-sidebar-title">Modes disponibles</div>
+          <div class="sim-sidebar-title" data-i18n="modes_disponibles_2">Modes disponibles</div>
           <div class="sim-modes-list" id="sim-modes-list"></div>
           <div class="sim-sidebar-bottom">
             <select id="sim-mode-select" style="width:100%">
               <option value="">— selecciona mode —</option>
             </select>
-            <button class="btn btn-sm" id="btn-load-py" disabled>Carregar .py local</button>
+            <button class="btn btn-sm" id="btn-load-py" disabled data-i18n="carregar_py_local">Carregar .py local</button>
           </div>
         </div>
         <!-- Main -->
         <div class="sim-main">
           <div class="sim-toolbar">
-            <label>MIDI Out</label>
+            <label data-i18n="midi_out">MIDI Out</label>
             <select id="sim-midi-select">
               <option value="">— sense MIDI —</option>
             </select>
-            <button class="btn btn-sm" id="btn-sim-start" disabled>▶ Iniciar</button>
-            <button class="btn btn-sm btn-danger" id="btn-sim-stop" disabled>■ Aturar</button>
-            <button class="btn btn-sm" id="btn-sim-float" title="Obrir simulador en finestra independent">Finestra
+            <button class="btn btn-sm" id="btn-sim-start" disabled data-i18n="iniciar">▶ Iniciar</button>
+            <button class="btn btn-sm btn-danger" id="btn-sim-stop" disabled data-i18n="aturar">■ Aturar</button>
+            <button class="btn btn-sm" id="btn-sim-float" title="Obrir simulador en finestra independent" data-i18n="finestra_independent">Finestra
               independent</button>
             <div class="sim-status">
               <div class="sim-dot" id="sim-status-dot"></div>
-              <span id="sim-status-text">no inicialitzat</span>
+              <span id="sim-status-text" data-i18n="no_inicialitzat">no inicialitzat</span>
             </div>
           </div>
           <div class="sim-content">
@@ -2317,7 +2449,7 @@
             </div>
           </div>
           <div class="sim-log-wrap">
-            <pre id="sim-log"><span class="slog-info">— log midi —
+            <pre id="sim-log"><span class="slog-info" data-i18n="log_midi">— log midi —
 </span></pre>
           </div>
         </div>
@@ -2328,41 +2460,45 @@
     <div class="tab-panel" id="tab-firmware">
       <div class="fw-grid">
         <div class="card">
-          <div class="card-title">Estat del sistema</div>
-          <div class="fw-status-row"><span class="fw-status-key">Mode Bootloader</span><span
+          <div class="card-title" data-i18n="estat_del_sistema">Estat del sistema</div>
+          <div class="fw-status-row"><span class="fw-status-key" data-i18n="mode_bootloader">Mode Bootloader</span><span
               class="fw-status-val fw-unk" id="fw-bootloader">?</span></div>
-          <div class="fw-status-row"><span class="fw-status-key">Volum</span><span
+          <div class="fw-status-row"><span class="fw-status-key" data-i18n="volum">Volum</span><span
               class="fw-status-val fw-unk" id="fw-circuitpy">?</span></div>
-          <div class="fw-status-row"><span class="fw-status-key">CircuitPython</span><span class="fw-status-val fw-unk"
+          <div class="fw-status-row"><span class="fw-status-key" data-i18n="circuitpython">CircuitPython</span><span class="fw-status-val fw-unk"
               id="fw-cpython">?</span></div>
-          <div class="fw-status-row"><span class="fw-status-key">Firmware TECLA</span><span class="fw-status-val fw-unk"
+          <div class="fw-status-row"><span class="fw-status-key" data-i18n="firmware_tecla">Firmware TECLA</span><span class="fw-status-val fw-unk"
               id="fw-tecla">?</span></div>
-          <div style="margin-top:12px"><button class="btn btn-sm" id="btn-fw-refresh">↻ Refrescar estat</button></div>
+          <div style="margin-top:12px"><button class="btn btn-sm" id="btn-fw-refresh" data-i18n="refrescar_estat">↻ Refrescar estat</button></div>
         </div>
         <div class="card">
-          <div class="card-title">Pas 1 — Instal·lar CircuitPython</div>
-          <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.65">Connecta la Pico mantenint premut <strong>BOOTSEL</strong>. Selecciona el volum <strong>RPI-RP2</strong> quan el diàleg ho demani.</p>
+          <div class="card-title" data-i18n="pas_1_installar_circuitpython">Pas 1 — Instal·lar CircuitPython</div>
+          <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.65">Connecta la Pico mantenint premut <strong data-i18n="bootsel">BOOTSEL</strong>. Selecciona el volum <strong data-i18n="rpi_rp2">RPI-RP2</strong> quan el diàleg ho demani.</p>
           <div style="display:flex;flex-direction:column;gap:8px">
-            <button class="btn btn-sm" id="btn-flash-nuke">⚠ Transferir Flash Nuke al RPI-RP2</button>
-            <button class="btn btn-sm btn-primary" id="btn-install-cp">⬇ Transferir CircuitPython 10.0.3 al RPI-RP2</button>
-            <button class="btn btn-sm" id="btn-fw-instructions">ℹ Instruccions completes</button>
+            <button class="btn btn-sm" id="btn-flash-nuke" data-i18n="transferir_flash_nuke_al_rpi_rp2">⚠ Transferir Flash Nuke al RPI-RP2</button>
+            <button class="btn btn-sm btn-primary" id="btn-install-cp" data-i18n="transferir_circuitpython_10_0_3_al">⬇ Transferir CircuitPython 10.0.3 al RPI-RP2</button>
+            <button class="btn btn-sm" id="btn-fw-instructions" data-i18n="instruccions_completes">ℹ Instruccions completes</button>
           </div>
         </div>
         <div class="card">
-          <div class="card-title">Pas 2 — Firmware TECLA</div>
+          <div class="card-title" data-i18n="pas_2_firmware_tecla">Pas 2 — Firmware TECLA</div>
           <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.65">Quan el dispositiu apareix
-            com <strong>CIRCUITPY</strong>, connecta'l a la pestanya <strong>Tecles</strong> i instal·la el firmware.
+            com <strong data-i18n="circuitpy">CIRCUITPY</strong>, connecta'l a la pestanya <strong data-i18n="tecles">Tecles</strong> i instal·la el firmware.
           </p>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin-bottom:10px;cursor:pointer">
+            <input type="checkbox" id="fw-include-display" style="accent-color:var(--accent)">
+            <span data-i18n="incloure_pantalla_oled">Pantalla OLED (SSD1306): instal·lar el mòdul de pantalla</span>
+          </label>
           <div style="display:flex;flex-direction:column;gap:8px">
-            <button class="btn btn-sm btn-primary" id="btn-install-fw" disabled>Instal·lar / Actualitzar
+            <button class="btn btn-sm btn-primary" id="btn-install-fw" disabled data-i18n="installar_actualitzar_firmware">Instal·lar / Actualitzar
               firmware</button>
-            <button class="btn btn-sm" id="btn-verify-fw" disabled>Verificar instal·lació</button>
+            <button class="btn btn-sm" id="btn-verify-fw" disabled data-i18n="verificar_installacio">Verificar instal·lació</button>
           </div>
         </div>
       </div>
       <div style="margin-top:14px">
         <progress id="fw-progress" value="0" max="100"></progress>
-        <div class="fw-msg" id="fw-progress-msg">Connecta el dispositiu per veure l'estat.</div>
+        <div class="fw-msg" id="fw-progress-msg" data-i18n="connecta_el_dispositiu_per_veure_l">Connecta el dispositiu per veure l'estat.</div>
       </div>
     </div>
 
@@ -2370,154 +2506,154 @@
     <div class="tab-panel" id="tab-theme">
       <div style="max-width:620px">
         <div class="card">
-          <div class="card-title">Aparença</div>
+          <div class="card-title" data-i18n="aparenca">Aparença</div>
           <div class="theme-cards" id="theme-cards">
             <div class="theme-card active" data-theme="dark">
               <div class="theme-swatches"><span style="background:#0c0c0c"></span><span
                   style="background:#141414"></span><span style="background:#1c1c1c"></span><span
                   style="background:#4a80f0"></span></div>
-              <div class="theme-card-name">Fosc</div>
+              <div class="theme-card-name" data-i18n="fosc">Fosc</div>
             </div>
             <div class="theme-card" data-theme="light">
               <div class="theme-swatches"><span style="background:#f2f2f2"></span><span
                   style="background:#ffffff"></span><span style="background:#ebebeb"></span><span
                   style="background:#4a80f0"></span></div>
-              <div class="theme-card-name">Clar</div>
+              <div class="theme-card-name" data-i18n="clar">Clar</div>
             </div>
             <div class="theme-card" data-theme="neon">
               <div class="theme-swatches"><span style="background:#080808"></span><span
                   style="background:#0d0d0d"></span><span style="background:#121212"></span><span
                   style="background:#00ffe0"></span></div>
-              <div class="theme-card-name">Neó</div>
+              <div class="theme-card-name" data-i18n="neo">Neó</div>
             </div>
             <div class="theme-card" data-theme="warm">
               <div class="theme-swatches"><span style="background:#100c08"></span><span
                   style="background:#1a1410"></span><span style="background:#231c16"></span><span
                   style="background:#e08030"></span></div>
-              <div class="theme-card-name">Càlid</div>
+              <div class="theme-card-name" data-i18n="calid">Càlid</div>
             </div>
             <div class="theme-card" data-theme="purple">
               <div class="theme-swatches"><span style="background:#0d0b14"></span><span
                   style="background:#14101e"></span><span style="background:#1e1830"></span><span
                   style="background:#a070f0"></span></div>
-              <div class="theme-card-name">Lila</div>
+              <div class="theme-card-name" data-i18n="lila">Lila</div>
             </div>
             <div class="theme-card" data-theme="ocean">
               <div class="theme-swatches"><span style="background:#07101a"></span><span
                   style="background:#0d1824"></span><span style="background:#132030"></span><span
                   style="background:#20c8f8"></span></div>
-              <div class="theme-card-name">Oceà</div>
+              <div class="theme-card-name" data-i18n="ocea">Oceà</div>
             </div>
             <div class="theme-card" data-theme="forest">
               <div class="theme-swatches"><span style="background:#07100a"></span><span
                   style="background:#0d1a10"></span><span style="background:#152018"></span><span
                   style="background:#22c55e"></span></div>
-              <div class="theme-card-name">Bosc</div>
+              <div class="theme-card-name" data-i18n="bosc">Bosc</div>
             </div>
             <div class="theme-card" data-theme="rose">
               <div class="theme-swatches"><span style="background:#120a0e"></span><span
                   style="background:#1e1016"></span><span style="background:#281520"></span><span
                   style="background:#f472b6"></span></div>
-              <div class="theme-card-name">Rosa</div>
+              <div class="theme-card-name" data-i18n="rosa">Rosa</div>
             </div>
             <div class="theme-card" data-theme="ice">
               <div class="theme-swatches"><span style="background:#eff5ff"></span><span
                   style="background:#ffffff"></span><span style="background:#e4eeff"></span><span
                   style="background:#0ea5e9"></span></div>
-              <div class="theme-card-name">Gel</div>
+              <div class="theme-card-name" data-i18n="gel">Gel</div>
             </div>
             <div class="theme-card" data-theme="carbon">
               <div class="theme-swatches"><span style="background:#080808"></span><span
                   style="background:#111111"></span><span style="background:#181818"></span><span
                   style="background:#ef4444"></span></div>
-              <div class="theme-card-name">Carbó</div>
+              <div class="theme-card-name" data-i18n="carbo">Carbó</div>
             </div>
             <div class="theme-card" data-theme="hc">
               <div class="theme-swatches"><span style="background:#000000"></span><span
                   style="background:#0d0d0d"></span><span style="background:#1a1a1a"></span><span
                   style="background:#ffe000"></span></div>
-              <div class="theme-card-name">Alt Contrast</div>
+              <div class="theme-card-name" data-i18n="alt_contrast">Alt Contrast</div>
             </div>
             <div class="theme-card" data-theme="crepuscle">
               <div class="theme-swatches"><span style="background:#100808"></span><span
                   style="background:#1a100a"></span><span style="background:#24160c"></span><span
                   style="background:#f97316"></span></div>
-              <div class="theme-card-name">Crepuscle</div>
+              <div class="theme-card-name" data-i18n="crepuscle">Crepuscle</div>
             </div>
             <div class="theme-card" data-theme="cosmic">
               <div class="theme-swatches"><span style="background:#06050f"></span><span
                   style="background:#0c0b1c"></span><span style="background:#13112c"></span><span
                   style="background:#818cf8"></span></div>
-              <div class="theme-card-name">Còsmic</div>
+              <div class="theme-card-name" data-i18n="cosmic">Còsmic</div>
             </div>
             <div class="theme-card" data-theme="mint">
               <div class="theme-swatches"><span style="background:#f0faf5"></span><span
                   style="background:#ffffff"></span><span style="background:#dff2e9"></span><span
                   style="background:#059669"></span></div>
-              <div class="theme-card-name">Menta</div>
+              <div class="theme-card-name" data-i18n="menta">Menta</div>
             </div>
             <div class="theme-card" data-theme="slate">
               <div class="theme-swatches"><span style="background:#0a0e14"></span><span
                   style="background:#111820"></span><span style="background:#18222e"></span><span
                   style="background:#94a3b8"></span></div>
-              <div class="theme-card-name">Pissarra</div>
+              <div class="theme-card-name" data-i18n="pissarra">Pissarra</div>
             </div>
             <div class="theme-card" data-theme="acid">
               <div class="theme-swatches"><span style="background:#060900"></span><span
                   style="background:#0b1100"></span><span style="background:#131a00"></span><span
                   style="background:#a3e635"></span></div>
-              <div class="theme-card-name">Àcid</div>
+              <div class="theme-card-name" data-i18n="acid">Àcid</div>
             </div>
             <div class="theme-card" data-theme="sand">
               <div class="theme-swatches"><span style="background:#fef7e8"></span><span
                   style="background:#fffcf2"></span><span style="background:#fdefc5"></span><span
                   style="background:#b45309"></span></div>
-              <div class="theme-card-name">Sorra</div>
+              <div class="theme-card-name" data-i18n="sorra">Sorra</div>
             </div>
             <!-- Saved custom themes will be inserted here -->
           </div>
 
           <div style="border-top:1px solid var(--border);margin:22px 0 18px;position:relative">
-            <span style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--surface);padding:0 12px;font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase">Editor de temes</span>
+            <span style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--surface);padding:0 12px;font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase" data-i18n="editor_de_temes">Editor de temes</span>
           </div>
 
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
             <div id="ct-mode-indicator" style="font-size:11px;color:var(--text3);font-weight:500"></div>
-            <button class="btn btn-sm" id="btn-new-theme" style="font-size:11px">✚ Nou tema</button>
+            <button class="btn btn-sm" id="btn-new-theme" style="font-size:11px" data-i18n="nou_tema">✚ Nou tema</button>
           </div>
 
           <!-- Name row -->
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-            <label style="font-size:12px;color:var(--text2);white-space:nowrap;min-width:40px">Nom:</label>
-            <input type="text" id="ct-name" placeholder="Ex: El meu tema" style="flex:1;min-width:0">
-            <button class="btn btn-sm" id="btn-random-theme" title="Colors aleatoris">🎲 Aleatori</button>
+            <label style="font-size:12px;color:var(--text2);white-space:nowrap;min-width:40px" data-i18n="nom_4">Nom:</label>
+            <input type="text" id="ct-name" data-i18n-ph="ph_ex_el_meu_tema" placeholder="Ex: El meu tema" style="flex:1;min-width:0">
+            <button class="btn btn-sm" id="btn-random-theme" title="Colors aleatoris" data-i18n="aleatori">🎲 Aleatori</button>
           </div>
 
           <div class="custom-theme-grid">
             <div class="ct-field">
               <input type="color" id="ct-bg" value="#0c0c0c">
-              <label>Fons</label>
+              <label data-i18n="fons">Fons</label>
             </div>
             <div class="ct-field">
               <input type="color" id="ct-surface" value="#141414">
-              <label>Superfície</label>
+              <label data-i18n="superficie">Superfície</label>
             </div>
             <div class="ct-field">
               <input type="color" id="ct-surface2" value="#1c1c1c">
-              <label>Superfície 2</label>
+              <label data-i18n="superficie_2">Superfície 2</label>
             </div>
             <div class="ct-field">
               <input type="color" id="ct-text" value="#e0e0e0">
-              <label>Text</label>
+              <label data-i18n="text">Text</label>
             </div>
             <div class="ct-field">
               <input type="color" id="ct-accent" value="#4a80f0">
-              <label>Accent</label>
+              <label data-i18n="accent">Accent</label>
             </div>
           </div>
           <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
-            <button class="btn btn-sm btn-primary" id="btn-save-custom-theme">Desa i aplica</button>
-            <button class="btn btn-sm" id="btn-reset-custom-theme">Restablir</button>
+            <button class="btn btn-sm btn-primary" id="btn-save-custom-theme" data-i18n="desa_i_aplica">Desa i aplica</button>
+            <button class="btn btn-sm" id="btn-reset-custom-theme" data-i18n="restablir">Restablir</button>
           </div>
         </div>
       </div>
@@ -2527,121 +2663,153 @@
     <div class="tab-panel" id="tab-guide">
       <div class="guide-wrap">
         <div class="card guide-card">
-          <div class="guide-toc">
-            <a href="#gs-1">1. Instal·lar el CircuitPython</a>
-            <a href="#gs-2">2. Instal·lar el firmware</a>
-            <a href="#gs-3">3. Funcionament del dispositiu</a>
-            <a href="#gs-4">4. Configuració</a>
-            <a href="#gs-5">5. Pestanyes</a>
-            <a href="#gs-6">6. Recomanacions</a>
-          </div>
-
-          <div id="gs-1">
-            <div class="guide-h1">1. Instal·lar el CircuitPython al TECLA</div>
-            <p class="guide-li">Connecta el TECLA a l'ordinador via USB.</p>
-            <p class="guide-li">Si apareix com a <strong>CIRCUITPY</strong> ves al punt 2.</p>
-            <p class="guide-li">Si apareix com a <strong>RPI-RP2</strong> cal instal·lar el CircuitPython.</p>
-            <p class="guide-li">Ves a la pestanya <em>Firmware</em> i segueix les instruccions del Pas 1.</p>
-            <p class="guide-li">El dispositiu apareixerà amb el nom CIRCUITPY.</p>
-          </div>
-
-          <div id="gs-2">
-            <div class="guide-h1">2. Instal·lar el firmware al TECLA</div>
-            <p class="guide-li">Connecta el TECLA a l'ordinador via USB.</p>
-            <p class="guide-li">Ves a la pestanya <em>Firmware</em> → clica <strong>Instal·lar / Actualitzar</strong>.
-            </p>
-            <p class="guide-li">Espera que la barra de progrés arribi al 100%.</p>
-            <p class="guide-li">Clica <strong>Verificar instal·lació</strong> (opcional).</p>
-            <p class="guide-li">Fes un reset al dispositiu (botó físic de reset).</p>
-            <div class="guide-note">El TECLA ja està llest per funcionar.</div>
-          </div>
-
-          <div id="gs-3">
-            <div class="guide-h1">3. Funcionament del TECLA</div>
-
-            <div class="guide-h2">Capa 1 · Teclat</div>
-            <p class="guide-li">Tecles <strong>1–8</strong>: notes / acords.</p>
-            <p class="guide-li">Tecla <strong>9</strong>: canvi d'escala / progressió (cíclic).</p>
-            <p class="guide-li">Tecla <strong>10</strong>: canvi de tonalitat (cercle de quintes).</p>
-            <p class="guide-li">Tecla <strong>11</strong>: activar / desactivar mode acords.</p>
-            <p class="guide-li">Tecla <strong>12</strong>: 1 clic → arpegiador + canvi de patró · 2 clics → desactivar
-              arpegiador.</p>
-            <p class="guide-li">Tecla <strong>13</strong>: 1 clic → capa 2 (Modes) · 2 clics → capa 1 (Teclat) · 2 s
-              mantingut → canvi de capa de modes.</p>
-            <p class="guide-li">Tecla <strong>14</strong>: baixar d'octava.</p>
-            <p class="guide-li">Tecla <strong>15</strong>: pujar d'octava.</p>
-            <p class="guide-li">Tecla <strong>16</strong>: aturar el so (All Notes Off).</p>
-            <div class="keys-grid" style="pointer-events: none; margin: 24px 0; max-width: 280px; gap: 8px;">
-              <div class="key-btn"><div class="key-num">1</div></div>
-              <div class="key-btn"><div class="key-num">2</div></div>
-              <div class="key-btn"><div class="key-num">3</div></div>
-              <div class="key-btn"><div class="key-num">4</div></div>
-              <div class="key-btn"><div class="key-num">5</div></div>
-              <div class="key-btn"><div class="key-num">6</div></div>
-              <div class="key-btn"><div class="key-num">7</div></div>
-              <div class="key-btn"><div class="key-num">8</div></div>
-              <div class="key-btn"><div class="key-num">9</div></div>
-              <div class="key-btn"><div class="key-num">10</div></div>
-              <div class="key-btn"><div class="key-num">11</div></div>
-              <div class="key-btn"><div class="key-num">12</div></div>
-              <div class="key-btn key-keybrd special"><div class="key-num">13</div></div>
-              <div class="key-btn key-fx special"><div class="key-num">14</div></div>
-              <div class="key-btn key-fx special"><div class="key-num">15</div></div>
-              <div class="key-btn key-stop special"><div class="key-num">16</div></div>
-            </div>
-
-            <div class="guide-h2">Capa 2 · Modes</div>
-            <p class="guide-li">S'activa amb la tecla 13. Es configura a la pestanya <em>Tecles</em>.</p>
-            <p class="guide-li">Tecles <strong>1–12</strong>: modes assignats.</p>
-            <p class="guide-li">Tecla <strong>13</strong>: torna a la capa teclat · 2 s mantingut → canvi de capa de
-              modes.</p>
-            <p class="guide-li">Tecla <strong>14</strong>: efecte temporal 1 (mantenir premuda) · 2 clics → canvia
-              efecte (rotatiu).</p>
-            <p class="guide-li">Tecla <strong>15</strong>: efecte temporal 2 (mantenir premuda) · 2 clics → canvia
-              efecte (rotatiu).</p>
-            <p class="guide-li">Tecla <strong>16</strong>: aturar el so.</p>
-          </div>
-
-          <div id="gs-4">
-            <div class="guide-h1">4. Configuració del dispositiu</div>
-            <p class="guide-li">Ves a <em>Modes i Escales</em> → selecciona els modes, escales i efectes.</p>
-            <p class="guide-li">Ves a <em>Tecles</em> → crea una capa i assigna modes a les tecles 1–12.</p>
-            <p class="guide-li">Clica <strong>Guardar configuració</strong>.</p>
-            <p class="guide-li">Ves a <em>Firmware</em> → <strong>Instal·lar / Actualitzar</strong> per sincronitzar el
-              dispositiu.</p>
-            <p class="guide-li">Fes un reset al dispositiu.</p>
-          </div>
-
-          <div id="gs-5">
-            <div class="guide-h1">5. Pestanyes</div>
-            <div class="guide-h2">Tecles</div>
-            <p class="guide-li">Crear capes de modes i assignar-los a les tecles 1–12.</p>
-            <p class="guide-li">Seleccionar efectes temporals a les tecles 14 i 15.</p>
-            <div class="guide-h2">Modes i Escales</div>
-            <p class="guide-li">Seleccionar modes, escales, efectes temporals i patrons de l'arpegiador.</p>
-            <p class="guide-li">Configurar els potenciòmetres del mode teclat i de l'arpegiador.</p>
-            <div class="guide-h2">Progressions</div>
-            <p class="guide-li">Crear progressions d'acords personalitzades.</p>
-            <div class="guide-h2">Simulador</div>
-            <p class="guide-li">Testejar modes sense el dispositiu físic. Requereix un DAW obert amb MIDI actiu.</p>
-            <p class="guide-li">La tecla 13 canvia entre capa teclat i capa modes.</p>
-            <div class="guide-h2">Firmware</div>
-            <p class="guide-li">Instal·lar CircuitPython i el firmware del TECLA.</p>
-            <div class="guide-h2">Aparença</div>
-            <p class="guide-li">Canviar el tema de colors de l'app. Crear un tema personalitzat.</p>
-          </div>
-
-          <div id="gs-6">
-            <div class="guide-h1">6. Recomanacions</div>
-            <p class="guide-li">Guardar sempre la configuració després de realitzar canvis.</p>
-            <p class="guide-li">Actualitzar el firmware després de canviar modes o escales.</p>
-            <p class="guide-li">No seleccionar més de 12 modes ni 12 escales/progressions.</p>
-            <p class="guide-li">No crear més d'una capa de modes per evitar problemes de memòria.</p>
-            <p class="guide-li">Provar els modes al simulador abans d'instal·lar-los al dispositiu.</p>
-            <p class="guide-li">Tancar i obrir l'app si has afegit nous modes per actualitzar el simulador.</p>
-            <div class="guide-note">Afegir més de 12 modes o dues capes al dispositiu pot generar problemes de memòria.
-            </div>
-          </div>
+<div class="guide-lang" data-lang="ca">
+<div class="guide-toc">
+<a href="#gca-1">1. Què és TECLA</a>
+<a href="#gca-2">2. Posada en marxa</a>
+<a href="#gca-3">3. La capa Teclat</a>
+<a href="#gca-4">4. Looper i Overdub</a>
+<a href="#gca-5">5. La capa Modes</a>
+<a href="#gca-6">6. Configurar des de l’app</a>
+<a href="#gca-7">7. Recomanacions</a>
+</div>
+<div id="gca-1">
+<div class="guide-h1">1. Què és TECLA</div><p class="guide-li">TECLA és un <strong>instrument MIDI</strong> de 16 tecles i 3 potenciòmetres. No fa so per si sol: envia notes MIDI per USB a qualsevol sintetitzador, DAW (Ableton, Logic, GarageBand…) o app de música.</p><p class="guide-li">Té dues grans capes: la <strong>capa Teclat</strong> (un instrument harmònic amb escales, acords, arpegiador, looper…) i la <strong>capa Modes</strong> (generadors musicals algorítmics: ones, clàssics, ritmes…).</p><p class="guide-li">Tot es configura des d’aquesta app web, sense instal·lar res: connecta el dispositiu per USB i prem <strong>connecta dispositiu</strong>.</p><div class="guide-note">Fes servir Chrome o Edge: l’app necessita l’accés a fitxers (File System Access) per escriure al dispositiu.</div>
+</div>
+<div id="gca-2">
+<div class="guide-h1">2. Posada en marxa</div><p class="guide-li">Connecta el TECLA a l’ordinador amb un cable USB de dades.</p><p class="guide-li">Si el disc que apareix es diu <strong>CIRCUITPY</strong>: ves a la pestanya <em>Firmware</em> → <strong>Instal·lar / Actualitzar firmware</strong>, espera el 100% i fes un reset al dispositiu. Llest.</p><p class="guide-li">Si el disc es diu <strong>RPI-RP2</strong> (Pico nou de fàbrica): primer cal el CircuitPython. A <em>Firmware</em>, segueix el <strong>Pas 1</strong>; quan reaparegui com a CIRCUITPY, fes el <strong>Pas 2</strong>.</p><p class="guide-li">Per sentir-lo: obre el teu DAW o sintetitzador i selecciona el port MIDI <strong>TECLA</strong> com a entrada.</p><div class="guide-note">El nom del port USB i del disc es poden personalitzar a <em>Modes</em> → Identitat USB.</div>
+</div>
+<div id="gca-3">
+<div class="guide-h1">3. La capa Teclat (per defecte en engegar)</div><div class="keys-grid" style="pointer-events:none;margin:24px 0;max-width:280px;gap:8px;">
+<div class="key-btn"><div class="key-num">1</div></div>
+<div class="key-btn"><div class="key-num">2</div></div>
+<div class="key-btn"><div class="key-num">3</div></div>
+<div class="key-btn"><div class="key-num">4</div></div>
+<div class="key-btn"><div class="key-num">5</div></div>
+<div class="key-btn"><div class="key-num">6</div></div>
+<div class="key-btn"><div class="key-num">7</div></div>
+<div class="key-btn"><div class="key-num">8</div></div>
+<div class="key-btn"><div class="key-num">9</div></div>
+<div class="key-btn"><div class="key-num">10</div></div>
+<div class="key-btn"><div class="key-num">11</div></div>
+<div class="key-btn"><div class="key-num">12</div></div>
+<div class="key-btn key-keybrd special"><div class="key-num">13</div></div>
+<div class="key-btn key-fx special"><div class="key-num">14</div></div>
+<div class="key-btn key-fx special"><div class="key-num">15</div></div>
+<div class="key-btn key-stop special"><div class="key-num">16</div></div>
+</div><p class="guide-li"><strong>Tecles 1–8</strong>: notes de l’escala activa (o acords, si el mode acords està actiu).</p><p class="guide-li"><strong>Tecles 9–12, 14, 15</strong>: funcions <em>reassignables</em> des de la pestanya <em>Teclat</em>. Per defecte: escala, tonalitat, acords, arpegiador i octava ±.</p><p class="guide-li"><strong>Tecla 13</strong> (fixa): toc curt → canviar a la capa Modes · mantinguda ≈1 s → canviar de banc de modes.</p><p class="guide-li"><strong>Tecla 16</strong> (fixa): STOP — atura tot el so.</p><div class="guide-h2">Funcions assignables</div><p class="guide-li"><strong>𝄞 Escala</strong>: toc → següent escala · toc llarg → anterior. <strong>♭ Tonalitat</strong>: cicla el cercle de quintes.</p><p class="guide-li"><strong>♪ Acords</strong>: toc → activar / ciclar tipus d’acord · toc llarg → desactivar. <strong>≈ Arpegiador</strong>: toc → activar / ciclar patró · toc llarg → desactivar.</p><p class="guide-li"><strong>↕ Harmonia Negativa</strong>: reflecteix les notes sobre un eix harmònic. <strong>Δ Funcions Diatòniques</strong>: dominants secundàries, acords prestats, napolitans…</p><p class="guide-li"><strong>∞ Latch</strong>: les notes/acords continuen sonant en deixar anar; re-prémer un botó l’apaga; útil per drones.</p><p class="guide-li"><strong>𝆔 Conducció de veus</strong>: cada acord nou tria la inversió més propera a l’anterior — les progressions sonen lligades, com un pianista.</p><div class="guide-h2">Potenciòmetres</div><p class="guide-li">3 pots amb funcions per capa (normal, arpegiador, acords, h. negativa), configurables des de l’app: velocity, modulació, sustain, gate, BPM de l’arp, inversions, <strong>CC Lliure</strong> (envia el CC MIDI que triïs, per controlar el teu synth)…</p>
+</div>
+<div id="gca-4">
+<div class="guide-h1">4. Looper i Overdub</div><p class="guide-li">Dues funcions assignables que converteixen TECLA en una màquina de directe: <strong>⟳ Looper</strong> (timing lliure) i <strong>➕ Overdub</strong> (capes).</p><div class="guide-h2">⟳ Gestos del looper</div><p class="guide-li"><strong>1r toc</strong>: armar (la gravació comença amb la primera nota) · <strong>2n toc</strong>: el loop arrenca a l’instant.</p><p class="guide-li"><strong>Toc curt</strong> mentre sona: pausa / represa des del principi · <strong>Toc llarg</strong> (0,8 s): esborrar el loop.</p><p class="guide-li">El looper <strong>capta bé l’arpegiador</strong>: activa l’arp, arma el looper i el patró es grava sol. Si l’arp ha sonat durant la presa, el loop s’<strong>auto-quantitza</strong> a la graella de l’arp (captura fina, sense desfasament); si només graves acords/notes manuals, conserva el timing lliure exacte. Per canviar el tempo d’un loop d’arp: pausa → mou el pot de BPM → represa.</p><p class="guide-li">Si graves amb el <strong>sustain</strong> del pot actiu, el loop <strong>fixa el sustain</strong> a la gravació (les notes queden lligades): sona sostingut per si mateix i és <strong>independent</strong> del sustain en directe — pots abaixar el sustain per tocar notes seques a sobre sense que el loop s’alteri.</p><div class="guide-h2">➕ Overdub (capes)</div><p class="guide-li"><strong>Toc curt</strong> amb el loop sonant: entrar/sortir del mode overdub — tot el que toquis s’afegeix al loop com una capa nova.</p><p class="guide-li"><strong>Toc llarg</strong> (0,8 s): desfer l’última capa (repeteix per anar pelant capes).</p><p class="guide-li"><strong>Toc molt llarg</strong> (1,6 s): esborrar TOTES les capes de cop — el loop base es manté.</p><div class="guide-note">Flux típic: grava una progressió d’acords → overdub d’una melodia → overdub de l’arp → toca en directe per sobre. La tecla 16 pausa el loop sense esborrar-lo.</div>
+</div>
+<div id="gca-5">
+<div class="guide-h1">5. La capa Modes</div><p class="guide-li">S’hi entra amb la <strong>tecla 13</strong> (toc curt). Les tecles <strong>1–12</strong> activen els modes generatius assignats al banc actual.</p><p class="guide-li"><strong>Tecla 13 mantinguda ≈1 s</strong>: canvia de banc de modes (Capa 1 → Capa 2 → Capa 3…).</p><p class="guide-li"><strong>Tecles 14 i 15</strong>: efectes temporals (mantenir premuda: sustain, pausa, gate…) · doble clic → canviar l’efecte assignat.</p><p class="guide-li"><strong>Tecla 16</strong>: STOP total + neteja de memòria.</p><p class="guide-li">Els modes es trien i s’assignen a la pestanya <em>Modes</em>; els potenciòmetres modulen paràmetres propis de cada mode.</p>
+</div>
+<div id="gca-6">
+<div class="guide-h1">6. Configurar des de l’app</div><div class="guide-h2">Pestanya Teclat</div><p class="guide-li">Arrossega funcions a les tecles, tria escales, tonalitats, tipus d’acord, patrons d’arpegiador, progressions i funcions dels potenciòmetres.</p><div class="guide-h2">Pestanya Modes</div><p class="guide-li">Crea bancs (capes) de modes i assigna un mode a cada tecla 1–12. Tria els efectes temporals de les tecles 14–15.</p><div class="guide-h2">Pestanya Simulador</div><p class="guide-li">Prova-ho tot <em>sense dispositiu</em>: el teclat i els modes corren al navegador i envien MIDI via WebMIDI al teu DAW.</p><div class="guide-h2">Pestanya Firmware</div><p class="guide-li">Instal·la CircuitPython (Pas 1) i el firmware TECLA (Pas 2). Cal repetir el Pas 2 després de canviar els modes assignats.</p><div class="guide-h2">Pestanya Aparença</div><p class="guide-li">Temes de color de l’app i editor de temes personalitzats.</p><div class="guide-note">Flux de treball: edita → <strong>Guardar configuració</strong> → si has canviat modes, <em>Firmware</em> → <strong>Instal·lar / Actualitzar</strong> → reset del dispositiu.</div>
+</div>
+<div id="gca-7">
+<div class="guide-h1">7. Recomanacions</div><p class="guide-li">Guarda sempre la configuració després de fer canvis.</p><p class="guide-li">Fins a <strong>3 bancs de modes</strong> funcionen amb total comoditat (validat amb mesures de memòria reals).</p><p class="guide-li">Prova els modes nous al simulador abans d’instal·lar-los.</p><p class="guide-li">Si una nota es queda penjada o el so descontrola: <strong>tecla 16</strong> (STOP).</p><p class="guide-li">Si el dispositiu no respon: reset físic (botó del Pico) — el watchdog també el reinicia sol si es penja durant una actuació.</p><p class="guide-li">Si l’app no veu el dispositiu: comprova que el disc CIRCUITPY/TECLA està muntat i que fas servir Chrome o Edge.</p>
+</div>
+</div>
+<div class="guide-lang" data-lang="es" style="display:none">
+<div class="guide-toc">
+<a href="#ges-1">1. Qué es TECLA</a>
+<a href="#ges-2">2. Puesta en marcha</a>
+<a href="#ges-3">3. La capa Teclado</a>
+<a href="#ges-4">4. Looper y Overdub</a>
+<a href="#ges-5">5. La capa Modos</a>
+<a href="#ges-6">6. Configurar desde la app</a>
+<a href="#ges-7">7. Recomendaciones</a>
+</div>
+<div id="ges-1">
+<div class="guide-h1">1. Qué es TECLA</div><p class="guide-li">TECLA es un <strong>instrumento MIDI</strong> de 16 teclas y 3 potenciómetros. No suena por sí solo: envía notas MIDI por USB a cualquier sintetizador, DAW (Ableton, Logic, GarageBand…) o app de música.</p><p class="guide-li">Tiene dos grandes capas: la <strong>capa Teclado</strong> (instrumento armónico con escalas, acordes, arpegiador, looper…) y la <strong>capa Modos</strong> (generadores musicales algorítmicos).</p><p class="guide-li">Todo se configura desde esta app web, sin instalar nada: conecta el dispositivo por USB y pulsa <strong>conectar dispositivo</strong>.</p><div class="guide-note">Usa Chrome o Edge: la app necesita File System Access para escribir en el dispositivo.</div>
+</div>
+<div id="ges-2">
+<div class="guide-h1">2. Puesta en marcha</div><p class="guide-li">Conecta el TECLA al ordenador con un cable USB de datos.</p><p class="guide-li">Si el disco se llama <strong>CIRCUITPY</strong>: pestaña <em>Firmware</em> → <strong>Instalar / Actualizar firmware</strong>, espera el 100% y resetea el dispositivo. Listo.</p><p class="guide-li">Si el disco se llama <strong>RPI-RP2</strong> (Pico de fábrica): primero CircuitPython. En <em>Firmware</em>, sigue el <strong>Paso 1</strong>; cuando reaparezca como CIRCUITPY, haz el <strong>Paso 2</strong>.</p><p class="guide-li">Para oírlo: abre tu DAW o sintetizador y selecciona el puerto MIDI <strong>TECLA</strong> como entrada.</p><div class="guide-note">El nombre del puerto USB y del disco se personalizan en <em>Modos</em> → Identidad USB.</div>
+</div>
+<div id="ges-3">
+<div class="guide-h1">3. La capa Teclado (por defecto al arrancar)</div><div class="keys-grid" style="pointer-events:none;margin:24px 0;max-width:280px;gap:8px;">
+<div class="key-btn"><div class="key-num">1</div></div>
+<div class="key-btn"><div class="key-num">2</div></div>
+<div class="key-btn"><div class="key-num">3</div></div>
+<div class="key-btn"><div class="key-num">4</div></div>
+<div class="key-btn"><div class="key-num">5</div></div>
+<div class="key-btn"><div class="key-num">6</div></div>
+<div class="key-btn"><div class="key-num">7</div></div>
+<div class="key-btn"><div class="key-num">8</div></div>
+<div class="key-btn"><div class="key-num">9</div></div>
+<div class="key-btn"><div class="key-num">10</div></div>
+<div class="key-btn"><div class="key-num">11</div></div>
+<div class="key-btn"><div class="key-num">12</div></div>
+<div class="key-btn key-keybrd special"><div class="key-num">13</div></div>
+<div class="key-btn key-fx special"><div class="key-num">14</div></div>
+<div class="key-btn key-fx special"><div class="key-num">15</div></div>
+<div class="key-btn key-stop special"><div class="key-num">16</div></div>
+</div><p class="guide-li"><strong>Teclas 1–8</strong>: notas de la escala activa (o acordes, con el modo acordes activo).</p><p class="guide-li"><strong>Teclas 9–12, 14, 15</strong>: funciones <em>reasignables</em> desde la pestaña <em>Teclado</em>. Por defecto: escala, tonalidad, acordes, arpegiador y octava ±.</p><p class="guide-li"><strong>Tecla 13</strong> (fija): toque corto → capa Modos · mantenida ≈1 s → cambiar de banco de modos.</p><p class="guide-li"><strong>Tecla 16</strong> (fija): STOP — detiene todo el sonido.</p><div class="guide-h2">Funciones asignables</div><p class="guide-li"><strong>𝄞 Escala</strong>: toque → siguiente · toque largo → anterior. <strong>♭ Tonalidad</strong>: cicla el círculo de quintas.</p><p class="guide-li"><strong>♪ Acordes</strong>: toque → activar / ciclar tipo · largo → desactivar. <strong>≈ Arpegiador</strong>: toque → activar / ciclar patrón · largo → desactivar.</p><p class="guide-li"><strong>↕ Armonía Negativa</strong>: refleja las notas sobre un eje armónico. <strong>Δ Funciones Diatónicas</strong>: dominantes secundarias, acordes prestados, napolitanos…</p><p class="guide-li"><strong>∞ Latch</strong>: las notas/acordes siguen sonando al soltar; re-pulsar un botón lo apaga; ideal para drones.</p><p class="guide-li"><strong>𝆔 Conducción de voces</strong>: cada acorde nuevo elige la inversión más cercana al anterior — progresiones ligadas, como un pianista.</p><div class="guide-h2">Potenciómetros</div><p class="guide-li">3 pots con funciones por capa (normal, arpegiador, acordes, a. negativa): velocity, modulación, sustain, gate, BPM del arp, inversiones, <strong>CC Libre</strong> (envía el CC MIDI que elijas)…</p>
+</div>
+<div id="ges-4">
+<div class="guide-h1">4. Looper y Overdub</div><p class="guide-li">Dos funciones asignables: <strong>⟳ Looper</strong> (timing libre) y <strong>➕ Overdub</strong> (capas).</p><div class="guide-h2">⟳ Gestos del looper</div><p class="guide-li"><strong>1er toque</strong>: armar (la grabación empieza con la primera nota) · <strong>2º toque</strong>: el loop arranca al instante.</p><p class="guide-li"><strong>Toque corto</strong> mientras suena: pausa / reanudar desde el principio · <strong>Toque largo</strong> (0,8 s): borrar el loop.</p><p class="guide-li">El looper <strong>capta bien el arpegiador</strong>: activa el arp, arma el looper y el patrón se graba solo. Si el arp ha sonado durante la toma, el loop se <strong>auto-cuantiza</strong> a la rejilla del arp (captura fina, sin desfase); si solo grabas acordes/notas manuales, conserva el timing libre exacto. Para cambiar el tempo de un loop de arp: pausa → mueve el pot de BPM → reanuda.</p><p class="guide-li">Si grabas con el <strong>sustain</strong> del pot activo, el loop <strong>fija el sustain</strong> en la grabación (las notas quedan ligadas): suena sostenido por sí mismo y es <strong>independiente</strong> del sustain en directo — puedes bajar el sustain para tocar notas secas encima sin que el loop se altere.</p><div class="guide-h2">➕ Overdub (capas)</div><p class="guide-li"><strong>Toque corto</strong> con el loop sonando: entrar/salir del modo overdub — lo que toques se añade al loop como una capa nueva.</p><p class="guide-li"><strong>Toque largo</strong> (0,8 s): deshacer la última capa (repite para ir pelando capas).</p><p class="guide-li"><strong>Toque muy largo</strong> (1,6 s): borrar TODAS las capas de golpe — el loop base se mantiene.</p><div class="guide-note">Flujo típico: graba una progresión → overdub de una melodía → overdub del arp → toca en directo encima. La tecla 16 pausa el loop sin borrarlo.</div>
+</div>
+<div id="ges-5">
+<div class="guide-h1">5. La capa Modos</div><p class="guide-li">Se entra con la <strong>tecla 13</strong> (toque corto). Las teclas <strong>1–12</strong> activan los modos generativos del banco actual.</p><p class="guide-li"><strong>Tecla 13 mantenida ≈1 s</strong>: cambia de banco de modos (Capa 1 → Capa 2 → Capa 3…).</p><p class="guide-li"><strong>Teclas 14 y 15</strong>: efectos temporales (mantener pulsada: sustain, pausa, gate…) · doble clic → cambiar el efecto.</p><p class="guide-li"><strong>Tecla 16</strong>: STOP total + limpieza de memoria.</p><p class="guide-li">Los modos se eligen y asignan en la pestaña <em>Modos</em>; los potenciómetros modulan parámetros propios de cada modo.</p>
+</div>
+<div id="ges-6">
+<div class="guide-h1">6. Configurar desde la app</div><div class="guide-h2">Pestaña Teclado</div><p class="guide-li">Arrastra funciones a las teclas, elige escalas, tonalidades, tipos de acorde, patrones de arpegiador, progresiones y funciones de los potenciómetros.</p><div class="guide-h2">Pestaña Modos</div><p class="guide-li">Crea bancos (capas) de modos y asigna un modo a cada tecla 1–12. Elige los efectos temporales de las teclas 14–15.</p><div class="guide-h2">Pestaña Simulador</div><p class="guide-li">Pruébalo todo <em>sin dispositivo</em>: el teclado y los modos corren en el navegador y envían MIDI vía WebMIDI a tu DAW.</p><div class="guide-h2">Pestaña Firmware</div><p class="guide-li">Instala CircuitPython (Paso 1) y el firmware TECLA (Paso 2). Repite el Paso 2 tras cambiar los modos asignados.</p><div class="guide-h2">Pestaña Apariencia</div><p class="guide-li">Temas de color de la app y editor de temas personalizados.</p><div class="guide-note">Flujo de trabajo: edita → <strong>Guardar configuración</strong> → si cambiaste modos, <em>Firmware</em> → <strong>Instalar / Actualizar</strong> → reset del dispositivo.</div>
+</div>
+<div id="ges-7">
+<div class="guide-h1">7. Recomendaciones</div><p class="guide-li">Guarda siempre la configuración tras hacer cambios.</p><p class="guide-li">Hasta <strong>3 bancos de modos</strong> funcionan con total comodidad (validado con medidas de memoria reales).</p><p class="guide-li">Prueba los modos nuevos en el simulador antes de instalarlos.</p><p class="guide-li">Si una nota se queda colgada: <strong>tecla 16</strong> (STOP).</p><p class="guide-li">Si el dispositivo no responde: reset físico (botón del Pico) — el watchdog también lo reinicia solo si se cuelga.</p><p class="guide-li">Si la app no ve el dispositivo: comprueba que el disco CIRCUITPY/TECLA está montado y que usas Chrome o Edge.</p>
+</div>
+</div>
+<div class="guide-lang" data-lang="en" style="display:none">
+<div class="guide-toc">
+<a href="#gen-1">1. What is TECLA</a>
+<a href="#gen-2">2. Getting started</a>
+<a href="#gen-3">3. The Keyboard layer</a>
+<a href="#gen-4">4. Looper & Overdub</a>
+<a href="#gen-5">5. The Modes layer</a>
+<a href="#gen-6">6. Configuring from the app</a>
+<a href="#gen-7">7. Tips</a>
+</div>
+<div id="gen-1">
+<div class="guide-h1">1. What is TECLA</div><p class="guide-li">TECLA is a 16-key, 3-knob <strong>MIDI instrument</strong>. It makes no sound on its own: it sends MIDI notes over USB to any synthesizer, DAW (Ableton, Logic, GarageBand…) or music app.</p><p class="guide-li">It has two main layers: the <strong>Keyboard layer</strong> (a harmonic instrument with scales, chords, arpeggiator, looper…) and the <strong>Modes layer</strong> (algorithmic music generators).</p><p class="guide-li">Everything is configured from this web app, nothing to install: plug the device in via USB and press <strong>connect device</strong>.</p><div class="guide-note">Use Chrome or Edge: the app needs File System Access to write to the device.</div>
+</div>
+<div id="gen-2">
+<div class="guide-h1">2. Getting started</div><p class="guide-li">Connect TECLA to your computer with a USB data cable.</p><p class="guide-li">If the disk is named <strong>CIRCUITPY</strong>: go to <em>Firmware</em> → <strong>Install / Update firmware</strong>, wait for 100% and reset the device. Done.</p><p class="guide-li">If the disk is named <strong>RPI-RP2</strong> (factory-fresh Pico): install CircuitPython first. In <em>Firmware</em>, follow <strong>Step 1</strong>; once it reappears as CIRCUITPY, do <strong>Step 2</strong>.</p><p class="guide-li">To hear it: open your DAW or synth and select the <strong>TECLA</strong> MIDI port as input.</p><div class="guide-note">The USB port and disk names can be customised in <em>Modes</em> → USB Identity.</div>
+</div>
+<div id="gen-3">
+<div class="guide-h1">3. The Keyboard layer (default at boot)</div><div class="keys-grid" style="pointer-events:none;margin:24px 0;max-width:280px;gap:8px;">
+<div class="key-btn"><div class="key-num">1</div></div>
+<div class="key-btn"><div class="key-num">2</div></div>
+<div class="key-btn"><div class="key-num">3</div></div>
+<div class="key-btn"><div class="key-num">4</div></div>
+<div class="key-btn"><div class="key-num">5</div></div>
+<div class="key-btn"><div class="key-num">6</div></div>
+<div class="key-btn"><div class="key-num">7</div></div>
+<div class="key-btn"><div class="key-num">8</div></div>
+<div class="key-btn"><div class="key-num">9</div></div>
+<div class="key-btn"><div class="key-num">10</div></div>
+<div class="key-btn"><div class="key-num">11</div></div>
+<div class="key-btn"><div class="key-num">12</div></div>
+<div class="key-btn key-keybrd special"><div class="key-num">13</div></div>
+<div class="key-btn key-fx special"><div class="key-num">14</div></div>
+<div class="key-btn key-fx special"><div class="key-num">15</div></div>
+<div class="key-btn key-stop special"><div class="key-num">16</div></div>
+</div><p class="guide-li"><strong>Keys 1–8</strong>: notes of the active scale (or chords, when chord mode is on).</p><p class="guide-li"><strong>Keys 9–12, 14, 15</strong>: functions <em>reassignable</em> from the <em>Keyboard</em> tab. Defaults: scale, key, chords, arpeggiator and octave ±.</p><p class="guide-li"><strong>Key 13</strong> (fixed): short press → switch to the Modes layer · hold ≈1 s → switch mode bank.</p><p class="guide-li"><strong>Key 16</strong> (fixed): STOP — kills all sound.</p><div class="guide-h2">Assignable functions</div><p class="guide-li"><strong>𝄞 Scale</strong>: tap → next · long press → previous. <strong>♭ Key</strong>: cycles the circle of fifths.</p><p class="guide-li"><strong>♪ Chords</strong>: tap → enable / cycle chord type · long → disable. <strong>≈ Arpeggiator</strong>: tap → enable / cycle pattern · long → disable.</p><p class="guide-li"><strong>↕ Negative Harmony</strong>: mirrors notes across a harmonic axis. <strong>Δ Diatonic Functions</strong>: secondary dominants, borrowed chords, Neapolitans…</p><p class="guide-li"><strong>∞ Latch</strong>: notes/chords keep sounding after release; press again to stop them; great for drones.</p><p class="guide-li"><strong>𝆔 Voice leading</strong>: each new chord picks the inversion closest to the previous one — progressions flow like a pianist’s.</p><div class="guide-h2">Knobs</div><p class="guide-li">3 pots with per-layer functions (normal, arpeggiator, chords, neg. harmony): velocity, modulation, sustain, gate, arp BPM, inversions, <strong>Free CC</strong> (send any MIDI CC you choose)…</p>
+</div>
+<div id="gen-4">
+<div class="guide-h1">4. Looper & Overdub</div><p class="guide-li">Two assignable functions: <strong>⟳ Looper</strong> (free timing) and <strong>➕ Overdub</strong> (layers).</p><div class="guide-h2">⟳ Looper gestures</div><p class="guide-li"><strong>1st tap</strong>: arm (recording starts with your first note) · <strong>2nd tap</strong>: the loop starts instantly.</p><p class="guide-li"><strong>Short tap</strong> while playing: pause / resume from the top · <strong>Long press</strong> (0.8 s): clear the loop.</p><p class="guide-li">The looper <strong>captures the arpeggiator tightly</strong>: enable the arp, arm the looper and the pattern records itself. If the arp played during the take, the loop <strong>auto-quantizes</strong> to the arp grid (tight capture, no drift); if you only record manual chords/notes, it keeps the exact free timing. To change an arp loop's tempo: pause → move the BPM pot → resume.</p><p class="guide-li">If you record with the <strong>sustain</strong> pot active, the loop <strong>bakes the sustain</strong> into the recording (notes become legato): it sounds sustained on its own and is <strong>independent</strong> of the live sustain — you can lower the sustain to play dry notes on top without altering the loop.</p><div class="guide-h2">➕ Overdub (layers)</div><p class="guide-li"><strong>Short tap</strong> while the loop plays: enter/exit overdub mode — whatever you play is added to the loop as a new layer.</p><p class="guide-li"><strong>Long press</strong> (0.8 s): undo the last layer (repeat to peel layers off one by one).</p><p class="guide-li"><strong>Very long press</strong> (1.6 s): wipe ALL layers at once — the base loop survives.</p><div class="guide-note">Typical flow: record a chord progression → overdub a melody → overdub the arp → play live on top. Key 16 pauses the loop without erasing it.</div>
+</div>
+<div id="gen-5">
+<div class="guide-h1">5. The Modes layer</div><p class="guide-li">Enter it with <strong>key 13</strong> (short press). Keys <strong>1–12</strong> trigger the generative modes of the current bank.</p><p class="guide-li"><strong>Key 13 held ≈1 s</strong>: switches mode bank (Layer 1 → Layer 2 → Layer 3…).</p><p class="guide-li"><strong>Keys 14 & 15</strong>: temporary effects (hold: sustain, pause, gate…) · double-click → change the assigned effect.</p><p class="guide-li"><strong>Key 16</strong>: full STOP + memory cleanup.</p><p class="guide-li">Modes are chosen and assigned in the <em>Modes</em> tab; the knobs modulate each mode’s own parameters.</p>
+</div>
+<div id="gen-6">
+<div class="guide-h1">6. Configuring from the app</div><div class="guide-h2">Keyboard tab</div><p class="guide-li">Drag functions onto keys; pick scales, keys, chord types, arpeggiator patterns, progressions and pot functions.</p><div class="guide-h2">Modes tab</div><p class="guide-li">Create mode banks (layers) and assign a mode to each key 1–12. Choose the temporary effects for keys 14–15.</p><div class="guide-h2">Simulator tab</div><p class="guide-li">Try everything <em>without the device</em>: the keyboard and modes run in the browser and send MIDI via WebMIDI to your DAW.</p><div class="guide-h2">Firmware tab</div><p class="guide-li">Install CircuitPython (Step 1) and the TECLA firmware (Step 2). Repeat Step 2 after changing assigned modes.</p><div class="guide-h2">Appearance tab</div><p class="guide-li">App colour themes and a custom theme editor.</p><div class="guide-note">Workflow: edit → <strong>Save settings</strong> → if you changed modes, <em>Firmware</em> → <strong>Install / Update</strong> → reset the device.</div>
+</div>
+<div id="gen-7">
+<div class="guide-h1">7. Tips</div><p class="guide-li">Always save your settings after making changes.</p><p class="guide-li">Up to <strong>3 mode banks</strong> run comfortably (validated with real memory measurements).</p><p class="guide-li">Test new modes in the simulator before installing them.</p><p class="guide-li">Stuck note or runaway sound: <strong>key 16</strong> (STOP).</p><p class="guide-li">Device unresponsive: physical reset (Pico button) — the watchdog also auto-restarts it if it ever hangs live.</p><p class="guide-li">App can’t see the device: check the CIRCUITPY/TECLA disk is mounted and that you’re using Chrome or Edge.</p>
+</div>
+</div>
         </div>
       </div>
     </div>
@@ -2649,9 +2817,11 @@
   </main>
   <script type="module">
     import { TECLADevice } from './js/tecla-device.js';
+    import { I18N } from './js/tecla-i18n.js';
     import { TECLAModes } from './js/tecla-modes.js';
     import { TECLASimulator } from './js/tecla-simulator.js';
     import { WebMidiManager } from './js/tecla-webmidi.js';
+    import { ALL_KEYS, KEYBOARD_SCALES, ARP_PATTERNS, AVAILABLE_EFFECTS, KB_BTN_FN_META, KB_BTN_FN_DRAGGABLE, NEG_HARMONY_TYPES, DIATONIC_FNS, applyHarmonicFn, SCALES_JS, SCALE_NAMES_JS, KEY_CIRCLE_JS, KEY_OFFSETS_JS, NOTES_JS, ARP_NAMES_JS, CHORDS_JS, _getChordIntervals, _sysVolTimer, _setSysVol } from './js/tecla-music-data.js';
 
     // ── Instàncies ─────────────────────────────────────────────────
     const device = new TECLADevice();
@@ -2703,6 +2873,9 @@
     });
     buildKeysGrid(); // async: populates selects, syncs bank select, restores saved values
     _builtKeys = true;
+    // La pestanya Teclat (tab-modes) és la primera visible en obrir l'app → construir-la ja.
+    buildModesTab();
+    _builtModes = true;
 
     navigator.usb?.addEventListener('disconnect', () => {
       if (device.isConnected()) { modes = null; setDisconnected(); log('Dispositiu desconnectat.', 'info'); }
@@ -3307,7 +3480,7 @@
     }
     function _availableEffects() {
       const mc = _loadModesConfig();
-      return mc.available_effects || ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend'];
+      return mc.available_effects || ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend', 'Harmonia Negativa'];
     }
 
     function _getAssignedModes() {
@@ -3469,11 +3642,14 @@
       const customNames = _getModeNames();
       const fileToName = Object.fromEntries(_modesIndex.map(m => [m.file, customNames[m.file] || m.name]));
       const midiChannel = mc.midi_channel || 1;
-      const kbScales = mc.keyboard_scales || [];
+      const DEFAULT_KB_SCALES = [0, 1, 4, 5, 7, 8, 13, 15, 18, 19];
+      const kbScales = (mc.keyboard_scales && mc.keyboard_scales.length > 0) ? mc.keyboard_scales : DEFAULT_KB_SCALES;
       const kbKeys = mc.keyboard_keys || ALL_KEYS;
       const arpModes = mc.arpeggiator_modes || Array.from({ length: 16 }, (_, i) => i);
-      const potFns = mc.potentiometer_functions || {};
+      const potFns    = mc.potentiometer_functions || {};
       const arpPotFns = mc.arp_potentiometer_functions || {};
+      const chordPotFns = mc.chord_potentiometer_functions || {};
+      const negPotFns   = mc.neg_potentiometer_functions   || {};
       const chordTypes = mc.chord_types || ['Major'];
       return {
         banks: _keysConfig.banks.map(b => ({
@@ -3490,7 +3666,7 @@
         current_bank: _keysConfig.currentBank,
         midi_channel: midiChannel,
         enabled_modes: _getAssignedModes(),
-        available_effects: mc.available_effects || ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend'],
+        available_effects: mc.available_effects || ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend', 'Harmonia Negativa'],
         keyboard_scales: kbScales,
         keyboard_keys: kbKeys,
         arpeggiator_modes: arpModes,
@@ -3498,7 +3674,14 @@
         custom_chord_progressions: _getProgressions(),
         potentiometer_functions: potFns,
         arp_potentiometer_functions: arpPotFns,
-        chord_types: chordTypes
+        chord_potentiometer_functions: chordPotFns,
+        neg_potentiometer_functions:   negPotFns,
+        chord_types: chordTypes,
+        keyboard_button_functions: _loadKbBtnFunctions(),
+        neg_harmony_axes: _loadNegHarmAxes(),
+        neg_harmony_type: _loadNegHarmType(),
+        chord_inversions: _loadChordInversions(),
+        diatonic_functions: _loadDiatonicFns()
       };
     }
 
@@ -3508,24 +3691,42 @@
     function _loadModesConfig() { try { return JSON.parse(localStorage.getItem('tecla-modes-config') || '{}'); } catch { return {}; } }
     function _saveModesConfig(cfg) { localStorage.setItem('tecla-modes-config', JSON.stringify(cfg)); }
 
-    const ALL_KEYS = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+    function _loadDiatonicFns() {
+      try { const a = JSON.parse(localStorage.getItem('tecla-diatonic-fns') || 'null'); if (Array.isArray(a) && a.length > 0) return a; } catch {}
+      return ['diatonic'];
+    }
+    function _saveDiatonicFns(arr) { localStorage.setItem('tecla-diatonic-fns', JSON.stringify(arr)); }
 
-    const KEYBOARD_SCALES = [
-      [0, "Jònic (Major)"], [1, "Dòric"], [2, "Frigi"], [3, "Lidi"],
-      [4, "Mixolidi"], [5, "Eòlic (Menor)"], [6, "Locri"],
-      [7, "Pentat. Major"], [8, "Pentat. Menor"],
-      [9, "Japonesa"], [10, "Egípcia"], [11, "Aràbiga"], [12, "Hongaresa"],
-      [13, "Lídia Dominant"], [14, "Alterada"], [15, "Menor Melòdica"],
-      [16, "Raga Bhairav"], [17, "Raga Todi"],
-      [18, "Flamenca"], [19, "Catalana"], [20, "Frígia"], [21, "Balcànica"],
-      [22, "Tons Sencers"], [23, "Harmònica Major"]
+    function _loadNegHarmType() { return parseInt(localStorage.getItem('tecla-neg-harm-type') || '0', 10); }
+    function _saveNegHarmType(t) { localStorage.setItem('tecla-neg-harm-type', t); }
+    function _loadNegHarmAxes() {
+      try { const a = JSON.parse(localStorage.getItem('tecla-neg-harm-axes') || 'null'); if (Array.isArray(a) && a.length > 0) return a; } catch {}
+      return NEG_HARMONY_TYPES.map(([id]) => id);
+    }
+    function _saveNegHarmAxes(arr) { localStorage.setItem('tecla-neg-harm-axes', JSON.stringify(arr)); }
+    const CHORD_INVERSIONS = [
+      [0, 'Fonamental'],
+      [1, '1a Inversió'],
+      [2, '2a Inversió'],
+      [3, '3a Inversió'],
     ];
-    const ARP_PATTERNS = [
-      [0, "Amunt"], [1, "Avall"], [2, "Ping-Pong"], [3, "Aleatori"], [4, "Ordre"],
-      [5, "Alberti"], [6, "Alberti Alt"], [7, "Vals"], [8, "Broken"], [9, "Trèmolo"],
-      [10, "Zig-Zag"], [11, "Block"], [12, "Rolled"], [13, "Octaves"], [14, "Contrari"], [15, "Spread"]
+    function _loadChordInversions() {
+      try { const a = JSON.parse(localStorage.getItem('tecla-chord-inversions') || 'null'); if (Array.isArray(a) && a.length > 0) return a; } catch {}
+      return CHORD_INVERSIONS.map(([id]) => id);
+    }
+    function _saveChordInversions(arr) { localStorage.setItem('tecla-chord-inversions', JSON.stringify(arr)); }
+    const KB_BTN_FN_DEFAULT = [
+      'note','note','note','note','note','note','note','note',
+      'scale','tonality','chord','arp',
+      'modes_layer','octave_down','octave_up','stop'
     ];
-    const AVAILABLE_EFFECTS = ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend'];
+    const KB_BTN_LOCKED_SET = new Set([12, 15]);
+    let _kbBtnFunctions = null;
+    function _loadKbBtnFunctions() {
+      try { const a = JSON.parse(localStorage.getItem('tecla-kb-btn-functions') || 'null'); if (Array.isArray(a) && a.length === 16) return a; } catch {}
+      return [...KB_BTN_FN_DEFAULT];
+    }
+    function _saveKbBtnFunctions(arr) { localStorage.setItem('tecla-kb-btn-functions', JSON.stringify(arr)); }
 
     function setSelectVal(id, val) {
       const el = document.getElementById(id); if (!el || !val) return;
@@ -3625,15 +3826,300 @@
       _rebuildChordTypesList();
 
       // Pots
-      const pf = mc.potentiometer_functions || {};
+      const pf  = mc.potentiometer_functions || {};
       const apf = mc.arp_potentiometer_functions || {};
-      setSelectVal('kb-pot-x', pf.pot_x || 'Brillantor');
-      setSelectVal('kb-pot-y', pf.pot_y || 'Modulació');
-      setSelectVal('kb-pot-z', pf.pot_z || 'Sustain');
-      setSelectVal('arp-pot-x', apf.arp_pot_x || 'Velocitat (BPM)');
-      setSelectVal('arp-pot-y', apf.arp_pot_y || 'Patró De Direcció');
-      setSelectVal('arp-pot-z', apf.arp_pot_z || 'Modulació');
+      const cpf = mc.chord_potentiometer_functions || {};
+      const npf = mc.neg_potentiometer_functions || {};
+      _potFunctions    = { pot_x: pf.pot_x     || 'Brillantor',        pot_y: pf.pot_y     || 'Modulació',           pot_z: pf.pot_z     || 'Sustain' };
+      _arpPotFunctions = { arp_pot_x: apf.arp_pot_x || 'Velocitat (BPM)', arp_pot_y: apf.arp_pot_y || 'Patró De Direcció', arp_pot_z: apf.arp_pot_z || 'Modulació' };
+      _chordPotFunctions = { chord_pot_x: cpf.chord_pot_x || "Tipologia d'Acords", chord_pot_y: cpf.chord_pot_y || "Inversió d'Acord", chord_pot_z: cpf.chord_pot_z || 'Modulació' };
+      _negPotFunctions   = { neg_pot_x: npf.neg_pot_x || "Eix d'Harmonia",     neg_pot_y: npf.neg_pot_y || "Inversió d'Acord", neg_pot_z: npf.neg_pot_z || 'Modulació' };
+
+      buildKbFunctionGrid();
     }
+
+    let _potDiagramMode = 'kbd';
+    let _potFunctions = null;
+    let _arpPotFunctions = null;
+    let _chordPotFunctions = null;
+    let _negPotFunctions = null;
+    const KB_POT_FNS    = ['Brillantor','Modulació','Sustain','Pitch Bend','Volum','Gate','Octava'];
+    const ARP_POT_FNS   = ['Velocitat (BPM)','Patró De Direcció','Brillantor','Volum','Modulació','Pitch Bend','Gate','Octava'];
+    const CHORD_POT_FNS = ["Tipologia d'Acords","Inversió d'Acord",'Brillantor','Modulació','Sustain','Pitch Bend','Volum','Gate','Octava'];
+    const NEG_POT_FNS   = ["Eix d'Harmonia","Inversió d'Acord",'Brillantor','Modulació','Sustain','Pitch Bend','Volum','Gate','Octava'];
+
+    function _setPotDiagramMode(mode) {
+      _potDiagramMode = mode;
+      document.getElementById('kb-pot-mode-kbd')?.classList.toggle('pot-mode-active', mode === 'kbd');
+      document.getElementById('kb-pot-mode-arp')?.classList.toggle('pot-mode-active', mode === 'arp');
+      document.getElementById('kb-pot-mode-chord')?.classList.toggle('pot-mode-active', mode === 'chord');
+      document.getElementById('kb-pot-mode-neg')?.classList.toggle('pot-mode-active', mode === 'neg');
+      _updatePotDiagram();
+    }
+
+    function _updatePotDiagram() {
+      const col = document.getElementById('kb-pots-col-knobs');
+      if (!col) return;
+      const m = _potDiagramMode;
+      const prefixMap = { kbd: 'pot', arp: 'arp_pot', chord: 'chord_pot', neg: 'neg_pot' };
+      const fnsMap    = { kbd: _potFunctions, arp: _arpPotFunctions, chord: _chordPotFunctions, neg: _negPotFunctions };
+      const prefix = prefixMap[m] || 'pot';
+      const fns    = fnsMap[m] || {};
+      const defs = [
+        { id: `${prefix}_x`, lbl: 'X' },
+        { id: `${prefix}_y`, lbl: 'Y' },
+        { id: `${prefix}_z`, lbl: 'Z' },
+      ];
+      col.innerHTML = defs.map(({ id, lbl }) => {
+        const fn = (fns && fns[id]) || '\u2014';
+        return `<div class="kb-pot-knob" data-pot="${id}" title="${fn}">
+          <div class="kb-pot-knob-id">${lbl}</div>
+          <div class="kb-pot-knob-circle"><div class="kb-pot-knob-indicator"></div></div>
+          <div class="kb-pot-knob-fn">${fn}</div>
+        </div>`;
+      }).join('');
+      col.querySelectorAll('.kb-pot-knob').forEach(el => {
+        el.addEventListener('click', () => _openPotMenu(el.dataset.pot, el));
+      });
+    }
+
+    let _potListenersWired = false;
+    function _wirePotDiagramListeners() {
+      if (_potListenersWired) return;
+      _potListenersWired = true;
+      document.getElementById('kb-pot-mode-kbd')?.addEventListener('click', () => _setPotDiagramMode('kbd'));
+      document.getElementById('kb-pot-mode-arp')?.addEventListener('click', () => _setPotDiagramMode('arp'));
+      document.getElementById('kb-pot-mode-chord')?.addEventListener('click', () => _setPotDiagramMode('chord'));
+      document.getElementById('kb-pot-mode-neg')?.addEventListener('click', () => _setPotDiagramMode('neg'));
+    }
+
+    function _savePotFunctions() {
+      const mc = _loadModesConfig();
+      if (_potFunctions)      mc.potentiometer_functions       = _potFunctions;
+      if (_arpPotFunctions)   mc.arp_potentiometer_functions   = _arpPotFunctions;
+      if (_chordPotFunctions) mc.chord_potentiometer_functions = _chordPotFunctions;
+      if (_negPotFunctions)   mc.neg_potentiometer_functions   = _negPotFunctions;
+      _saveModesConfig(mc);
+      if (typeof kbMode !== 'undefined' && kbMode) kbMode._reloadConfig();
+    }
+
+    function _openPotMenu(potId, anchorEl) {
+      document.getElementById('kb-pot-menu')?.remove();
+      const isArp   = potId.startsWith('arp_');
+      const isChord = potId.startsWith('chord_');
+      const isNeg   = potId.startsWith('neg_');
+      const options    = isArp ? ARP_POT_FNS : isChord ? CHORD_POT_FNS : isNeg ? NEG_POT_FNS : KB_POT_FNS;
+      const currentFns = isArp ? _arpPotFunctions : isChord ? _chordPotFunctions : isNeg ? _negPotFunctions : _potFunctions;
+      const current = currentFns?.[potId];
+      const menu = document.createElement('div');
+      menu.id = 'kb-pot-menu';
+      menu.style.cssText = 'position:fixed;z-index:9999;background:var(--surface3,var(--surface2));border:1px solid var(--border-h,var(--border));border-radius:8px;padding:6px;min-width:160px;box-shadow:0 6px 20px rgba(0,0,0,.35)';
+      const rect = anchorEl.getBoundingClientRect();
+      menu.style.top = Math.min(rect.bottom + 4, window.innerHeight - 320) + 'px';
+      menu.style.left = Math.min(rect.left, window.innerWidth - 180) + 'px';
+      options.forEach(fn => {
+        const item = document.createElement('div');
+        item.style.cssText = 'padding:5px 9px;border-radius:5px;cursor:pointer;font-size:11.5px;font-weight:500;';
+        item.textContent = fn;
+        if (fn === current) item.style.background = 'rgba(74,128,240,.14)';
+        item.addEventListener('mouseenter', () => { item.style.background = 'color-mix(in srgb,var(--accent) 12%,transparent)'; });
+        item.addEventListener('mouseleave', () => { item.style.background = fn === current ? 'rgba(74,128,240,.14)' : ''; });
+        item.addEventListener('click', () => {
+          if (isArp)         { _arpPotFunctions   = _arpPotFunctions   || {}; _arpPotFunctions[potId]   = fn; }
+          else if (isChord)  { _chordPotFunctions = _chordPotFunctions || {}; _chordPotFunctions[potId] = fn; }
+          else if (isNeg)    { _negPotFunctions   = _negPotFunctions   || {}; _negPotFunctions[potId]   = fn; }
+          else               { _potFunctions      = _potFunctions      || {}; _potFunctions[potId]      = fn; }
+          _savePotFunctions();
+          _updatePotDiagram();
+          menu.remove();
+        });
+        menu.appendChild(item);
+      });
+      document.body.appendChild(menu);
+      setTimeout(() => document.addEventListener('click', () => menu.remove(), { once: true }), 0);
+    }
+
+    function buildKbFunctionGrid() {
+      _kbBtnFunctions = _loadKbBtnFunctions();
+      _renderKbFnGrid();
+      _renderKbFnChips();
+      _renderNegHarmTypes();
+      _renderChordInversions();
+      _renderDiatonicFns();
+      _wirePotDiagramListeners();
+      _updatePotDiagram();
+    }
+
+    function _renderDiatonicFns() {
+      const cont = document.getElementById('diatonic-fns');
+      if (!cont) return;
+      const enabled = new Set(_loadDiatonicFns());
+      cont.innerHTML = DIATONIC_FNS.map(fn =>
+        `<label class="cb"><input type="checkbox" class="diatonic-fn-chk" value="${fn.id}" ${enabled.has(fn.id) ? 'checked' : ''}>${fn.name}</label>`
+      ).join('');
+      cont.querySelectorAll('.diatonic-fn-chk').forEach(chk => chk.addEventListener('change', () => {
+        const active = [...cont.querySelectorAll('.diatonic-fn-chk:checked')].map(c => c.value);
+        _saveDiatonicFns(active.length > 0 ? active : ['diatonic']);
+      }));
+    }
+
+    function _renderDiatonicPreview() {
+      const cont = document.getElementById('diatonic-degrees-preview');
+      if (!cont) return;
+      const DEGREES = [
+        { roman: 'I',    quality: 'Maj', tonic: true },
+        { roman: 'ii',   quality: 'min', tonic: false },
+        { roman: 'iii',  quality: 'min', tonic: false },
+        { roman: 'IV',   quality: 'Maj', tonic: true },
+        { roman: 'V',    quality: 'Maj', tonic: true },
+        { roman: 'vi',   quality: 'min', tonic: false },
+        { roman: 'vii°', quality: 'dim', tonic: false },
+      ];
+      cont.innerHTML = DEGREES.map(d => {
+        const bg = d.quality === 'dim'
+          ? 'rgba(192,57,43,.12)'
+          : d.tonic ? 'rgba(22,160,133,.15)' : 'rgba(22,160,133,.07)';
+        const col = d.quality === 'dim' ? '#c0392b' : '#16a085';
+        return `<div style="flex:1;min-width:36px;background:${bg};border-radius:4px;padding:4px 2px">
+          <div style="color:${col};font-weight:600">${d.roman}</div>
+          <div style="color:var(--text2);margin-top:2px">${d.quality}</div>
+        </div>`;
+      }).join('');
+    }
+
+    function _renderKbFnGrid() {
+      const grid = document.getElementById('kb-fn-grid');
+      if (!grid) return;
+      grid.innerHTML = '';
+      for (let i = 0; i < 16; i++) {
+        const fn = _kbBtnFunctions[i] || '';
+        const meta = fn ? (KB_BTN_FN_META[fn] || { name: fn, color: '#888', icon: '?' }) : null;
+        const locked = KB_BTN_LOCKED_SET.has(i);
+        const btn = document.createElement('div');
+
+        // Mirror Tecles tab visual style
+        let cls = 'key-btn';
+        if (i === 12)         cls += ' key-keybrd special';
+        else if (i === 15)    cls += ' key-stop special';
+        else if (fn === 'note') cls += ' active';
+        else if (fn)          cls += ' key-fx special';
+        btn.className = cls;
+        btn.dataset.idx = i;
+
+        // Per-function color on border (non-locked, non-note)
+        if (fn && fn !== 'note' && !locked)
+          btn.style.borderColor = meta.color + 'cc';
+
+        let labelLine2 = '';
+        if (i === 12)   labelLine2 = '<br><span style="font-size:7px;opacity:.6">Bloquejat</span>';
+        else if (i === 15) labelLine2 = '<br><span style="font-size:7px;opacity:.6">Bloquejat</span>';
+        else if (!fn)   labelLine2 = '<br><span style="font-size:7px;opacity:.4">—</span>';
+
+        btn.innerHTML = `<div class="key-num">${i + 1}</div>
+          <div class="key-label" style="${fn && !locked ? 'color:'+meta.color : ''}">${meta ? meta.icon+' '+meta.name : '—'}${labelLine2}</div>`;
+
+        if (!locked) {
+          btn.addEventListener('dragover', e => { e.preventDefault(); btn.classList.add('drag-over'); });
+          btn.addEventListener('dragleave', () => btn.classList.remove('drag-over'));
+          btn.addEventListener('drop', e => {
+            e.preventDefault(); btn.classList.remove('drag-over');
+            const fnId = e.dataTransfer.getData('text/plain');
+            if (!fnId || KB_BTN_FN_META[fnId]?.locked) return;
+            if (!KB_BTN_FN_META[fnId]?.multi)
+              _kbBtnFunctions = _kbBtnFunctions.map((f, j) => f === fnId && !KB_BTN_LOCKED_SET.has(j) && j !== i ? '' : f);
+            _kbBtnFunctions[i] = fnId;
+            _saveKbBtnFunctions(_kbBtnFunctions);
+            if (typeof kbMode !== 'undefined' && kbMode) { kbMode._btnFns = _loadKbBtnFunctions(); kbMode._updateHUD(); }
+            _renderKbFnGrid();
+          });
+          btn.addEventListener('click', () => _openKbBtnMenu(i, btn));
+        }
+        grid.appendChild(btn);
+      }
+    }
+
+    function _renderNegHarmTypes() {
+      const cont = document.getElementById('neg-harmony-types');
+      if (!cont) return;
+      const enabled = new Set(_loadNegHarmAxes());
+      cont.innerHTML = NEG_HARMONY_TYPES.map(([id, name]) =>
+        `<label class="cb"><input type="checkbox" class="neg-harm-chk" value="${id}" ${enabled.has(id) ? 'checked' : ''}>${name}</label>`
+      ).join('');
+      cont.querySelectorAll('.neg-harm-chk').forEach(chk => chk.addEventListener('change', () => {
+        const active = [...cont.querySelectorAll('.neg-harm-chk:checked')].map(c => parseInt(c.value, 10));
+        _saveNegHarmAxes(active.length > 0 ? active : [0]);
+      }));
+    }
+
+    function _renderChordInversions() {
+      const cont = document.getElementById('chord-inversions');
+      if (!cont) return;
+      const enabled = new Set(_loadChordInversions());
+      cont.innerHTML = CHORD_INVERSIONS.map(([id, name]) =>
+        `<label class="cb"><input type="checkbox" class="chord-inv-chk" value="${id}" ${enabled.has(id) ? 'checked' : ''}>${name}</label>`
+      ).join('');
+      cont.querySelectorAll('.chord-inv-chk').forEach(chk => chk.addEventListener('change', () => {
+        const active = [...cont.querySelectorAll('.chord-inv-chk:checked')].map(c => parseInt(c.value, 10));
+        _saveChordInversions(active.length > 0 ? active : [0]);
+      }));
+    }
+
+    function _renderKbFnChips() {
+      const panel = document.getElementById('kb-fn-chips');
+      if (!panel) return;
+      panel.innerHTML = KB_BTN_FN_DRAGGABLE.map(fnId => {
+        const m = KB_BTN_FN_META[fnId];
+        return `<div class="kb-fn-chip" draggable="true" data-fn="${fnId}">
+          <span class="chip-icon" style="color:${m.color}">${m.icon}</span><span>${m.name}</span></div>`;
+      }).join('');
+      panel.querySelectorAll('.kb-fn-chip').forEach(chip => {
+        chip.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', chip.dataset.fn); chip.style.opacity = '.45'; });
+        chip.addEventListener('dragend', () => chip.style.opacity = '');
+      });
+    }
+
+    function _openKbBtnMenu(idx, anchorEl) {
+      document.getElementById('kb-btn-menu')?.remove();
+      const menu = document.createElement('div');
+      menu.id = 'kb-btn-menu';
+      menu.style.cssText = 'position:fixed;z-index:9999;background:var(--surface3,var(--surface2));border:1px solid var(--border);border-radius:8px;padding:6px;min-width:140px;box-shadow:0 4px 16px rgba(0,0,0,.2)';
+      const rect = anchorEl.getBoundingClientRect();
+      menu.style.top = Math.min(rect.bottom + 4, window.innerHeight - 250) + 'px';
+      menu.style.left = Math.min(rect.left, window.innerWidth - 160) + 'px';
+      [...KB_BTN_FN_DRAGGABLE, ''].forEach(fnId => {
+        const m = fnId ? KB_BTN_FN_META[fnId] : { name: '— Buit —', color: 'var(--text3)', icon: '·' };
+        const item = document.createElement('div');
+        item.style.cssText = 'display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:5px;cursor:pointer;font-size:11.5px;font-weight:500;';
+        item.innerHTML = `<span style="color:${m.color};min-width:14px;text-align:center">${m.icon}</span><span>${m.name}</span>`;
+        if (_kbBtnFunctions[idx] === fnId || (!fnId && !_kbBtnFunctions[idx])) item.style.background = 'rgba(74,128,240,.12)';
+        item.addEventListener('mouseenter', () => item.style.background = 'color-mix(in srgb,var(--accent) 10%,transparent)');
+        item.addEventListener('mouseleave', () => item.style.background = (_kbBtnFunctions[idx] === fnId) ? 'rgba(74,128,240,.12)' : '');
+        item.addEventListener('click', () => {
+          if (fnId && !KB_BTN_FN_META[fnId]?.multi)
+            _kbBtnFunctions = _kbBtnFunctions.map((f, j) => f === fnId && !KB_BTN_LOCKED_SET.has(j) && j !== idx ? '' : f);
+          _kbBtnFunctions[idx] = fnId;
+          _saveKbBtnFunctions(_kbBtnFunctions);
+          if (typeof kbMode !== 'undefined' && kbMode) { kbMode._btnFns = _loadKbBtnFunctions(); kbMode.negHarmBtnIdx = kbMode._btnFns.indexOf('neg_harmony'); kbMode._updateHUD(); }
+          _renderKbFnGrid();
+          menu.remove();
+        });
+        menu.appendChild(item);
+      });
+      document.body.appendChild(menu);
+      setTimeout(() => document.addEventListener('click', () => menu.remove(), { once: true }), 0);
+    }
+
+    document.getElementById('btn-save-kb-fn')?.addEventListener('click', () => {
+      if (!_kbBtnFunctions) return;
+      _saveKbBtnFunctions(_kbBtnFunctions);
+      showGlobalToast('Funcions dels botons guardades');
+    });
+    document.getElementById('btn-reset-kb-fn')?.addEventListener('click', () => {
+      if (!confirm('Restablir les funcions per defecte dels botons?')) return;
+      _kbBtnFunctions = [...KB_BTN_FN_DEFAULT];
+      _renderKbFnGrid();
+      showGlobalToast('Funcions restablertes');
+    });
 
     document.getElementById('btn-save-midi-channel')?.addEventListener('click', async () => {
       const ch = parseInt(document.getElementById('midi-channel-select')?.value || '1', 10);
@@ -3923,49 +4409,21 @@
 
     // ── Chord Types (Botó 11) ──────────────────────────────────────
     function _rebuildChordTypesList() {
-      const sel = document.getElementById('chord-type-add-select');
-      if (sel && sel.children.length === 0) {
-        sel.innerHTML = _CHORD_TYPES.map(t => `<option value="${t}">${t}</option>`).join('');
-      }
-      _renderChordTypeTags();
-    }
-
-    function _renderChordTypeTags() {
-      const cont = document.getElementById('chord-types-tags');
+      const cont = document.getElementById('chord-types-list');
       if (!cont) return;
       const mc = _loadModesConfig();
-      const list = mc.chord_types ?? ['Major'];
-      cont.innerHTML = list.map((t, i) =>
-        `<span style="display:inline-flex;align-items:center;gap:3px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:500">
-           ${t}
-           <button data-idx="${i}" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:0 0 0 3px;line-height:1" title="Eliminar">×</button>
-         </span>`).join('');
-      cont.querySelectorAll('button[data-idx]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const mc2 = _loadModesConfig();
-          const l = [...(mc2.chord_types ?? ['Major'])];
-          if (l.length <= 1) return;
-          l.splice(+btn.dataset.idx, 1);
-          mc2.chord_types = l;
-          _saveModesConfig(mc2);
-          _renderChordTypeTags();
-        });
-      });
+      const enabled = new Set(mc.chord_types ?? ['Major']);
+      const html = _CHORD_TYPES.map(t =>
+        `<label class="cb"><input type="checkbox" class="kb-chord-chk" value="${t}" ${enabled.has(t) ? 'checked' : ''}>
+     <span>${t}</span></label>`).join('');
+      cont.innerHTML = html;
     }
 
-    document.getElementById('btn-chord-type-add')?.addEventListener('click', () => {
-      const val = document.getElementById('chord-type-add-select')?.value;
-      if (!val) return;
-      const mc = _loadModesConfig();
-      const l = [...(mc.chord_types ?? ['Major'])];
-      if (!l.includes(val)) { l.push(val); mc.chord_types = l; _saveModesConfig(mc); _renderChordTypeTags(); }
-    });
-
     document.getElementById('btn-save-chord-types')?.addEventListener('click', async () => {
-      const mc = _loadModesConfig();
-      const enabled = mc.chord_types ?? ['Major'];
-      if (enabled.length === 0) { alert('Selecciona almenys una tipologia.'); return; }
-      log(`Tipologies d'acords guardades: ${enabled.join(', ')}`, 'ok');
+      const enabled = [...document.querySelectorAll('.kb-chord-chk:checked')].map(c => c.value);
+      if (!enabled.length) { alert('Selecciona almenys una tipologia.'); return; }
+      const mc = _loadModesConfig(); mc.chord_types = enabled; _saveModesConfig(mc);
+      log(`${enabled.length} tipologies d'acords guardades: ${enabled.join(', ')}`, 'ok');
       showGlobalToast('Guardat correctament');
       if (device.isConnected()) {
         try {
@@ -3974,20 +4432,20 @@
         } catch (e) { log(`Error sincronitzant: ${e.message}`, 'warn'); }
       }
     });
+    document.getElementById('btn-chord-all')?.addEventListener('click', () => document.querySelectorAll('.kb-chord-chk').forEach(c => c.checked = true));
+    document.getElementById('btn-chord-none')?.addEventListener('click', () => document.querySelectorAll('.kb-chord-chk').forEach(c => c.checked = false));
 
     document.getElementById('btn-save-pots')?.addEventListener('click', async () => {
-      const mc = _loadModesConfig();
-      mc.potentiometer_functions = {
-        pot_x: document.getElementById('kb-pot-x')?.value || 'Brillantor',
-        pot_y: document.getElementById('kb-pot-y')?.value || 'Modulació',
-        pot_z: document.getElementById('kb-pot-z')?.value || 'Sustain'
-      };
-      mc.arp_potentiometer_functions = {
-        arp_pot_x: document.getElementById('arp-pot-x')?.value || 'Velocitat (BPM)',
-        arp_pot_y: document.getElementById('arp-pot-y')?.value || 'Patró De Direcció',
-        arp_pot_z: document.getElementById('arp-pot-z')?.value || 'Modulació'
-      };
-      _saveModesConfig(mc);
+      _potFunctions = _potFunctions || {};
+      _arpPotFunctions = _arpPotFunctions || {};
+      _potFunctions.pot_x = document.getElementById('kb-pot-x')?.value || _potFunctions.pot_x || 'Brillantor';
+      _potFunctions.pot_y = document.getElementById('kb-pot-y')?.value || _potFunctions.pot_y || 'Modulació';
+      _potFunctions.pot_z = document.getElementById('kb-pot-z')?.value || _potFunctions.pot_z || 'Sustain';
+      _arpPotFunctions.arp_pot_x = document.getElementById('arp-pot-x')?.value || _arpPotFunctions.arp_pot_x || 'Velocitat (BPM)';
+      _arpPotFunctions.arp_pot_y = document.getElementById('arp-pot-y')?.value || _arpPotFunctions.arp_pot_y || 'Patró De Direcció';
+      _arpPotFunctions.arp_pot_z = document.getElementById('arp-pot-z')?.value || _arpPotFunctions.arp_pot_z || 'Modulació';
+      _savePotFunctions();
+      _updatePotDiagram();
       log('Funcions dels potenciòmetres guardades.', 'ok');
       showGlobalToast('Guardat correctament');
       if (device.isConnected()) {
@@ -4362,10 +4820,10 @@
           `<label class="cb"><input type="checkbox" class="arp-chk" value="${id}" ${enabledArp.has(id) ? 'checked' : ''}>
        <span>${name}</span></label>`).join('');
        
-      _customArps.forEach((p, i) => {
-        const id = 2000 + i;
-        html += `<label class="cb"><input type="checkbox" class="arp-chk custom-arp-chk" value="${id}" ${enabledArp.has(id) ? 'checked' : ''}>
-       <span style="color:var(--accent)">${p.name}</span></label>`;
+      _customArps.forEach((p) => {
+        const id = p.id;
+        html += `<label class="cb custom-arp-label"><input type="checkbox" class="arp-chk custom-arp-chk" value="${id}" ${enabledArp.has(id) ? 'checked' : ''}>
+       <span>${p.name}</span></label>`;
       });
       
       arpCont.innerHTML = html;
@@ -4483,63 +4941,9 @@
 
     // (firmware handlers → FIRMWARE section below)
 
-    // ══════════════════════════════════════════════════════════════
-    // MUSIC CONSTANTS (ported from device_files/music_constants.py)
-    // ══════════════════════════════════════════════════════════════
-    const SCALES_JS = [
-      [0, 2, 4, 5, 7, 9, 11], [0, 2, 3, 5, 7, 9, 10], [0, 1, 3, 5, 7, 8, 10], [0, 2, 4, 6, 7, 9, 11],
-      [0, 2, 4, 5, 7, 9, 10], [0, 2, 3, 5, 7, 8, 10], [0, 1, 3, 5, 6, 8, 10], [0, 2, 4, 7, 9],
-      [0, 3, 5, 7, 10], [0, 1, 4, 6, 7], [0, 2, 5, 7, 9], [0, 1, 4, 5, 7, 8, 11],
-      [0, 2, 3, 6, 7, 9, 10], [0, 2, 4, 6, 7, 9, 10], [0, 1, 3, 4, 6, 8, 10], [0, 2, 3, 5, 7, 9, 11],
-      [0, 1, 4, 5, 7, 8, 11], [0, 1, 3, 6, 7, 8, 11], [0, 1, 4, 5, 7, 8, 10], [0, 1, 4, 5, 7, 9, 11],
-      [0, 1, 3, 5, 7, 8, 10], [0, 1, 4, 5, 7, 8, 11], [0, 2, 4, 6, 8, 10], [0, 2, 4, 5, 7, 8, 11]
-    ];
-    const SCALE_NAMES_JS = [
-      'Jònic (Major)', 'Dòric', 'Frigi', 'Lidi', 'Mixolidi', 'Eòlic (Minor)', 'Locri',
-      'Pentatònica Major', 'Pentatònica Menor', 'Japonesa', 'Egípcia', 'Aràbiga',
-      'Hongaresa Menor', 'Lídia Dominant', 'Alterada', 'Menor Melòdica',
-      'Raga Bhairav', 'Raga Todi', 'Flamenca', 'Catalana', 'Frígia', 'Balcànica',
-      'Tons Sencers', 'Harmònica Major'
-    ];
-    const KEY_CIRCLE_JS = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
-    const KEY_OFFSETS_JS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-    const NOTES_JS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    const ARP_NAMES_JS = {
-      0: 'Amunt', 1: 'Avall', 2: 'Ping-Pong', 3: 'Aleatori', 4: 'Ordre Premut',
-      5: 'Alberti', 6: 'Alberti Alt', 7: 'Waltz', 8: 'Trencat', 9: 'Tremolo',
-      10: 'Zigzag', 11: 'Bloc', 12: 'Rodat', 13: 'Octaves', 14: 'Contrari', 15: 'Spread'
-    };
-    const CHORDS_JS = {
-      'Major':[0,4,7],'m':[0,3,7],'7':[0,4,7,10],'maj7':[0,4,7,11],'m7':[0,3,7,10],
-      'dim':[0,3,6],'aug':[0,4,8],'sus4':[0,5,7],'sus2':[0,2,7],'m7b5':[0,3,6,10],
-      'add9':[0,4,7,14],'6':[0,4,7,9],'add11':[0,4,7,17],'add13':[0,4,7,21],
-      '9':[0,4,7,10,14],'9#5':[0,4,8,10,14],'9b5':[0,4,6,10,14],
-      '9#11':[0,4,7,10,14,18],'11':[0,4,7,10,14,17],'13':[0,4,7,10,14,21],
-      '13b9':[0,4,7,10,13,21],'13#9':[0,4,7,10,15,21],
-      '7b9':[0,4,7,10,13],'7#9':[0,4,7,10,15],'7sus4':[0,5,7,10],'7b13':[0,4,7,10,20],
-      '69':[0,4,7,9,14],'m9':[0,3,7,10,14],'m11':[0,3,7,10,14,17],
-      'm13':[0,3,7,10,14,21],'m69':[0,3,7,9,14]
-    };
-    function _getChordIntervals(name) { return CHORDS_JS[name] || [0,4,7]; }
     function _getArpName(id) {
       if (id >= 2000) { const c = _customArps.find(a => a.id === id); return c ? c.name : `Custom ${id-2000}`; }
       return ARP_NAMES_JS[id] ?? `Arp ${id}`;
-    }
-
-    // ══════════════════════════════════════════════════════════════
-    // SYSTEM VOLUME HELPER (via server.py local, macOS only)
-    // ══════════════════════════════════════════════════════════════
-    let _sysVolTimer = 0;
-    function _setSysVol(midiVal) {
-      const now = Date.now();
-      if (now - _sysVolTimer < 80) return; // throttle ~12/s
-      _sysVolTimer = now;
-      const vol = Math.round((midiVal / 127) * 100);
-      fetch('http://127.0.0.1:8080/sys/volume', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ value: vol })
-      }).catch(() => {}); // no-op si el servidor no corre
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -4557,7 +4961,20 @@
         this.scaleIdx = 0;
         this.chordMode = false;
         this.arpMode = false;
+        this.latchMode = false;
+        this.voiceLead = false; this._vlPrev = null;
         this.velocity = 100;
+        // Looper: 0=IDLE 1=ARMAT 2=GRAVANT 3=SONANT 4=PAUSA
+        // loopQuantized: el loop està en PASSOS de graella (escala amb arpSpeed)
+        this.loopState = 0; this.loopQuantized = false; this.loopGrid = 0.15;
+        this.loopEvents = []; this.loopLength = 0; this.loopT0 = 0;
+        this.loopPosIdx = 0; this._loopOpen = {}; this._loopNoteOffs = [];
+        this.looperBtnPressTime = 0;
+        this.loopOverdub = false; this._dubCurrent = []; this._dubLayers = [];
+        this._loopHadArp = false;  // l'arp ha gravat en aquesta presa → auto-quantitza
+        this._loopHadSustain = false; // gravat amb sustain → fixa el sustain a les durades
+        this.sustainLevel = 0;     // últim CC64 enviat pel pot Sustain (0-127)
+        this.dubBtnPressTime = 0;
         // Arpeggiator
         this.arpSpeed = 0.15;
         this.arpModeIndex = 2;
@@ -4581,12 +4998,26 @@
         this.availableArpModes = [0, 1, 2];
         this.availableChordTypes = ['Major'];
         this.chordTypeIndex = 0;
+        this.availableInversions = [0];
+        this.chordInversionIdx = 0;
+        this.negHarmMode = false;
+        this.negHarmAxisIdx = 0;
+        this.negHarmBtnIdx = -1;
+        this.negHarmBtnPressTime = 0;
+        this.diatonicFnIdx = -1;            // -1 = off; >=0 índex dins availableDiatonicFns
+        this.availableDiatonicFns = ['diatonic'];
+        this.diatonicBtnPressTime = 0;
+        this.transposition = 0;
+        this.voiceSpread = 0;
+        this._btnFns = null;
         this.longPressThreshold = 0.5;
         this.chordBtnPressTime = 0;
         this.arpBtnPressTime = 0;
         this._arpBlockNotes = [];
         this.potXFn = 'Brillantor'; this.potYFn = 'Modulació'; this.potZFn = 'Sustain';
         this.arpPotXFn = 'Velocitat (BPM)'; this.arpPotYFn = 'Patró De Direcció'; this.arpPotZFn = 'Modulació';
+        this.chordPotXFn = "Tipologia d'Acords"; this.chordPotYFn = "Inversió d'Acord"; this.chordPotZFn = 'Modulació';
+        this.negPotXFn   = "Eix d'Harmonia";    this.negPotYFn   = "Inversió d'Acord"; this.negPotZFn   = 'Modulació';
         this._reloadConfig();
       }
 
@@ -4599,13 +5030,30 @@
         const chords = mc.chord_types || [];
         this.availableChordTypes = chords.length ? chords : ['Major'];
         if (this.chordTypeIndex >= this.availableChordTypes.length) this.chordTypeIndex = 0;
-        const pf = mc.potentiometer_functions || mc.pot_functions || {};
+        const invs = _loadChordInversions();
+        this.availableInversions = invs.length ? invs : [0];
+        if (this.chordInversionIdx >= this.availableInversions.length) this.chordInversionIdx = 0;
+        this._btnFns = _loadKbBtnFunctions();
+        const dfns = _loadDiatonicFns();
+        this.availableDiatonicFns = dfns.length ? dfns : ['diatonic'];
+        if (this.diatonicFnIdx >= this.availableDiatonicFns.length) this.diatonicFnIdx = -1;
+        this.negHarmBtnIdx = this._btnFns.indexOf('neg_harmony');
+        const pf  = mc.potentiometer_functions || mc.pot_functions || {};
+        const apf = mc.arp_potentiometer_functions || {};
         this.potXFn = pf.pot_x || 'Brillantor';
         this.potYFn = pf.pot_y || 'Modulació';
         this.potZFn = pf.pot_z || 'Sustain';
-        this.arpPotXFn = pf.arp_pot_x || 'Velocitat (BPM)';
-        this.arpPotYFn = pf.arp_pot_y || 'Patró De Direcció';
-        this.arpPotZFn = pf.arp_pot_z || 'Modulació';
+        this.arpPotXFn   = apf.arp_pot_x   || 'Velocitat (BPM)';
+        this.arpPotYFn   = apf.arp_pot_y   || 'Patró De Direcció';
+        this.arpPotZFn   = apf.arp_pot_z   || 'Modulació';
+        const cpf2 = mc.chord_potentiometer_functions || {};
+        const npf2 = mc.neg_potentiometer_functions   || {};
+        this.chordPotXFn = cpf2.chord_pot_x || "Tipologia d'Acords";
+        this.chordPotYFn = cpf2.chord_pot_y || "Inversió d'Acord";
+        this.chordPotZFn = cpf2.chord_pot_z || 'Modulació';
+        this.negPotXFn   = npf2.neg_pot_x   || "Eix d'Harmonia";
+        this.negPotYFn   = npf2.neg_pot_y   || "Inversió d'Acord";
+        this.negPotZFn   = npf2.neg_pot_z   || 'Modulació';
       }
 
       get scaleName() {
@@ -4637,47 +5085,86 @@
         if (idx < 8) {
           if (this.arpMode) {
             if (!this.arpButtonOrder.includes(idx)) this.arpButtonOrder.push(idx);
-            const newNotes = this.chordMode ? this._chordNotesForBtn(idx) : [this._noteForBtn(idx)].filter(n => n !== null);
+            const newNotes = this.diatonicFnIdx >= 0 ? this._diatonicNotesForBtn(idx)
+              : this.chordMode ? this._chordNotesForBtn(idx) : [this._noteForBtn(idx)].filter(n => n !== null);
             for (const n of newNotes) { if (!this.arpNotes.includes(n)) this.arpNotes.push(n); }
+          } else if (this.latchMode && this.buttonNotes[idx].size > 0) {
+            this._noteOff(idx);  // latch: re-prémer commuta a OFF
+          } else if (this.diatonicFnIdx >= 0) {
+            this._playDiatonic(idx);
+            if (this.loopState === 1 || this.loopState === 2 || (this.loopState === 3 && this.loopOverdub)) this._loopRecordPress(idx, now);
           } else if (this.chordMode) {
             this._playChord(idx);
+            if (this.loopState === 1 || this.loopState === 2 || (this.loopState === 3 && this.loopOverdub)) this._loopRecordPress(idx, now);
           } else {
             this._noteOn(idx);
+            if (this.loopState === 1 || this.loopState === 2 || (this.loopState === 3 && this.loopOverdub)) this._loopRecordPress(idx, now);
           }
-        } else if (idx === 8) {  // T9: cycle scale
-          this._allNotesOff();
-          this.scaleIdx = (this.scaleIdx + 1) % this.availableScales.length;
-          this.onLog(`🎼 Escala: ${this.scaleName}  (${this.scaleIdx + 1}/${this.availableScales.length})`, 'info');
-          this._updateHUD();
-        } else if (idx === 9) {  // T10: cycle key
-          this._allNotesOff();
-          this.keyIndex = (this.keyIndex + 1) % 12;
-          this.onLog(`🎵 Tonalitat: ${this.keyName}`, 'info');
-          this._updateHUD();
-        } else if (idx === 10) { // T11: acords — registra temps inici (llarg=desact, curt=act/cicle)
-          this.chordBtnPressTime = performance.now() / 1000;
-        } else if (idx === 11) { // T12: arpegiador — registra temps inici (llarg=desact, curt=act/cicle)
-          this.arpBtnPressTime = performance.now() / 1000;
-        } else if (idx === 12) { // T13: switch to modes layer
-          this.onLog('T13 → selecciona un mode de la llista lateral per canviar de capa', 'info');
-        } else if (idx === 13) { // T14: octave down
-          this.octave = Math.max(0, this.octave - 1);
-          this.onLog(`Octava: ${this.octave}`, 'info');
-          this._updateHUD();
-        } else if (idx === 14) { // T15: octave up
-          this.octave = Math.min(8, this.octave + 1);
-          this.onLog(`Octava: ${this.octave}`, 'info');
-          this._updateHUD();
-        } else if (idx === 15) { // T16: all notes off
-          this._allNotesOff();
-          this.onLog('All Notes Off', 'info');
+        } else {
+          const fn = (this._btnFns && this._btnFns[idx]) || (idx === 12 ? 'modes_layer' : idx === 15 ? 'stop' : '');
+          if (fn === 'scale') {
+            this._allNotesOff();
+            this.scaleIdx = (this.scaleIdx + 1) % this.availableScales.length;
+            this.onLog(`🎼 Escala: ${this.scaleName}  (${this.scaleIdx + 1}/${this.availableScales.length})`, 'info');
+            this._updateHUD();
+          } else if (fn === 'tonality') {
+            this._allNotesOff();
+            this.keyIndex = (this.keyIndex + 1) % 12;
+            this.onLog(`🎵 Tonalitat: ${this.keyName}`, 'info');
+            this._updateHUD();
+          } else if (fn === 'chord')          { this.chordBtnPressTime = now;
+          } else if (fn === 'arp')            { this.arpBtnPressTime = now;
+          } else if (fn === 'diatonic')       { this.diatonicBtnPressTime = now;
+          } else if (fn === 'neg_harmony')    { this.negHarmBtnPressTime = now;
+          } else if (fn === 'octave_down') {
+            this.octave = Math.max(0, this.octave - 1);
+            this.onLog(`Octava: ${this.octave}`, 'info'); this._updateHUD();
+          } else if (fn === 'octave_up') {
+            this.octave = Math.min(8, this.octave + 1);
+            this.onLog(`Octava: ${this.octave}`, 'info'); this._updateHUD();
+          } else if (fn === 'latch') {
+            this.latchMode = !this.latchMode;
+            if (!this.latchMode) this._allNotesOff();
+            this.onLog(`∞ Latch ${this.latchMode ? 'ACTIVAT' : 'DESACTIVAT'}`, 'info');
+            this._updateHUD();
+          } else if (fn === 'looper' || fn === 'looper_q') {
+            this.looperBtnPressTime = now;
+          } else if (fn === 'looper_dub') {
+            this.dubBtnPressTime = now;
+          } else if (fn === 'voice_lead') {
+            this.voiceLead = !this.voiceLead;
+            if (this.voiceLead) this._vlPrev = null;
+            this.onLog(`𝆔 Conducció de veus ${this.voiceLead ? 'ACTIVADA' : 'DESACTIVADA'}`, 'info');
+            this._updateHUD();
+          } else if (fn === 'modes_layer') {
+            this.onLog('→ Modes: selecciona un mode de la llista lateral', 'info');
+          } else if (fn === 'stop') {
+            this._allNotesOff(); this.onLog('All Notes Off', 'info');
+            if (this.loopState === 3) { if (this.loopOverdub) this._endOverdub(); this._loopSilence(); this.loopState = 4; this.onLog('⟳ Loop en pausa (STOP)', 'info'); this._updateHUD(); }
+          }
         }
       }
 
       releaseButton(idx) {
         if (!this.active) return;
         const now = performance.now() / 1000;
-        if (idx === 10) { // T11: acords
+        if (idx < 8) {
+          if (this.loopState === 2 || (this.loopState === 3 && this.loopOverdub)) this._loopRecordRelease(idx, now);
+          if (!this.arpMode) { if (!this.latchMode) this._noteOff(idx); }
+          else {
+            const removed = this.diatonicFnIdx >= 0 ? this._diatonicNotesForBtn(idx)
+              : this.chordMode ? this._chordNotesForBtn(idx) : [this._noteForBtn(idx)].filter(n => n !== null);
+            this.arpNotes = this.arpNotes.filter(n => !removed.includes(n));
+            this.arpButtonOrder = this.arpButtonOrder.filter(b => b !== idx);
+          }
+          return;
+        }
+        const fn = (this._btnFns && this._btnFns[idx]) || (idx === 12 ? 'modes_layer' : idx === 15 ? 'stop' : '');
+        if (fn === 'looper' || fn === 'looper_q') {
+          this._looperGesture(now - this.looperBtnPressTime, now, fn === 'looper_q');
+        } else if (fn === 'looper_dub') {
+          this._dubGesture(now - this.dubBtnPressTime, now);
+        } else if (fn === 'chord') {
           const dur = now - this.chordBtnPressTime;
           this._allNotesOff();
           if (dur >= this.longPressThreshold && this.chordMode) {
@@ -4690,9 +5177,8 @@
             this.chordTypeIndex = (this.chordTypeIndex + 1) % this.availableChordTypes.length;
             this.onLog(`🎹 Acords: ${this.availableChordTypes[this.chordTypeIndex]}`, 'info');
           }
-          this._updateHUD(); return;
-        }
-        if (idx === 11) { // T12: arpegiador
+          this._updateHUD();
+        } else if (fn === 'arp') {
           const dur = now - this.arpBtnPressTime;
           this._allNotesOff();
           if (dur >= this.longPressThreshold && this.arpMode) {
@@ -4708,36 +5194,68 @@
             this.arpPos = 0; this.arpDir = 1; this.arpButtonOrder = [];
             this.onLog(`🎶 Arpegiador: ${_getArpName(this.arpModeIndex)}`, 'info');
           }
-          this._updateHUD(); return;
-        }
-        if (idx >= 8) return;
-        if (!this.arpMode) this._noteOff(idx);
-        else {
-          const removed = this.chordMode ? this._chordNotesForBtn(idx) : [this._noteForBtn(idx)].filter(n => n !== null);
-          this.arpNotes = this.arpNotes.filter(n => !removed.includes(n));
-          this.arpButtonOrder = this.arpButtonOrder.filter(b => b !== idx);
+          this._updateHUD();
+        } else if (fn === 'diatonic') {
+          // Mirall de kbd_buttons.py: toc curt cicla la funció harmònica; toc llarg
+          // la desactiva. No es talla el so (les notes es deixen anar en alliberar).
+          const dur = now - this.diatonicBtnPressTime;
+          const fns = this.availableDiatonicFns.length ? this.availableDiatonicFns : ['diatonic'];
+          if (dur >= this.longPressThreshold) {
+            this.diatonicFnIdx = -1;
+            this.onLog('Δ Funcions Harmòniques DESACTIVAT', 'info');
+          } else {
+            this.diatonicFnIdx = (this.diatonicFnIdx + 1) % fns.length;
+            const meta = DIATONIC_FNS.find(f => f.id === fns[this.diatonicFnIdx]);
+            this.onLog(`Δ ${meta ? meta.name : fns[this.diatonicFnIdx]} (${this.diatonicFnIdx + 1}/${fns.length})`, 'info');
+          }
+          this._updateHUD();
+        } else if (fn === 'neg_harmony') {
+          const dur = now - this.negHarmBtnPressTime;
+          this._allNotesOff();
+          const axes = _loadNegHarmAxes();
+          if (dur >= this.longPressThreshold && this.negHarmMode) {
+            this.negHarmMode = false;
+            this.onLog('↕ H. Negativa DESACTIVADA (premuda llarga)', 'info');
+          } else if (!this.negHarmMode) {
+            this.negHarmMode = true; this.negHarmAxisIdx = 0;
+            const axisName = NEG_HARMONY_TYPES.find(([id]) => id === (axes[0] ?? 0))?.[1] ?? 'Quinta';
+            this.onLog(`↕ H. Negativa ACTIVADA: ${axisName}`, 'info');
+          } else {
+            this.negHarmAxisIdx = ((this.negHarmAxisIdx ?? 0) + 1) % Math.max(axes.length, 1);
+            const axisName = NEG_HARMONY_TYPES.find(([id]) => id === (axes[this.negHarmAxisIdx] ?? 0))?.[1] ?? `Eix ${this.negHarmAxisIdx}`;
+            this.onLog(`↕ H. Negativa: ${axisName}`, 'info');
+          }
+          this._updateHUD();
         }
       }
 
       setPot(idx, value) {
         if (!this.active) return;
-        const hwIdx = idx;  // X=0, Y=1, Z=2
         const fns = this.arpMode
           ? [this.arpPotXFn, this.arpPotYFn, this.arpPotZFn]
-          : [this.potXFn, this.potYFn, this.potZFn];
-        this._applyPotFn(fns[hwIdx], Math.max(0, Math.min(127, value | 0)));
+          : this.negHarmMode
+            ? [this.negPotXFn, this.negPotYFn, this.negPotZFn]
+            : this.chordMode
+              ? [this.chordPotXFn, this.chordPotYFn, this.chordPotZFn]
+              : [this.potXFn, this.potYFn, this.potZFn];
+        this._applyPotFn(fns[idx], Math.max(0, Math.min(127, value | 0)));
       }
 
       _applyPotFn(fn, v) {
         if (!fn) return;
         if (['Brillantor', 'Velocity'].includes(fn)) { this.velocity = Math.max(20, v); }
         else if (['Modulació', 'Modulation', 'Modulation (CC1)'].includes(fn)) { this.webMidi.send('control_change', 1, v, 0); }
-        else if (['Sustain', 'Sustain (CC64)'].includes(fn)) { this.webMidi.send('control_change', 64, v, 0); }
+        else if (['Sustain', 'Sustain (CC64)'].includes(fn)) { const sv = v >= 125 ? 127 : 0; this.sustainLevel = sv; this.webMidi.send('control_change', 64, sv, 0); }  // zona morta: CC64 net ON/OFF
         else if (['Volum', 'Volume', 'Expression (CC11)'].includes(fn)) { this.webMidi.send('control_change', 7, v, 0); _setSysVol(v); }
         else if (['Gate', 'Gate Length'].includes(fn)) { if (v < 10) { this.gateEnabled = false; this.webMidi.send('control_change', 11, 127, 0); } else { this.gateEnabled = true; this.gatePeriod = 0.5 - (v / 127) * 0.45; } }
         else if (fn === 'Pitch Bend') { this.webMidi.send('pitchwheel', v < 5 ? 0 : Math.round((v / 127) * 8191), 0, 0); }
         else if (['Velocitat (BPM)', 'Arp Speed (BPM)'].includes(fn)) { this.arpSpeed = 60.0 / (30 + (v / 127) * 1970); }
         else if (['Patró De Direcció', 'Arp Pattern Selector'].includes(fn)) { if (this.availableArpModes.length > 0) { const mi = Math.min(Math.floor((v / 128) * this.availableArpModes.length), this.availableArpModes.length - 1); this.arpModeIndex = this.availableArpModes[mi]; } }
+        else if (fn === 'Octava') { this.octave = Math.round((v / 127) * 8); this._updateHUD(); }
+        else if (["Inversió d'Acord", 'Tipus Inversió'].includes(fn)) { if (this.availableInversions.length > 0) { this.chordInversionIdx = Math.min(Math.floor((v / 128) * this.availableInversions.length), this.availableInversions.length - 1); this._updateHUD(); } }
+        else if (fn === "Eix d'Harmonia") { const axes = _loadNegHarmAxes(); if (axes.length > 0) { this.negHarmAxisIdx = Math.min(Math.floor((v / 128) * axes.length), axes.length - 1); } }
+        else if (fn === "Tipologia d'Acords") { if (this.availableChordTypes.length > 0) { this.chordTypeIndex = Math.min(Math.floor((v / 128) * this.availableChordTypes.length), this.availableChordTypes.length - 1); this._updateHUD(); } }
+        else if (fn.startsWith('CC Lliure')) { const m = fn.match(/\d+/); if (m) this.webMidi.send('control_change', Math.min(127, +m[0]), v, 0); }
       }
 
       _noteForBtn(btnIdx) {
@@ -4759,13 +5277,31 @@
         const intervals = SCALES_JS[id] ?? SCALES_JS[0];
         const deg = btnIdx % intervals.length;
         const octOff = Math.floor(btnIdx / intervals.length);
-        return Math.max(0, Math.min(127, (this.octave + octOff) * 12 + KEY_OFFSETS_JS[this.keyIndex] + intervals[deg]));
+        return Math.max(0, Math.min(127, (this.octave + octOff) * 12 + KEY_OFFSETS_JS[this.keyIndex] + intervals[deg] + (this.transposition || 0)));
+      }
+
+      _currentInversionId() {
+        return this.availableInversions[this.chordInversionIdx] ?? 0;
+      }
+
+      _applyInversion(intervals) {
+        const inv = this._currentInversionId();
+        const spread = this.voiceSpread || 0;
+        let arr = [...intervals].sort((a, b) => a - b);
+        if (inv > 0) {
+          const n = Math.min(inv, arr.length - 1);
+          for (let i = 0; i < n; i++) arr.push(arr.shift() + 12);
+          const base = arr[0]; arr = arr.map(x => x - base);
+        }
+        if (spread > 0) arr = arr.map((x, i) => x + i * spread);
+        return arr;
       }
 
       _chordNotesForBtn(btnIdx) {
         const root = this._noteForBtn(btnIdx); if (root === null) return [];
         const chordType = this.availableChordTypes[this.chordTypeIndex] || 'Major';
-        return _getChordIntervals(chordType).map(i => Math.max(0, Math.min(127, root + i)));
+        const intervals = this._applyInversion(_getChordIntervals(chordType));
+        return intervals.map(i => Math.max(0, Math.min(127, root + i)));
       }
 
       _noteOn(btnIdx) {
@@ -4783,10 +5319,65 @@
         this._noteOff(btnIdx);
         const root = this._noteForBtn(btnIdx); if (root === null) return;
         const chordType = this.availableChordTypes[this.chordTypeIndex] || 'Major';
-        for (const n of _getChordIntervals(chordType).map(i => Math.max(0, Math.min(127, root + i)))) {
+        const intervals = this._applyInversion(_getChordIntervals(chordType));
+        let notes = intervals.map(i => Math.max(0, Math.min(127, root + i)));
+        if (this.voiceLead) notes = this._vlApply(notes);
+        for (const n of notes) {
           this.buttonNotes[btnIdx].add(n); this.activeNotes.add(n);
           this.webMidi.send('note_on', n, this.velocity, 0);
         }
+      }
+
+      // ── Acords diatònics / funcions harmòniques (mirall de kbd_notes.py) ──
+      // El device construeix root_note + offset harmònic + intervals de l'acord,
+      // SENSE inversió (generate_chord_for_button). applyHarmonicFn té paritat total.
+      _diatonicNotesForBtn(btnIdx) {
+        const id = this.availableScales[this.scaleIdx] ?? 0;
+        if (id >= 1000) {  // escales custom / progressions: cau a nota simple
+          const n = this._noteForBtn(btnIdx); return n === null ? [] : [n];
+        }
+        const intervals = SCALES_JS[id] ?? SCALES_JS[0];
+        const deg = btnIdx % intervals.length;
+        const octOff = Math.floor(btnIdx / intervals.length);
+        let root = (this.octave + octOff) * 12 + KEY_OFFSETS_JS[this.keyIndex] + intervals[deg] + (this.transposition || 0);
+        const fns = this.availableDiatonicFns.length ? this.availableDiatonicFns : ['diatonic'];
+        const fn = fns[this.diatonicFnIdx] ?? 'diatonic';
+        let rootOffset = 0, chordType = 'Major';
+        try { [rootOffset, chordType] = applyHarmonicFn(intervals, deg, fn, id); }
+        catch (e) { return [Math.max(0, Math.min(127, root))]; }
+        root += rootOffset;
+        const chordIv = Array.isArray(chordType) ? chordType : _getChordIntervals(chordType);
+        return chordIv.map(i => Math.max(0, Math.min(127, root + i)));
+      }
+
+      _playDiatonic(btnIdx) {
+        this._noteOff(btnIdx);
+        for (const n of this._diatonicNotesForBtn(btnIdx)) {
+          this.buttonNotes[btnIdx].add(n); this.activeNotes.add(n);
+          this.webMidi.send('note_on', n, this.velocity, 0);
+        }
+      }
+
+      // ── Conducció de veus (mirall de kbd_voicelead.py) ──────────
+      _vlApply(notes) {
+        if (!notes.length) return notes;
+        const prev = this._vlPrev;
+        if (!prev) { this._vlPrev = [...notes].sort((a, b) => a - b); return notes; }
+        const base = [...notes].sort((a, b) => a - b);
+        let best = null, bestCost = Infinity;
+        for (let inv = 0; inv < base.length; inv++) {
+          const v = [...base.slice(inv), ...base.slice(0, inv).map(x => x + 12)].sort((a, b) => a - b);
+          for (const shift of [-12, 0, 12]) {
+            const cand = v.map(x => x + shift);
+            if (cand.some(x => x < 0 || x > 127)) continue;
+            let cost = 0;
+            for (const n of cand) cost += Math.min(...prev.map(p => Math.abs(n - p)));
+            cost += Math.floor(Math.abs(Math.min(...cand) - Math.min(...prev)) / 2);
+            if (cost < bestCost) { bestCost = cost; best = cand; }
+          }
+        }
+        this._vlPrev = best || base;
+        return best || notes;
       }
 
       _allNotesOff() {
@@ -4800,9 +5391,238 @@
         try { this.webMidi.allNotesOff?.(); } catch { }
       }
 
+      // ── Looper (timing lliure — mirall de kbd_looper.py) ──────────
+      _looperGesture(held, now, quantized = false) {
+        if (held >= this.longPressThreshold) {
+          this._loopSilence();
+          this.loopState = 0; this.loopEvents = []; this._loopOpen = {};
+          this.loopOverdub = false; this._dubCurrent = []; this._dubLayers = [];
+          this._loopHadArp = false; this._loopHadSustain = false;
+          this.onLog('⟳ Looper ESBORRAT', 'info'); this._updateHUD(); return;
+        }
+        if (this.loopState === 0) {
+          this.loopState = 1; this.loopEvents = []; this._loopOpen = {};
+          this.loopQuantized = false; this._loopHadArp = false; this._loopHadSustain = false;
+          this.onLog(`⟳ Looper ARMAT — toca per començar a gravar${quantized ? ' (quantitzat)' : ''}`, 'info');
+        } else if (this.loopState === 1) {
+          this.loopState = 0;
+          this.onLog('⟳ Looper cancel·lat', 'info');
+        } else if (this.loopState === 2) {
+          this.loopLength = now - this.loopT0;
+          for (const ev of Object.values(this._loopOpen)) ev[1] = Math.max(0.05, this.loopLength - ev[0]);
+          this._loopOpen = {};
+          if (this.loopEvents.length === 0 || this.loopLength < 0.2) {
+            this.loopState = 0; this.loopEvents = [];
+            this.onLog('⟳ Looper: res a gravar', 'info');
+          } else {
+            // Fixa el sustain a les durades si s'ha gravat amb el pedal actiu: el loop
+            // sona sostingut per si mateix i és INDEPENDENT del sustain en directe.
+            if (this._loopHadSustain) this._loopBakeSustain();
+            // Auto-quantitza si l'arp ha intervingut en aquesta presa (o forçat per looper_q)
+            if (quantized || this._loopHadArp) this._loopQuantize();
+            this.loopState = 3; this.loopT0 = now; this.loopPosIdx = 0;
+            this.onLog(this.loopQuantized
+              ? `◈ Loop quantitzat: ${this.loopEvents.length} acords, ${this.loopLength} passos (BPM viu amb el pot d'arp)`
+              : `⟳ Loop en marxa: ${this.loopEvents.length} acords, ${this.loopLength.toFixed(1)}s`, 'info');
+          }
+        } else if (this.loopState === 3) {
+          if (this.loopOverdub) this._endOverdub();
+          this._loopSilence(); this.loopState = 4;
+          this.onLog('⟳ Loop en pausa', 'info');
+        } else if (this.loopState === 4) {
+          this.loopState = 3; this.loopT0 = now; this.loopPosIdx = 0;
+          if (this.loopQuantized) this.loopGrid = Math.max(0.02, this.arpSpeed);
+          this.onLog('⟳ Loop reprès', 'info');
+        }
+        this._updateHUD();
+      }
+
+      _loopRecordPress(idx, now) {
+        if (this.loopState === 1) {
+          this.loopState = 2; this.loopT0 = now;
+          this.onLog('● Gravant...', 'info'); this._updateHUD();
+        }
+        const notes = [...this.buttonNotes[idx]];
+        if (notes.length === 0 || this.loopEvents.length >= 64) return;
+        if (this.loopState === 2) {
+          if (this.sustainLevel >= 64) this._loopHadSustain = true;
+          const ev = [now - this.loopT0, null, notes, this.velocity];
+          this.loopEvents.push(ev);
+          this._loopOpen[idx] = ev;
+        } else if (this.loopState === 3 && this.loopOverdub) {
+          const ev = [this._dubOffset(now), null, notes, this.velocity];
+          this._insertDubEvent(ev);
+          this._loopOpen[idx] = ev;
+        }
+      }
+
+      _loopRecordRelease(idx, now) {
+        const ev = this._loopOpen[idx];
+        if (!ev) return;
+        delete this._loopOpen[idx];
+        if (this.loopState === 2) {
+          ev[1] = Math.max(0.05, (now - this.loopT0) - ev[0]);
+        } else if (this.loopState === 3 && this.loopOverdub && ev[1] === null) {
+          if (this.loopQuantized) {
+            const dur = Math.round((now - this.loopT0) / this.loopGrid) - ev[0];
+            ev[1] = Math.max(1, Math.min(dur, this.loopLength));
+          } else {
+            ev[1] = Math.max(0.05, Math.min((now - this.loopT0) - ev[0], this.loopLength));
+          }
+        }
+      }
+
+      _loopBakeSustain() {
+        // Mirall de kbd_looper._bake_sustain: cada esdeveniment se sosté fins al
+        // següent (lligat), amb un marge petit perquè el note-off surti abans del
+        // note-on següent. El loop queda autosostingut i independent del pedal.
+        const evs = this.loopEvents, n = evs.length;
+        for (let i = 0; i < n; i++) {
+          const nxt = i + 1 < n ? evs[i + 1][0] : this.loopLength;
+          const gap = nxt - evs[i][0];
+          if (gap <= 0) continue;
+          const target = gap > 0.08 ? gap - 0.03 : gap;
+          const cur = evs[i][1] || 0.05;
+          if (target > cur) evs[i][1] = target;
+        }
+      }
+
+      _loopQuantize() {
+        // Converteix segons -> PASSOS de graella (la graella és arpSpeed actual).
+        // A partir d'aquí la reproducció escala amb el tempo VIU de l'arp.
+        const sl = Math.max(0.02, this.arpSpeed);
+        for (const ev of this.loopEvents) {
+          ev[0] = Math.round(ev[0] / sl);
+          ev[1] = Math.max(1, Math.round((ev[1] || 0.1) / sl));
+        }
+        this.loopLength = Math.max(1, Math.round(this.loopLength / sl));
+        for (const ev of this.loopEvents) if (ev[0] >= this.loopLength) ev[0] = this.loopLength - 1;
+        this.loopQuantized = true;
+        this.loopGrid = sl;  // tempo FIXAT en aquest moment (no segueix el pot en viu)
+      }
+
+      _loopTick(now) {
+        // sl = segons per unitat (1 si lliure; loopGrid fixat si quantitzat —
+        // per canviar el tempo: pausa -> ajusta BPM -> represa)
+        const sl = this.loopQuantized ? this.loopGrid : 1.0;
+        const lengthS = this.loopLength * sl;
+        let t = now - this.loopT0;
+        if (t >= lengthS) {
+          this.loopT0 += lengthS; this.loopPosIdx = 0;
+          t = now - this.loopT0;
+        }
+        while (this.loopPosIdx < this.loopEvents.length && this.loopEvents[this.loopPosIdx][0] * sl <= t) {
+          const [off, dur, notes, vel] = this.loopEvents[this.loopPosIdx];
+          for (const n of notes) this.webMidi.send('note_on', n, vel, 0);
+          this._loopNoteOffs.push([this.loopT0 + (off + (dur || 0.1)) * sl, notes]);
+          this.loopPosIdx++;
+        }
+        if (this._loopNoteOffs.length) {
+          this._loopNoteOffs = this._loopNoteOffs.filter(([endT, notes]) => {
+            if (now >= endT) { for (const n of notes) this.webMidi.send('note_off', n, 0, 0); return false; }
+            return true;
+          });
+        }
+      }
+
+      _loopSilence() {
+        for (const [, notes] of this._loopNoteOffs)
+          for (const n of notes) this.webMidi.send('note_off', n, 0, 0);
+        this._loopNoteOffs = [];
+      }
+
+      // ── Overdub (mirall de kbd_looper.py) ───────────────────────
+      _dubOffset(now) {
+        if (this.loopQuantized)
+          return Math.round((now - this.loopT0) / this.loopGrid) % this.loopLength;
+        return (now - this.loopT0) % this.loopLength;
+      }
+
+      _insertDubEvent(ev) {
+        const evs = this.loopEvents;
+        let i = 0;
+        while (i < evs.length && evs[i][0] <= ev[0]) i++;
+        evs.splice(i, 0, ev);
+        if (i < this.loopPosIdx) this.loopPosIdx++;
+        else this.loopPosIdx = i + 1;  // ja ha sonat en viu
+        this._dubCurrent.push(ev);
+      }
+
+      _endOverdub() {
+        this.loopOverdub = false;
+        for (const ev of Object.values(this._loopOpen))
+          if (ev[1] === null) ev[1] = this.loopQuantized ? 1 : 0.1;
+        this._loopOpen = {};
+        if (this._dubCurrent.length) {
+          this._dubLayers.push(this._dubCurrent);
+          this.onLog(`➕ Capa ${this._dubLayers.length} afegida (llarg: desfer-la | molt llarg: totes)`, 'info');
+        } else {
+          this.onLog('➕ Overdub tancat (sense canvis)', 'info');
+        }
+        this._dubCurrent = [];
+        this._updateHUD();
+      }
+
+      _dubGesture(held, now) {
+        if (held >= this.longPressThreshold * 2) { this._clearAllLayers(now); return; }
+        if (held >= this.longPressThreshold) { this._undoLastLayer(now); return; }
+        if (this.loopState === 3) {
+          if (!this.loopOverdub) {
+            this.loopOverdub = true; this._dubCurrent = [];
+            this.onLog('➕ Overdub ACTIU — el que toquis s\'afegeix al loop', 'info');
+            this._updateHUD();
+          } else {
+            this._endOverdub();
+          }
+        } else if (this.loopState === 4) {
+          this.loopState = 3; this.loopT0 = now; this.loopPosIdx = 0;
+          if (this.loopQuantized) this.loopGrid = Math.max(0.02, this.arpSpeed);
+          this.loopOverdub = true; this._dubCurrent = [];
+          this.onLog('➕ Loop reprès amb Overdub actiu', 'info');
+          this._updateHUD();
+        } else {
+          this.onLog('➕ Overdub: primer grava un loop amb el botó looper', 'info');
+        }
+      }
+
+      _removeLoopEvents(events, now) {
+        this.loopEvents = this.loopEvents.filter(ev => !events.includes(ev));
+        if (this.loopState === 3) {
+          const sl = this.loopQuantized ? this.loopGrid : 1.0;
+          const t = now - this.loopT0;
+          let idx = 0;
+          for (const ev of this.loopEvents) { if (ev[0] * sl <= t) idx++; else break; }
+          this.loopPosIdx = idx;
+        }
+      }
+
+      _undoLastLayer(now) {
+        if (this.loopOverdub) { this.loopOverdub = false; this._loopOpen = {}; }
+        let layer;
+        if (this._dubCurrent.length) { layer = this._dubCurrent; this._dubCurrent = []; }
+        else if (this._dubLayers.length) { layer = this._dubLayers.pop(); }
+        else { this.onLog('➕ Overdub: cap capa per desfer', 'info'); return; }
+        this._removeLoopEvents(layer, now);
+        this.onLog(`➖ Capa desfeta (${layer.length} esdeveniments) | en queden ${this._dubLayers.length}`, 'info');
+        this._updateHUD();
+      }
+
+      _clearAllLayers(now) {
+        if (this.loopOverdub) { this.loopOverdub = false; this._loopOpen = {}; }
+        const tots = [...this._dubCurrent];
+        for (const layer of this._dubLayers) tots.push(...layer);
+        if (!tots.length) { this.onLog('➕ Overdub: cap capa per esborrar', 'info'); return; }
+        const nCapes = this._dubLayers.length + (this._dubCurrent.length ? 1 : 0);
+        this._dubCurrent = []; this._dubLayers = [];
+        this._removeLoopEvents(tots, now);
+        this.onLog(`🧹 ${nCapes} capes esborrades — només queda el loop base`, 'info');
+        this._updateHUD();
+      }
+
       _tick() {
         if (!this.active) return;
         const now = performance.now() / 1000;
+        if (this.loopState === 3) this._loopTick(now);
         if (this.arpMode && this.arpNotes.length > 0 && (now - this.lastArpTime) >= this.arpSpeed) {
           this.lastArpTime = now; this._arpTick();
         }
@@ -4813,6 +5633,37 @@
       }
 
       _arpTick() {
+        // Captura per al looper: intercepta els note_on d'aquest pas quan grava
+        if (this.loopState === 1 || this.loopState === 2 || (this.loopState === 3 && this.loopOverdub)) {
+          const now = performance.now() / 1000;
+          const orig = this.webMidi.send.bind(this.webMidi);
+          this.webMidi.send = (type, a, b, ch) => {
+            if (type === 'note_on') this._loopRecordLive(a, b, now);
+            return orig(type, a, b, ch);
+          };
+          try { this._arpTickInner(); } finally { this.webMidi.send = orig; }
+        } else {
+          this._arpTickInner();
+        }
+      }
+
+      _loopRecordLive(note, vel, now) {
+        if (this.loopState === 1) {
+          this.loopState = 2; this.loopT0 = now;
+          this.onLog('● Gravant...', 'info'); this._updateHUD();
+        }
+        if (this.loopEvents.length >= 64) return;
+        if (this.loopState === 2) {
+          this._loopHadArp = true;  // marca la presa per auto-quantitzar en tancar
+          if (this.sustainLevel >= 64) this._loopHadSustain = true;
+          this.loopEvents.push([now - this.loopT0, Math.max(0.05, this.arpSpeed * 0.9), [note], vel]);
+        } else if (this.loopState === 3 && this.loopOverdub) {
+          const dur = this.loopQuantized ? 1 : Math.max(0.05, this.arpSpeed * 0.9);
+          this._insertDubEvent([this._dubOffset(now), dur, [note], vel]);
+        }
+      }
+
+      _arpTickInner() {
         const notes = [...this.arpNotes]; const n = notes.length; if (!n) return;
         if (this.arpPos >= n) this.arpPos = 0;
         const m = this.arpModeIndex;
@@ -4879,27 +5730,43 @@
           el.textContent = `${NOTES_JS[noteNum % 12]}${this.octave + octOff}`;
           document.querySelector(`.sim-key[data-idx="${i}"]`)?.classList.add('has-mode');
         }
-        // Function buttons 9-12
-        const fn9 = document.getElementById('key-ml-8'); if (fn9) fn9.textContent = this.scaleName.substring(0, 9);
-        const fn10 = document.getElementById('key-ml-9'); if (fn10) fn10.textContent = this.keyName;
-        const chordLabel = this.chordMode ? `▣ ${(this.availableChordTypes[this.chordTypeIndex] || 'Major').substring(0, 6)}` : 'Acords';
-        const fn11 = document.getElementById('key-ml-10'); if (fn11) fn11.textContent = chordLabel;
-        const fn12 = document.getElementById('key-ml-11'); if (fn12) fn12.textContent = this.arpMode ? `♩ ${_getArpName(this.arpModeIndex).substring(0, 7)}` : 'Arp.';
-        for (let i = 8; i < 12; i++) document.querySelector(`.sim-key[data-idx="${i}"]`)?.classList.toggle('key-fn', true);
-        // Special keys 13-16 labels (capa teclat)
-        const sl = [['key-ml-12', '→ Modes'], ['key-ml-13', `Oct−`], ['key-ml-14', `Oct+`], ['key-ml-15', 'STOP']];
-        for (const [id_, txt] of sl) { const el = document.getElementById(id_); if (el) el.textContent = txt; }
-        // Arp/chord visual
-        document.querySelector('.sim-key[data-idx="11"]')?.classList.toggle('key-arp-active', this.arpMode);
-        document.querySelector('.sim-key[data-idx="10"]')?.classList.toggle('key-chord-active', this.chordMode);
+        // Function buttons 8-15: etiquetes dinàmiques basades en funció assignada
+        const _invId   = this.availableInversions[this.chordInversionIdx] ?? 0;
+        const _negAxes = _loadNegHarmAxes();
+        const _axisId  = _negAxes[this.negHarmAxisIdx ?? 0] ?? 0;
+        const _fnLabels = {
+          scale:           this.scaleName.substring(0, 9),
+          tonality:        this.keyName,
+          chord:           this.chordMode ? `▣ ${(this.availableChordTypes[this.chordTypeIndex] || 'Major').substring(0, 6)}` : 'Acords',
+          arp:             this.arpMode ? `♪ ${_getArpName(this.arpModeIndex).substring(0, 7)}` : 'Arp.',
+          neg_harmony:     this.negHarmMode ? `↕ ${(NEG_HARMONY_TYPES.find(([id]) => id === _axisId)?.[1] ?? 'H.Neg').substring(0, 6)}` : 'H.Neg',
+          octave_down:     'Oct−', octave_up: 'Oct+', modes_layer: '→ Modes', stop: 'STOP',
+        };
+        if (this._btnFns) {
+          for (let i = 8; i < 16; i++) {
+            const fn = this._btnFns[i] || (i === 12 ? 'modes_layer' : i === 15 ? 'stop' : '');
+            const el = document.getElementById(`key-ml-${i}`);
+            if (el && fn) el.textContent = _fnLabels[fn] ?? fn;
+            const keyEl = document.querySelector(`.sim-key[data-idx="${i}"]`);
+            if (keyEl) {
+              keyEl.classList.toggle('key-fn', true);
+              keyEl.classList.toggle('key-chord-active', fn === 'chord' && this.chordMode);
+              keyEl.classList.toggle('key-arp-active', fn === 'arp' && this.arpMode);
+            }
+          }
+        }
         // Status bar
-        simStatusText.textContent = `${this.keyName} ${this.scaleName.substring(0, 10)}  oct${this.octave}${this.arpMode ? ' ♩' : ''}${this.chordMode ? ' ▣' : ''}`;
-        // Pot labels
-        const mc = _loadModesConfig(); const pf = mc.pot_functions || {};
-        const lbls = this.arpMode
-          ? [pf.arp_pot_y || this.arpPotYFn, pf.arp_pot_x || this.arpPotXFn, pf.arp_pot_z || this.arpPotZFn]
-          : [pf.pot_y || this.potYFn, pf.pot_x || this.potXFn, pf.pot_z || this.potZFn];
-        ['X', 'Y', 'Z'].forEach((l, i) => { const el = document.getElementById(`pot-lbl-${i}`); if (el) el.textContent = `${l}: ${(lbls[i] || '').substring(0, 11)}`; });
+        const _invSufx = this.chordInversionIdx > 0 ? ` ⇅${_invId}` : '';
+        const _negSufx = this.negHarmMode ? ' ↕' : '';
+        const _loopSufx = [' ', ' ◦', ' ●', ' ⟳', ' ⏸'][this.loopState] || '';
+        simStatusText.textContent = `${this.keyName} ${this.scaleName.substring(0, 10)}  oct${this.octave}${this.arpMode ? ' ♪' : ''}${this.chordMode ? ' ▣' : ''}${_invSufx}${_negSufx}${_loopSufx}`;
+        // Pot labels (mode-aware)
+        const _potLbls = this.arpMode
+          ? [this.arpPotXFn, this.arpPotYFn, this.arpPotZFn]
+          : (this.chordMode && this.invBtnIdx >= 0)
+            ? [this.invPotXFn, this.invPotYFn, this.invPotZFn]
+            : [this.potXFn, this.potYFn, this.potZFn];
+        ['X', 'Y', 'Z'].forEach((l, i) => { const el = document.getElementById(`pot-lbl-${i}`); if (el) el.textContent = `${l}: ${(_potLbls[i] || '').substring(0, 11)}`; });
       }
     }
 
@@ -4981,6 +5848,15 @@
 
     function _applyTemporalEffect(btnIdx, active) {
       const efName = _getEffectForBtn(btnIdx);
+      // Harmonia Negativa: NO és un efecte de "presa de control" (no envia CC ni
+      // substitueix el mode). Manté el mode sonant i reflecteix les notes. S'injecta
+      // l'estat al botó 16 (índex 15), el canal que tots els modes melòdics consulten
+      // via poll_negharm(). El pot Z tria l'eix harmònic.
+      if (efName === 'Harmonia Negativa') {
+        if (simulator) simulator.buttons[15] = active;
+        if (active) simlog(`FX ${btnIdx === 13 ? '14' : '15'}: Harmonia Negativa activa (pot Z = eix)`, 'info');
+        return;
+      }
       const fx = _FX_CC_MAP[efName];
       if (!fx) return;
       if (fx.pb) {
@@ -4993,7 +5869,6 @@
 
     function onKeyDown(idx, el) {
       el.classList.add('pressed');
-
       // Botó 13 (T13): commuta capes teclat ↔ modes
       if (idx === 12) {
         if (isKbMode) _switchToModesLayer();
@@ -5333,9 +6208,9 @@
 
       let teclaStatus = 'No instal·lat'; let teclaOk = false;
       try {
-        const hasMain = await device.fileExists('main.py');
+        const hasMain = (await device.fileExists('main.py')) || (await device.fileExists('main.mpy'));
         const hasModes = (await device.listDir('modes')).length > 0;
-        const hasCore = await device.fileExists('core/config_manager.py');
+        const hasCore = (await device.fileExists('core/config_manager.py')) || (await device.fileExists('core/config_manager.mpy'));
         if (hasMain && hasModes && hasCore) {
           try { const ver = await device.readFile('tecla_version.txt'); teclaStatus = ver.trim() || 'Instal·lat'; }
           catch { teclaStatus = 'Instal·lat'; }
@@ -5350,6 +6225,18 @@
     }
 
     document.getElementById('btn-fw-refresh')?.addEventListener('click', _fwRefresh);
+
+    // ── Casella "Pantalla OLED" (persistida) ──────────────────────────
+    // Si està activada, s'instal·la també core/display_manager (mòdul extern
+    // opcional); si no, s'exclou del manifest i s'esborra del dispositiu.
+    const _fwDisplayChk = document.getElementById('fw-include-display');
+    if (_fwDisplayChk) {
+      _fwDisplayChk.checked = localStorage.getItem('tecla-fw-display') === '1';
+      _fwDisplayChk.addEventListener('change', () => {
+        localStorage.setItem('tecla-fw-display', _fwDisplayChk.checked ? '1' : '0');
+      });
+    }
+    const _isDisplayFile = (relPath) => /^core\/display_manager\.(py|mpy)$/.test(relPath);
 
     document.getElementById('btn-fw-instructions')?.addEventListener('click', () => {
       alert(`Instruccions d'instal·lació del Firmware TECLA\n\n` +
@@ -5370,10 +6257,39 @@
     document.getElementById('btn-install-fw')?.addEventListener('click', async () => {
       if (!device.isConnected()) { alert('Connecta el dispositiu (CIRCUITPY) a la pestanya "Tecles" primer.'); return; }
 
+      // Comprovació de compatibilitat: el firmware optimitzat usa .mpy (CircuitPython 10.x)
+      const MPY_TARGET_MAJOR = 10;
+      try {
+        const bootOut = await device.readFile('boot_out.txt');
+        const m = bootOut.match(/CircuitPython\s+(\d+)\.(\d+)\.(\d+)/i);
+        if (m) {
+          const major = parseInt(m[1], 10);
+          if (major !== MPY_TARGET_MAJOR) {
+            if (!confirm(`⚠ Incompatibilitat de versió\n\n` +
+              `El dispositiu té CircuitPython ${m[1]}.${m[2]}.${m[3]}, però el firmware ` +
+              `optimitzat està precompilat (.mpy) per a CircuitPython ${MPY_TARGET_MAJOR}.x.\n\n` +
+              `Si continues, el dispositiu probablement NO arrencarà. Recomanat: instal·la ` +
+              `CircuitPython ${MPY_TARGET_MAJOR}.0.3 (pestanya Firmware → bootloader) primer.\n\n` +
+              `Vols continuar igualment?`)) return;
+          }
+        } else {
+          if (!confirm(`No s'ha pogut determinar la versió de CircuitPython del dispositiu.\n\n` +
+            `El firmware optimitzat requereix CircuitPython ${MPY_TARGET_MAJOR}.x. Continuar?`)) return;
+        }
+      } catch {
+        if (!confirm(`No s'ha pogut llegir boot_out.txt (versió de CircuitPython desconeguda).\n\n` +
+          `El firmware optimitzat requereix CircuitPython ${MPY_TARGET_MAJOR}.x. Continuar?`)) return;
+      }
+
+      const _includeDisplay = !!document.getElementById('fw-include-display')?.checked;
+
       if (!confirm(`Instal·lar/actualitzar el firmware TECLA al dispositiu?\n\n` +
         `• Es copiaran TOTS els fitxers del firmware (core, effects, lib, modes…)\n` +
         `• La configuració del dispositiu s'actualitzarà amb la de l'app web\n` +
-        `• Els modes no seleccionats a "Modes i Escales" no es copiaran\n\n` +
+        `• Els modes no seleccionats a "Modes i Escales" no es copiaran\n` +
+        (_includeDisplay
+          ? `• S'inclourà el mòdul de pantalla OLED\n\n`
+          : `• NO s'inclourà el mòdul de pantalla OLED (casella desactivada)\n\n`) +
         `Vols continuar?`)) return;
 
       document.getElementById('btn-install-fw').disabled = true;
@@ -5386,14 +6302,18 @@
         const manifest = await manifestRes.json();
 
         // 2. Determine enabled modes (those assigned to keys)
-        const enabledSet = new Set(_getAssignedModes());
-        const ESSENTIAL_MODES = new Set(['base_mode.py', 'mode_manager.py', '__init__.py', 'mode_keyboard.py']);
+        //    Es normalitza pel nom base (sense .py/.mpy) per suportar modes precompilats.
+        const _modeBase = (f) => f.replace(/\.(py|mpy)$/, '');
+        const enabledSet = new Set(_getAssignedModes().map(_modeBase));
+        const ESSENTIAL_BASE = new Set(['base_mode', 'mode_manager', '__init__', 'mode_keyboard']);
 
         const filesToCopy = manifest.files.filter(relPath => {
+          if (_isDisplayFile(relPath)) return _includeDisplay;
           const fname = relPath.split('/').pop();
-          if (relPath.startsWith('modes/mode_') && relPath.endsWith('.py')) {
-            if (ESSENTIAL_MODES.has(fname)) return true;
-            return enabledSet.has(fname);
+          if (relPath.startsWith('modes/mode_') && /\.(py|mpy)$/.test(relPath)) {
+            const base = _modeBase(fname);
+            if (ESSENTIAL_BASE.has(base)) return true;
+            return enabledSet.has(base);
           }
           return true;
         });
@@ -5416,13 +6336,22 @@
           for (const entry of modesEntries) {
             if (entry.type !== 'file') continue;
             const fname = entry.name;
-            if (!fname.startsWith('mode_') || !fname.endsWith('.py')) continue;
-            if (ESSENTIAL_MODES.has(fname)) continue;
-            if (enabledSet.size > 0 && enabledSet.has(fname)) continue;
+            if (!fname.startsWith('mode_') || !/\.(py|mpy)$/.test(fname)) continue;
+            const base = _modeBase(fname);
+            if (ESSENTIAL_BASE.has(base)) continue;
+            if (enabledSet.size > 0 && enabledSet.has(base)) continue;
             try { await device.deleteFile(`modes/${fname}`); log(`Eliminat modes/${fname}`, 'info'); }
             catch (e) { console.warn(`No s'ha pogut eliminar modes/${fname}:`, e.message); }
           }
         } catch (e) { console.warn('Error llistant modes del dispositiu:', e.message); }
+
+        // 4b. Si la pantalla està desactivada, eliminar el mòdul del dispositiu
+        if (!_includeDisplay) {
+          for (const f of ['core/display_manager.py', 'core/display_manager.mpy']) {
+            try { await device.deleteFile(f); log(`Eliminat ${f}`, 'info'); }
+            catch { /* no existeix, ok */ }
+          }
+        }
 
         // 5. (Config always overwritten by web app config)
 
@@ -5435,6 +6364,14 @@
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const content = isBinary ? await res.arrayBuffer() : await res.text();
             await device.writeFile(relPath, content);
+            // Eliminar el germà de l'extensió oposada per evitar duplicats .py/.mpy
+            // (p.ex. instal·lar mode_x.mpy sobre un mode_x.py antic).
+            if (/\.(py|mpy)$/.test(relPath)) {
+              const sibling = relPath.endsWith('.mpy')
+                ? relPath.slice(0, -4) + '.py'
+                : relPath.slice(0, -3) + '.mpy';
+              try { await device.deleteFile(sibling); } catch { /* no existeix, ok */ }
+            }
           } catch (e) { errors.push(`${relPath}: ${e.message}`); console.warn('Skipping', relPath, e.message); }
           done++;
           _fwProgress(Math.round(5 + (done / filesToCopy.length) * 83));
@@ -5480,18 +6417,20 @@
     document.getElementById('btn-verify-fw')?.addEventListener('click', async () => {
       if (!device.isConnected()) { alert('Connecta el dispositiu primer.'); return; }
       _fwMsg('Verificant instal·lació…'); _fwProgress(0);
+      // Bases de mòduls crítics (sense extensió): es validen acceptant .py O .mpy,
+      // ja que el firmware optimitzat usa .mpy però els entry points/__init__ van en .py.
       const CRITICAL = [
-        'main.py', 'music_constants.py',
-        'modes/__init__.py', 'modes/mode_manager.py', 'modes/mode_keyboard.py', 'modes/base_mode.py',
-        'core/__init__.py', 'core/config_manager.py',
-        'effects/__init__.py', 'effects/effect_manager.py',
-        'config/__init__.py',
-        'lib/adafruit_midi/__init__.py',
+        'main', 'music_constants',
+        'modes/__init__', 'modes/mode_manager', 'modes/mode_keyboard', 'modes/base_mode',
+        'core/__init__', 'core/config_manager',
+        'effects/__init__', 'effects/effect_manager',
+        'config/__init__',
+        'lib/adafruit_midi/__init__',
       ];
       const missing = []; let checked = 0;
-      for (const f of CRITICAL) {
-        const ok = await device.fileExists(f);
-        if (!ok) missing.push(f);
+      for (const base of CRITICAL) {
+        const ok = (await device.fileExists(`${base}.py`)) || (await device.fileExists(`${base}.mpy`));
+        if (!ok) missing.push(`${base}.(py|mpy)`);
         checked++;
         _fwProgress(Math.round((checked / CRITICAL.length) * 100));
       }
@@ -5945,20 +6884,22 @@ body{background:var(--sim-bg,#0a0a0a);color:var(--text,#e0e0e0);font-family:syst
 
     })();
 
-    // Llengua
+    // Llengua — diccionaris a js/tecla-i18n.js (ca / es / en)
     (function() {
-      const I18N = {
-        ca: { device_disconnected: 'desconnectat', btn_connect: 'connecta dispositiu', btn_disconnect: 'desconnectar', nav_keys: 'Tecles', nav_modes: 'Teclat', nav_progressions: 'Progressions', nav_scales: 'Escales', nav_simulator: 'Simulador', nav_theme: 'Aparença', nav_guide: 'Guia' },
-        es: { device_disconnected: 'desconectado', btn_connect: 'conectar dispositivo', btn_disconnect: 'desconectar', nav_keys: 'Teclas', nav_modes: 'Teclado', nav_progressions: 'Progresiones', nav_scales: 'Escalas', nav_simulator: 'Simulador', nav_theme: 'Apariencia', nav_guide: 'Guía' },
-        en: { device_disconnected: 'disconnected', btn_connect: 'connect device', btn_disconnect: 'disconnect', nav_keys: 'Keys', nav_modes: 'Keyboard', nav_progressions: 'Progressions', nav_scales: 'Scales', nav_simulator: 'Simulator', nav_theme: 'Appearance', nav_guide: 'Guide' }
-      };
       const _savedLang = localStorage.getItem('tecla-midi-lang') || 'ca';
       function _applyLang(lang) {
         localStorage.setItem('tecla-midi-lang', lang);
+        document.documentElement.lang = lang;
         document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
         const d = I18N[lang] || I18N.ca;
+        // Text dels elements etiquetats
         document.querySelectorAll('[data-i18n]').forEach(el => { const k = el.dataset.i18n; if (d[k]) el.textContent = d[k]; });
+        // Placeholders dels inputs
+        document.querySelectorAll('[data-i18n-ph]').forEach(el => { const k = el.dataset.i18nPh; if (d[k]) el.placeholder = d[k]; });
+        // Guia: un bloc complet per idioma (.guide-lang[data-lang])
+        document.querySelectorAll('.guide-lang').forEach(g => { g.style.display = g.dataset.lang === lang ? '' : 'none'; });
       }
+      window.applyTeclaLang = _applyLang;  // re-aplicable després de renderitzats dinàmics
       document.querySelectorAll('.lang-btn').forEach(b => b.addEventListener('click', () => _applyLang(b.dataset.lang)));
       _applyLang(_savedLang);
     })();

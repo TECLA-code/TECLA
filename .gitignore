@@ -7,6 +7,11 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+codi/build_device/
+*.mpy
+# Excepció: els .mpy del firmware SÍ s'han de versionar (l'app-web els serveix
+# i GitHub Pages els necessita per instal·lar el firmware optimitzat al dispositiu).
+!codi/device_files/**/*.mpy
 venv/
 .venv/
 
@@ -22,3 +27,6 @@ Icon?
 .idea/
 *.swp
 *.swo
+
+# Binari mpy-cross (es baixa amb tools/, no versionar)
+tools/mpy-cross

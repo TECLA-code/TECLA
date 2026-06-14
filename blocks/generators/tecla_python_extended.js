@@ -3,51 +3,61 @@
 
 // ==================== CONTROL AVANÇAT ====================
 
-Blockly.Python['tecla_switch'] = function(block) {
-  const value = Blockly.Python.valueToCode(block, 'VALUE', Blockly.Python.ORDER_ATOMIC);
-  // Implementació simplificada amb if/elif
-  return `# Switch statement (simplificat amb if/elif)\n`;
+Blockly.Python.forBlock['tecla_switch'] = function(block) {
+  const IND = Blockly.Python.INDENT || '  ';
+  const value = Blockly.Python.valueToCode(block, 'VALUE', Blockly.Python.ORDER_RELATIONAL) || '0';
+  const caseVal = block.getFieldValue('CASE0') || '0';
+  const lit = isNaN(Number(caseVal)) ? JSON.stringify(caseVal) : caseVal;
+  const caseCode = Blockly.Python.statementToCode(block, 'CASE0') || `${IND}pass\n`;
+  const defCode  = Blockly.Python.statementToCode(block, 'DEFAULT') || `${IND}pass\n`;
+  return `if ${value} == ${lit}:\n${caseCode}else:\n${defCode}`;
 };
 
-Blockly.Python['tecla_break'] = function(block) {
+Blockly.Python.forBlock['tecla_break'] = function(block) {
   return 'break\n';
 };
 
-Blockly.Python['tecla_continue'] = function(block) {
+Blockly.Python.forBlock['tecla_continue'] = function(block) {
   return 'continue\n';
 };
 
-Blockly.Python['tecla_try_except'] = function(block) {
-  const tryCode = Blockly.Python.statementToCode(block, 'TRY');
-  const exceptCode = Blockly.Python.statementToCode(block, 'EXCEPT');
+Blockly.Python.forBlock['tecla_try_except'] = function(block) {
+  const IND = Blockly.Python.INDENT || '  ';
+  const tryCode = Blockly.Python.statementToCode(block, 'TRY') || `${IND}pass\n`;
+  const exceptCode = Blockly.Python.statementToCode(block, 'EXCEPT') || `${IND}pass\n`;
   return `try:\n${tryCode}except Exception as e:\n${exceptCode}\n`;
 };
 
 // ==================== TEMPS I TEMPORITZADORS ====================
 
-Blockly.Python['tecla_time_now'] = function(block) {
+Blockly.Python.forBlock['tecla_time_now'] = function(block) {
   Blockly.Python.definitions_['import_time'] = 'import time';
   return ['time.monotonic()', Blockly.Python.ORDER_FUNCTION_CALL];
 };
 
-Blockly.Python['tecla_time_millis'] = function(block) {
+Blockly.Python.forBlock['tecla_time_millis'] = function(block) {
   Blockly.Python.definitions_['import_time'] = 'import time';
   return ['int(time.monotonic() * 1000)', Blockly.Python.ORDER_FUNCTION_CALL];
 };
 
-Blockly.Python['tecla_timer_start'] = function(block) {
-  const varName = Blockly.Python.variableDB_.getName(block.getFieldValue('VAR'), Blockly.Variables.NAME_TYPE);
+function _teclaVarName(block, field, fallback) {
+  const id = block.getFieldValue(field);
+  return id ? Blockly.Python.nameDB_.getName(id, Blockly.Names.NameType.VARIABLE) : fallback;
+}
+
+Blockly.Python.forBlock['tecla_timer_start'] = function(block) {
+  const varName = _teclaVarName(block, 'VAR', 'timer');
   Blockly.Python.definitions_['import_time'] = 'import time';
   return `${varName} = time.monotonic()\n`;
 };
 
-Blockly.Python['tecla_timer_elapsed'] = function(block) {
-  const varName = Blockly.Python.variableDB_.getName(block.getFieldValue('VAR'), Blockly.Variables.NAME_TYPE);
+Blockly.Python.forBlock['tecla_timer_elapsed'] = function(block) {
+  const varName = _teclaVarName(block, 'VAR', 'timer');
   Blockly.Python.definitions_['import_time'] = 'import time';
   return [`time.monotonic() - ${varName}`, Blockly.Python.ORDER_ADDITIVE];
 };
 
-Blockly.Python['tecla_sleep_ms'] = function(block) {
+Blockly.Python.forBlock['tecla_sleep_ms'] = function(block) {
   const time = Blockly.Python.valueToCode(block, 'TIME', Blockly.Python.ORDER_ATOMIC) || '0';
   Blockly.Python.definitions_['import_time'] = 'import time';
   return `time.sleep(${time} / 1000.0)\n`;
@@ -55,44 +65,44 @@ Blockly.Python['tecla_sleep_ms'] = function(block) {
 
 // ==================== STRING AVANÇAT ====================
 
-Blockly.Python['tecla_string_replace'] = function(block) {
+Blockly.Python.forBlock['tecla_string_replace'] = function(block) {
   const text = Blockly.Python.valueToCode(block, 'TEXT', Blockly.Python.ORDER_MEMBER) || '""';
   const old = Blockly.Python.valueToCode(block, 'OLD', Blockly.Python.ORDER_NONE) || '""';
   const newStr = Blockly.Python.valueToCode(block, 'NEW', Blockly.Python.ORDER_NONE) || '""';
   return [`${text}.replace(${old}, ${newStr})`, Blockly.Python.ORDER_FUNCTION_CALL];
 };
 
-Blockly.Python['tecla_string_split'] = function(block) {
+Blockly.Python.forBlock['tecla_string_split'] = function(block) {
   const text = Blockly.Python.valueToCode(block, 'TEXT', Blockly.Python.ORDER_MEMBER) || '""';
   const delimiter = Blockly.Python.valueToCode(block, 'DELIMITER', Blockly.Python.ORDER_NONE) || '""';
   return [`${text}.split(${delimiter})`, Blockly.Python.ORDER_FUNCTION_CALL];
 };
 
-Blockly.Python['tecla_string_join'] = function(block) {
+Blockly.Python.forBlock['tecla_string_join'] = function(block) {
   const list = Blockly.Python.valueToCode(block, 'LIST', Blockly.Python.ORDER_NONE) || '[]';
   const separator = Blockly.Python.valueToCode(block, 'SEPARATOR', Blockly.Python.ORDER_MEMBER) || '""';
   return [`${separator}.join(str(x) for x in ${list})`, Blockly.Python.ORDER_FUNCTION_CALL];
 };
 
-Blockly.Python['tecla_string_format'] = function(block) {
+Blockly.Python.forBlock['tecla_string_format'] = function(block) {
   const format = Blockly.Python.valueToCode(block, 'FORMAT', Blockly.Python.ORDER_MEMBER) || '""';
   const value = Blockly.Python.valueToCode(block, 'VALUE', Blockly.Python.ORDER_NONE) || '0';
   return [`${format}.format(${value})`, Blockly.Python.ORDER_FUNCTION_CALL];
 };
 
-Blockly.Python['tecla_string_contains'] = function(block) {
+Blockly.Python.forBlock['tecla_string_contains'] = function(block) {
   const text = Blockly.Python.valueToCode(block, 'TEXT', Blockly.Python.ORDER_MEMBER) || '""';
   const search = Blockly.Python.valueToCode(block, 'SEARCH', Blockly.Python.ORDER_NONE) || '""';
   return [`${search} in ${text}`, Blockly.Python.ORDER_RELATIONAL];
 };
 
-Blockly.Python['tecla_string_startswith'] = function(block) {
+Blockly.Python.forBlock['tecla_string_startswith'] = function(block) {
   const text = Blockly.Python.valueToCode(block, 'TEXT', Blockly.Python.ORDER_MEMBER) || '""';
   const prefix = Blockly.Python.valueToCode(block, 'PREFIX', Blockly.Python.ORDER_NONE) || '""';
   return [`${text}.startswith(${prefix})`, Blockly.Python.ORDER_FUNCTION_CALL];
 };
 
-Blockly.Python['tecla_string_endswith'] = function(block) {
+Blockly.Python.forBlock['tecla_string_endswith'] = function(block) {
   const text = Blockly.Python.valueToCode(block, 'TEXT', Blockly.Python.ORDER_MEMBER) || '""';
   const suffix = Blockly.Python.valueToCode(block, 'SUFFIX', Blockly.Python.ORDER_NONE) || '""';
   return [`${text}.endswith(${suffix})`, Blockly.Python.ORDER_FUNCTION_CALL];
@@ -100,49 +110,49 @@ Blockly.Python['tecla_string_endswith'] = function(block) {
 
 // ==================== MATEMÀTIQUES AVANÇADES ====================
 
-Blockly.Python['tecla_math_sin'] = function(block) {
+Blockly.Python.forBlock['tecla_math_sin'] = function(block) {
   const angle = Blockly.Python.valueToCode(block, 'ANGLE', Blockly.Python.ORDER_NONE) || '0';
   Blockly.Python.definitions_['import_math'] = 'import math';
   return [`math.sin(${angle})`, Blockly.Python.ORDER_FUNCTION_CALL];
 };
 
-Blockly.Python['tecla_math_cos'] = function(block) {
+Blockly.Python.forBlock['tecla_math_cos'] = function(block) {
   const angle = Blockly.Python.valueToCode(block, 'ANGLE', Blockly.Python.ORDER_NONE) || '0';
   Blockly.Python.definitions_['import_math'] = 'import math';
   return [`math.cos(${angle})`, Blockly.Python.ORDER_FUNCTION_CALL];
 };
 
-Blockly.Python['tecla_math_tan'] = function(block) {
+Blockly.Python.forBlock['tecla_math_tan'] = function(block) {
   const angle = Blockly.Python.valueToCode(block, 'ANGLE', Blockly.Python.ORDER_NONE) || '0';
   Blockly.Python.definitions_['import_math'] = 'import math';
   return [`math.tan(${angle})`, Blockly.Python.ORDER_FUNCTION_CALL];
 };
 
-Blockly.Python['tecla_math_log'] = function(block) {
+Blockly.Python.forBlock['tecla_math_log'] = function(block) {
   const value = Blockly.Python.valueToCode(block, 'VALUE', Blockly.Python.ORDER_NONE) || '1';
   Blockly.Python.definitions_['import_math'] = 'import math';
   return [`math.log(${value})`, Blockly.Python.ORDER_FUNCTION_CALL];
 };
 
-Blockly.Python['tecla_math_exp'] = function(block) {
+Blockly.Python.forBlock['tecla_math_exp'] = function(block) {
   const value = Blockly.Python.valueToCode(block, 'VALUE', Blockly.Python.ORDER_NONE) || '0';
   Blockly.Python.definitions_['import_math'] = 'import math';
   return [`math.exp(${value})`, Blockly.Python.ORDER_FUNCTION_CALL];
 };
 
-Blockly.Python['tecla_math_degrees'] = function(block) {
+Blockly.Python.forBlock['tecla_math_degrees'] = function(block) {
   const radians = Blockly.Python.valueToCode(block, 'RADIANS', Blockly.Python.ORDER_NONE) || '0';
   Blockly.Python.definitions_['import_math'] = 'import math';
   return [`math.degrees(${radians})`, Blockly.Python.ORDER_FUNCTION_CALL];
 };
 
-Blockly.Python['tecla_math_radians'] = function(block) {
+Blockly.Python.forBlock['tecla_math_radians'] = function(block) {
   const degrees = Blockly.Python.valueToCode(block, 'DEGREES', Blockly.Python.ORDER_NONE) || '0';
   Blockly.Python.definitions_['import_math'] = 'import math';
   return [`math.radians(${degrees})`, Blockly.Python.ORDER_FUNCTION_CALL];
 };
 
-Blockly.Python['tecla_math_bitwise'] = function(block) {
+Blockly.Python.forBlock['tecla_math_bitwise'] = function(block) {
   const a = Blockly.Python.valueToCode(block, 'A', Blockly.Python.ORDER_BITWISE_AND) || '0';
   const b = Blockly.Python.valueToCode(block, 'B', Blockly.Python.ORDER_BITWISE_AND) || '0';
   const op = block.getFieldValue('OP');
@@ -158,15 +168,13 @@ Blockly.Python['tecla_math_bitwise'] = function(block) {
 
 // ==================== NEOPIXELS / RGB LEDS ====================
 
-Blockly.Python['tecla_neopixel_setup'] = function(block) {
-  const pin = Blockly.Python.valueToCode(block, 'PIN', Blockly.Python.ORDER_NONE) || '0';
-  const count = Blockly.Python.valueToCode(block, 'COUNT', Blockly.Python.ORDER_NONE) || '10';
-  Blockly.Python.definitions_['import_neopixel'] = 'import neopixel\nimport board';
-  Blockly.Python.definitions_['neopixel_strip'] = `pixels = neopixel.NeoPixel(board.GP${pin}, ${count}, brightness=0.5, auto_write=False)`;
-  return '';
+Blockly.Python.forBlock['tecla_neopixel_setup'] = function(block) {
+  const pin = Blockly.Python.valueToCode(block, 'PIN', Blockly.Python.ORDER_NONE) || '16';
+  const count = Blockly.Python.valueToCode(block, 'COUNT', Blockly.Python.ORDER_NONE) || '8';
+  return `# Tira NeoPixel al pin GP${pin}\npixels = _neopix(int(${pin}), int(${count}))\n`;
 };
 
-Blockly.Python['tecla_neopixel_set'] = function(block) {
+Blockly.Python.forBlock['tecla_neopixel_set'] = function(block) {
   const index = Blockly.Python.valueToCode(block, 'INDEX', Blockly.Python.ORDER_NONE) || '0';
   const r = Blockly.Python.valueToCode(block, 'R', Blockly.Python.ORDER_NONE) || '0';
   const g = Blockly.Python.valueToCode(block, 'G', Blockly.Python.ORDER_NONE) || '0';
@@ -174,114 +182,82 @@ Blockly.Python['tecla_neopixel_set'] = function(block) {
   return `pixels[${index}] = (${r}, ${g}, ${b})\n`;
 };
 
-Blockly.Python['tecla_neopixel_show'] = function(block) {
+Blockly.Python.forBlock['tecla_neopixel_show'] = function(block) {
   return 'pixels.show()\n';
 };
 
-Blockly.Python['tecla_neopixel_clear'] = function(block) {
+Blockly.Python.forBlock['tecla_neopixel_clear'] = function(block) {
   return 'pixels.fill((0, 0, 0))\npixels.show()\n';
 };
 
-Blockly.Python['tecla_neopixel_rainbow'] = function(block) {
+Blockly.Python.forBlock['tecla_neopixel_rainbow'] = function(block) {
   const offset = Blockly.Python.valueToCode(block, 'OFFSET', Blockly.Python.ORDER_NONE) || '0';
-  Blockly.Python.definitions_['neopixel_rainbow'] = `def rainbow_cycle(offset):
-    for i in range(len(pixels)):
-        pixel_index = (i * 256 // len(pixels)) + offset
-        pixels[i] = wheel(pixel_index & 255)
-    pixels.show()
-
-def wheel(pos):
-    if pos < 85:
-        return (pos * 3, 255 - pos * 3, 0)
-    elif pos < 170:
-        pos -= 85
-        return (255 - pos * 3, 0, pos * 3)
-    else:
-        pos -= 170
-        return (0, pos * 3, 255 - pos * 3)`;
-  return `rainbow_cycle(${offset})\n`;
+  return `_npx_rainbow(pixels, int(${offset}))\n`;
 };
 
 // ==================== DISPLAY OLED/LCD ====================
 
-Blockly.Python['tecla_display_setup'] = function(block) {
-  const type = block.getFieldValue('TYPE');
-  if (type === 'OLED') {
-    Blockly.Python.definitions_['import_display'] = 'import board\nimport displayio\nimport busio\nimport adafruit_displayio_ssd1306';
-    Blockly.Python.definitions_['display_setup'] = `i2c = busio.I2C(board.SCL, board.SDA)
-display_bus = displayio.I2CDisplay(i2c, device_address=0x3C)
-display = adafruit_displayio_ssd1306.SSD1306(display_bus, width=128, height=64)`;
-  } else {
-    Blockly.Python.definitions_['import_display'] = 'import board\nimport busio\nfrom adafruit_character_lcd.character_lcd_i2c import Character_LCD_I2C';
-    Blockly.Python.definitions_['display_setup'] = `i2c = busio.I2C(board.SCL, board.SDA)
-lcd = Character_LCD_I2C(i2c, 16, 2)`;
-  }
-  return '';
+// La pantalla és el SSD1306 del TECLA: _display() l'autodetecta i, si no hi és,
+// retorna una pantalla fantasma perquè el programa no peti.
+Blockly.Python.forBlock['tecla_display_setup'] = function(block) {
+  return `# Inicialitzar pantalla OLED (cal adafruit_ssd1306 a CIRCUITPY/lib/)\n_display()\n`;
 };
 
-Blockly.Python['tecla_display_text'] = function(block) {
+Blockly.Python.forBlock['tecla_display_text'] = function(block) {
   const text = Blockly.Python.valueToCode(block, 'TEXT', Blockly.Python.ORDER_NONE) || '""';
   const x = Blockly.Python.valueToCode(block, 'X', Blockly.Python.ORDER_NONE) || '0';
   const y = Blockly.Python.valueToCode(block, 'Y', Blockly.Python.ORDER_NONE) || '0';
-  return `display.text(${text}, ${x}, ${y}, 1)\n`;
+  return `_display().text(str(${text}), int(${x}), int(${y}), 1)\n_display().show()\n`;
 };
 
-Blockly.Python['tecla_display_clear'] = function(block) {
-  return 'display.fill(0)\ndisplay.show()\n';
+Blockly.Python.forBlock['tecla_display_clear'] = function(block) {
+  return '_display().fill(0)\n_display().show()\n';
 };
 
-Blockly.Python['tecla_display_pixel'] = function(block) {
+Blockly.Python.forBlock['tecla_display_pixel'] = function(block) {
   const x = Blockly.Python.valueToCode(block, 'X', Blockly.Python.ORDER_NONE) || '0';
   const y = Blockly.Python.valueToCode(block, 'Y', Blockly.Python.ORDER_NONE) || '0';
   const state = block.getFieldValue('STATE') === 'ON' ? '1' : '0';
-  return `display.pixel(${x}, ${y}, ${state})\n`;
+  return `_display().pixel(int(${x}), int(${y}), ${state})\n_display().show()\n`;
 };
 
-Blockly.Python['tecla_display_line'] = function(block) {
+Blockly.Python.forBlock['tecla_display_line'] = function(block) {
   const x1 = Blockly.Python.valueToCode(block, 'X1', Blockly.Python.ORDER_NONE) || '0';
   const y1 = Blockly.Python.valueToCode(block, 'Y1', Blockly.Python.ORDER_NONE) || '0';
   const x2 = Blockly.Python.valueToCode(block, 'X2', Blockly.Python.ORDER_NONE) || '0';
   const y2 = Blockly.Python.valueToCode(block, 'Y2', Blockly.Python.ORDER_NONE) || '0';
-  return `display.line(${x1}, ${y1}, ${x2}, ${y2}, 1)\n`;
+  return `_display().line(int(${x1}), int(${y1}), int(${x2}), int(${y2}), 1)\n_display().show()\n`;
 };
 
-Blockly.Python['tecla_display_rect'] = function(block) {
+Blockly.Python.forBlock['tecla_display_rect'] = function(block) {
   const x = Blockly.Python.valueToCode(block, 'X', Blockly.Python.ORDER_NONE) || '0';
   const y = Blockly.Python.valueToCode(block, 'Y', Blockly.Python.ORDER_NONE) || '0';
   const width = Blockly.Python.valueToCode(block, 'WIDTH', Blockly.Python.ORDER_NONE) || '10';
   const height = Blockly.Python.valueToCode(block, 'HEIGHT', Blockly.Python.ORDER_NONE) || '10';
   const fill = block.getFieldValue('FILL') === 'FILLED' ? 'fill_rect' : 'rect';
-  return `display.${fill}(${x}, ${y}, ${width}, ${height}, 1)\n`;
+  return `_display().${fill}(int(${x}), int(${y}), int(${width}), int(${height}), 1)\n_display().show()\n`;
 };
 
 // ==================== MOTORS I SERVOS ====================
 
-Blockly.Python['tecla_servo_setup'] = function(block) {
-  const pin = Blockly.Python.valueToCode(block, 'PIN', Blockly.Python.ORDER_NONE) || '0';
-  Blockly.Python.definitions_['import_servo'] = 'import board\nimport pwmio\nfrom adafruit_motor import servo';
-  Blockly.Python.definitions_[`servo_${pin}`] = `pwm_${pin} = pwmio.PWMOut(board.GP${pin}, frequency=50)
-servo_${pin} = servo.Servo(pwm_${pin})`;
-  return '';
+Blockly.Python.forBlock['tecla_servo_setup'] = function(block) {
+  const pin = Blockly.Python.valueToCode(block, 'PIN', Blockly.Python.ORDER_NONE) || '16';
+  return `# Servo al pin GP${pin} (cal adafruit_motor a CIRCUITPY/lib/)\n_servo(int(${pin}))\n`;
 };
 
-Blockly.Python['tecla_servo_angle'] = function(block) {
-  const pin = Blockly.Python.valueToCode(block, 'PIN', Blockly.Python.ORDER_NONE) || '0';
+Blockly.Python.forBlock['tecla_servo_angle'] = function(block) {
+  const pin = Blockly.Python.valueToCode(block, 'PIN', Blockly.Python.ORDER_NONE) || '16';
   const angle = Blockly.Python.valueToCode(block, 'ANGLE', Blockly.Python.ORDER_NONE) || '90';
-  return `servo_${pin}.angle = ${angle}\n`;
+  return `_servo(int(${pin})).angle = max(0, min(180, int(${angle})))\n`;
 };
 
-Blockly.Python['tecla_motor_setup'] = function(block) {
-  const pin1 = Blockly.Python.valueToCode(block, 'PIN1', Blockly.Python.ORDER_NONE) || '0';
-  const pin2 = Blockly.Python.valueToCode(block, 'PIN2', Blockly.Python.ORDER_NONE) || '1';
-  Blockly.Python.definitions_['import_motor'] = 'import board\nimport pwmio\nimport digitalio';
-  Blockly.Python.definitions_['motor_setup'] = `motor_pin1 = digitalio.DigitalInOut(board.GP${pin1})
-motor_pin2 = digitalio.DigitalInOut(board.GP${pin2})
-motor_pin1.direction = digitalio.Direction.OUTPUT
-motor_pin2.direction = digitalio.Direction.OUTPUT`;
-  return '';
+Blockly.Python.forBlock['tecla_motor_setup'] = function(block) {
+  const pin1 = Blockly.Python.valueToCode(block, 'PIN1', Blockly.Python.ORDER_NONE) || '16';
+  const pin2 = Blockly.Python.valueToCode(block, 'PIN2', Blockly.Python.ORDER_NONE) || '17';
+  return `# Motor DC als pins GP${pin1}/GP${pin2}\nmotor_pin1 = _gpio(int(${pin1}), True)\nmotor_pin2 = _gpio(int(${pin2}), True)\n`;
 };
 
-Blockly.Python['tecla_motor_speed'] = function(block) {
+Blockly.Python.forBlock['tecla_motor_speed'] = function(block) {
   const speed = Blockly.Python.valueToCode(block, 'SPEED', Blockly.Python.ORDER_NONE) || '0';
   const direction = block.getFieldValue('DIRECTION');
   if (direction === 'FORWARD') {
@@ -295,114 +271,105 @@ Blockly.Python['tecla_motor_speed'] = function(block) {
 
 // ==================== SENSORS ADICIONALS ====================
 
-Blockly.Python['tecla_sensor_light'] = function(block) {
+Blockly.Python.forBlock['tecla_sensor_light'] = function(block) {
   const pin = Blockly.Python.valueToCode(block, 'PIN', Blockly.Python.ORDER_NONE) || '0';
-  Blockly.Python.definitions_['import_analogio'] = 'import board\nimport analogio';
-  Blockly.Python.definitions_[`light_sensor_${pin}`] = `light_sensor = analogio.AnalogIn(board.A${pin})`;
-  return [`int(light_sensor.value / 65535 * 100)`, Blockly.Python.ORDER_FUNCTION_CALL];
+  return [`int(_adc(${pin}).value / 65535 * 100)`, Blockly.Python.ORDER_FUNCTION_CALL];
 };
 
-Blockly.Python['tecla_sensor_sound'] = function(block) {
+Blockly.Python.forBlock['tecla_sensor_sound'] = function(block) {
   const pin = Blockly.Python.valueToCode(block, 'PIN', Blockly.Python.ORDER_NONE) || '0';
-  Blockly.Python.definitions_['import_analogio'] = 'import board\nimport analogio';
-  Blockly.Python.definitions_[`sound_sensor_${pin}`] = `sound_sensor = analogio.AnalogIn(board.A${pin})`;
-  return [`int(sound_sensor.value / 65535 * 100)`, Blockly.Python.ORDER_FUNCTION_CALL];
+  return [`int(_adc(${pin}).value / 65535 * 100)`, Blockly.Python.ORDER_FUNCTION_CALL];
 };
 
-Blockly.Python['tecla_sensor_moisture'] = function(block) {
+Blockly.Python.forBlock['tecla_sensor_moisture'] = function(block) {
   const pin = Blockly.Python.valueToCode(block, 'PIN', Blockly.Python.ORDER_NONE) || '0';
-  Blockly.Python.definitions_['import_analogio'] = 'import board\nimport analogio';
-  Blockly.Python.definitions_[`moisture_sensor_${pin}`] = `moisture_sensor = analogio.AnalogIn(board.A${pin})`;
-  return [`int(moisture_sensor.value / 65535 * 100)`, Blockly.Python.ORDER_FUNCTION_CALL];
+  return [`int(_adc(${pin}).value / 65535 * 100)`, Blockly.Python.ORDER_FUNCTION_CALL];
 };
 
-Blockly.Python['tecla_sensor_pir'] = function(block) {
-  const pin = Blockly.Python.valueToCode(block, 'PIN', Blockly.Python.ORDER_NONE) || '0';
-  Blockly.Python.definitions_['import_digitalio'] = 'import board\nimport digitalio';
-  Blockly.Python.definitions_[`pir_sensor_${pin}`] = `pir_sensor = digitalio.DigitalInOut(board.GP${pin})
-pir_sensor.direction = digitalio.Direction.INPUT`;
-  return [`pir_sensor.value`, Blockly.Python.ORDER_ATOMIC];
+Blockly.Python.forBlock['tecla_sensor_pir'] = function(block) {
+  const pin = Blockly.Python.valueToCode(block, 'PIN', Blockly.Python.ORDER_NONE) || '16';
+  return [`_gpio(int(${pin})).value`, Blockly.Python.ORDER_MEMBER];
 };
 
-Blockly.Python['tecla_sensor_button_external'] = function(block) {
-  const pin = Blockly.Python.valueToCode(block, 'PIN', Blockly.Python.ORDER_NONE) || '0';
+Blockly.Python.forBlock['tecla_sensor_button_external'] = function(block) {
+  const pin = Blockly.Python.valueToCode(block, 'PIN', Blockly.Python.ORDER_NONE) || '16';
   const pull = block.getFieldValue('PULL');
-  Blockly.Python.definitions_['import_digitalio'] = 'import board\nimport digitalio';
-  const pullType = pull === 'PULLUP' ? 'digitalio.Pull.UP' : 'digitalio.Pull.DOWN';
-  Blockly.Python.definitions_[`button_${pin}`] = `button_${pin} = digitalio.DigitalInOut(board.GP${pin})
-button_${pin}.direction = digitalio.Direction.INPUT
-button_${pin}.pull = ${pullType}`;
-  return [`button_${pin}.value`, Blockly.Python.ORDER_ATOMIC];
+  if (pull === 'PULLUP') {
+    // Amb pull-up, el botó premut posa el pin a 0: invertim la lectura
+    return [`(not _gpio(int(${pin}), False, True).value)`, Blockly.Python.ORDER_LOGICAL_NOT];
+  }
+  return [`_gpio(int(${pin})).value`, Blockly.Python.ORDER_MEMBER];
 };
 
 // ==================== PWM AVANÇAT ====================
 
-Blockly.Python['tecla_pwm_setup'] = function(block) {
-  const pin = Blockly.Python.valueToCode(block, 'PIN', Blockly.Python.ORDER_NONE) || '0';
+Blockly.Python.forBlock['tecla_pwm_setup'] = function(block) {
+  const pin = Blockly.Python.valueToCode(block, 'PIN', Blockly.Python.ORDER_NONE) || '16';
   const freq = Blockly.Python.valueToCode(block, 'FREQ', Blockly.Python.ORDER_NONE) || '1000';
-  Blockly.Python.definitions_['import_pwmio'] = 'import board\nimport pwmio';
-  Blockly.Python.definitions_[`pwm_${pin}`] = `pwm_${pin} = pwmio.PWMOut(board.GP${pin}, frequency=${freq}, duty_cycle=0)`;
-  return '';
+  return `# PWM al pin GP${pin} a ${freq} Hz\n_pwm(int(${pin}), int(${freq}))\n`;
 };
 
-Blockly.Python['tecla_pwm_duty'] = function(block) {
-  const pin = Blockly.Python.valueToCode(block, 'PIN', Blockly.Python.ORDER_NONE) || '0';
+Blockly.Python.forBlock['tecla_pwm_duty'] = function(block) {
+  const pin = Blockly.Python.valueToCode(block, 'PIN', Blockly.Python.ORDER_NONE) || '16';
   const duty = Blockly.Python.valueToCode(block, 'DUTY', Blockly.Python.ORDER_NONE) || '50';
-  return `pwm_${pin}.duty_cycle = int(${duty} / 100 * 65535)\n`;
+  return `_pwm(int(${pin})).duty_cycle = int(max(0, min(100, ${duty})) / 100 * 65535)\n`;
 };
 
 // ==================== EMMAGATZEMATGE ====================
 
-Blockly.Python['tecla_storage_write'] = function(block) {
+// Magatzem simple clau-valor en memòria (es perd en reiniciar el dispositiu)
+Blockly.Python.forBlock['tecla_storage_write'] = function(block) {
   const key = Blockly.Python.valueToCode(block, 'KEY', Blockly.Python.ORDER_NONE) || '""';
   const value = Blockly.Python.valueToCode(block, 'VALUE', Blockly.Python.ORDER_NONE) || '0';
-  Blockly.Python.definitions_['import_storage'] = 'import json';
-  return `# Save to storage: ${key} = ${value}\n`;
+  Blockly.Python.definitions_['tecla_storage'] = '_storage = {}  # magatzem clau-valor en memòria';
+  return `_storage[${key}] = ${value}\n`;
 };
 
-Blockly.Python['tecla_storage_read'] = function(block) {
+Blockly.Python.forBlock['tecla_storage_read'] = function(block) {
   const key = Blockly.Python.valueToCode(block, 'KEY', Blockly.Python.ORDER_NONE) || '""';
-  return [`# Read from storage: ${key}`, Blockly.Python.ORDER_ATOMIC];
+  Blockly.Python.definitions_['tecla_storage'] = '_storage = {}  # magatzem clau-valor en memòria';
+  return [`_storage.get(${key}, 0)`, Blockly.Python.ORDER_FUNCTION_CALL];
 };
 
-Blockly.Python['tecla_storage_exists'] = function(block) {
+Blockly.Python.forBlock['tecla_storage_exists'] = function(block) {
   const key = Blockly.Python.valueToCode(block, 'KEY', Blockly.Python.ORDER_NONE) || '""';
-  return [`# Check if exists: ${key}`, Blockly.Python.ORDER_ATOMIC];
+  Blockly.Python.definitions_['tecla_storage'] = '_storage = {}  # magatzem clau-valor en memòria';
+  return [`(${key} in _storage)`, Blockly.Python.ORDER_RELATIONAL];
 };
 
-Blockly.Python['tecla_storage_delete'] = function(block) {
+Blockly.Python.forBlock['tecla_storage_delete'] = function(block) {
   const key = Blockly.Python.valueToCode(block, 'KEY', Blockly.Python.ORDER_NONE) || '""';
-  return `# Delete from storage: ${key}\n`;
+  Blockly.Python.definitions_['tecla_storage'] = '_storage = {}  # magatzem clau-valor en memòria';
+  return `_storage.pop(${key}, None)\n`;
 };
 
 // ==================== SISTEMA ====================
 
-Blockly.Python['tecla_system_reset'] = function(block) {
+Blockly.Python.forBlock['tecla_system_reset'] = function(block) {
   Blockly.Python.definitions_['import_microcontroller'] = 'import microcontroller';
   return 'microcontroller.reset()\n';
 };
 
-Blockly.Python['tecla_system_memory'] = function(block) {
+Blockly.Python.forBlock['tecla_system_memory'] = function(block) {
   Blockly.Python.definitions_['import_gc'] = 'import gc';
   return ['gc.mem_free()', Blockly.Python.ORDER_FUNCTION_CALL];
 };
 
-Blockly.Python['tecla_system_cpu_temp'] = function(block) {
+Blockly.Python.forBlock['tecla_system_cpu_temp'] = function(block) {
   Blockly.Python.definitions_['import_microcontroller'] = 'import microcontroller';
   return ['microcontroller.cpu.temperature', Blockly.Python.ORDER_MEMBER];
 };
 
-Blockly.Python['tecla_system_voltage'] = function(block) {
-  Blockly.Python.definitions_['import_analogio'] = 'import board\nimport analogio';
-  Blockly.Python.definitions_['voltage_sensor'] = `voltage_sense = analogio.AnalogIn(board.VOLTAGE_MONITOR)`;
-  return ['voltage_sense.value * 3.3 / 65536', Blockly.Python.ORDER_MULTIPLICATIVE];
+Blockly.Python.forBlock['tecla_system_voltage'] = function(block) {
+  return ['(_adc_named("VOLTAGE_MONITOR").value * 3.3 * 3 / 65536)', Blockly.Python.ORDER_MULTIPLICATIVE];
 };
 
 // ==================== GENERADORS MODULARS / GENERATIUS ====================
 
-Blockly.Python['tecla_probability'] = function (block) {
+Blockly.Python.forBlock['tecla_probability'] = function (block) {
     const percent = Blockly.Python.valueToCode(block, 'PERCENT', Blockly.Python.ORDER_MEMBER) || '50';
-    const statements = Blockly.Python.statementToCode(block, 'DO');
+    const IND = Blockly.Python.INDENT || '  ';
+    const statements = Blockly.Python.statementToCode(block, 'DO') || `${IND}pass\n`;
 
     Blockly.Python.definitions_['import_random'] = 'import random';
 
@@ -413,7 +380,7 @@ Blockly.Python['tecla_probability'] = function (block) {
     return code;
 };
 
-Blockly.Python['tecla_software_lfo'] = function (block) {
+Blockly.Python.forBlock['tecla_software_lfo'] = function (block) {
     const rate = Blockly.Python.valueToCode(block, 'RATE', Blockly.Python.ORDER_MEMBER) || '1';
     const min = Blockly.Python.valueToCode(block, 'MIN', Blockly.Python.ORDER_MEMBER) || '0';
     const max = Blockly.Python.valueToCode(block, 'MAX', Blockly.Python.ORDER_MEMBER) || '100';
@@ -429,7 +396,7 @@ Blockly.Python['tecla_software_lfo'] = function (block) {
     return [code, Blockly.Python.ORDER_MULTIPLICATIVE];
 };
 
-Blockly.Python['tecla_scale_quantize'] = function (block) {
+Blockly.Python.forBlock['tecla_scale_quantize'] = function (block) {
     const value = Blockly.Python.valueToCode(block, 'VALUE', Blockly.Python.ORDER_MEMBER) || '60';
     const scale = block.getFieldValue('SCALE');
     const root = block.getFieldValue('ROOT');
@@ -465,7 +432,7 @@ def quantize_note(value, scale_name, root_name):
     return [code, Blockly.Python.ORDER_FUNCTION_CALL];
 };
 
-Blockly.Python['tecla_euclidean_rhythm'] = function (block) {
+Blockly.Python.forBlock['tecla_euclidean_rhythm'] = function (block) {
     const step = Blockly.Python.valueToCode(block, 'STEP', Blockly.Python.ORDER_MEMBER) || '0';
     const pulses = Blockly.Python.valueToCode(block, 'PULSES', Blockly.Python.ORDER_MEMBER) || '4';
     const steps = Blockly.Python.valueToCode(block, 'STEPS', Blockly.Python.ORDER_MEMBER) || '16';
@@ -479,7 +446,7 @@ Blockly.Python['tecla_euclidean_rhythm'] = function (block) {
 
 // ==================== MIDI AVANÇAT ====================
 
-Blockly.Python['tecla_midi_cc'] = function (block) {
+Blockly.Python.forBlock['tecla_midi_cc'] = function (block) {
   const ccType = block.getFieldValue('CC_TYPE');
   const ccNum  = Blockly.Python.valueToCode(block, 'CC_NUM',  Blockly.Python.ORDER_ATOMIC) || '1';
   const ccVal  = Blockly.Python.valueToCode(block, 'CC_VAL',  Blockly.Python.ORDER_ATOMIC) || '64';
@@ -487,48 +454,48 @@ Blockly.Python['tecla_midi_cc'] = function (block) {
   return `midi.send(ControlChange(${num}, max(0, min(127, int(${ccVal})))))\n`;
 };
 
-Blockly.Python['tecla_midi_pitch_bend'] = function (block) {
+Blockly.Python.forBlock['tecla_midi_pitch_bend'] = function (block) {
   const amount = Blockly.Python.valueToCode(block, 'AMOUNT', Blockly.Python.ORDER_ATOMIC) || '0';
   return `# Pitch Bend: escala -63..+63 → 0..16383\n` +
     `midi.send(PitchBend(max(0, min(16383, int((${amount} + 63) * 130)))))\n`;
 };
 
-Blockly.Python['tecla_midi_all_notes_off'] = function (_block) {
+Blockly.Python.forBlock['tecla_midi_all_notes_off'] = function (_block) {
   return `# Panic: apagar totes les notes\n` +
     `for _ch in range(16):\n` +
     `    midi.send(ControlChange(123, 0, channel=_ch))\n`;
 };
 
-Blockly.Python['tecla_midi_sustain'] = function (block) {
+Blockly.Python.forBlock['tecla_midi_sustain'] = function (block) {
   const state = block.getFieldValue('STATE');
   return `midi.send(ControlChange(64, ${state}))  # Sustain pedal\n`;
 };
 
-Blockly.Python['tecla_midi_expression'] = function (block) {
+Blockly.Python.forBlock['tecla_midi_expression'] = function (block) {
   const val = Blockly.Python.valueToCode(block, 'VALUE', Blockly.Python.ORDER_ATOMIC) || '127';
   return `midi.send(ControlChange(11, max(0, min(127, int(${val})))))  # CC11 Expressió\n`;
 };
 
 // ==================== LIVE CODING ====================
 
-Blockly.Python['tecla_note_on_only'] = function (block) {
+Blockly.Python.forBlock['tecla_note_on_only'] = function (block) {
   const note = Blockly.Python.valueToCode(block, 'NOTE',     Blockly.Python.ORDER_ATOMIC) || '60';
   const vel  = Blockly.Python.valueToCode(block, 'VELOCITY', Blockly.Python.ORDER_ATOMIC) || '100';
-  return `midi.send(NoteOn(${note}, ${vel}))  # NoteOn sense NoteOff\n`;
+  return `midi.send(NoteOn((${note}) + _riff[0], ${vel}))  # NoteOn sense NoteOff\n`;
 };
 
-Blockly.Python['tecla_note_off_only'] = function (block) {
+Blockly.Python.forBlock['tecla_note_off_only'] = function (block) {
   const note = Blockly.Python.valueToCode(block, 'NOTE', Blockly.Python.ORDER_ATOMIC) || '60';
-  return `midi.send(NoteOff(${note}, 0))  # NoteOff explícit\n`;
+  return `midi.send(NoteOff((${note}) + _riff[0], 0))  # NoteOff explícit\n`;
 };
 
-Blockly.Python['tecla_transpose'] = function (block) {
+Blockly.Python.forBlock['tecla_transpose'] = function (block) {
   const note = Blockly.Python.valueToCode(block, 'NOTE',      Blockly.Python.ORDER_ADDITIVE) || '60';
   const semi = Blockly.Python.valueToCode(block, 'SEMITONES', Blockly.Python.ORDER_ADDITIVE) || '0';
   return [`max(0, min(127, (${note}) + (${semi})))`, Blockly.Python.ORDER_FUNCTION_CALL];
 };
 
-Blockly.Python['tecla_humanize_vel'] = function (block) {
+Blockly.Python.forBlock['tecla_humanize_vel'] = function (block) {
   const base   = Blockly.Python.valueToCode(block, 'BASE_VEL', Blockly.Python.ORDER_ADDITIVE) || '100';
   const spread = Blockly.Python.valueToCode(block, 'SPREAD',   Blockly.Python.ORDER_ATOMIC)   || '10';
   Blockly.Python.definitions_['import_random'] = 'import random';
@@ -536,7 +503,7 @@ Blockly.Python['tecla_humanize_vel'] = function (block) {
           Blockly.Python.ORDER_FUNCTION_CALL];
 };
 
-Blockly.Python['tecla_crescendo'] = function (block) {
+Blockly.Python.forBlock['tecla_crescendo'] = function (block) {
   const from = Blockly.Python.valueToCode(block, 'FROM_VAL', Blockly.Python.ORDER_ATOMIC) || '0';
   const to   = Blockly.Python.valueToCode(block, 'TO_VAL',   Blockly.Python.ORDER_ATOMIC) || '127';
   const dur  = Blockly.Python.valueToCode(block, 'DURATION', Blockly.Python.ORDER_ATOMIC) || '2.0';
@@ -550,24 +517,26 @@ Blockly.Python['tecla_crescendo'] = function (block) {
     `    time.sleep(_step_t)\n`;
 };
 
-Blockly.Python['tecla_riff_repeat'] = function (block) {
-  const times   = block.getFieldValue('TIMES')           || '4';
-  const transp  = block.getFieldValue('EACH_TRANSPOSE')  || '0';
-  const riff    = Blockly.Python.statementToCode(block, 'RIFF') || '    pass\n';
-  if (transp === '0' || transp === 0) {
+Blockly.Python.forBlock['tecla_riff_repeat'] = function (block) {
+  const IND    = Blockly.Python.INDENT || '  ';
+  const times  = block.getFieldValue('TIMES') || '4';
+  const transp = parseInt(block.getFieldValue('EACH_TRANSPOSE') || '0', 10) || 0;
+  const riff   = Blockly.Python.statementToCode(block, 'RIFF') || `${IND}pass\n`;
+  if (!transp) {
     return `# Riff × ${times}\nfor _rep in range(${times}):\n${riff}`;
   }
-  return `# Riff × ${times} (transport ${transp > 0 ? '+' : ''}${transp} semitons/rep)\n` +
-    `_riff_offset = 0\n` +
+  // _riff[0] és l'offset global que els blocs de nota sumen a cada NoteOn/NoteOff
+  return `# Riff × ${times} (${transp > 0 ? '+' : ''}${transp} semitons per repetició)\n` +
+    `_riff[0] = 0\n` +
     `for _rep in range(${times}):\n` +
-    `    # (usa 'tecla_transpose' als blocs interns per aplicar _riff_offset)\n` +
-    `    _riff_offset += ${transp}\n` +
-    riff;
+    riff +
+    `${IND}_riff[0] += ${transp}\n` +
+    `_riff[0] = 0\n`;
 };
 
 // ==================== SEQÜENCIADOR ====================
 
-Blockly.Python['tecla_seq_play_steps'] = function (block) {
+Blockly.Python.forBlock['tecla_seq_play_steps'] = function (block) {
   const notes    = block.getFieldValue('NOTES') || '60,62,64,67';
   const velocity = Blockly.Python.valueToCode(block, 'VELOCITY', Blockly.Python.ORDER_ATOMIC) || '100';
   const stepDur  = Blockly.Python.valueToCode(block, 'STEP_DUR', Blockly.Python.ORDER_ATOMIC) || '0.25';
@@ -578,7 +547,7 @@ Blockly.Python['tecla_seq_play_steps'] = function (block) {
     `    midi.send(NoteOff(_seq_note, 0))\n`;
 };
 
-Blockly.Python['tecla_arpeggio_dir'] = function (block) {
+Blockly.Python.forBlock['tecla_arpeggio_dir'] = function (block) {
   const chord = block.getFieldValue('CHORD');
   const dir   = block.getFieldValue('DIR');
   const speed = Blockly.Python.valueToCode(block, 'SPEED', Blockly.Python.ORDER_ATOMIC) || '0.12';
@@ -617,7 +586,7 @@ Blockly.Python['tecla_arpeggio_dir'] = function (block) {
   return code;
 };
 
-Blockly.Python['tecla_seq_grid'] = function (block) {
+Blockly.Python.forBlock['tecla_seq_grid'] = function (block) {
   const _N = {'C':0,'Cs':1,'D':2,'Ds':3,'E':4,'F':5,'Fs':6,'G':7,'Gs':8,'A':9,'As':10,'B':11};
   const vel = block.getFieldValue('VEL') || '100';
   const dur = block.getFieldValue('DUR') || '0.25';
@@ -639,7 +608,7 @@ Blockly.Python['tecla_seq_grid'] = function (block) {
   return code;
 };
 
-Blockly.Python['tecla_drum_hit'] = function (block) {
+Blockly.Python.forBlock['tecla_drum_hit'] = function (block) {
   const drum     = block.getFieldValue('DRUM');
   const velocity = Blockly.Python.valueToCode(block, 'VELOCITY', Blockly.Python.ORDER_ATOMIC) || '100';
   return `# Percussió MIDI GM (canal 10)\n` +
@@ -648,7 +617,7 @@ Blockly.Python['tecla_drum_hit'] = function (block) {
     `midi.send(NoteOff(${drum}, 0, channel=9))\n`;
 };
 
-Blockly.Python['tecla_drum_pattern'] = function (block) {
+Blockly.Python.forBlock['tecla_drum_pattern'] = function (block) {
   const drum    = block.getFieldValue('DRUM');
   const pattern = block.getFieldValue('PATTERN') || '1000100010001000';
   const stepDur = Blockly.Python.valueToCode(block, 'STEP_DUR', Blockly.Python.ORDER_ATOMIC) || '0.125';
@@ -661,12 +630,12 @@ Blockly.Python['tecla_drum_pattern'] = function (block) {
     `    time.sleep(${stepDur})\n`;
 };
 
-Blockly.Python['tecla_note_name'] = function (block) {
+Blockly.Python.forBlock['tecla_note_name'] = function (block) {
   const note = block.getFieldValue('NOTE') || '60';
   return [note, Blockly.Python.ORDER_ATOMIC];
 };
 
-Blockly.Python['tecla_chord_progression'] = function (block) {
+Blockly.Python.forBlock['tecla_chord_progression'] = function (block) {
   const prog     = block.getFieldValue('PROG');
   const keyOff   = parseInt(block.getFieldValue('KEY') || '0', 10);
   const beatsDur = Blockly.Python.valueToCode(block, 'BEATS_DUR', Blockly.Python.ORDER_ATOMIC) || '1.0';

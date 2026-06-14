@@ -36,6 +36,8 @@ class ModeLiveCaos(BaseMode):
 
     def _dbl(self, button_states, now):
         for i in range(min(len(button_states), 16)):
+            if i == 15:
+                continue
             cur = bool(button_states[i])
             if self.last_btn[i] and not cur:
                 gap = now - self.last_release[i]
@@ -50,9 +52,11 @@ class ModeLiveCaos(BaseMode):
     def update(self, pot_values, button_states):
         x, y, z = pot_values
         now = time.monotonic()
+        self.poll_negharm(button_states, z)
         self.intensity = x / 127.0
         self._cc(1, y)
-        self.octave = 3 + int((z / 127.0) * 2.99)
+        if not self.neg_active:  # Z congelada mentre tria l'eix neg.
+            self.octave = 3 + int((z / 127.0) * 2.99)
         still = []
         for (n, off_t) in self.notes_on:
             if now >= off_t:
@@ -67,6 +71,7 @@ class ModeLiveCaos(BaseMode):
                 iv = _PENTA[random.randint(0, len(_PENTA) - 1)]
                 oct_offset = random.randint(-1, 1) * 12
                 note = max(24, min(108, root + iv + oct_offset))
+                note = self.negharm(note, self._root() % 12)
                 vel = int(40 + self.intensity * random.uniform(40, 87))
                 dur = random.uniform(0.05, 0.40 + self.intensity * 0.35)
                 self.midi_out.send(self.note_on(note, vel))

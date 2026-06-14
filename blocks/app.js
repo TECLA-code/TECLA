@@ -47,6 +47,8 @@ const _I18N = {
     'guide.cat5':'🔌 GPIO: Pins digitals, PWM, analògics',
     'guide.cat6':'🎲 Generatiu: Probabilitat, LFO per software, quantització',
     'guide.cat7':'⌨️ Accions: Teclat USB, dreceres, media',
+    'guide.cat8':'🖥️ Pantalla i LEDs: OLED, NeoPixels, servos i motors',
+    'guide.cat9':'🔭 Sensors i Sistema: temperatura, distància, llum, memòria',
     'guide.p3a':'Prem Connectar al header i selecciona el volum CIRCUITPY.',
     'guide.p3b':'Un cop connectat, prem Pujar per copiar el codi al dispositiu.',
     'guide.p3c':"El TECLA s'executa automàticament en reiniciar-se.",
@@ -58,7 +60,24 @@ const _I18N = {
     'fw.dl.fw':'Descarregar CircuitPython (.uf2)','fw.dl.lib':'Descarregar Bundle de Llibreries',
     'theme.title':'Aparença','theme.editor':'Editor de temes','theme.newbtn':'+ Nou tema',
     'theme.name':'Nom:','theme.random':'🎲 Aleatori','theme.save':'Desa i aplica','theme.reset':'Restablir',
-    'status.ready':'Llest per programar'
+    'status.ready':'Llest per programar',
+    'btn.disconnect':'Desconnectar','proj.rename':'Reanomenar',
+    'confirm.new':'Vols crear un nou projecte? Els canvis no guardats es perdran.',
+    'confirm.example':"Vols carregar l'exemple? El projecte actual es perdrà.",
+    'confirm.load':'Carregar "{name}"? El workspace actual es perdrà.',
+    'confirm.overwrite':'"{name}" ja existeix. Sobreescriure?',
+    'toast.newproj':'Nou projecte creat','toast.saved':'Projecte guardat','toast.downloaded':'Projecte descarregat',
+    'toast.saveerr':'Error guardant','toast.openerr':'Error obrint fitxer','toast.readerr':'Error llegint fitxer',
+    'toast.loaded':'Projecte carregat','toast.badformat':'Format no compatible',
+    'toast.pyrecovered':'Blocs recuperats del fitxer .py','toast.exported':'Codi Python exportat',
+    'toast.connected':'Connectat a {name}','toast.connerr':'Error connectant',
+    'toast.uploaded':'code.py pujat a {name}','toast.uploaderr':'Error pujant al dispositiu',
+    'toast.revoked':'Accés revocat. Torna a connectar.','toast.disconnected':'Desconnectat',
+    'toast.copied':'Codi copiat','toast.copyerr':'Error copiant',
+    'toast.emptyws':'El workspace està buit','toast.exampleloaded':'Exemple "{name}" carregat',
+    'toast.exampleerr':'Error carregant exemple','toast.fsapi':'Requereix Chrome o Edge (File System Access API)',
+    'toast.connectfirst':'Connecta el dispositiu primer','toast.noassigned':'Cap botó té cap projecte assignat',
+    'status.connectedto':'Connectat a {name}','status.uploadedto':'Pujat a {name}','status.devdisconn':'Dispositiu desconnectat'
   },
   es: {
     'btn.back':'Inicio','tab.code':'Código','tab.sim':'Simulador','tab.guide':'Guía','tab.fw':'Firmware',
@@ -98,6 +117,8 @@ const _I18N = {
     'guide.cat5':'🔌 GPIO: Pines digitales, PWM, analógicos',
     'guide.cat6':'🎲 Generativo: Probabilidad, LFO por software, cuantización',
     'guide.cat7':'⌨️ Acciones: Teclado USB, atajos, media',
+    'guide.cat8':'🖥️ Pantalla y LEDs: OLED, NeoPixels, servos y motores',
+    'guide.cat9':'🔭 Sensores y Sistema: temperatura, distancia, luz, memoria',
     'guide.p3a':'Pulsa Conectar en el header y selecciona el volumen CIRCUITPY.',
     'guide.p3b':'Una vez conectado, pulsa Subir para copiar el código al dispositivo.',
     'guide.p3c':'El TECLA se ejecuta automáticamente al reiniciarse.',
@@ -109,7 +130,24 @@ const _I18N = {
     'fw.dl.fw':'Descargar CircuitPython (.uf2)','fw.dl.lib':'Descargar Bundle de Librerías',
     'theme.title':'Apariencia','theme.editor':'Editor de temas','theme.newbtn':'+ Nuevo tema',
     'theme.name':'Nombre:','theme.random':'🎲 Aleatorio','theme.save':'Guardar y aplicar','theme.reset':'Restablecer',
-    'status.ready':'Listo para programar'
+    'status.ready':'Listo para programar',
+    'btn.disconnect':'Desconectar','proj.rename':'Renombrar',
+    'confirm.new':'¿Crear un proyecto nuevo? Los cambios no guardados se perderán.',
+    'confirm.example':'¿Cargar el ejemplo? El proyecto actual se perderá.',
+    'confirm.load':'¿Cargar "{name}"? El workspace actual se perderá.',
+    'confirm.overwrite':'"{name}" ya existe. ¿Sobrescribir?',
+    'toast.newproj':'Nuevo proyecto creado','toast.saved':'Proyecto guardado','toast.downloaded':'Proyecto descargado',
+    'toast.saveerr':'Error al guardar','toast.openerr':'Error abriendo archivo','toast.readerr':'Error leyendo archivo',
+    'toast.loaded':'Proyecto cargado','toast.badformat':'Formato no compatible',
+    'toast.pyrecovered':'Bloques recuperados del archivo .py','toast.exported':'Código Python exportado',
+    'toast.connected':'Conectado a {name}','toast.connerr':'Error al conectar',
+    'toast.uploaded':'code.py subido a {name}','toast.uploaderr':'Error subiendo al dispositivo',
+    'toast.revoked':'Acceso revocado. Vuelve a conectar.','toast.disconnected':'Desconectado',
+    'toast.copied':'Código copiado','toast.copyerr':'Error al copiar',
+    'toast.emptyws':'El workspace está vacío','toast.exampleloaded':'Ejemplo "{name}" cargado',
+    'toast.exampleerr':'Error cargando ejemplo','toast.fsapi':'Requiere Chrome o Edge (File System Access API)',
+    'toast.connectfirst':'Conecta el dispositivo primero','toast.noassigned':'Ningún botón tiene proyecto asignado',
+    'status.connectedto':'Conectado a {name}','status.uploadedto':'Subido a {name}','status.devdisconn':'Dispositivo desconectado'
   },
   en: {
     'btn.back':'Home','tab.code':'Code','tab.sim':'Simulator','tab.guide':'Guide','tab.fw':'Firmware',
@@ -149,6 +187,8 @@ const _I18N = {
     'guide.cat5':'🔌 GPIO: Digital pins, PWM, analog',
     'guide.cat6':'🎲 Generative: Probability, software LFO, quantisation',
     'guide.cat7':'⌨️ Actions: USB keyboard, shortcuts, media',
+    'guide.cat8':'🖥️ Display & LEDs: OLED, NeoPixels, servos and motors',
+    'guide.cat9':'🔭 Sensors & System: temperature, distance, light, memory',
     'guide.p3a':'Press Connect in the header and select the CIRCUITPY volume.',
     'guide.p3b':'Once connected, press Upload to copy the code to the device.',
     'guide.p3c':'TECLA runs automatically on restart.',
@@ -160,11 +200,39 @@ const _I18N = {
     'fw.dl.fw':'Download CircuitPython (.uf2)','fw.dl.lib':'Download Library Bundle',
     'theme.title':'Appearance','theme.editor':'Theme editor','theme.newbtn':'+ New theme',
     'theme.name':'Name:','theme.random':'🎲 Random','theme.save':'Save & apply','theme.reset':'Reset',
-    'status.ready':'Ready to program'
+    'status.ready':'Ready to program',
+    'btn.disconnect':'Disconnect','proj.rename':'Rename',
+    'confirm.new':'Create a new project? Unsaved changes will be lost.',
+    'confirm.example':'Load the example? The current project will be lost.',
+    'confirm.load':'Load "{name}"? The current workspace will be lost.',
+    'confirm.overwrite':'"{name}" already exists. Overwrite?',
+    'toast.newproj':'New project created','toast.saved':'Project saved','toast.downloaded':'Project downloaded',
+    'toast.saveerr':'Error saving','toast.openerr':'Error opening file','toast.readerr':'Error reading file',
+    'toast.loaded':'Project loaded','toast.badformat':'Unsupported format',
+    'toast.pyrecovered':'Blocks recovered from .py file','toast.exported':'Python code exported',
+    'toast.connected':'Connected to {name}','toast.connerr':'Connection error',
+    'toast.uploaded':'code.py uploaded to {name}','toast.uploaderr':'Error uploading to device',
+    'toast.revoked':'Access revoked. Reconnect.','toast.disconnected':'Disconnected',
+    'toast.copied':'Code copied','toast.copyerr':'Copy error',
+    'toast.emptyws':'The workspace is empty','toast.exampleloaded':'Example "{name}" loaded',
+    'toast.exampleerr':'Error loading example','toast.fsapi':'Requires Chrome or Edge (File System Access API)',
+    'toast.connectfirst':'Connect the device first','toast.noassigned':'No key has a project assigned',
+    'status.connectedto':'Connected to {name}','status.uploadedto':'Uploaded to {name}','status.devdisconn':'Device disconnected'
   }
 };
 let _curLang = 'ca';
 function t(key) { return (_I18N[_curLang] || _I18N.ca)[key] || (_I18N.ca)[key] || key; }
+// t() amb interpolació: tf('toast.connected', { name: 'CIRCUITPY' })
+function tf(key, vars = {}) {
+  let s = t(key);
+  for (const [k, v] of Object.entries(vars)) s = s.replaceAll(`{${k}}`, v);
+  return s;
+}
+// Escapa text per inserir-lo amb seguretat dins innerHTML
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
 function applyI18n(lang) {
   if (lang) _curLang = lang;
   const dict = _I18N[_curLang] || _I18N.ca;
@@ -185,6 +253,7 @@ let workspace;
 let simulationRunning = false;
 let activeVisuals = [];
 let currentBPM = 120;
+let simRiffOffset = 0; // transposició activa del bloc "riff" al simulador
 
 let currentProject = {
   name: 'Projecte sense títol',
@@ -201,8 +270,31 @@ function debounce(fn, ms = 300) {
 }
 
 function getWorkspaceHash(ws) {
-  const b = ws.getAllBlocks(false);
-  return b.map(x => x.id).sort().join(',') + '|' + b.map(x => x.type).sort().join(',');
+  // L'estat serialitzat complet inclou els valors dels camps: així els canvis
+  // de números/desplegables també invaliden la cache (no només afegir/treure blocs)
+  try { return JSON.stringify(Blockly.serialization.workspaces.save(ws)); }
+  catch { return String(Date.now()); }
+}
+
+// ── Autosave (recupera la feina si es tanca/refresca la pàgina) ──
+const _AUTOSAVE_KEY = 'tecla-blk-autosave';
+
+function autosaveWorkspace() {
+  try {
+    const state = Blockly.serialization.workspaces.save(workspace);
+    localStorage.setItem(_AUTOSAVE_KEY, JSON.stringify({ name: currentProject.name, blocks: state }));
+  } catch (_) {}
+}
+
+function restoreAutosave() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(_AUTOSAVE_KEY) || 'null');
+    if (saved && saved.blocks && saved.blocks.blocks) {
+      Blockly.serialization.workspaces.load(saved.blocks, workspace);
+      if (saved.name) currentProject.name = saved.name;
+      updateGeneratedCode();
+    }
+  } catch (_) {}
 }
 
 // ── Init ──────────────────────────────────────────────────────
@@ -216,6 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initThemeSystem();
   initDeviceConfig();
   initProjectsLib();
+  restoreAutosave();
   updateStatusBar();
 });
 
@@ -223,9 +316,6 @@ function fixToolboxAlignment() {
   requestAnimationFrame(() => {
     const toolbox = document.querySelector('.blocklyToolboxDiv');
     if (!toolbox) { setTimeout(fixToolboxAlignment, 200); return; }
-
-    console.log('[TECLA] Toolbox row HTML sample:',
-      toolbox.querySelector('.blocklyTreeRow')?.outerHTML?.slice(0, 400));
 
     toolbox.querySelectorAll('.blocklyTreeRow').forEach(row => {
       row.style.setProperty('display', 'flex', 'important');
@@ -313,6 +403,7 @@ function onWorkspaceChange(e) {
   if (!relevant.includes(e.type)) return;
   updateGeneratedCode();
   updateStatusBar();
+  autosaveWorkspace();
 }
 
 function updateGeneratedCode() {
@@ -349,7 +440,9 @@ function setupButtons() {
   document.getElementById('btn-open').addEventListener('click', openProject);
   document.getElementById('btn-save').addEventListener('click', saveProject);
   document.getElementById('btn-export').addEventListener('click', exportPython);
-  document.getElementById('btn-connect').addEventListener('click', connectDevice);
+  // onclick (no addEventListener): updateDeviceBadge() el reassigna a
+  // connectar/desconnectar segons l'estat; amb listener s'executarien tots dos
+  document.getElementById('btn-connect').onclick = connectDevice;
   document.getElementById('btn-upload').addEventListener('click', uploadToDevice);
   document.getElementById('btn-fw-upload').addEventListener('click', uploadToDevice);
   document.getElementById('btn-midi-connect').addEventListener('click', connectMIDI);
@@ -384,7 +477,7 @@ function setupFileOpen() {
       const text = await file.text();
       loadProjectFromText(text, file.name);
     } catch (err) {
-      toast('Error llegint fitxer', 'err');
+      toast(t('toast.readerr'), 'err');
     }
     e.target.value = '';
   });
@@ -392,13 +485,14 @@ function setupFileOpen() {
 
 // ── Project management ────────────────────────────────────────
 function newProject() {
-  if (!confirm('Vols crear un nou projecte? Els canvis no guardats es perdran.')) return;
+  if (!confirm(t('confirm.new'))) return;
   workspace.clear();
   currentProject = { name: 'Projecte sense títol', blocks: null };
   codeCache = { hash: null, code: null };
+  localStorage.removeItem(_AUTOSAVE_KEY);
   document.getElementById('generatedCode').textContent = '# El teu codi apareixerà aquí...';
   updateStatusBar();
-  toast('Nou projecte creat');
+  toast(t('toast.newproj'));
 }
 
 async function saveProject() {
@@ -422,7 +516,7 @@ async function saveProject() {
         const writable = await handle.createWritable();
         await writable.write(json);
         await writable.close();
-        toast('Projecte guardat', 'ok');
+        toast(t('toast.saved'), 'ok');
         return;
       } catch (e) {
         if (e.name === 'AbortError') return;
@@ -430,10 +524,10 @@ async function saveProject() {
     }
 
     blobDownload(json, `${currentProject.name}.tblocks`, 'application/json');
-    toast('Projecte descarregat', 'ok');
+    toast(t('toast.downloaded'), 'ok');
   } catch (err) {
     console.error(err);
-    toast('Error guardant', 'err');
+    toast(t('toast.saveerr'), 'err');
   }
 }
 
@@ -445,7 +539,7 @@ function openProject() {
       const file = await handle.getFile();
       const text = await file.text();
       loadProjectFromText(text, file.name);
-    }).catch(e => { if (e.name !== 'AbortError') toast('Error obrint fitxer', 'err'); });
+    }).catch(e => { if (e.name !== 'AbortError') toast(t('toast.openerr'), 'err'); });
   } else {
     document.getElementById('file-open-input').click();
   }
@@ -458,11 +552,11 @@ function loadProjectFromText(text, filename) {
     if (data.format === 'json' && data.blocks) {
       Blockly.serialization.workspaces.load(data.blocks, workspace);
       currentProject.name = data.name || filename || 'Projecte';
-      toast('Projecte carregat', 'ok');
+      toast(t('toast.loaded'), 'ok');
     } else if (data.blocks && typeof data.blocks === 'string' && data.blocks.trim().startsWith('<xml')) {
       const dom = Blockly.utils.xml.textToDom(data.blocks);
       Blockly.Xml.domToWorkspace(dom, workspace);
-      toast('Projecte (XML) carregat', 'ok');
+      toast(t('toast.loaded'), 'ok');
     } else {
       throw new Error('Format no reconegut');
     }
@@ -471,11 +565,25 @@ function loadProjectFromText(text, filename) {
       try {
         const dom = Blockly.utils.xml.textToDom(text);
         Blockly.Xml.domToWorkspace(dom, workspace);
-        toast('Projecte XML carregat', 'ok');
+        toast(t('toast.loaded'), 'ok');
+        updateGeneratedCode();
+        updateStatusBar();
         return;
       } catch (e) { /* fall through */ }
     }
-    toast('Format no compatible', 'err');
+    // Fitxer .py exportat per TECLA Blocks: recuperar els blocs incrustats
+    const m = text.match(/TECLA_BLOCKS_EMBEDDED_JSON = '''([\s\S]*?)'''/);
+    if (m) {
+      try {
+        Blockly.serialization.workspaces.load(JSON.parse(m[1]), workspace);
+        currentProject.name = (filename || 'Projecte').replace(/\.py$/i, '');
+        toast(t('toast.pyrecovered'), 'ok');
+        updateGeneratedCode();
+        updateStatusBar();
+        return;
+      } catch (e) { /* fall through */ }
+    }
+    toast(t('toast.badformat'), 'err');
     console.error(jsonErr);
   }
   updateGeneratedCode();
@@ -486,13 +594,13 @@ async function exportPython() {
   const code = updateGeneratedCode() || document.getElementById('generatedCode').textContent;
   const name = currentProject.name.replace(/[^a-z0-9_]/gi, '_');
   blobDownload(code, `${name}.py`, 'text/x-python');
-  toast('Codi Python exportat', 'ok');
+  toast(t('toast.exported'), 'ok');
 }
 
 // ── Device connection (like MacroPad / MIDI apps) ─────────────
 async function connectDevice() {
   if (!('showDirectoryPicker' in window)) {
-    toast('Requereix Chrome o Edge (File System Access API)', 'err');
+    toast(t('toast.fsapi'), 'err');
     return;
   }
   try {
@@ -503,10 +611,10 @@ async function connectDevice() {
     });
     deviceDirHandle = dirHandle;
     updateDeviceBadge(dirHandle.name, true);
-    setStatus(`Connectat a ${dirHandle.name}`, 'ok');
-    toast(`Connectat a ${dirHandle.name}`, 'ok');
+    setStatus(tf('status.connectedto', { name: dirHandle.name }), 'ok');
+    toast(tf('toast.connected', { name: dirHandle.name }), 'ok');
   } catch (e) {
-    if (e.name !== 'AbortError') { toast('Error connectant', 'err'); console.error(e); }
+    if (e.name !== 'AbortError') { toast(t('toast.connerr'), 'err'); console.error(e); }
   }
 }
 
@@ -521,44 +629,46 @@ async function uploadToDevice() {
     const writable = await fileHandle.createWritable();
     await writable.write(code);
     await writable.close();
-    toast(`code.py pujat a ${deviceDirHandle.name}`, 'ok');
-    setStatus(`Pujat a ${deviceDirHandle.name}`, 'ok');
+    toast(tf('toast.uploaded', { name: deviceDirHandle.name }), 'ok');
+    setStatus(tf('status.uploadedto', { name: deviceDirHandle.name }), 'ok');
   } catch (e) {
     if (e.name === 'NotAllowedError') {
       deviceDirHandle = null;
       updateDeviceBadge(null, false);
-      toast('Accés revocat. Torna a connectar.', 'err');
+      toast(t('toast.revoked'), 'err');
     } else {
-      toast('Error pujant al dispositiu', 'err'); console.error(e);
+      toast(t('toast.uploaderr'), 'err'); console.error(e);
     }
   }
 }
 
 function updateDeviceBadge(name, connected) {
   const badge = document.getElementById('device-badge');
-  document.getElementById('device-name').textContent = name || 'desconnectat';
+  document.getElementById('device-name').textContent = name || t('fw.disconn');
   badge.className = connected ? 'device-badge connected' : 'device-badge';
   document.getElementById('btn-upload').disabled = !connected;
+  const devUploadBtn = document.getElementById('btn-upload-device-code');
+  if (devUploadBtn) devUploadBtn.disabled = !connected;
   const connectBtn = document.getElementById('btn-connect');
-  connectBtn.textContent = connected ? 'Desconnectar' : 'Connectar';
+  connectBtn.textContent = connected ? t('btn.disconnect') : t('btn.connect');
   connectBtn.onclick = connected ? disconnectDevice : connectDevice;
   const fwName = document.getElementById('fw-device-name');
   const fwStatus = document.getElementById('fw-device-status');
   if (fwName) fwName.textContent = name || '—';
-  if (fwStatus) { fwStatus.textContent = connected ? name : 'desconnectat'; fwStatus.className = connected ? 'status-val ok' : 'status-val'; }
+  if (fwStatus) { fwStatus.textContent = connected ? name : t('fw.disconn'); fwStatus.className = connected ? 'status-val ok' : 'status-val'; }
 }
 
 function disconnectDevice() {
   deviceDirHandle = null;
   updateDeviceBadge(null, false);
-  setStatus('Dispositiu desconnectat');
-  toast('Desconnectat');
+  setStatus(t('status.devdisconn'));
+  toast(t('toast.disconnected'));
 }
 
 // ── Copy code ─────────────────────────────────────────────────
 function copyCode() {
-  const code = codeCache.code || document.getElementById('generatedCode').textContent;
-  navigator.clipboard.writeText(code).then(() => toast('Codi copiat', 'ok')).catch(() => toast('Error copiant', 'err'));
+  const code = updateGeneratedCode() || document.getElementById('generatedCode').textContent;
+  navigator.clipboard.writeText(code).then(() => toast(t('toast.copied'), 'ok')).catch(() => toast(t('toast.copyerr'), 'err'));
 }
 
 // ── Web MIDI ──────────────────────────────────────────────────
@@ -584,9 +694,10 @@ function updateMIDIPortList() {
   const prev = sel.value;
   sel.innerHTML = '<option value="">— port MIDI —</option>';
   midiAccess.outputs.forEach((port, id) => {
+    if (port.state !== 'connected') return;
     const opt = document.createElement('option');
     opt.value = id; opt.textContent = port.name;
-    if (port.state === 'connected') sel.appendChild(opt);
+    sel.appendChild(opt);
   });
   if (prev && sel.querySelector(`[value="${prev}"]`)) sel.value = prev;
   else if (midiAccess.outputs.size > 0) sel.value = [...midiAccess.outputs.keys()][0];
@@ -647,11 +758,45 @@ async function evalValue(block) {
       const op = block.getFieldValue('OP');
       return op==='ADD'?a+b: op==='MINUS'?a-b: op==='MULTIPLY'?a*b: op==='DIVIDE'&&b?a/b: op==='POWER'?Math.pow(a,b): a;
     }
-    case 'math_random_int': {
+    case 'math_random_int':
+    case 'tecla_math_random_int': {
       const a = await evalValue(block.getInputTargetBlock('FROM'));
       const b = await evalValue(block.getInputTargetBlock('TO'));
       return Math.floor(Math.random() * (b - a + 1)) + a;
     }
+    case 'tecla_math_map': {
+      const v  = await evalValue(block.getInputTargetBlock('VALUE'));
+      const fm = await evalValue(block.getInputTargetBlock('FROM_MIN'));
+      const fM = await evalValue(block.getInputTargetBlock('FROM_MAX'));
+      const tm = await evalValue(block.getInputTargetBlock('TO_MIN'));
+      const tM = await evalValue(block.getInputTargetBlock('TO_MAX'));
+      return (fM - fm) ? Math.floor((v - fm) * (tM - tm) / (fM - fm) + tm) : tm;
+    }
+    case 'tecla_software_lfo': {
+      const rate = await evalValue(block.getInputTargetBlock('RATE')) || 1;
+      const mn = await evalValue(block.getInputTargetBlock('MIN'));
+      const mx = await evalValue(block.getInputTargetBlock('MAX'));
+      return (Math.sin(Date.now() / 1000 * rate * 6.28) + 1) / 2 * (mx - mn) + mn;
+    }
+    case 'logic_boolean':
+      return block.getFieldValue('BOOL') === 'TRUE' ? 1 : 0;
+    case 'logic_negate':
+      return (await evalValue(block.getInputTargetBlock('BOOL'))) ? 0 : 1;
+    case 'logic_compare': {
+      const a = await evalValue(block.getInputTargetBlock('A'));
+      const b = await evalValue(block.getInputTargetBlock('B'));
+      const op = block.getFieldValue('OP');
+      const r = op==='EQ'?a===b: op==='NEQ'?a!==b: op==='LT'?a<b: op==='LTE'?a<=b: op==='GT'?a>b: op==='GTE'?a>=b: false;
+      return r ? 1 : 0;
+    }
+    case 'logic_operation': {
+      const a = await evalValue(block.getInputTargetBlock('A'));
+      const b = await evalValue(block.getInputTargetBlock('B'));
+      return (block.getFieldValue('OP') === 'AND' ? (a && b) : (a || b)) ? 1 : 0;
+    }
+    case 'tecla_read_button':
+    case 'tecla_read_pot':
+      return 0; // sense hardware al simulador
     case 'tecla_note_name':
       return parseFloat(block.getFieldValue('NOTE')) || 60;
     case 'tecla_transpose': {
@@ -698,8 +843,9 @@ function simLog(text, cls = 'note') {
 
 function getChordNotes(name) {
   const R={C:60,D:62,E:64,F:65,G:67,A:69,B:71};
-  const m = name.endsWith('m'), root = (R[name[0]]||60) + (m?0:0);
-  return m ? [root,root+3,root+7] : [root,root+4,root+7];
+  const minor = name.endsWith('m');
+  const root = R[name[0]] || 60;
+  return minor ? [root,root+3,root+7] : [root,root+4,root+7];
 }
 
 async function execChain(block) {
@@ -716,7 +862,7 @@ async function execBlock(block) {
 
   switch (block.type) {
     case 'tecla_play_note': {
-      const note = await getVal(block,'NOTE',60);
+      const note = (await getVal(block,'NOTE',60)) + simRiffOffset;
       const vel  = await getVal(block,'VELOCITY',100);
       const dur  = await getVal(block,'DURATION',0.5);
       midiNoteOn(1, note, vel);
@@ -782,8 +928,14 @@ async function execBlock(block) {
     }
     case 'controls_whileUntil': {
       const inner = block.getInputTargetBlock('DO');
+      const mode = block.getFieldValue('MODE') || 'WHILE';
       let guard = 0;
-      while (simulationRunning && guard++ < 64) { await execChain(inner); }
+      while (simulationRunning && guard++ < 10000) {
+        const cond = !!(await evalValue(block.getInputTargetBlock('BOOL')));
+        if (mode === 'WHILE' ? !cond : cond) break;
+        await execChain(inner);
+        await sleep(1); // evita bloquejar la UI amb bucles buits
+      }
       break;
     }
     case 'tecla_repeat_forever': {
@@ -916,14 +1068,14 @@ async function execBlock(block) {
       midiCC(1,11,exV); simLog(`🎭 Expressió: ${exV}`,'sys'); break;
     }
     case 'tecla_note_on_only': {
-      const nonNote=Math.round(await getVal(block,'NOTE',60));
+      const nonNote=Math.round(await getVal(block,'NOTE',60)) + simRiffOffset;
       const nonVel =Math.round(await getVal(block,'VELOCITY',100));
       const nonCtx =document.getElementById('simulatorCanvas')?.getContext('2d');
       midiNoteOn(1,nonNote,nonVel); if(nonCtx) visualizeNote(nonCtx,nonNote,nonVel);
       simLog(`▶ NoteOn ${noteToName(nonNote)} vel:${nonVel}`,'note'); break;
     }
     case 'tecla_note_off_only': {
-      const nofNote=Math.round(await getVal(block,'NOTE',60));
+      const nofNote=Math.round(await getVal(block,'NOTE',60)) + simRiffOffset;
       midiNoteOff(1,nofNote); simLog(`■ NoteOff ${noteToName(nofNote)}`,'sys'); break;
     }
     case 'tecla_crescendo': {
@@ -939,9 +1091,12 @@ async function execBlock(block) {
     }
     case 'tecla_riff_repeat': {
       const rrT=parseInt(block.getFieldValue('TIMES'))||4;
+      const rrTr=parseInt(block.getFieldValue('EACH_TRANSPOSE'))||0;
       const rrIn=block.getInputTargetBlock('RIFF');
-      simLog(`🔄 Riff × ${rrT}`,'sys');
-      for(let i=0;i<rrT&&simulationRunning;i++) if(rrIn) await execChain(rrIn);
+      simLog(`🔄 Riff × ${rrT}${rrTr?` (${rrTr>0?'+':''}${rrTr} st/rep)`:''}`,'sys');
+      simRiffOffset = 0;
+      for(let i=0;i<rrT&&simulationRunning;i++){ if(rrIn) await execChain(rrIn); simRiffOffset += rrTr; }
+      simRiffOffset = 0;
       break;
     }
     case 'tecla_key_press': {
@@ -978,6 +1133,7 @@ async function execBlock(block) {
 async function runSimulation() {
   if (simulationRunning) return;
   simulationRunning = true;
+  simRiffOffset = 0;
   document.getElementById('btn-simulate').disabled = true;
   document.getElementById('btn-stop-sim').disabled = false;
 
@@ -1022,7 +1178,7 @@ function stopSimulation() {
   document.getElementById('btn-simulate').disabled = false;
   document.getElementById('btn-stop-sim').disabled = true;
   simLog('■ Aturat', 'sys');
-  setStatus('Llest per programar');
+  setStatus(t('status.ready'));
 }
 
 function initVisualizer(ctx) {
@@ -1061,7 +1217,7 @@ function visualizeNote(ctx, note, vel) {
 
 // ── Examples ──────────────────────────────────────────────────
 function loadExample(type) {
-  if (!confirm('Vols carregar l\'exemple? El projecte actual es perdrà.')) return;
+  if (!confirm(t('confirm.example'))) return;
   workspace.clear();
 
   const xmlMap = {
@@ -1077,9 +1233,9 @@ function loadExample(type) {
     currentProject.name = `Exemple ${type}`;
     updateGeneratedCode();
     updateStatusBar();
-    toast(`Exemple "${type}" carregat`);
+    toast(tf('toast.exampleloaded', { name: type }));
   } catch (e) {
-    toast('Error carregant exemple', 'err');
+    toast(t('toast.exampleerr'), 'err');
   }
 }
 
@@ -1131,7 +1287,7 @@ const _BUILTIN_EXAMPLES = [
     blocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="tecla_key_combo" x="50" y="50"><field name="MODIFIER">CONTROL</field><field name="KEY">Z</field><next><block type="tecla_key_combo"><field name="MODIFIER">CONTROL</field><field name="KEY">C</field><next><block type="tecla_key_combo"><field name="MODIFIER">CONTROL</field><field name="KEY">V</field></block></next></block></next></block></xml>` },
   { name: 'Guardar i Exportar', desc: 'Ctrl+S (Guardar) seguit de Ctrl+Shift+S (Guardar com)', category: 'util',
     blocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="tecla_key_combo" x="50" y="50"><field name="MODIFIER">CONTROL</field><field name="KEY">S</field><next><block type="tecla_key_combo"><field name="MODIFIER">CTRL_SHIFT</field><field name="KEY">S</field></block></next></block></xml>` },
-  { name: 'Finestra Nova / Tanca', desc: 'Ctrl+N (Nova finestra) o Ctrl+W (Tancar pestanya)', category: 'util',
+  { name: 'Pestanya Nova / Tanca', desc: 'Ctrl+T (Nova pestanya) i Ctrl+W (Tancar pestanya)', category: 'util',
     blocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="tecla_key_combo" x="50" y="50"><field name="MODIFIER">CONTROL</field><field name="KEY">T</field><next><block type="tecla_key_combo"><field name="MODIFIER">CONTROL</field><field name="KEY">W</field></block></next></block></xml>` },
   { name: 'Escriure Text', desc: 'Escriu un text predefinit com si fos un teclat', category: 'util',
     blocks: `<xml xmlns="https://developers.google.com/blockly/xml"><block type="tecla_type_text" x="50" y="50"><field name="TEXT">Hola, TECLA!</field></block></xml>` }
@@ -1151,7 +1307,7 @@ function _renderExamplesSection() {
       const inLib = projectsLib.some(p => p.name === ex.name);
       const label = document.createElement('label');
       label.className = 'cb';
-      label.innerHTML = `<input type="checkbox"${inLib ? ' checked disabled' : ''}><span style="${inLib ? 'color:var(--text3)' : ''}" title="${ex.desc}">${ex.name}</span>`;
+      label.innerHTML = `<input type="checkbox"${inLib ? ' checked disabled' : ''}><span style="${inLib ? 'color:var(--text3)' : ''}" title="${esc(ex.desc)}">${esc(ex.name)}</span>`;
       if (!inLib) {
         label.querySelector('input').addEventListener('change', e => {
           if (!e.target.checked) return;
@@ -1239,12 +1395,12 @@ function renderProjectsPanel() {
     card.innerHTML = `
       <div class="proj-dot" style="background:${col}"></div>
       <div class="proj-info">
-        <div class="proj-name">${proj.name}</div>
+        <div class="proj-name">${esc(proj.name)}</div>
         <div class="proj-meta">${srcLbl} · ${_projDate(proj.timestamp)}</div>
       </div>
       <div class="proj-actions">
         <button class="btn" data-act="open" title="${t('dev.load')}">${t('proj.open')}</button>
-        <button class="btn" data-act="rename" title="${t('proj.rename')||'Reanomenar'}" style="font-size:11px">✏️</button>
+        <button class="btn" data-act="rename" title="${t('proj.rename')}" style="font-size:11px">✏️</button>
         <button class="btn" data-act="assign" title="${t('proj.assignto')}" style="color:var(--accent)">${t('proj.assign')}</button>
         <button class="btn btn-danger" data-act="del" title="✕">✕</button>
       </div>
@@ -1296,7 +1452,7 @@ function _assignProjToBtn(projId, btnId) {
 function _openProjectFromLib(projId) {
   const proj = projectsLib.find(p => p.id === projId);
   if (!proj) return;
-  if (workspace.getAllBlocks(false).length > 0 && !confirm(`Carregar "${proj.name}"? El workspace actual es perdrà.`)) return;
+  if (workspace.getAllBlocks(false).length > 0 && !confirm(tf('confirm.load', { name: proj.name }))) return;
   loadProjectFromText(JSON.stringify(proj.tblocks), proj.name);
   toast(`⇑ "${proj.name}" carregat`, 'ok');
 }
@@ -1312,10 +1468,10 @@ function _deleteProjectFromLib(projId) {
 }
 
 function saveCurrentToLib() {
-  if (workspace.getAllBlocks(false).length === 0) { toast('El workspace està buit', 'err'); return; }
+  if (workspace.getAllBlocks(false).length === 0) { toast(t('toast.emptyws'), 'err'); return; }
   const existing = projectsLib.find(p => p.name === currentProject.name);
   if (existing) {
-    if (!confirm(`"${currentProject.name}" ja existeix. Sobreescriure?`)) return;
+    if (!confirm(tf('confirm.overwrite', { name: currentProject.name }))) return;
     projectsLib = projectsLib.filter(p => p.id !== existing.id);
   }
   const xml  = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspace));
@@ -1453,8 +1609,8 @@ function _renderDCHardware() {
     const potLbl = potFn === 'midi' ? _ccLabel(pot.cc) : t('dev.mode.' + potFn);
     w.innerHTML = `
       <div class="dev-pot-knob"><div class="dev-pot-indicator"></div></div>
-      <span class="dev-pot-lbl">${pot.name}</span>
-      <span class="dev-pot-cc" style="${potFn !== 'midi' ? 'color:var(--accent)' : ''}">${potLbl}</span>`;
+      <span class="dev-pot-lbl">${esc(pot.name)}</span>
+      <span class="dev-pot-cc" style="${potFn !== 'midi' ? 'color:var(--accent)' : ''}">${esc(potLbl)}</span>`;
     w.addEventListener('click', () => {
       _dcSel = (sel) ? null : { type: 'pot', id: pot.id };
       _renderDCHardware(); _renderDCConfigArea();
@@ -1471,8 +1627,8 @@ function _renderDCHardware() {
     el.className = `dev-key-btn${hp ? ' assigned' : ''}${sel ? ' selected' : ''}`;
     el.innerHTML = `
       <span class="dev-key-num">${btn.id}</span>
-      <span class="dev-key-name">${btn.name}</span>
-      ${hp ? `<span class="dev-key-proj">${btn.project.name}</span>` : ''}`;
+      <span class="dev-key-name">${esc(btn.name)}</span>
+      ${hp ? `<span class="dev-key-proj">${esc(btn.project.name)}</span>` : ''}`;
     el.addEventListener('click', () => {
       _dcSel = (sel) ? null : { type: 'btn', id: btn.id };
       _renderDCHardware(); _renderDCConfigArea();
@@ -1493,15 +1649,15 @@ function _renderDCConfigArea() {
     if (!btn) return;
     const hp = !!btn.project;
     const libItems = projectsLib.length > 0
-      ? projectsLib.map(p => `<div class="dcf-lib-item${btn.project && btn.project.name === p.name ? ' active' : ''}" data-pid="${p.id}">${p.name}</div>`).join('')
+      ? projectsLib.map(p => `<div class="dcf-lib-item${btn.project && btn.project.name === p.name ? ' active' : ''}" data-pid="${p.id}">${esc(p.name)}</div>`).join('')
       : `<div style="font-size:11px;color:var(--text3);padding:4px 0">${t('dev.nolib')}</div>`;
     area.innerHTML = `
       <div class="dev-cfg-head">${t('dev.button')} <span>B${btn.id}</span></div>
       <div class="dev-cfg-name-row">
-        <input id="dcf-bname" type="text" value="${btn.name.replace(/"/g,'&quot;')}" maxlength="16" placeholder="${t('dev.label')}" style="width:100%;font-size:11px">
+        <input id="dcf-bname" type="text" value="${esc(btn.name)}" maxlength="16" placeholder="${t('dev.label')}" style="width:100%;font-size:11px">
       </div>
       <div class="dev-cfg-proj-info ${hp ? 'has-proj' : 'no-proj'}">
-        ${hp ? `📄 ${btn.project.name}` : t('dev.noproj')}
+        ${hp ? `📄 ${esc(btn.project.name)}` : t('dev.noproj')}
       </div>
       <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:6px 0 3px">${t('dev.libpick')}</div>
       <div class="dcf-lib-picker">${libItems}</div>
@@ -1539,7 +1695,7 @@ function _renderDCConfigArea() {
       </div>` : 
       `<div style="font-size:11px;color:var(--text3);padding:4px 0 8px">${t('dev.mode.' + fn)} — ${fn==='hid_vol'?'Controla el volum del sistema':fn==='hid_bright'?'Controla la brillantor de la pantalla':'Controla el scroll del ratolí'}</div>`;
     area.innerHTML = `
-      <div class="dev-cfg-head">${t('dev.pot')} <span>${pot.name}</span></div>
+      <div class="dev-cfg-head">${t('dev.pot')} <span>${esc(pot.name)}</span></div>
       <div class="dev-cfg-name-row" style="margin-bottom:8px">
         <label style="font-size:10px;color:var(--text3);min-width:38px">${t('dev.mode')}</label>
         <select id="dcf-pfn" style="flex:1;padding:5px 6px;font-size:11px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text)">
@@ -1551,7 +1707,7 @@ function _renderDCConfigArea() {
       </div>
       ${midiFields}
       <div class="dev-cfg-name-row">
-        <input id="dcf-pname" type="text" value="${pot.name}" maxlength="8" placeholder="${t('dev.label')}" style="width:100%;font-size:11px">
+        <input id="dcf-pname" type="text" value="${esc(pot.name)}" maxlength="8" placeholder="${t('dev.label')}" style="width:100%;font-size:11px">
       </div>`;
     area.querySelector('#dcf-pfn').addEventListener('change', e => {
       pot.fnType = e.target.value; _saveDC(); _renderDCConfigArea(); _renderDCHardware();
@@ -1574,7 +1730,7 @@ function _renderDCConfigArea() {
 
 function _assignProject(btnId) {
   if (workspace.getAllBlocks(false).length === 0) {
-    toast('El workspace està buit. Afegeix blocs primer.', 'err'); return;
+    toast(t('toast.emptyws'), 'err'); return;
   }
   const xml = Blockly.Xml.workspaceToDom(workspace);
   const xmlText = Blockly.Xml.domToText(xml);
@@ -1590,7 +1746,7 @@ function _assignProject(btnId) {
 function _loadBtnProject(btnId) {
   const btn = deviceConfig.buttons.find(b => b.id === btnId);
   if (!btn || !btn.project) return;
-  if (!confirm(`Carregar "${btn.project.name}"? El workspace actual es perdrà.`)) return;
+  if (!confirm(tf('confirm.load', { name: btn.project.name }))) return;
   workspace.clear();
   try {
     const dom = Blockly.utils.xml.textToDom(btn.project.xml);
@@ -1621,7 +1777,9 @@ function _buildDeviceCode() {
   c += `import usb_midi, adafruit_midi, board, digitalio, analogio, time, random, math\n`;
   c += `from adafruit_midi.note_on import NoteOn\n`;
   c += `from adafruit_midi.note_off import NoteOff\n`;
-  c += `from adafruit_midi.control_change import ControlChange\n\n`;
+  c += `from adafruit_midi.control_change import ControlChange\n`;
+  c += `from adafruit_midi.program_change import ProgramChange\n`;
+  c += `from adafruit_midi.pitch_bend import PitchBend\n\n`;
   c += `# Detectar port MIDI de sortida\n`;
   c += `_midi_out = usb_midi.ports[1]\n`;
   c += `for _p in usb_midi.ports:\n`;
@@ -1634,7 +1792,8 @@ function _buildDeviceCode() {
   c += `bpm = 120\n`;
   c += `button_states = [False] * 16\n`;
   c += `last_button_states = [False] * 16\n`;
-  c += `pot_values = [0, 0, 0]\n\n`;
+  c += `pot_values = [0, 0, 0]\n`;
+  c += `_riff = [0]  # Offset de transposició (bloc "riff")\n\n`;
 
   // --- Sistema d'interrupció de bucles (TeclaInterrupt) ---
   c += `# Sistema d'interrupció\n`;
@@ -1700,6 +1859,13 @@ function _buildDeviceCode() {
   c += `# Potenciòmetres\n`;
   c += `_POT_PINS = [board.A1, board.A0, board.A2]\n`;
   c += `_pots = [analogio.AnalogIn(p) for p in _POT_PINS]\n\n`;
+
+  // Helpers de hardware compartits (GPIO, PWM, NeoPixel, OLED, distància...)
+  c += (window.TECLA_HW_HELPERS || '') + `\n`;
+  c += `# Els potenciòmetres ja ocupen A0-A2: reutilitzar-los com a entrades analògiques\n`;
+  c += `for _i, _n in enumerate(("A1", "A0", "A2")):\n`;
+  c += `    if _i < len(_pots):\n`;
+  c += `        _hw_cache["a" + _n[1:]] = _pots[_i]\n\n`;
 
   // _pot_update() function: llegeix pots i envia CC/HID (cridada des de tecla_sleep i bucle principal)
   c += `def _pot_update():\n`;
@@ -1800,7 +1966,7 @@ function _buildDeviceCode() {
 
 function exportDeviceCode() {
   if (!deviceConfig.buttons.some(b => b.project)) {
-    toast('Cap botó té cap projecte assignat', 'err'); return;
+    toast(t('toast.noassigned'), 'err'); return;
   }
   const code = _buildDeviceCode();
   blobDownload(code, 'code.py', 'text/x-python');
@@ -1808,7 +1974,7 @@ function exportDeviceCode() {
 }
 
 async function uploadDeviceCode() {
-  if (!deviceDirHandle) { toast('Connecta el dispositiu primer', 'err'); return; }
+  if (!deviceDirHandle) { toast(t('toast.connectfirst'), 'err'); return; }
   const code = _buildDeviceCode();
   try {
     const fh = await deviceDirHandle.getFileHandle('code.py', { create: true });
@@ -1883,7 +2049,7 @@ function _renderSavedThemes() {
     const card = document.createElement('div');
     card.className = 'theme-card' + (_activeCustomId===t.id?' active':'');
     card.dataset.customId = t.id;
-    card.innerHTML = `<div class="theme-swatches"><span style="background:${t.vars.bg}"></span><span style="background:${t.vars.surface}"></span><span style="background:${t.vars.surface2}"></span><span style="background:${t.vars.accent}"></span></div><div class="theme-card-name">${t.name}</div><span data-del="${t.id}" title="Eliminar" style="position:absolute;top:2px;right:3px;font-size:13px;opacity:0;cursor:pointer;transition:opacity .12s">×</span>`;
+    card.innerHTML = `<div class="theme-swatches"><span style="background:${t.vars.bg}"></span><span style="background:${t.vars.surface}"></span><span style="background:${t.vars.surface2}"></span><span style="background:${t.vars.accent}"></span></div><div class="theme-card-name">${esc(t.name)}</div><span data-del="${t.id}" title="Eliminar" style="position:absolute;top:2px;right:3px;font-size:13px;opacity:0;cursor:pointer;transition:opacity .12s">×</span>`;
     card.addEventListener('mouseenter', () => { card.querySelector('[data-del]').style.opacity='0.7'; });
     card.addEventListener('mouseleave', () => { card.querySelector('[data-del]').style.opacity='0'; });
     card.addEventListener('click', e => {

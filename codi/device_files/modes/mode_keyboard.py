@@ -34,6 +34,12 @@ except ImportError:
 # Ordre cromàtic (C, C#, D, ... B) — més intuïtiu que el cercle de quintes
 KEY_CIRCLE = ('C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B')
 _KEY_OFFSET = {'C':0,'C#':1,'D':2,'Eb':3,'E':4,'F':5,'F#':6,'G':7,'Ab':8,'A':9,'Bb':10,'B':11}
+# Eixos d'harmonia negativa (offset en semitones respecte la tònica)
+# 0=Quinta/Levy(3.5), 1=Unisonant(0.0), 2=Tercera M(2.0), 3=Tercera m(1.5), 4=Tritó(6.0)
+# 5=Quarta(2.5), 6=Sexta M(4.5), 7=Sèptima m(5.5)
+_NEG_HARM_AXES = (3.5, 0.0, 2.0, 1.5, 6.0, 2.5, 4.5, 5.5)
+_NEG_HARM_NAMES = ('Quinta', 'Unisonant', 'Tercera M', 'Tercera m', 'Trito', 'Quarta', 'Sexta M', 'Septima m')
+
 _SCALE_NAMES = (
     'Major', 'Doric', 'Frigi', 'Lidi', 'Mixolidi', 'Menor', 'Locri',
     'Pentat.Maj', 'Pentat.Men', 'Japonesa', 'Egipcia', 'Arabiga', 'Hongaresa',
@@ -60,9 +66,26 @@ class KeyboardMode:
         self.chord_type_index = 0  # Índex de la tipologia activa
         self.chord_btn_press_time = 0.0  # Per detecció de click mantingut (botó 11)
         self.arp_mode_active = False  # Mode arpegiador desactivat per defecte
-        self.last_button_states = [False] * 12
-        # Mapatge de notes per botó per NoteOff ràpid i precís
-        self.button_notes = {i: set() for i in range(12)}
+        self.last_button_states = [False] * 15
+        # Mapatge de notes per botó per NoteOff ràpid i precís (15 botons configurables)
+        self.button_notes = {i: set() for i in range(15)}
+        self.latch_active = False  # Latch: les notes/acords continuen sonant en deixar anar
+        self.loop_state = 0  # Looper: 0=inactiu (la resta d'estat es crea lazy a kbd_looper)
+        self.voice_lead_active = False  # Conducció de veus (kbd_voicelead, lazy)
+        # Harmonia negativa
+        self.neg_harmony_active = False
+        self.neg_harmony_type = 0
+        self.available_neg_harm_ids = list(range(len(_NEG_HARM_AXES)))
+        self._neg_harm_btn_press_time = 0.0
+        self._neg_harm_last_release = 0.0
+        self._neg_harm_just_activated = False
+        # Inversió d'acord
+        self.available_chord_inv_ids = [0, 1, 2, 3]
+        self.chord_inversion_index = 0
+        # Acords diatònics — funcions harmòniques
+        self.diatonic_fn_idx = -1  # -1 = inactiu
+        self.available_diatonic_fns = ['diatonic']
+        self._diatonic_btn_press_time = 0.0
         # Mode debug (evitar prints per latència)
         self.debug = False
         
@@ -71,15 +94,39 @@ class KeyboardMode:
             self.available_scales = self.config_manager.get_keyboard_scales()
             self.available_arp_modes = self.config_manager.get_arpeggiator_modes()
             self.available_keys = self.config_manager.get_keyboard_keys()
-            
-            # Obtenir funcions configurades dels potenciòmetres (MODE TECLAT)
+            self.btn_functions = self.config_manager.get_keyboard_button_functions()
+            self.neg_harmony_type = self.config_manager.get_neg_harmony_type()
+            self.available_neg_harm_ids = self.config_manager.get_neg_harmony_axes()
+            # Obtenir funcions dels potenciòmetres (MODE TECLAT)
             pot_functions = self.config_manager.get_potentiometer_functions()
             self.pot_x_function = pot_functions.get('pot_x', 'Velocity/Arp Speed (dual)')
             self.pot_y_function = pot_functions.get('pot_y', 'Modulation (CC1)')
             self.pot_z_function = pot_functions.get('pot_z', 'Sustain (CC64)')
-            
+            # Obtenir funcions dels potenciòmetres (MODE ARPEGIADOR)
+            arp_pf = self.config_manager.get_arp_potentiometer_functions()
+            self.arp_pot_x_function = arp_pf.get('arp_pot_x', 'Arp Speed (BPM)')
+            self.arp_pot_y_function = arp_pf.get('arp_pot_y', 'Arp Pattern Selector')
+            self.arp_pot_z_function = arp_pf.get('arp_pot_z', 'Gate Length')
+            # Obtenir funcions dels potenciòmetres (MODE ACORDS)
+            chord_pf = self.config_manager.get_chord_potentiometer_functions()
+            self.chord_pot_x_function = chord_pf.get('chord_pot_x', "Tipologia d'Acords")
+            self.chord_pot_y_function = chord_pf.get('chord_pot_y', "Inversió d'Acord")
+            self.chord_pot_z_function = chord_pf.get('chord_pot_z', 'Modulació')
+            # Obtenir funcions dels potenciòmetres (HARMONIA NEGATIVA)
+            neg_pf = self.config_manager.get_neg_potentiometer_functions()
+            self.neg_pot_x_function = neg_pf.get('neg_pot_x', "Eix d'Harmonia")
+            self.neg_pot_y_function = neg_pf.get('neg_pot_y', "Inversió d'Acord")
+            self.neg_pot_z_function = neg_pf.get('neg_pot_z', 'Modulació')
             # Obtenir tipologies d'acord disponibles
             self.available_chord_types = self.config_manager.get_chord_types()
+            self.available_diatonic_fns = self.config_manager.get_diatonic_functions()
+        else:
+            self.btn_functions = (
+                'note','note','note','note','note','note','note','note',
+                'scale','tonality','chord','arp',
+                'modes_layer','octave_down','octave_up','stop'
+            )
+        self._build_fn_mappings()
             
         # Paràmetres controlables per potenciòmetres (tracking de valors)
         self.velocity = 100  # Velocitat/intensitat (0-127)
@@ -146,6 +193,15 @@ class KeyboardMode:
         
     def setup(self):
         """Configuració inicial del mode"""
+        # Pre-carregar mòduls pesats ara que la memòria és lliure
+        import gc; gc.collect()
+        try:
+            import modes.kbd_notes
+            import modes.kbd_arp
+            import modes.kbd_pots
+        except Exception:
+            pass
+        gc.collect()
         self.stop_all_notes()
         self.active_notes.clear()
         
@@ -161,7 +217,11 @@ class KeyboardMode:
             if self.key_index >= len(self.available_keys):
                 self.key_index = 0
             
-            # Recarregar funcions dels potenciòmetres (MODE TECLAT)
+            # Recarregar funcions dels botons + potenciòmetres (MODE TECLAT)
+            self.btn_functions = self.config_manager.get_keyboard_button_functions()
+            self.neg_harmony_type = self.config_manager.get_neg_harmony_type()
+            self.available_neg_harm_ids = self.config_manager.get_neg_harmony_axes()
+            self._build_fn_mappings()
             pot_functions = self.config_manager.get_potentiometer_functions()
             self.pot_x_function = pot_functions.get('pot_x', 'Velocity/Arp Speed (dual)')
             self.pot_y_function = pot_functions.get('pot_y', 'Modulation (CC1)')
@@ -173,10 +233,20 @@ class KeyboardMode:
             self.arp_pot_y_function = arp_pot_functions.get('arp_pot_y', 'Arp Pattern Selector')
             self.arp_pot_z_function = arp_pot_functions.get('arp_pot_z', 'Gate Length')
             
+            # Recarregar funcions dels potenciòmetres (MODE ACORDS)
+            chord_pf = self.config_manager.get_chord_potentiometer_functions()
+            self.chord_pot_x_function = chord_pf.get('chord_pot_x', "Tipologia d'Acords")
+            self.chord_pot_y_function = chord_pf.get('chord_pot_y', "Inversió d'Acord")
+            self.chord_pot_z_function = chord_pf.get('chord_pot_z', 'Modulació')
+            # Recarregar funcions dels potenciòmetres (HARMONIA NEGATIVA)
+            neg_pf = self.config_manager.get_neg_potentiometer_functions()
+            self.neg_pot_x_function = neg_pf.get('neg_pot_x', "Eix d'Harmonia")
+            self.neg_pot_y_function = neg_pf.get('neg_pot_y', "Inversió d'Acord")
+            self.neg_pot_z_function = neg_pf.get('neg_pot_z', 'Modulació')
             # Recarregar tipologies d'acord disponibles
             self.available_chord_types = self.config_manager.get_chord_types()
             
-        for i in range(12):
+        for i in range(15):
             self.button_notes[i].clear()
         
         # Restaurar estat del Gate després de recarregar
@@ -195,9 +265,12 @@ class KeyboardMode:
         
     def cleanup(self):
         """Neteja en sortir del mode"""
+        # Silenciar el looper (les seves notes no són a active_notes i quedarien
+        # penjades en destruir la instància en canviar de capa)
+        self.pause_looper()
         self.stop_all_notes()
         self.active_notes.clear()
-        for i in range(12):
+        for i in range(15):
             self.button_notes[i].clear()
         
         # Desactivar tots els CC al sortir
@@ -211,14 +284,28 @@ class KeyboardMode:
         
         # Apagar el PWM quan no hi ha notes actives
         try:
-            import main
-            if hasattr(main, 'pwm') and main.pwm is not None:
-                main.pwm.duty_cycle = 0
+            # sys.modules en lloc d'import: si 'main' no està importat, el pwm
+            # no existeix i l'import re-executaria tot main.py (pic de RAM)
+            import sys
+            _main = sys.modules.get('main')
+            if _main is not None and getattr(_main, 'pwm', None) is not None:
+                _main.pwm.duty_cycle = 0
         except Exception:
             pass
         
         print("🎹 Mode Teclat desactivat")
         
+    def pause_looper(self):
+        """Pausa el looper i silencia les seves notes (cridat per l'STOP general).
+        NO és dins stop_all_notes: l'arpegiador crida stop_all_notes a CADA pas
+        i pausaria el loop a l'instant."""
+        if self.loop_state:
+            try:
+                from modes.kbd_looper import pause_for_panic
+                pause_for_panic(self)
+            except Exception:
+                pass
+
     def stop_all_notes(self):
         """Para totes les notes actives i neteja tot el tracking"""
         # Primer, desactivar sustain per assegurar que cap nota queda enganxada
@@ -237,14 +324,17 @@ class KeyboardMode:
         
         # Netejar tots els trackings
         self.active_notes.clear()
-        for i in range(12):
+        for i in range(15):
             self.button_notes[i].clear()
         
         # Apagar el PWM
         try:
-            import main
-            if hasattr(main, 'pwm') and main.pwm is not None:
-                main.pwm.duty_cycle = 0
+            # sys.modules en lloc d'import: si 'main' no està importat, el pwm
+            # no existeix i l'import re-executaria tot main.py (pic de RAM)
+            import sys
+            _main = sys.modules.get('main')
+            if _main is not None and getattr(_main, 'pwm', None) is not None:
+                _main.pwm.duty_cycle = 0
         except Exception:
             pass
             
@@ -260,8 +350,13 @@ class KeyboardMode:
         # Actualitzar paràmetres des dels potenciòmetres
         self._update_parameters(pot_values, force_update=force_update)
         
-        # Processar els botons 1-12 com a notes del teclat
-        self._process_keyboard_buttons(button_states[:12])
+        # Processar els botons 1-15 com a notes/funcions del teclat
+        self._process_keyboard_buttons(button_states[:15])
+
+        # Motor del looper (només quan hi ha un loop reproduint-se)
+        if self.loop_state == 3:  # PLAYING
+            from modes.kbd_looper import tick
+            tick(self, time.monotonic())
             
     def _update_parameters(self, pot_values, force_update=False):
         from modes.kbd_pots import update_parameters
@@ -313,409 +408,33 @@ class KeyboardMode:
             if self.debug:
                 print(f"Error enviant PitchBend: {e}")
             
+    def _build_fn_mappings(self):
+        from modes.kbd_buttons import build_fn_mappings
+        build_fn_mappings(self)
+
     def _process_keyboard_buttons(self, button_states):
-        """Processa els botons: 1-8 notes, 9-12 funcions"""
-        current_time = time.monotonic()
+        from modes.kbd_buttons import process_keyboard_buttons
+        process_keyboard_buttons(self, button_states)
         
-        # Processar botons de funcions 9-12 (índexs 8-11)
-        for btn_idx in range(8, 12):
-            if btn_idx < len(button_states):
-                current_pressed = button_states[btn_idx]
-                was_pressed = btn_idx < len(self.last_button_states) and self.last_button_states[btn_idx]
-                
-                if current_pressed and not was_pressed:
-                    # Botó acabat de prémer: registrar temps per tots els botons de funció
-                    if btn_idx == 8:
-                        self._scale_btn_press_time = current_time
-                    elif btn_idx == 9:
-                        self._key_btn_press_time = current_time
-                    elif btn_idx == 10:
-                        self.chord_btn_press_time = current_time
-                    elif btn_idx == 11:
-                        self.arp_btn_press_time = current_time
-                
-                elif not current_pressed and was_pressed:
-                    if btn_idx == 8:  # Botó 9: Escales (tap=▶, mantingut≥0.6s=◀)
-                        elapsed = current_time - self._scale_btn_press_time
-                        backward = elapsed >= 0.6
-                        if len(self.available_scales) > 0:
-                            if backward:
-                                self.scale_mode_index = (self.scale_mode_index - 1) % len(self.available_scales)
-                            else:
-                                self.scale_mode_index = (self.scale_mode_index + 1) % len(self.available_scales)
-                            actual_scale_id = self.available_scales[self.scale_mode_index]
-                            d = '◀' if backward else '▶'
-                            if actual_scale_id >= 2000:
-                                custom_scale = self.config_manager.get_custom_scale_by_scale_id(actual_scale_id) if self.config_manager else None
-                                sname = custom_scale.get('name', 'Sense nom') if custom_scale else f'#{actual_scale_id - 2000}'
-                                print(f"🎼{d} Escala Personalitzada: {sname} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
-                            elif actual_scale_id >= 1000:
-                                progression = self.config_manager.get_progression_by_scale_id(actual_scale_id) if self.config_manager else None
-                                pname = progression.get('name', 'Sense nom') if progression else f'#{actual_scale_id - 1000}'
-                                print(f"♪{d} Progressió: {pname} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
-                            else:
-                                sname = _SCALE_NAMES[actual_scale_id] if actual_scale_id < len(_SCALE_NAMES) else f'#{actual_scale_id}'
-                                print(f"🎼{d} {sname} ({self.scale_mode_index + 1}/{len(self.available_scales)})")
-                    
-                    elif btn_idx == 9:  # Botó 10: Tonalitat (tap=▶, mantingut≥0.6s=◀)
-                        elapsed = current_time - self._key_btn_press_time
-                        backward = elapsed >= 0.6
-                        n = len(self.available_keys)
-                        if n > 0:
-                            if backward:
-                                self.key_index = (self.key_index - 1) % n
-                            else:
-                                self.key_index = (self.key_index + 1) % n
-                            d = '◀' if backward else '▶'
-                            print(f"🎵{d} Tonalitat: {self.available_keys[self.key_index]}")
-                    
-                    elif btn_idx == 11:  # Botó 12: Arpegiador (tap=activa/▶, mantingut≥0.5s=desactiva, doble tap=◀)
-                        elapsed = current_time - self.arp_btn_press_time
-                        since_last = current_time - self._arp_last_release
-                        self._arp_last_release = current_time
-                        if elapsed >= 0.5:  # Mantingut → desactivar
-                            self.stop_all_notes()
-                            self.arp_mode_active = False
-                            self.arp_notes = []
-                            self.arp_button_order = []
-                            self._arp_just_activated = False
-                            print(f"🎶 Arpeggiador DESACTIVAT")
-                        elif not self.arp_mode_active:  # Curt + inactiu → activar
-                            self.arp_mode_active = True
-                            self.arp_notes = []
-                            self.arp_button_order = []
-                            self._arp_pat_sel_last_val = None
-                            self._arp_just_activated = True
-                            if self.arp_mode_index not in self.available_arp_modes:
-                                self.arp_mode_index = self.available_arp_modes[0] if self.available_arp_modes else 2
-                            print(f"🎶 Arpeggiador: {self._get_arp_name(self.arp_mode_index)}")
-                        elif since_last < 0.4 and not self._arp_just_activated:  # Doble tap + actiu → ciclar enrere
-                            self._arp_just_activated = False
-                            if self.available_arp_modes:
-                                try:
-                                    current_idx = self.available_arp_modes.index(self.arp_mode_index)
-                                    self.arp_mode_index = self.available_arp_modes[(current_idx - 2) % len(self.available_arp_modes)]
-                                except ValueError:
-                                    self.arp_mode_index = self.available_arp_modes[-1]
-                                self.arp_index = 0
-                                self.arp_direction = 1
-                                self.arp_button_order = []
-                                self._arp_pat_sel_last_val = None
-                                print(f"🎶◀ Arpeggiador: {self._get_arp_name(self.arp_mode_index)}")
-                        else:  # Curt + actiu → ciclar endavant
-                            self._arp_just_activated = False
-                            if self.available_arp_modes:
-                                try:
-                                    current_idx = self.available_arp_modes.index(self.arp_mode_index)
-                                    self.arp_mode_index = self.available_arp_modes[(current_idx + 1) % len(self.available_arp_modes)]
-                                except ValueError:
-                                    self.arp_mode_index = self.available_arp_modes[0]
-                                self.arp_index = 0
-                                self.arp_direction = 1
-                                self.arp_button_order = []
-                                self._arp_pat_sel_last_val = None
-                                print(f"🎶▶ Arpeggiador: {self._get_arp_name(self.arp_mode_index)}")
-                        self._reapply_active_ccs()
-                    
-                    elif btn_idx == 10:  # Botó 11: Acords (tap=activa/▶, mantingut≥0.5s=desactiva, doble tap=◀)
-                        elapsed = current_time - self.chord_btn_press_time
-                        since_last = current_time - self._chord_last_release
-                        self._chord_last_release = current_time
-                        if elapsed >= 0.5:  # Mantingut → desactivar
-                            self.stop_all_notes()
-                            self.chord_mode_active = False
-                            self.chord_type_index = 0
-                            self._chord_just_activated = False
-                            print(f"🎹 Mode Acords DESACTIVAT")
-                        elif not self.chord_mode_active:  # Curt + inactiu → activar
-                            self.chord_mode_active = True
-                            self._chord_just_activated = True
-                            ct = self.available_chord_types[self.chord_type_index] if self.available_chord_types else 'Major'
-                            print(f"🎹 Mode Acords ACTIVAT ({ct})")
-                        elif since_last < 0.4 and not self._chord_just_activated:  # Doble tap + actiu → ciclar enrere
-                            self._chord_just_activated = False
-                            if self.available_chord_types:
-                                n = len(self.available_chord_types)
-                                self.chord_type_index = (self.chord_type_index - 2) % n
-                                ct = self.available_chord_types[self.chord_type_index]
-                                print(f"🎹◀ Acord: {ct}")
-                        else:  # Curt + actiu → ciclar endavant
-                            self._chord_just_activated = False
-                            if self.available_chord_types:
-                                self.chord_type_index = (self.chord_type_index + 1) % len(self.available_chord_types)
-                                ct = self.available_chord_types[self.chord_type_index]
-                                print(f"🎹▶ Acord: {ct}")
-                        self._reapply_active_ccs()
-        
-        # Processar botons de notes 1-8 (índexs 0-7)
-        if self.arp_mode_active:
-            # Mode arpeggiador: recollir notes premudes
-            self._process_arpeggiator(button_states[:8], current_time)
-        else:
-            # Mode normal o acords
-            for btn_idx in range(8):
-                if btn_idx < len(button_states):
-                    current_pressed = button_states[btn_idx]
-                    was_pressed = btn_idx < len(self.last_button_states) and self.last_button_states[btn_idx]
-                    
-                    if current_pressed and not was_pressed:
-                        # Botó acabat de prémer
-                        if self.chord_mode_active:
-                            self._generate_chord_for_button(btn_idx)
-                        else:
-                            self._generate_notes_for_button(btn_idx)
-                    elif not current_pressed and was_pressed:
-                        # Botó acabat d'alliberar
-                        self._note_off_for_button(btn_idx, from_release=True)
-            
-            # Processar Gate: repetir notes (només mode teclat/acords)
-            if self.gate_enabled:
-                self._process_gate(current_time)
-        
-        # Actualitzar estat anterior
-        self.last_button_states = button_states[:12].copy()
-        
-    def _generate_notes_for_button(self, btn_idx):
-        """Genera nota(es) per al botó segons el mode actiu (escales, progressions o escales personalitzades)"""
-        # Obtenir ID d'escala/progressió/escala personalitzada actual
-        if len(self.available_scales) == 0:
-            return
-        
-        current_scale_id = self.available_scales[self.scale_mode_index]
-        
-        # Detectar tipus: escala personalitzada (>= 2000), progressió (1000-1999) o escala normal (< 1000)
-        if current_scale_id >= 2000:
-            # Mode escala personalitzada: tocar nota directament des de la configuració
-            custom_scale = self.config_manager.get_custom_scale_by_scale_id(current_scale_id) if self.config_manager else None
-            if custom_scale:
-                self._generate_note_from_custom_scale(btn_idx, custom_scale)
-            else:
-                print(f"Error: Escala personalitzada {current_scale_id} no trobada")
-        elif current_scale_id >= 1000:
-            # Mode progressions: generar acord des de la progressió
-            progression = self.config_manager.get_progression_by_scale_id(current_scale_id) if self.config_manager else None
-            if progression:
-                self._generate_chord_from_progression(btn_idx, progression)
-            else:
-                print(f"Error: Progressió {current_scale_id} no trobada")
-        else:
-            # Mode escales: generar nota individual
-            # Calcular la nota base del botó en l'escala i tonalitat actual
-            scale_intervals = SCALES[current_scale_id]
-            key_offset = _KEY_OFFSET.get(self.available_keys[self.key_index], 0)
-            
-            # El botó representa una posició dins l'escala (màxim 8 botons)
-            scale_degree = btn_idx % len(scale_intervals)
-            octave_offset = btn_idx // len(scale_intervals)
-            
-            # Nota = octava + tonalitat + grau d'escala
-            base_note = (self.octave + octave_offset) * 12 + key_offset + scale_intervals[scale_degree]
-            base_note = max(0, min(127, base_note))
-            
-            # Tocar la nota amb la velocitat del potenciòmetre
-            self._note_on(base_note, btn_idx)
+    def _generate_notes_for_button(self, slot, btn_idx):
+        from modes.kbd_notes import generate_notes_for_button
+        generate_notes_for_button(self, slot, btn_idx)
     
-    def _generate_chord_from_progression(self, btn_idx, progression):
-        """Genera un acord des de la progressió personalitzada
-        Args:
-            btn_idx: Índex del botó (0-7)
-            progression: Diccionari amb la progressió (id, name, chords)
-        """
-        if not progression:
-            return
-        
-        # Primer, aturar notes anteriors d'aquest botó
-        self._note_off_for_button(btn_idx)
-        
-        # Trobar l'acord configurat per aquest botó
-        chords = progression.get('chords', [])
-        chord_config = None
-        for chord in chords:
-            if chord.get('button') == btn_idx:
-                chord_config = chord
-                break
-        
-        if not chord_config:
-            return
-        
-        # Extreure configuració de l'acord
-        root_note_name = chord_config.get('root_note', 'C')
-        chord_type = chord_config.get('chord_type', 'Major')
-        config_octave = chord_config.get('octave', 4)
-        
-        # Calcular nota MIDI base amb offset d'octava actual (botons 14-15)
-        root_offset_val = note_offset(root_note_name)
-        base_note = (self.octave + config_octave - 4) * 12 + root_offset_val
-        
-        # Obtenir intervals de l'acord
-        chord_intervals = get_chord(chord_type)
-        
-        # Generar les notes de l'acord
-        for interval in chord_intervals:
-            note = base_note + interval
-            note = max(0, min(127, note))
-            try:
-                self.midi.send(NoteOn(note, self.velocity))
-                self.active_notes.add(note)
-                self.button_notes[btn_idx].add(note)
-                # Actualitzar PWM sempre amb la primera nota (root)
-                if interval == 0:
-                    self._update_pwm_for_note(note)
-            except Exception as e:
-                print(f"Error tocant acord: {e}")
+    def _generate_chord_from_progression(self, slot, btn_idx, progression):
+        from modes.kbd_notes import generate_chord_from_progression
+        generate_chord_from_progression(self, slot, btn_idx, progression)
     
-    def _generate_note_from_custom_scale(self, btn_idx, custom_scale):
-        """Genera una nota des de l'escala personalitzada
-        Args:
-            btn_idx: Índex del botó (0-7)
-            custom_scale: Diccionari amb l'escala personalitzada (id, name, notes)
-        """
-        if not custom_scale:
-            return
-        
-        # Primer, aturar notes anteriors d'aquest botó
-        self._note_off_for_button(btn_idx)
-        
-        # Trobar la nota configurada per aquest botó
-        notes = custom_scale.get('notes', [])
-        note_config = None
-        for note in notes:
-            if note.get('button') == btn_idx:
-                note_config = note
-                break
-        
-        if not note_config:
-            # Si no hi ha nota configurada per aquest botó, no tocar res
-            return
-        
-        # Obtenir nota MIDI directament de la configuració
-        midi_note = note_config.get('midi_note')
-        
-        if midi_note is None:
-            # Si no hi ha midi_note, calcular-la des del nom i octava
-            note_name = note_config.get('note_name', 'C')
-            config_octave = note_config.get('octave', 4)
-            note_offset_val = note_offset(note_name)
-            # Aplicar offset d'octava actual (botons 14-15)
-            midi_note = (self.octave + config_octave - 4 + 1) * 12 + note_offset_val
-        else:
-            # Si ja té midi_note, aplicar offset d'octava actual
-            # Calcular quina octava té la nota configurada i aplicar l'offset
-            config_octave = midi_note // 12
-            note_in_octave = midi_note % 12
-            midi_note = (config_octave + self.octave - 4) * 12 + note_in_octave
-        
-        # Assegurar que està dins del rang MIDI vàlid
-        midi_note = max(0, min(127, midi_note))
-        
-        # Tocar la nota amb la velocitat del potenciòmetre
-        self._note_on(midi_note, btn_idx)
+    def _generate_note_from_custom_scale(self, slot, btn_idx, custom_scale):
+        from modes.kbd_notes import generate_note_from_custom_scale
+        generate_note_from_custom_scale(self, slot, btn_idx, custom_scale)
     
-    def _generate_chord_from_custom_scale(self, btn_idx, custom_scale):
-        """Genera un acord (tríada major) des de l'escala personalitzada
-        Args:
-            btn_idx: Índex del botó (0-7)
-            custom_scale: Diccionari amb l'escala personalitzada (id, name, notes)
-        """
-        if not custom_scale:
-            return
-        
-        # Primer, aturar notes anteriors d'aquest botó
-        self._note_off_for_button(btn_idx)
-        
-        # Trobar la nota configurada per aquest botó
-        notes = custom_scale.get('notes', [])
-        note_config = None
-        for note in notes:
-            if note.get('button') == btn_idx:
-                note_config = note
-                break
-        
-        if not note_config:
-            # Si no hi ha nota configurada per aquest botó, no tocar res
-            return
-        
-        # Obtenir nota MIDI base
-        midi_note = note_config.get('midi_note')
-        if midi_note is None:
-            note_name = note_config.get('note_name', 'C')
-            octave = note_config.get('octave', 4)
-            note_offset_val = note_offset(note_name)
-            midi_note = (octave + 1) * 12 + note_offset_val
-        
-        # Assegurar que està dins del rang MIDI vàlid
-        midi_note = max(0, min(127, midi_note))
-        
-        # Generar tríada major cromàtica: root, tercera major (+4), quinta justa (+7)
-        chord_notes = [
-            midi_note,      # Root
-            midi_note + 4,  # Tercera major
-            midi_note + 7   # Quinta justa
-        ]
-        
-        # Tocar les notes de l'acord
-        for note in chord_notes:
-            note = max(0, min(127, note))
-            try:
-                self.midi.send(NoteOn(note, self.velocity))
-                self.active_notes.add(note)
-                self.button_notes[btn_idx].add(note)
-                # Actualitzar PWM sempre amb la primera nota (root)
-                if note == midi_note:
-                    self._update_pwm_for_note(note)
-            except Exception as e:
-                print(f"Error tocant acord: {e}")
+    def _generate_chord_from_custom_scale(self, slot, btn_idx, custom_scale):
+        from modes.kbd_notes import generate_chord_from_custom_scale
+        generate_chord_from_custom_scale(self, slot, btn_idx, custom_scale)
     
-    def _generate_chord_for_button(self, btn_idx):
-        """Genera un acord per al botó segons l'escala actual"""
-        # Obtenir escala actual (només funciona si no és progressió ni escala personalitzada)
-        if len(self.available_scales) == 0:
-            return
-        
-        current_scale_id = self.available_scales[self.scale_mode_index]
-        
-        # Si és una escala personalitzada, generar acord a partir de la nota configurada
-        if current_scale_id >= 2000:
-            custom_scale = self.config_manager.get_custom_scale_by_scale_id(current_scale_id) if self.config_manager else None
-            if custom_scale:
-                self._generate_chord_from_custom_scale(btn_idx, custom_scale)
-            return
-        
-        # Si és una progressió, utilitzar el mètode específic
-        if current_scale_id >= 1000:
-            progression = self.config_manager.get_progression_by_scale_id(current_scale_id) if self.config_manager else None
-            if progression:
-                self._generate_chord_from_progression(btn_idx, progression)
-            return
-        
-        scale_intervals = SCALES[current_scale_id]
-        key_offset = _KEY_OFFSET.get(self.available_keys[self.key_index], 0)
-        
-        # Primer, aturar notes anteriors d'aquest botó
-        self._note_off_for_button(btn_idx)
-        
-        # Calcular nota base
-        scale_degree = btn_idx % len(scale_intervals)
-        octave_offset = btn_idx // len(scale_intervals)
-        root_note = (self.octave + octave_offset) * 12 + key_offset + scale_intervals[scale_degree]
-        
-        # Intervals cromàtics des de la tipologia d'acord activa
-        chord_type = self.available_chord_types[self.chord_type_index] if self.available_chord_types else 'Major'
-        chord_intervals = get_chord(chord_type)
-        chord_notes = [root_note + interval for interval in chord_intervals]
-        
-        # Tocar les notes de l'acord
-        for i, note in enumerate(chord_notes):
-            note = max(0, min(127, note))
-            try:
-                self.midi.send(NoteOn(note, self.velocity))
-                self.active_notes.add(note)
-                self.button_notes[btn_idx].add(note)
-                # Actualitzar PWM sempre amb la primera nota (root)
-                if i == 0:
-                    self._update_pwm_for_note(note)
-            except Exception as e:
-                print(f"Error tocant acord: {e}")
+    def _generate_chord_for_button(self, slot, btn_idx):
+        from modes.kbd_notes import generate_chord_for_button
+        generate_chord_for_button(self, slot, btn_idx)
     
     def _process_arpeggiator(self, button_states, current_time):
         from modes.kbd_arp import process_arpeggiator
@@ -729,8 +448,19 @@ class KeyboardMode:
         from modes.kbd_arp import play_arp_pattern
         play_arp_pattern(self, direction)
 
+    def _cycle_neg_harm_type(self, step):
+        from modes.kbd_notes import cycle_neg_harm_type
+        return cycle_neg_harm_type(self, step)
+
+    def _reflect_note(self, note):
+        from modes.kbd_notes import reflect_note
+        return reflect_note(self, note)
+
     def _note_on(self, note, button_index):
-        """Activa una nota amb la velocitat configurada"""
+        """Activa una nota amb la velocitat configurada.
+        Si neg_harmony_active, aplica l'inversió simètrica abans d'enviar."""
+        if self.neg_harmony_active:
+            note = self._reflect_note(note)
         # Para qualsevol nota anterior d'aquest botó (només si no és arpeggiador)
         if button_index >= 0:
             self._note_off_for_button(button_index)
@@ -741,6 +471,11 @@ class KeyboardMode:
             self.active_notes.add(note)
             if button_index >= 0:
                 self.button_notes[button_index].add(note)
+            elif self.loop_state:
+                # Nota de l'arpegiador (button_index == -1): capturar-la al
+                # looper si està armat/gravant — permet loopejar l'arp
+                from modes.kbd_looper import record_live_note
+                record_live_note(self, note, self.velocity, time.monotonic())
             
             # Actualitzar PWM amb aquesta nota
             self._update_pwm_for_note(note)
@@ -766,11 +501,18 @@ class KeyboardMode:
             button_index: Índex del botó (0-11)
             from_release: True si ve d'alliberar el botó, False si ve de tocar una nova nota
         """
-        # Si sustain hold està actiu i ve d'un alliberament de botó,
-        # NO enviar NoteOff (sustain indefinit)
-        # PERÒ si ve de tocar una nova nota del mateix botó, sempre aturar les notes anteriors
-        if self.sustain_hold_enabled and from_release:
-            return  # Les notes continuen sonant indefinidament quan s'allibera el botó
+        # Sustain-hold (notes sostingudes indefinidament en alliberar el botó):
+        # NOMÉS s'aplica en mode normal, on el potenciòmetre Sustain es llegeix i
+        # es pot desactivar. En capes especials (arpegiador/harmonia negativa/acords)
+        # el pot Sustain NO es polleja, així que el hold quedaria "encallat" i les
+        # notes penjarien sense voler-ho. En aquestes capes, alliberar el botó
+        # SEMPRE envia NoteOff (evita notes penjades sense sustain).
+        if from_release and self.sustain_hold_enabled:
+            in_special_layer = (self.arp_mode_active or
+                                self.neg_harmony_active or
+                                self.chord_mode_active)
+            if not in_special_layer:
+                return  # Les notes continuen sonant indefinidament quan s'allibera el botó
         
         try:
             notes_set = self.button_notes.get(button_index, set())
@@ -799,9 +541,10 @@ class KeyboardMode:
             # Si no queden notes actives, apagar el PWM
             if len(self.active_notes) == 0:
                 try:
-                    import main
-                    if hasattr(main, 'pwm') and main.pwm is not None:
-                        main.pwm.duty_cycle = 0
+                    import sys
+                    _main = sys.modules.get('main')
+                    if _main is not None and getattr(_main, 'pwm', None) is not None:
+                        _main.pwm.duty_cycle = 0
                 except Exception:
                     pass
             

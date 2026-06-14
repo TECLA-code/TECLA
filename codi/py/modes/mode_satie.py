@@ -2,6 +2,7 @@
 Mode Satie - Minimalisme hipnotic estil Erik Satie
 X: Velocitat  Y: Patro melodic  Z: Octavador
 Doble click: canvi de tonalitat
+Mantenir premut botó 16: harmonia negativa (pot Z tria l'eix)
 """
 import time
 from modes.base_mode import BaseMode
@@ -51,6 +52,9 @@ class ModeSatie(BaseMode):
     def _root(self):
         return self.octave * 12 + _OFF[self.key_idx]
 
+    def _nh(self, note):
+        return self.negharm(note, self._root() % 12)
+
     def _cc(self, cc, v):
         try:
             self.midi_out.send(ControlChange(cc, v))
@@ -60,6 +64,7 @@ class ModeSatie(BaseMode):
     def _play_step(self, vel_scale):
         pat = _PATTERNS[self.pat_idx]
         note = max(24, min(108, self._root() + pat[self.step % 8]))
+        note = self._nh(note)
         vel = max(10, min(90, int(_VELS[self.step % 8] * vel_scale)))
 
         if self.last_note >= 0:
@@ -76,6 +81,7 @@ class ModeSatie(BaseMode):
     def update(self, pot_values, button_states):
         x, y, z = pot_values
         now = time.monotonic()
+        self.poll_negharm(button_states, z)
 
         # Silenci intencional (l'espai es part de la musica)
         if self.silence_active and now >= self.silence_time:
@@ -90,15 +96,18 @@ class ModeSatie(BaseMode):
             self.pat_idx = new_pat
             self.step = 0
 
-        new_oct = 3 + int((z / 127.0) * 3.99)
-        if new_oct != self.octave:
-            self.octave = new_oct
+        if not self.neg_active:  # Z congelada mentre tria l'eix d'harmonia negativa
+            new_oct = 3 + int((z / 127.0) * 3.99)
+            if new_oct != self.octave:
+                self.octave = new_oct
 
         if now >= self.next_note_time:
             self._play_step(0.7 + (y / 127.0) * 0.3)
             self.next_note_time = now + self.speed
 
         for i in range(min(len(button_states), 16)):
+            if i == 15:
+                continue
             cur = bool(button_states[i])
             if self.last_btn[i] and not cur:
                 gap = now - self.last_release[i]
@@ -111,7 +120,9 @@ class ModeSatie(BaseMode):
                     self.last_release[i] = now
             self.last_btn[i] = cur
 
-        return {'key': _KEYS[self.key_idx], 'oct': self.octave, 'pat': self.pat_idx}
+        return {'key': _KEYS[self.key_idx], 'oct': self.octave, 'pat': self.pat_idx,
+                'neg': self.neg_active,
+                'axis': self.negharm_axis_name() if self.neg_active else '-'}
 
     def cleanup(self):
         if self.last_note >= 0:

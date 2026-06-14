@@ -6,6 +6,7 @@ X: Ritme (temps entre campanes: lent/rapid)
 Y: Escala del carilló (Pentatònica, Mística, Whole-tone, Lidia, Japonesa)
 Z: Octava (2-5)
 Doble click: canvi de tonalitat
+Mantenir premut botó 16: harmonia negativa (pot Z tria l'eix; campanes noves reflectides)
 """
 import time
 import random
@@ -97,7 +98,7 @@ class ModeToCampanes(BaseMode):
         oct_spread = random.choice([0, 0, 1])  # 2/3 vegades octava actual, 1/3 octava amunt
         interval = random.choice(scale)
         note = (self.octave + oct_spread) * 12 + key_off + interval
-        return max(36, min(108, note))
+        return self.negharm(max(36, min(108, note)), key_off % 12)
 
     def _fire_bell(self, now):
         """Dispara una campana amb decay natural."""
@@ -142,6 +143,7 @@ class ModeToCampanes(BaseMode):
     def update(self, pot_values, button_states):
         x, y, z = pot_values
         now = time.monotonic()
+        self.poll_negharm(button_states, z)
 
         # X: Interval entre campanes (4s lent → 0.15s ràpid)
         # Rang molt llarg: des de silenci espaciat fins a pluja de campanes
@@ -155,10 +157,11 @@ class ModeToCampanes(BaseMode):
             self.scale_idx = new_scale
             print(f"ToCampanes: {_SNAMES[self.scale_idx]}")
 
-        # Z: Octava (2-5)
-        new_oct = 2 + int((z / 127.0) * 3.99)
-        if new_oct != self.octave:
-            self.octave = new_oct
+        # Z: Octava (2-5) — congelada mentre Z tria l'eix d'harmonia negativa
+        if not self.neg_active:
+            new_oct = 2 + int((z / 127.0) * 3.99)
+            if new_oct != self.octave:
+                self.octave = new_oct
 
         # Processar decays de campanes actives
         self._process_decays(now)
@@ -168,8 +171,10 @@ class ModeToCampanes(BaseMode):
             self._fire_bell(now)
             self.next_bell_t = now + self.bell_interval + random.uniform(-jitter, jitter)
 
-        # Doble click: canvi de tonalitat
+        # Doble click: canvi de tonalitat (botó 16 reservat per harmonia negativa)
         for i in range(min(len(button_states), 16)):
+            if i == 15:
+                continue
             cur = bool(button_states[i])
             if self.last_btn[i] and not cur:
                 gap = now - self.last_release[i]
@@ -185,6 +190,8 @@ class ModeToCampanes(BaseMode):
             'key':   _KEYS[self.key_idx],
             'scale': _SNAMES[self.scale_idx],
             'bells': len(self.active_bells),
+            'neg':   self.neg_active,
+            'axis':  self.negharm_axis_name() if self.neg_active else '-',
         }
 
     def stop(self):

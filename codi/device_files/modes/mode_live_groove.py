@@ -40,6 +40,8 @@ class ModeLiveGroove(BaseMode):
 
     def _dbl(self, button_states, now):
         for i in range(min(len(button_states), 16)):
+            if i == 15:
+                continue
             cur = bool(button_states[i])
             if self.last_btn[i] and not cur:
                 gap = now - self.last_release[i]
@@ -55,12 +57,15 @@ class ModeLiveGroove(BaseMode):
     def update(self, pot_values, button_states):
         x, y, z = pot_values
         now = time.monotonic()
+        self.poll_negharm(button_states, z)
         self.interval = max(0.08, 0.40 - (x / 127.0) * 0.32)
         self._cc(1, y)
-        self.octave = 1 + int((z / 127.0) * 2.99)
+        if not self.neg_active:  # Z congelada mentre tria l'eix neg.
+            self.octave = 1 + int((z / 127.0) * 2.99)
         if now >= self.next_t:
             idx = self.step % len(_LINE)
             note = max(24, min(84, self._root() + _LINE[idx]))
+            note = self.negharm(note, self._root() % 12)
             vel = _VELS[idx]
             if self.last_note >= 0:
                 self.midi_out.send(self.note_off(self.last_note, 0))

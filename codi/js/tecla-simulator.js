@@ -60,6 +60,16 @@ export class TECLASimulator {
         const baseCode = await baseRes.text();
         this.pyodide.FS.writeFile('/tecla/modes/base_mode.py', baseCode);
 
+        // Carrega negharm.py al VFS — dependència de base_mode.negharm() (harmonia
+        // negativa). Sense això, activar l'efecte d'harmonia negativa al simulador
+        // llançaria ImportError quan el mode reflecteix una nota.
+        try {
+            const negRes = await fetch('./py/modes/negharm.py');
+            if (negRes.ok) {
+                this.pyodide.FS.writeFile('/tecla/modes/negharm.py', await negRes.text());
+            }
+        } catch (e) { /* opcional: si no hi és, els modes sense negharm funcionen igual */ }
+
         // Guarda la referència a l'estat compartit
         this.state = this.pyodide.globals.get('_state');
 

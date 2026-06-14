@@ -6,43 +6,47 @@ Z: Breakdown (0=kick, 32=+snare, 64=+hh, 96=full)
 """
 import time
 from modes.base_mode import BaseMode
-from adafruit_midi.note_on import NoteOn
-from adafruit_midi.note_off import NoteOff
-from adafruit_midi.control_change import ControlChange
 
 _KICK=36;_SNARE=38;_CLAP=39;_HH=42
 _BASS=(36,37,38,39,40,41,42,43,44,45,46,47)
 _KEYS=('C','C#','D','D#','E','F','F#','G','G#','A','A#','B')
+# Patrons aplanats com a bytes (16 steps x 4 valors): k,sn,h,bv. Estalvia RAM.
 _PATTERNS=(
-    ((1,0,1,90),(0,0,0,0),(0,0,1,0),(0,0,0,0),
-     (0,1,1,0),(0,0,0,0),(0,0,1,0),(1,0,0,60),
-     (1,0,1,90),(0,0,0,0),(0,0,1,0),(0,0,0,0),
-     (0,1,1,0),(0,0,0,0),(1,0,1,0),(0,0,0,50)),
-    ((1,0,1,110),(1,0,0,0),(0,1,1,0),(1,0,0,80),
-     (0,0,1,0),(1,0,0,0),(1,1,1,0),(0,0,0,0),
-     (1,0,1,110),(0,0,0,0),(1,0,1,0),(0,1,0,80),
-     (1,0,1,0),(1,0,0,0),(0,1,1,0),(1,0,0,60)),
-    ((1,0,0,100),(0,0,1,0),(0,0,0,70),(0,0,1,0),
-     (0,1,0,0),(0,0,1,0),(1,0,0,80),(0,0,1,0),
-     (1,0,0,100),(0,0,1,0),(0,1,0,70),(0,0,1,0),
-     (0,0,0,0),(1,0,1,0),(1,0,0,80),(0,1,1,0)),
-    ((1,0,1,100),(0,0,0,0),(0,0,1,0),(1,0,0,70),
-     (0,0,1,0),(0,1,0,0),(1,0,1,0),(0,0,0,0),
-     (1,0,1,100),(0,0,0,0),(0,1,1,0),(0,0,0,70),
-     (1,0,1,0),(0,0,0,0),(0,0,1,0),(1,1,0,80)),
+    bytes((1,0,1,90,0,0,0,0,0,0,1,0,0,0,0,0,
+             0,1,1,0,0,0,0,0,0,0,1,0,1,0,0,60,
+             1,0,1,90,0,0,0,0,0,0,1,0,0,0,0,0,
+             0,1,1,0,0,0,0,0,1,0,1,0,0,0,0,50)),
+    bytes((1,0,1,110,1,0,0,0,0,1,1,0,1,0,0,80,
+             0,0,1,0,1,0,0,0,1,1,1,0,0,0,0,0,
+             1,0,1,110,0,0,0,0,1,0,1,0,0,1,0,80,
+             1,0,1,0,1,0,0,0,0,1,1,0,1,0,0,60)),
+    bytes((1,0,0,100,0,0,1,0,0,0,0,70,0,0,1,0,
+             0,1,0,0,0,0,1,0,1,0,0,80,0,0,1,0,
+             1,0,0,100,0,0,1,0,0,1,0,70,0,0,1,0,
+             0,0,0,0,1,0,1,0,1,0,0,80,0,1,1,0)),
+    bytes((1,0,1,100,0,0,0,0,0,0,1,0,1,0,0,70,
+             0,0,1,0,0,1,0,0,1,0,1,0,0,0,0,0,
+             1,0,1,100,0,0,0,0,0,1,1,0,0,0,0,70,
+             1,0,1,0,0,0,0,0,0,0,1,0,1,1,0,80)),
 )
 _PNAMES=('Basic','Industrial','Acid','Tribal')
 _GATE=0.05;_BG=0.35
 
 
 def _on(m,n,v,c):
-    try: msg=NoteOn(n&0x7F,max(1,min(127,v))&0x7F);msg.channel=c;m.send(msg)
+    try:
+        from adafruit_midi.note_on import NoteOn
+        msg=NoteOn(n&0x7F,max(1,min(127,v))&0x7F);msg.channel=c;m.send(msg)
     except Exception: pass
 def _off(m,n,c):
-    try: msg=NoteOff(n&0x7F,0);msg.channel=c;m.send(msg)
+    try:
+        from adafruit_midi.note_off import NoteOff
+        msg=NoteOff(n&0x7F,0);msg.channel=c;m.send(msg)
     except Exception: pass
 def _cc(m,c,v,ch):
-    try: msg=ControlChange(c,max(0,min(127,v))&0x7F);msg.channel=ch;m.send(msg)
+    try:
+        from adafruit_midi.control_change import ControlChange
+        msg=ControlChange(c,max(0,min(127,v))&0x7F);msg.channel=ch;m.send(msg)
     except Exception: pass
 
 
@@ -71,8 +75,8 @@ class ModeHardTechno(BaseMode):
         if self.ah and now-self.ah_t>=_GATE: _off(self.midi_out,_HH,9);self.ah=False
         if self.ab and now-self.ab_t>=self.step_dur*_BG: _off(self.midi_out,_BASS[self.key_idx],0);self.ab=False
 
-    def _fire(self, s, now):
-        k,sn,h,bv=s;vs=max(10,min(127,int(self.vel_scale*100)));L=self.layer
+    def _fire(self, p, b, now):
+        k=p[b];sn=p[b+1];h=p[b+2];bv=p[b+3];vs=max(10,min(127,int(self.vel_scale*100)));L=self.layer
         if k: _on(self.midi_out,_KICK,min(127,int(vs*1.2)),9);self.ak=True;self.ak_t=now
         if sn and L>=1: _on(self.midi_out,_SNARE,min(127,int(vs*1.1)),9);_on(self.midi_out,_CLAP,max(1,vs-20),9);self.as_=True;self.as_t=now
         if h and L>=2: _on(self.midi_out,_HH,max(1,int(vs*0.7)),9);self.ah=True;self.ah_t=now
@@ -88,7 +92,7 @@ class ModeHardTechno(BaseMode):
         self.layer=min(3,int((z/127.0)*4))
         self._rel(now)
         if now-self.last_step_t>=self.step_dur:
-            self.last_step_t=now;self._fire(_PATTERNS[self.pattern_idx][self.step],now)
+            self.last_step_t=now;self._fire(_PATTERNS[self.pattern_idx],self.step*4,now)
             self.step=(self.step+1)%16
         _LNAMES=('KICK','KICK+SN','FULL-','FULL')
         return {'bpm':int(self.bpm),'pat':_PNAMES[self.pattern_idx],'lay':_LNAMES[self.layer]}

@@ -1,6 +1,10 @@
 {
   "modes": [
     {
+      "name": "Acid",
+      "file": "mode_acid.py"
+    },
+    {
       "name": "Arnalds",
       "file": "mode_arnalds.py"
     },
@@ -37,6 +41,10 @@
       "file": "mode_dinamo.py"
     },
     {
+      "name": "Dub",
+      "file": "mode_dub.py"
+    },
+    {
       "name": "Einaudi",
       "file": "mode_einaudi.py"
     },
@@ -45,8 +53,16 @@
       "file": "mode_estatic.py"
     },
     {
+      "name": "Euclid",
+      "file": "mode_euclid.py"
+    },
+    {
       "name": "Frahm",
       "file": "mode_frahm.py"
+    },
+    {
+      "name": "Gamelan",
+      "file": "mode_gamelan.py"
     },
     {
       "name": "Glass",
@@ -125,10 +141,6 @@
       "file": "mode_ona_serra.py"
     },
     {
-      "name": "Sinusoidal",
-      "file": "mode_ona_sinusoidal.py"
-    },
-    {
       "name": "OnaTriangular",
       "file": "mode_ona_triangular.py"
     },
@@ -145,12 +157,24 @@
       "file": "mode_pedaljazz.py"
     },
     {
+      "name": "Phase",
+      "file": "mode_phase.py"
+    },
+    {
       "name": "Satie",
       "file": "mode_satie.py"
     },
     {
+      "name": "Sinusoidal",
+      "file": "mode_ona_sinusoidal.py"
+    },
+    {
       "name": "Techno",
       "file": "mode_techno.py"
+    },
+    {
+      "name": "Tempesta",
+      "file": "mode_tormenta.py"
     },
     {
       "name": "ToAcord",
@@ -173,12 +197,12 @@
       "file": "mode_tojazz.py"
     },
     {
-      "name": "Tempesta",
-      "file": "mode_tormenta.py"
-    },
-    {
       "name": "Vida",
       "file": "mode_vida.py"
+    },
+    {
+      "name": "Wolfram",
+      "file": "mode_wolfram.py"
     }
   ]
 }

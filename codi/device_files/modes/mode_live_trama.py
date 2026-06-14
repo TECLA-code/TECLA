@@ -36,6 +36,8 @@ class ModeLiveTrama(BaseMode):
 
     def _dbl(self, button_states, now):
         for i in range(min(len(button_states), 16)):
+            if i == 15:
+                continue
             cur = bool(button_states[i])
             if self.last_btn[i] and not cur:
                 gap = now - self.last_release[i]
@@ -50,9 +52,11 @@ class ModeLiveTrama(BaseMode):
     def update(self, pot_values, button_states):
         x, y, z = pot_values
         now = time.monotonic()
+        self.poll_negharm(button_states, z)
         self.interval = max(0.04, 0.35 - (x / 127.0) * 0.31)
         self._cc(1, y)
-        self.octave = 3 + int((z / 127.0) * 2.99)
+        if not self.neg_active:  # Z congelada mentre tria l'eix neg.
+            self.octave = 3 + int((z / 127.0) * 2.99)
         still = []
         for (n, off_t) in self.notes_on:
             if now >= off_t:
@@ -63,6 +67,7 @@ class ModeLiveTrama(BaseMode):
         if now >= self.next_t:
             iv = _PENTA[random.randint(0, len(_PENTA) - 1)]
             note = max(36, min(108, self._root() + iv))
+            note = self.negharm(note, self._root() % 12)
             vel = random.randint(40, 85)
             dur = self.interval * random.uniform(0.6, 1.8)
             self.midi_out.send(self.note_on(note, vel))

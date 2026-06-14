@@ -12,23 +12,24 @@ from adafruit_midi.control_change import ControlChange
 
 _KICK=36;_SNARE=38;_HH=42;_OH=46
 _BASS=(36,37,38,39,40,41,42,43,44,45,46,47)
+# Patrons aplanats com a bytes (16 steps x 5 valors): k,sn,h,o,bv. Estalvia RAM.
 _PATTERNS=(
-    ((1,0,1,0,80),(0,0,0,0,0),(0,0,1,0,0),(0,0,0,0,0),
-     (0,1,1,0,0),(0,0,0,0,0),(0,0,1,0,0),(0,0,0,0,50),
-     (1,0,1,0,80),(0,0,0,0,0),(0,0,1,0,0),(0,0,0,0,0),
-     (0,1,1,0,0),(0,0,0,0,0),(0,0,1,0,0),(1,0,0,1,60)),
-    ((1,0,0,0,90),(0,0,1,0,70),(0,0,0,0,0),(0,0,1,0,0),
-     (0,1,0,0,0),(1,0,1,0,75),(0,0,0,0,60),(0,0,1,0,0),
-     (1,0,0,0,90),(0,0,1,0,0),(0,0,0,0,65),(0,0,1,0,0),
-     (0,1,0,0,0),(1,0,1,0,0),(0,0,0,0,70),(0,0,1,0,0)),
-    ((1,0,0,0,75),(0,0,0,0,0),(0,0,0,0,0),(0,0,1,0,0),
-     (0,0,0,0,0),(0,0,0,0,0),(0,0,0,0,55),(0,0,1,0,0),
-     (1,0,0,0,75),(0,1,0,0,0),(0,0,0,0,0),(0,0,1,0,0),
-     (0,0,0,0,0),(0,0,0,0,0),(1,0,0,1,65),(0,0,1,0,0)),
-    ((1,0,1,0,100),(0,0,0,0,0),(0,0,1,0,0),(0,0,0,0,80),
-     (0,1,1,0,0),(0,0,0,0,0),(0,0,1,0,0),(1,0,0,0,70),
-     (1,0,1,0,100),(0,0,0,0,0),(0,0,1,0,80),(0,0,0,0,0),
-     (0,1,1,0,0),(0,0,0,0,0),(1,0,1,0,0),(0,0,0,1,80)),
+    bytes((1,0,1,0,80,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,
+             0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,50,
+             1,0,1,0,80,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,
+             0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,60)),
+    bytes((1,0,0,0,90,0,0,1,0,70,0,0,0,0,0,0,0,1,0,0,
+             0,1,0,0,0,1,0,1,0,75,0,0,0,0,60,0,0,1,0,0,
+             1,0,0,0,90,0,0,1,0,0,0,0,0,0,65,0,0,1,0,0,
+             0,1,0,0,0,1,0,1,0,0,0,0,0,0,70,0,0,1,0,0)),
+    bytes((1,0,0,0,75,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,
+             0,0,0,0,0,0,0,0,0,0,0,0,0,0,55,0,0,1,0,0,
+             1,0,0,0,75,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,
+             0,0,0,0,0,0,0,0,0,0,1,0,0,1,65,0,0,1,0,0)),
+    bytes((1,0,1,0,100,0,0,0,0,0,0,0,1,0,0,0,0,0,0,80,
+             0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,70,
+             1,0,1,0,100,0,0,0,0,0,0,0,1,0,80,0,0,0,0,0,
+             0,1,1,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,1,80)),
 )
 _PNAMES=('Detroit','Acid','Minimal','Rave')
 _GATE=0.05;_BG=0.45
@@ -70,8 +71,8 @@ class ModeTechno(BaseMode):
         if self.ah and now-self.ah_t>=_GATE: _off(self.midi_out,_HH,9);_off(self.midi_out,_OH,9);self.ah=False
         if self.ab and now-self.ab_t>=self.step_dur*_BG: _off(self.midi_out,_BASS[self.key_idx],0);self.ab=False
 
-    def _fire(self, s, now):
-        k,sn,h,o,bv=s;v=90;L=self.layer
+    def _fire(self, p, b, now):
+        k=p[b];sn=p[b+1];h=p[b+2];o=p[b+3];bv=p[b+4];v=90;L=self.layer
         if k: _on(self.midi_out,_KICK,min(127,int(v*1.1)),9);self.ak=True;self.ak_t=now
         if sn and L>=1: _on(self.midi_out,_SNARE,v,9);self.as_=True;self.as_t=now
         if h and L>=2: _on(self.midi_out,_HH,max(1,int(v*0.6)),9);self.ah=True;self.ah_t=now
@@ -88,7 +89,7 @@ class ModeTechno(BaseMode):
         self.layer=min(3,int((z/127.0)*4))
         self._rel(now)
         if now-self.last_step_t>=self.step_dur:
-            self.last_step_t=now;self._fire(_PATTERNS[self.pattern_idx][self.step],now)
+            self.last_step_t=now;self._fire(_PATTERNS[self.pattern_idx],self.step*5,now)
             self.step=(self.step+1)%16
         _LNAMES=('KICK','KICK+SN','FULL-','FULL')
         return {'pat':_PNAMES[self.pattern_idx],'bpm':int(self.bpm),'lay':_LNAMES[self.layer]}

@@ -150,7 +150,7 @@ class ConfigManager:
             'current_bank': 0,
             'button_actions': {},
             'custom_chord_progressions': [],
-            'available_effects': ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend'],
+            'available_effects': ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend', 'Harmonia Negativa'],
             # Efectes temporals GLOBALS - apliquen a TOTS els bancs
             'efectos_temporales': {
                 '13': 'Sustain',
@@ -246,29 +246,30 @@ class ConfigManager:
     # La duplicación fue eliminada
         
     def get_config_hash(self):
-        """Genera un valor hash simple basado en la configuración actual
-        Este valor cambiará cuando la configuración sea modificada
+        """Genera un hash del CONTINGUT de la configuració (tots els bancs).
+
+        IMPORTANT: el hash ha de ser INDEPENDENT del banc actiu (current_bank_index).
+        Si depengués del banc actual, un simple canvi de capa (botó 13) faria
+        creure al bucle principal que el fitxer ha canviat i recarregaria la
+        config des de disc, revertint el canvi de banc. Per això recorrem TOTS
+        els bancs i ignorem quin està seleccionat.
         """
         try:
-            # Obtener elementos clave que podrían cambiar
-            current_bank = self.get_current_bank()
-            if not current_bank:
+            banks = self.config.get('banks', [])
+            if not banks:
                 return 0
-                
-            # Crear un hash simple basado en el nombre del banco y los modos
+
             hash_value = 0
-            
-            # Añadir hash del nombre del banco
-            bank_name = current_bank.get('name', '')
-            for char in bank_name:
-                hash_value = (hash_value * 31 + ord(char)) & 0xFFFFFFFF
-                
-            # Añadir hash de los modos asignados
-            modes = current_bank.get('modes', [])
-            for mode in modes:
-                for char in mode:
+            for bank in banks:
+                bank_name = bank.get('name', '')
+                for char in bank_name:
                     hash_value = (hash_value * 31 + ord(char)) & 0xFFFFFFFF
-                    
+                for mode in bank.get('modes', []):
+                    for char in mode:
+                        hash_value = (hash_value * 31 + ord(char)) & 0xFFFFFFFF
+                # separador entre bancs per evitar col·lisions
+                hash_value = (hash_value * 31 + 124) & 0xFFFFFFFF  # '|'
+
             return hash_value
         except Exception as e:
             print(f"Error al calcular el hash de configuración: {e}")
@@ -305,8 +306,9 @@ class ConfigManager:
         """
         bank_idx = self.current_bank_index if bank_index is None else bank_index
         if 0 <= bank_idx < len(self.config['banks']):
-            # Retornar les escales configurades o un valor per defecte
-            return self.config['banks'][bank_idx].get('keyboard_scales', [0, 1, 4, 5, 7, 8, 13, 15, 18, 19])
+            scales = self.config['banks'][bank_idx].get('keyboard_scales', None)
+            if scales:  # Non-empty list (empty list treated as unconfigured)
+                return list(scales)
         return [0, 1, 4, 5, 7, 8, 13, 15, 18, 19]  # Escales per defecte
     
     def get_keyboard_scales_with_progressions(self, bank_index=None):
@@ -456,9 +458,20 @@ class ConfigManager:
         Returns:
             progression_id si té èxit, None si falla
         """
-        import time
-        # Generar un ID únic
-        progression_id = f"prog_{int(time.monotonic() * 1000)}"
+        # Generar un ID únic a partir dels existents. (Abans es derivava de
+        # time.monotonic(), que es reinicia a cada arrencada i podia produir
+        # IDs duplicats entre sessions.)
+        max_n = 0
+        for prog in self.get_all_progressions():
+            pid = str(prog.get('id', ''))
+            if pid.startswith('prog_'):
+                try:
+                    n = int(pid[5:])
+                    if n > max_n:
+                        max_n = n
+                except ValueError:
+                    pass
+        progression_id = f"prog_{max_n + 1}"
         
         print(f"🎼 Creant progressió: '{name}' amb ID {progression_id}")
         print(f"   Acords: {len(chords)}")
@@ -723,6 +736,51 @@ class ConfigManager:
         
         return self.set_global_temporal_effects(effects)
 
+    def get_keyboard_button_functions(self):
+        """Retorna les funcions assignades als 16 botons del mode teclat.
+        Índexs 12 i 15 sempre retornen 'modes_layer' i 'stop' (blocats).
+        Format: llista de 16 strings.
+        """
+        _default = (
+            'note','note','note','note','note','note','note','note',
+            'scale','tonality','chord','arp',
+            'modes_layer','octave_down','octave_up','stop'
+        )
+        fns = self.config.get('keyboard_button_functions', None)
+        if not fns or len(fns) != 16:
+            return list(_default)
+        result = list(fns)
+        result[12] = 'modes_layer'
+        result[15] = 'stop'
+        return result
+
+    def get_neg_harmony_type(self):
+        """Retorna el tipus d'eix per a l'harmonia negativa (0-7)."""
+        try:
+            v = int(self.config.get('neg_harmony_type', 0))
+            return v if 0 <= v <= 7 else 0
+        except (ValueError, TypeError):
+            # Valor no numèric a la config: no fer petar el setup del teclat
+            return 0
+
+    def get_neg_harmony_axes(self):
+        """Retorna la llista d'IDs d'eixos d'harmonia negativa activats.
+        Per defecte retorna tots els eixos disponibles (0-7).
+        """
+        axes = self.config.get('neg_harmony_axes', None)
+        if axes and isinstance(axes, list):
+            result = []
+            for a in axes:
+                try:
+                    n = int(a)
+                except (ValueError, TypeError):
+                    continue
+                if 0 <= n <= 7:
+                    result.append(n)
+            if result:
+                return result
+        return [0, 1, 2, 3, 4, 5, 6, 7]
+
     def get_midi_channel(self):
         """Retorna el canal MIDI del dispositiu (1-16)"""
         return self.config.get('midi_channel', 1)
@@ -734,3 +792,20 @@ class ConfigManager:
         self.config['midi_channel'] = channel
         return self.save_config()
 
+
+    def get_chord_potentiometer_functions(self):
+        """Retorna les funcions dels potenciòmetres per al mode acords"""
+        return self.config.get('chord_potentiometer_functions', {})
+
+    def get_neg_potentiometer_functions(self):
+        """Retorna les funcions dels potenciòmetres per a l'harmonia negativa"""
+        return self.config.get('neg_potentiometer_functions', {})
+
+    def get_diatonic_functions(self):
+        """Retorna la llista de funcions harmòniques diatòniques activades.
+        Per defecte retorna ['diatonic'].
+        """
+        fns = self.config.get('diatonic_functions', None)
+        if fns:
+            return list(fns)
+        return ['diatonic']

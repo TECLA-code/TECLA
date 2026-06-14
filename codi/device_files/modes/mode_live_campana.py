@@ -38,6 +38,8 @@ class ModeLiveCampana(BaseMode):
 
     def _dbl(self, button_states, now):
         for i in range(min(len(button_states), 16)):
+            if i == 15:
+                continue
             cur = bool(button_states[i])
             if self.last_btn[i] and not cur:
                 gap = now - self.last_release[i]
@@ -52,9 +54,11 @@ class ModeLiveCampana(BaseMode):
     def update(self, pot_values, button_states):
         x, y, z = pot_values
         now = time.monotonic()
+        self.poll_negharm(button_states, z)
         self.min_gap = max(0.20, 3.0 - (x / 127.0) * 2.80)
         self._cc(1, y)
-        self.octave = 4 + int((z / 127.0) * 1.99)
+        if not self.neg_active:  # Z congelada mentre tria l'eix neg.
+            self.octave = 4 + int((z / 127.0) * 1.99)
         still = []
         for (n, off_t) in self.notes_on:
             if now >= off_t:
@@ -65,6 +69,7 @@ class ModeLiveCampana(BaseMode):
         if now >= self.next_t:
             iv = _PENTA[random.randint(0, len(_PENTA) - 1)]
             note = max(48, min(108, self._root() + iv))
+            note = self.negharm(note, self._root() % 12)
             vel = random.randint(65, 110)
             dur = random.uniform(0.8, 2.0)
             self.midi_out.send(self.note_on(note, vel))

@@ -49,12 +49,15 @@ class ModeLivePols(BaseMode):
         root = self._root()
         for iv in _CHORD:
             note = max(24, min(108, root + iv))
+            note = self.negharm(note, self._root() % 12)
             self.active_notes.append(note)
             self.midi_out.send(self.note_on(note, 90))
         self.chord_on = True
 
     def _dbl(self, button_states, now):
         for i in range(min(len(button_states), 16)):
+            if i == 15:
+                continue
             cur = bool(button_states[i])
             if self.last_btn[i] and not cur:
                 gap = now - self.last_release[i]
@@ -69,10 +72,12 @@ class ModeLivePols(BaseMode):
     def update(self, pot_values, button_states):
         x, y, z = pot_values
         now = time.monotonic()
+        self.poll_negharm(button_states, z)
         self.interval = max(0.12, 1.0 - (x / 127.0) * 0.88)
         self.note_len = self.interval * 0.15
         self._cc(1, y)
-        self.octave = 2 + int((z / 127.0) * 2.99)
+        if not self.neg_active:  # Z congelada mentre tria l'eix neg.
+            self.octave = 2 + int((z / 127.0) * 2.99)
         if now >= self.next_on:
             self._play_chord()
             self.next_off = now + self.note_len

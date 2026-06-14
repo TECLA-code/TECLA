@@ -20,6 +20,8 @@ Configuració del dispositiu:
 Mòduls essencials:
 - `config_manager.py` - Gestor de configuració
 - `layer_manager.py` - Gestor de capes
+- `display_manager.py` - Pantalla OLED SSD1306 (mòdul OPCIONAL: sense aquest
+  fitxer o sense pantalla connectada, el dispositiu funciona exactament igual)
 - `animations/` - Animacions per modes visuals
 
 #### 📂 `modes/`

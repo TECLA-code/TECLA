@@ -4,6 +4,7 @@ X: Velocitat de la melodia
 Y: Patró melòdic (5a Simfonia, Moonlight, Oda Alegria, Per Elisa, Appassionata)
 Z: Octavador
 Doble click: canvi de tonalitat
+Mantenir premut botó 16: harmonia negativa (pot Z tria l'eix)
 """
 import time
 from modes.base_mode import BaseMode
@@ -61,6 +62,9 @@ class ModeBeethoven(BaseMode):
     def _root(self):
         return self.octave * 12 + _OFFSETS[self.key_idx]
 
+    def _nh(self, note):
+        return self.negharm(note, self._root() % 12)
+
     def _send_cc(self, cc, val):
         try:
             self.midi_out.send(ControlChange(cc, val))
@@ -71,6 +75,7 @@ class ModeBeethoven(BaseMode):
         pat = _PATTERNS[self.pat_idx]
         interval = pat[self.step % len(pat)]
         note = max(24, min(108, self._root() + interval))
+        note = self._nh(note)
 
         # Dinàmica beethoveniana: sforzando cada 4 notes
         base_vel = _VELS[self.step % len(_VELS)]
@@ -91,6 +96,7 @@ class ModeBeethoven(BaseMode):
     def update(self, pot_values, button_states):
         x, y, z = pot_values
         now = time.monotonic()
+        self.poll_negharm(button_states, z)
 
         # POT X: Velocitat (0.7s lent → 0.07s ràpid)
         self.speed = 0.07 if x > 122 else (0.7 - (x / 127.0) * 0.63)
@@ -102,10 +108,11 @@ class ModeBeethoven(BaseMode):
             self.step = 0
             self.sfz_counter = 0
 
-        # POT Z: Octava (3-6)
-        new_oct = 3 + int((z / 127.0) * 3.99)
-        if new_oct != self.octave:
-            self.octave = new_oct
+        # POT Z: Octava (3-6) — congelada mentre Z tria l'eix d'harmonia negativa
+        if not self.neg_active:
+            new_oct = 3 + int((z / 127.0) * 3.99)
+            if new_oct != self.octave:
+                self.octave = new_oct
 
         # Tocar nota si toca
         if now >= self.next_note_time:
@@ -114,8 +121,10 @@ class ModeBeethoven(BaseMode):
             self._play_step(vel_scale)
             self.next_note_time = now + self.speed
 
-        # Doble click: canviar tonalitat
+        # Doble click: canviar tonalitat (botó 16 reservat per harmonia negativa)
         for i in range(min(len(button_states), 16)):
+            if i == 15:
+                continue
             cur = bool(button_states[i])
             if self.last_btn[i] and not cur:
                 gap = now - self.last_release[i]
@@ -129,7 +138,9 @@ class ModeBeethoven(BaseMode):
                     self.last_release[i] = now
             self.last_btn[i] = cur
 
-        return {'key': _KEYS[self.key_idx], 'oct': self.octave, 'pat': self.pat_idx}
+        return {'key': _KEYS[self.key_idx], 'oct': self.octave, 'pat': self.pat_idx,
+                'neg': self.neg_active,
+                'axis': self.negharm_axis_name() if self.neg_active else '-'}
 
     def cleanup(self):
         if self.last_note >= 0:

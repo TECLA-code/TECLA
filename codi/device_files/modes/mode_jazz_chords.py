@@ -2,6 +2,7 @@
 Mode Jazz - Per a músics de jazz que volen improvisar
 Doble click per canviar tonalitat
 Pots: Octava, Progressió, Swing
+Mantenir premut botó 16: harmonia negativa (pot Z tria l'eix; re-voca l'acord)
 """
 import random
 import time
@@ -83,9 +84,13 @@ class ModeJazzChords(BaseMode):
     def update(self, pot_values, button_states):
         current_time = time.monotonic()
         x, y, z = pot_values
-        
-        # Detectar doble click per canviar tonalitat
+        prev_neg = (self.neg_active, self.neg_axis)
+        self.poll_negharm(button_states, z)
+
+        # Detectar doble click per canviar tonalitat (botó 16 reservat per negativa)
         for i, pressed in enumerate(button_states):
+            if i == 15:
+                continue
             if pressed and self._detect_double_click(i):
                 # Canviar tonalitat (C, C#, D, D#, etc.)
                 self.key = (self.key + 1) % 12
@@ -107,8 +112,11 @@ class ModeJazzChords(BaseMode):
             self.last_chord_time = 0
             self.last_prog_type = self.progression_type
         
-        # POT Z: Swing (0.0 = straight, 1.0 = molt swing)
-        self.swing_amount = z / 127.0
+        # POT Z: Swing — congelat mentre Z tria l'eix d'harmonia negativa
+        if not self.neg_active:
+            self.swing_amount = z / 127.0
+        if (self.neg_active, self.neg_axis) != prev_neg:
+            self.last_chord_time = 0   # re-voca l'acord en negatiu immediatament
         
         # Ajustar duració segons swing
         base_duration = 2.0
@@ -132,8 +140,8 @@ class ModeJazzChords(BaseMode):
             # Aplicar tonalitat i octava
             self.current_chord = []
             for interval in chord_intervals:
-                note = (self.octave * 12) + self.key + interval
-                note = max(0, min(127, note))
+                note = max(0, min(127, (self.octave * 12) + self.key + interval))
+                note = self.negharm(note, self.key % 12)
                 self.current_chord.append(note)
             
             # Reproduir acord amb variació de velocitat per swing
@@ -155,11 +163,13 @@ class ModeJazzChords(BaseMode):
             'key': key_names[self.key],
             'oct': f'Oct{self.octave}',
             'prog': prog_names[self.progression_type],
-            'swing': f'{int(self.swing_amount*100)}%'
+            'swing': f'{int(self.swing_amount*100)}%',
+            'neg': self.neg_active,
+            'axis': self.negharm_axis_name() if self.neg_active else '-'
         }
     
     def cleanup(self):
         # Aturar totes les notes
-        notes_to_stop = list(self.current_chord)
+        for note in list(self.current_chord):
+            self.midi_out.send(self.note_off(note, 0))
         self.current_chord = []
-        return [(note, 0) for note in notes_to_stop]

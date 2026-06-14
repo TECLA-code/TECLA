@@ -11,26 +11,26 @@ const _HID_MOD_MAP = {
   'GUI':           'Keycode.GUI'
 };
 
-Blockly.Python['tecla_key_press'] = function(block) {
+Blockly.Python.forBlock['tecla_key_press'] = function(block) {
   const key = block.getFieldValue('KEY');
   return `_keyboard.send(Keycode.${key})\n`;
 };
 
-Blockly.Python['tecla_key_combo'] = function(block) {
+Blockly.Python.forBlock['tecla_key_combo'] = function(block) {
   const modifier = block.getFieldValue('MODIFIER');
   const key      = block.getFieldValue('KEY');
   const mods     = _HID_MOD_MAP[modifier] || 'Keycode.CONTROL';
   return `_keyboard.send(${mods}, Keycode.${key})\n`;
 };
 
-Blockly.Python['tecla_type_text'] = function(block) {
+Blockly.Python.forBlock['tecla_type_text'] = function(block) {
   const text = block.getFieldValue('TEXT')
     .replace(/\\/g, '\\\\')
     .replace(/"/g, '\\"');
   return `_layout.write("${text}")\n`;
 };
 
-Blockly.Python['tecla_media'] = function(block) {
+Blockly.Python.forBlock['tecla_media'] = function(block) {
   const action = block.getFieldValue('ACTION');
   // Map actions that changed name between adafruit_hid versions
   const safeMap = {
@@ -43,7 +43,7 @@ Blockly.Python['tecla_media'] = function(block) {
   return `_cc.send(${useVar})\n`;
 };
 
-Blockly.Python['tecla_open_app'] = function(block) {
+Blockly.Python.forBlock['tecla_open_app'] = function(block) {
   const app  = (block.getFieldValue('APP_NAME') || 'Spotify').replace(/"/g, '\\"');
   const plat = block.getFieldValue('PLATFORM');
   let code = `# Obrir app: ${app}\n`;

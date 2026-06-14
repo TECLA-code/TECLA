@@ -54,7 +54,7 @@ class ModePedalJazz(BaseMode):
         
         velocities = [80, 65, 75, 60, 55]
         for i, degree in enumerate(degrees):
-            note = max(24, min(96, base_note + degree))
+            note = self.negharm(max(24, min(96, base_note + degree)), base_note % 12)
             self.active_drones.append((note, velocities[i]))
             self.midi_out.send(self.note_on(note, velocities[i]))
         print(f"🎷 PedalJazz: {self.key_circle[self.key_index]}{chord_type}")
@@ -69,7 +69,13 @@ class ModePedalJazz(BaseMode):
         dt = current_time - self.last_update
         self.last_update = current_time
         x, y, z = pot_values
-        
+
+        # Harmonia negativa: botó 16; pot Z tria l'eix (re-voca el pedal)
+        prev_neg = (self.neg_active, self.neg_axis)
+        self.poll_negharm(button_states, z)
+        if (self.neg_active, self.neg_axis) != prev_neg:
+            self._stop_pedal()   # força el rebuild reflectit de la lògica de capes
+
         # X: Nombre de capes (1-5)
         num_layers = 1 + int((x / 127.0) * 4)
         if num_layers != len(self.active_drones):
@@ -85,21 +91,24 @@ class ModePedalJazz(BaseMode):
             velocities = [80, 65, 75, 60, 55]
             for i in range(num_layers):
                 if i < len(degrees):
-                    note = max(24, min(96, base_note + degrees[i]))
+                    note = self.negharm(max(24, min(96, base_note + degrees[i])), base_note % 12)
                     self.active_drones.append((note, velocities[i]))
                     self.midi_out.send(self.note_on(note, velocities[i]))
         
         # Y: Reverb (CC91) per profunditat jazz
         self._send_cc(91, y)
         
-        # Z: Tipus d'acord (maj9, m7, 7, dim7, sus4)
-        new_chord_type = int((z / 127.0) * (len(self.chord_type_names) - 0.01))
-        if new_chord_type != self.current_chord_type:
-            self.current_chord_type = new_chord_type
-            self._start_pedal()  # Reiniciar pedal amb nou tipus d'acord
-        
-        # Doble click: canviar tonalitat cromàtica
+        # Z: Tipus d'acord — congelat mentre Z tria l'eix d'harmonia negativa
+        if not self.neg_active:
+            new_chord_type = int((z / 127.0) * (len(self.chord_type_names) - 0.01))
+            if new_chord_type != self.current_chord_type:
+                self.current_chord_type = new_chord_type
+                self._start_pedal()  # Reiniciar pedal amb nou tipus d'acord
+
+        # Doble click: canviar tonalitat cromàtica (botó 16 reservat per negativa)
         for btn_idx in range(len(button_states)):
+            if btn_idx == 15:
+                continue
             if btn_idx < len(button_states) and button_states[btn_idx]:
                 time_since = current_time - self.last_button_press_time[btn_idx]
                 if time_since < self.double_click_threshold:
@@ -114,7 +123,9 @@ class ModePedalJazz(BaseMode):
         return {
             'key': self.key_circle[self.key_index],
             'chord': chord_type,
-            'layers': layer_names[num_layers - 1] if num_layers <= 5 else 'Full'
+            'layers': layer_names[num_layers - 1] if num_layers <= 5 else 'Full',
+            'neg': self.neg_active,
+            'axis': self.negharm_axis_name() if self.neg_active else '-',
         }
     
     def _send_cc(self, cc_num, value):
@@ -129,4 +140,3 @@ class ModePedalJazz(BaseMode):
         self._stop_pedal()
         self._send_cc(91, 0)
         self._send_cc(1, 0)
-        return [(note, 0) for note, _ in self.active_drones]

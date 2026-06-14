@@ -6,9 +6,6 @@ Z: Velocitat general del caos
 """
 import time, random
 from modes.base_mode import BaseMode
-from adafruit_midi.note_on import NoteOn
-from adafruit_midi.note_off import NoteOff
-from adafruit_midi.control_change import ControlChange
 
 
 class ModeHardNoise(BaseMode):
@@ -33,6 +30,8 @@ class ModeHardNoise(BaseMode):
         print(f"HardNoise: {'RAFEGUES' if self.burst_mode else 'CONTINU'}")
 
     def _bg(self):
+        from adafruit_midi.note_on import NoteOn
+        from adafruit_midi.note_off import NoteOff
         tgt=int(self.bass_int*70)
         for b in self.bg:
             b['vel']=min(b['vel']+3,tgt) if b['vel']<tgt else max(b['vel']-3,tgt)
@@ -44,17 +43,20 @@ class ModeHardNoise(BaseMode):
             except Exception: pass
 
     def _burst(self, t):
+        from adafruit_midi.note_on import NoteOn
         for _ in range(1+int(self.burst_int*3)):
             n=random.randint(80,110);v=random.randint(90,127)
             try: self.midi_out.send(NoteOn(n,v));self.playing.add(n)
             except Exception: pass
 
     def _mid(self, t):
+        from adafruit_midi.note_on import NoteOn
         n=random.randint(45,70);v=int(60+self.chaos*50)
         try: self.midi_out.send(NoteOn(n,v));self.playing.add(n)
         except Exception: pass
 
     def _decay(self):
+        from adafruit_midi.note_off import NoteOff
         p=0.08+self.chaos*0.15
         for n in [n for n in self.playing if n>=40 and random.random()<p]:
             try: self.midi_out.send(NoteOff(n,0));self.playing.discard(n)
@@ -83,6 +85,8 @@ class ModeHardNoise(BaseMode):
     def stop(self): self.cleanup()
 
     def cleanup(self):
+        from adafruit_midi.note_off import NoteOff
+        from adafruit_midi.control_change import ControlChange
         for b in self.bg:
             if b['on']:
                 try: self.midi_out.send(NoteOff(b['note'],0))

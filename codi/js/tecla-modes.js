@@ -18,13 +18,14 @@ export class TECLAModes {
         const modes = {};
 
         // 0. Scan actual files present in modes/ (single FS call, used to filter both sources)
+        //    Accepta .py i .mpy (precompilats). Es guarda el nom base sense extensió.
         const presentFiles = new Set();
         try {
             const entries = await this.device.listDir('modes');
             for (const entry of entries) {
-                if (entry.type === 'file' && entry.name.endsWith('.py')) {
-                    presentFiles.add(entry.name); // e.g. 'mode_einaudi.py'
-                }
+                if (entry.type !== 'file') continue;
+                if (entry.name.endsWith('.py')) presentFiles.add(entry.name.slice(0, -3));
+                else if (entry.name.endsWith('.mpy')) presentFiles.add(entry.name.slice(0, -4));
             }
         } catch { /* modes dir may not exist yet */ }
 
@@ -36,7 +37,7 @@ export class TECLAModes {
                 const pattern = /'([^']+)':\s*\('([^']+)',\s*'([^']+)'\)/g;
                 let m;
                 while ((m = pattern.exec(match[1])) !== null) {
-                    if (presentFiles.has(`${m[2]}.py`)) {
+                    if (presentFiles.has(m[2])) {
                         modes[m[1]] = {
                             file_name: m[2],
                             class_name: m[3],
@@ -46,7 +47,16 @@ export class TECLAModes {
                 }
             }
         } catch (e) {
-            console.warn('[TECLA] No s\'ha pogut llegir mode_manager.py:', e);
+            // Dispositiu desplegat amb .mpy precompilats: mode_manager.py no hi
+            // és com a font. Fallback al registre estàtic conegut (ha de quadrar
+            // amb MODE_CLASSES de mm_lifecycle.py).
+            if (presentFiles.has('mode_keyboard')) {
+                modes['Teclat'] = {
+                    file_name: 'mode_keyboard',
+                    class_name: 'KeyboardMode',
+                    source: 'original'
+                };
+            }
         }
 
         // 2. Modes personalitzats del registre — only include if file is physically present
@@ -55,7 +65,7 @@ export class TECLAModes {
             const registry = JSON.parse(content);
             const customModes = registry.custom_modes || {};
             for (const [name, info] of Object.entries(customModes)) {
-                if (presentFiles.has(`${info.file_name}.py`)) {
+                if (presentFiles.has(info.file_name)) {
                     modes[name] = { ...info, source: 'custom' };
                 }
             }
@@ -160,11 +170,16 @@ export class TECLAModes {
     // ─── Eliminar mode ───────────────────────────────────────────────
 
     async removeMode(modeName, modeInfo) {
-        // Eliminar el fitxer
-        try {
-            await this.device.deleteFile(`modes/${modeInfo.file_name}.py`);
-        } catch (e) {
-            return { success: false, error: `No s'ha pogut eliminar el fitxer: ${e.message}` };
+        // Eliminar el fitxer (pot ser .py o .mpy precompilat)
+        let deleted = false;
+        for (const ext of ['.py', '.mpy']) {
+            try {
+                await this.device.deleteFile(`modes/${modeInfo.file_name}${ext}`);
+                deleted = true;
+            } catch { /* aquesta extensió no existeix */ }
+        }
+        if (!deleted) {
+            return { success: false, error: `No s'ha pogut eliminar el fitxer del mode` };
         }
 
         // Actualitzar el registre (només per modes custom)

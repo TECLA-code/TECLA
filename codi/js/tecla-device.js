@@ -85,8 +85,15 @@ export class TECLADevice {
     }
 
     async fileExists(path) {
+        // Només resol el handle: llegir el contingut sencer (com abans) era
+        // innecessàriament car per a fitxers grans
         try {
-            await this.readFile(path);
+            const parts = path.split('/').filter(Boolean);
+            let current = this.rootHandle;
+            for (let i = 0; i < parts.length - 1; i++) {
+                current = await current.getDirectoryHandle(parts[i]);
+            }
+            await current.getFileHandle(parts[parts.length - 1]);
             return true;
         } catch {
             return false;
@@ -130,7 +137,7 @@ export class TECLADevice {
             const modesHandle = await this.rootHandle.getDirectoryHandle('modes');
             let count = 0;
             for await (const [name, handle] of modesHandle.entries()) {
-                if (handle.kind === 'file' && name.endsWith('.py')) count++;
+                if (handle.kind === 'file' && (name.endsWith('.py') || name.endsWith('.mpy'))) count++;
             }
             return count;
         } catch {

@@ -4,10 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TECLA Blocks</title>
-  <script src="https://unpkg.com/blockly@10.4.3/blockly_compressed.js"></script>
-  <script src="https://unpkg.com/blockly@10.4.3/blocks_compressed.js"></script>
-  <script src="https://unpkg.com/blockly@10.4.3/python_compressed.js"></script>
-  <script src="https://unpkg.com/blockly@10.4.3/msg/ca.js"></script>
+  <!-- Blockly vendoritzat (v10.4.3): funciona sense connexió a internet -->
+  <script src="vendor/blockly/blockly_compressed.js"></script>
+  <script src="vendor/blockly/blocks_compressed.js"></script>
+  <script>
+    // Carrega les traduccions de Blockly segons l'idioma desat (ca/es/en)
+    (function () {
+      var lang = localStorage.getItem('tecla-blk-lang') || 'ca';
+      if (['ca', 'es', 'en'].indexOf(lang) === -1) lang = 'ca';
+      document.write('<script src="vendor/blockly/msg/' + lang + '.js"><\/script>');
+    })();
+  </script>
+  <script src="vendor/blockly/python_compressed.js"></script>
   <style>
     :root {
       --bg: #0a0a0a;
@@ -489,6 +497,8 @@
             <p class="guide-li" data-i18n="guide.cat5">GPIO: Pins digitals, PWM, analògics</p>
             <p class="guide-li" data-i18n="guide.cat6">Generatiu: Probabilitat, LFO per software, quantització</p>
             <p class="guide-li" data-i18n="guide.cat7">Accions: Teclat USB, dreceres, media</p>
+            <p class="guide-li" data-i18n="guide.cat8">Pantalla i LEDs: OLED, NeoPixels, servos i motors</p>
+            <p class="guide-li" data-i18n="guide.cat9">Sensors i Sistema: temperatura, distància, llum, memòria</p>
           </div>
           <div class="guide-section">
             <div class="guide-h1" data-i18n="guide.t3">3. Pujar al dispositiu</div>
@@ -530,6 +540,7 @@
             <div class="fw-step-title"><span class="fw-step-num">2</span><span data-i18n="fw.t2">Instal·lar les llibreries</span></div>
             <p class="fw-step-desc">Descarrega el <strong>bundle de llibreries</strong> de CircuitPython i copia la carpeta <strong>adafruit_midi</strong> dins <strong>CIRCUITPY/lib/</strong>.</p>
             <p class="fw-step-sub">Cerca <em>adafruit-circuitpython-bundle</em> → descomprimeix → copia <strong>adafruit_midi/</strong> a <strong>CIRCUITPY/lib/</strong>.</p>
+            <p class="fw-step-sub">Segons els blocs que usis, copia també: <strong>adafruit_hid/</strong> (teclat i media), <strong>adafruit_ssd1306.mpy</strong> + <strong>adafruit_framebuf.mpy</strong> (pantalla OLED), <strong>neopixel.mpy</strong> (LEDs) i <strong>adafruit_motor/</strong> (servos).</p>
             <a class="dl-link" href="https://github.com/adafruit/Adafruit_CircuitPython_Bundle/releases/latest" target="_blank">
               <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M4 7l4 4 4-4"/><rect x="2" y="11" width="12" height="2" rx="1"/></svg>
               <span data-i18n="fw.dl.lib">Descarregar Bundle de Llibreries</span>
@@ -687,18 +698,116 @@
       <block type="tecla_effect_delay"></block>
       <block type="tecla_effect_reverb"></block>
       <block type="tecla_effect_filter"></block>
+      <block type="tecla_set_instrument"></block>
+      <block type="tecla_set_volume"><value name="VOLUME"><shadow type="math_number"><field name="NUM">100</field></shadow></value></block>
+      <block type="tecla_set_pan"><value name="PAN"><shadow type="math_number"><field name="NUM">64</field></shadow></value></block>
     </category>
     <category name="GPIO (Pins)" colour="#00f0ff">
       <block type="tecla_digital_write"></block>
       <block type="tecla_digital_read"></block>
       <block type="tecla_analog_write"><value name="VALUE"><shadow type="math_number"><field name="NUM">32768</field></shadow></value></block>
       <block type="tecla_analog_read"></block>
+      <block type="tecla_pwm_setup">
+        <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+        <value name="FREQ"><shadow type="math_number"><field name="NUM">1000</field></shadow></value>
+      </block>
+      <block type="tecla_pwm_duty">
+        <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+        <value name="DUTY"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
+      </block>
+    </category>
+    <category name="Pantalla OLED" colour="#00f0ff">
+      <block type="tecla_display_setup"></block>
+      <block type="tecla_display_text">
+        <value name="TEXT"><shadow type="text"><field name="TEXT">Hola TECLA!</field></shadow></value>
+        <value name="X"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="Y"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+      </block>
+      <block type="tecla_display_clear"></block>
+      <block type="tecla_display_pixel">
+        <value name="X"><shadow type="math_number"><field name="NUM">64</field></shadow></value>
+        <value name="Y"><shadow type="math_number"><field name="NUM">32</field></shadow></value>
+      </block>
+      <block type="tecla_display_line">
+        <value name="X1"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="Y1"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="X2"><shadow type="math_number"><field name="NUM">127</field></shadow></value>
+        <value name="Y2"><shadow type="math_number"><field name="NUM">63</field></shadow></value>
+      </block>
+      <block type="tecla_display_rect">
+        <value name="X"><shadow type="math_number"><field name="NUM">10</field></shadow></value>
+        <value name="Y"><shadow type="math_number"><field name="NUM">10</field></shadow></value>
+        <value name="WIDTH"><shadow type="math_number"><field name="NUM">40</field></shadow></value>
+        <value name="HEIGHT"><shadow type="math_number"><field name="NUM">20</field></shadow></value>
+      </block>
+    </category>
+    <category name="LEDs NeoPixel" colour="#f472b6">
+      <block type="tecla_neopixel_setup">
+        <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+        <value name="COUNT"><shadow type="math_number"><field name="NUM">8</field></shadow></value>
+      </block>
+      <block type="tecla_neopixel_set">
+        <value name="INDEX"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="R"><shadow type="math_number"><field name="NUM">255</field></shadow></value>
+        <value name="G"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="B"><shadow type="math_number"><field name="NUM">128</field></shadow></value>
+      </block>
+      <block type="tecla_neopixel_show"></block>
+      <block type="tecla_neopixel_clear"></block>
+      <block type="tecla_neopixel_rainbow">
+        <value name="OFFSET"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+      </block>
+    </category>
+    <category name="Servos i Motors" colour="#fb923c">
+      <block type="tecla_servo_setup">
+        <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+      </block>
+      <block type="tecla_servo_angle">
+        <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+        <value name="ANGLE"><shadow type="math_number"><field name="NUM">90</field></shadow></value>
+      </block>
+      <block type="tecla_motor_setup">
+        <value name="PIN1"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+        <value name="PIN2"><shadow type="math_number"><field name="NUM">17</field></shadow></value>
+      </block>
+      <block type="tecla_motor_speed">
+        <value name="SPEED"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+      </block>
+    </category>
+    <category name="Sensors" colour="#4ade80">
+      <block type="tecla_sensor_temperature"></block>
+      <block type="tecla_sensor_light">
+        <value name="PIN"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+      </block>
+      <block type="tecla_sensor_sound">
+        <value name="PIN"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+      </block>
+      <block type="tecla_sensor_moisture">
+        <value name="PIN"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+      </block>
+      <block type="tecla_sensor_pir">
+        <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+      </block>
+      <block type="tecla_sensor_button_external">
+        <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+      </block>
+      <block type="tecla_sensor_distance"></block>
+      <block type="tecla_system_voltage"></block>
     </category>
     <category name="Temps i Bucles" colour="#ff9100">
       <block type="tecla_wait"><value name="TIME"><shadow type="math_number"><field name="NUM">1.0</field></shadow></value></block>
+      <block type="tecla_sleep_ms"><value name="TIME"><shadow type="math_number"><field name="NUM">500</field></shadow></value></block>
       <block type="tecla_repeat_forever"></block>
       <block type="controls_repeat_ext"><value name="TIMES"><shadow type="math_number"><field name="NUM">10</field></shadow></value></block>
       <block type="controls_whileUntil"></block>
+      <block type="tecla_break"></block>
+      <block type="tecla_continue"></block>
+      <block type="tecla_set_bpm"><value name="BPM"><shadow type="math_number"><field name="NUM">120</field></shadow></value></block>
+      <block type="tecla_wait_beat"></block>
+      <block type="tecla_timer_start"></block>
+      <block type="tecla_timer_elapsed"></block>
+      <block type="tecla_time_now"></block>
+      <block type="tecla_time_millis"></block>
     </category>
     <category name="Generatiu" colour="#ff1a6c">
       <block type="tecla_probability"><value name="PERCENT"><shadow type="math_number"><field name="NUM">50</field></shadow></value></block>
@@ -708,6 +817,14 @@
         <value name="MAX"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
       </block>
       <block type="tecla_scale_quantize"><value name="VALUE"><shadow type="math_number"><field name="NUM">60</field></shadow></value></block>
+      <block type="tecla_get_random_scale_note">
+        <value name="OCTAVE"><shadow type="math_number"><field name="NUM">4</field></shadow></value>
+      </block>
+      <block type="tecla_euclidean_rhythm">
+        <value name="STEP"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="PULSES"><shadow type="math_number"><field name="NUM">4</field></shadow></value>
+        <value name="STEPS"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+      </block>
     </category>
     <category name="Lògica" colour="#00e676">
       <block type="controls_if"></block>
@@ -716,6 +833,10 @@
       <block type="logic_operation"></block>
       <block type="logic_negate"></block>
       <block type="logic_boolean"></block>
+      <block type="tecla_switch">
+        <value name="VALUE"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+      </block>
+      <block type="tecla_try_except"></block>
     </category>
     <category name="Matemàtiques" colour="#00e676">
       <block type="math_number"></block>
@@ -733,6 +854,81 @@
         <value name="FROM_MAX"><shadow type="math_number"><field name="NUM">1023</field></shadow></value>
         <value name="TO_MIN"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
         <value name="TO_MAX"><shadow type="math_number"><field name="NUM">127</field></shadow></value>
+      </block>
+      <block type="tecla_math_constrain">
+        <value name="VALUE"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
+        <value name="MIN"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="MAX"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+      </block>
+      <block type="tecla_math_trig">
+        <value name="NUM"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+      </block>
+      <block type="tecla_math_degrees">
+        <value name="RADIANS"><shadow type="math_number"><field name="NUM">3.14</field></shadow></value>
+      </block>
+      <block type="tecla_math_radians">
+        <value name="DEGREES"><shadow type="math_number"><field name="NUM">180</field></shadow></value>
+      </block>
+      <block type="tecla_math_log">
+        <value name="VALUE"><shadow type="math_number"><field name="NUM">10</field></shadow></value>
+      </block>
+      <block type="tecla_math_exp">
+        <value name="VALUE"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+      </block>
+      <block type="tecla_math_bitwise">
+        <value name="A"><shadow type="math_number"><field name="NUM">5</field></shadow></value>
+        <value name="B"><shadow type="math_number"><field name="NUM">3</field></shadow></value>
+      </block>
+    </category>
+    <category name="Text" colour="#ffe500">
+      <block type="text"></block>
+      <block type="tecla_text_join">
+        <value name="TEXT1"><shadow type="text"><field name="TEXT">Hola </field></shadow></value>
+        <value name="TEXT2"><shadow type="text"><field name="TEXT">TECLA</field></shadow></value>
+      </block>
+      <block type="tecla_text_length">
+        <value name="TEXT"><shadow type="text"><field name="TEXT">hola</field></shadow></value>
+      </block>
+      <block type="tecla_text_contains">
+        <value name="TEXT"><shadow type="text"><field name="TEXT">hola món</field></shadow></value>
+        <value name="SEARCH"><shadow type="text"><field name="TEXT">món</field></shadow></value>
+      </block>
+      <block type="tecla_string_replace">
+        <value name="TEXT"><shadow type="text"><field name="TEXT">hola món</field></shadow></value>
+        <value name="OLD"><shadow type="text"><field name="TEXT">món</field></shadow></value>
+        <value name="NEW"><shadow type="text"><field name="TEXT">TECLA</field></shadow></value>
+      </block>
+      <block type="tecla_string_split">
+        <value name="TEXT"><shadow type="text"><field name="TEXT">a,b,c</field></shadow></value>
+        <value name="DELIMITER"><shadow type="text"><field name="TEXT">,</field></shadow></value>
+      </block>
+      <block type="tecla_string_format">
+        <value name="FORMAT"><shadow type="text"><field name="TEXT">Valor: {}</field></shadow></value>
+        <value name="VALUE"><shadow type="math_number"><field name="NUM">42</field></shadow></value>
+      </block>
+      <block type="tecla_string_startswith">
+        <value name="TEXT"><shadow type="text"><field name="TEXT">hola món</field></shadow></value>
+        <value name="PREFIX"><shadow type="text"><field name="TEXT">hola</field></shadow></value>
+      </block>
+      <block type="tecla_string_endswith">
+        <value name="TEXT"><shadow type="text"><field name="TEXT">hola món</field></shadow></value>
+        <value name="SUFFIX"><shadow type="text"><field name="TEXT">món</field></shadow></value>
+      </block>
+      <block type="tecla_serial_print">
+        <value name="TEXT"><shadow type="text"><field name="TEXT">Hola consola!</field></shadow></value>
+      </block>
+    </category>
+    <category name="Llistes" colour="#ff6e40">
+      <block type="tecla_list_create"></block>
+      <block type="tecla_list_add">
+        <value name="ITEM"><shadow type="math_number"><field name="NUM">60</field></shadow></value>
+      </block>
+      <block type="tecla_list_get">
+        <value name="INDEX"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+      </block>
+      <block type="tecla_list_length"></block>
+      <block type="tecla_string_join">
+        <value name="SEPARATOR"><shadow type="text"><field name="TEXT">, </field></shadow></value>
       </block>
     </category>
     <category name="MIDI Avançat" colour="#40c8ff">
@@ -804,6 +1000,23 @@
       <block type="tecla_media"></block>
       <block type="tecla_open_app"></block>
     </category>
+    <category name="Sistema" colour="#94a3b8">
+      <block type="tecla_storage_write">
+        <value name="KEY"><shadow type="text"><field name="TEXT">comptador</field></shadow></value>
+        <value name="VALUE"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+      </block>
+      <block type="tecla_storage_read">
+        <value name="KEY"><shadow type="text"><field name="TEXT">comptador</field></shadow></value>
+      </block>
+      <block type="tecla_storage_exists">
+        <value name="KEY"><shadow type="text"><field name="TEXT">comptador</field></shadow></value>
+      </block>
+      <block type="tecla_storage_delete">
+        <value name="KEY"><shadow type="text"><field name="TEXT">comptador</field></shadow></value>
+      </block>
+      <block type="tecla_system_memory"></block>
+      <block type="tecla_system_reset"></block>
+    </category>
     <sep></sep>
     <category name="Events Scratch" colour="#FFBF00">
       <block type="scratch_when_flag_clicked"></block>
@@ -813,16 +1026,58 @@
     </category>
     <category name="Control Scratch" colour="#FFAB19">
       <block type="scratch_stop"></block>
+      <block type="scratch_say">
+        <value name="MESSAGE"><shadow type="text"><field name="TEXT">Hola!</field></shadow></value>
+        <value name="SECONDS"><shadow type="math_number"><field name="NUM">2</field></shadow></value>
+      </block>
+      <block type="scratch_think">
+        <value name="MESSAGE"><shadow type="text"><field name="TEXT">Hmm...</field></shadow></value>
+        <value name="SECONDS"><shadow type="math_number"><field name="NUM">2</field></shadow></value>
+      </block>
+      <block type="scratch_timer"></block>
+      <block type="scratch_reset_timer"></block>
+      <block type="scratch_change_var">
+        <value name="VALUE"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+      </block>
+      <block type="scratch_show_variable"></block>
+    </category>
+    <category name="Operadors Scratch" colour="#59C059">
+      <block type="scratch_join">
+        <value name="STRING1"><shadow type="text"><field name="TEXT">poma </field></shadow></value>
+        <value name="STRING2"><shadow type="text"><field name="TEXT">pera</field></shadow></value>
+      </block>
+      <block type="scratch_letter_of">
+        <value name="LETTER"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+        <value name="STRING"><shadow type="text"><field name="TEXT">poma</field></shadow></value>
+      </block>
+      <block type="scratch_length_of">
+        <value name="STRING"><shadow type="text"><field name="TEXT">poma</field></shadow></value>
+      </block>
+      <block type="scratch_contains">
+        <value name="STRING1"><shadow type="text"><field name="TEXT">poma</field></shadow></value>
+        <value name="STRING2"><shadow type="text"><field name="TEXT">o</field></shadow></value>
+      </block>
+      <block type="scratch_mod">
+        <value name="NUM1"><shadow type="math_number"><field name="NUM">10</field></shadow></value>
+        <value name="NUM2"><shadow type="math_number"><field name="NUM">3</field></shadow></value>
+      </block>
+      <block type="scratch_round">
+        <value name="NUM"><shadow type="math_number"><field name="NUM">3.5</field></shadow></value>
+      </block>
+      <block type="scratch_mathop">
+        <value name="NUM"><shadow type="math_number"><field name="NUM">9</field></shadow></value>
+      </block>
     </category>
   </xml>
 
   <!-- Block definitions & generators -->
-  <script src="blocks/tecla_blocks.js"></script>
-  <script src="blocks/scratch_compatible.js"></script>
-  <script src="generators/tecla_python.js?v=4"></script>
-  <script src="generators/tecla_python_extended.js?v=4"></script>
-  <script src="generators/tecla_python_hid.js"></script>
-  <script src="generators/scratch_python.js"></script>
-  <script src="app.js?v=4"></script>
+  <script src="generators/blockly_compat.js?v=8"></script>
+  <script src="blocks/tecla_blocks.js?v=8"></script>
+  <script src="blocks/scratch_compatible.js?v=8"></script>
+  <script src="generators/tecla_python.js?v=8"></script>
+  <script src="generators/tecla_python_extended.js?v=8"></script>
+  <script src="generators/tecla_python_hid.js?v=8"></script>
+  <script src="generators/scratch_python.js?v=8"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>

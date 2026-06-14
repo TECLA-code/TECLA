@@ -5,8 +5,6 @@ Funcions potenciòmetres basades en mode teclat
 """
 import time
 from modes.base_mode import BaseMode
-from adafruit_midi.control_change import ControlChange
-
 class ModeToDrone(BaseMode):
     def __init__(self, midi_out, config=None):
         super().__init__(midi_out, config)
@@ -162,6 +160,7 @@ class ModeToDrone(BaseMode):
         """Envia un CC MIDI a tots els canals"""
         self.cc_values[cc_num] = value
         try:
+            from adafruit_midi.control_change import ControlChange
             for ch in range(16):
                 self.midi_out.send(ControlChange(cc_num, value, channel=ch))
         except Exception:
@@ -173,4 +172,3 @@ class ModeToDrone(BaseMode):
         # Desactivar CC al sortir
         self._send_cc(11, 127)  # Expression al màxim
         self._send_cc(74, 64)   # Brightness neutral
-        return [(note, 0) for note in self.active_drone_notes]

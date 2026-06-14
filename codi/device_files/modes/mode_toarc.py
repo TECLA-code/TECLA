@@ -4,6 +4,7 @@ X: Velocitat del cicle d'arc (rapid 0.5s <-> lent 6s per cicle)
 Y: Modulacio (CC1) - igual que al mode teclat i ToDrone
 Z: Octava (2-5)
 Doble click: canvi de tonalitat
+Mantenir premut botó 16: harmonia negativa (pot Z tria l'eix; re-voca el drone)
 """
 import time
 from modes.base_mode import BaseMode
@@ -98,7 +99,7 @@ class ModeToArc(BaseMode):
         self._stop_notes()
         root = self._root()
         for iv in _HARMONICS[self.harm_idx]:
-            note = max(24, min(96, root + iv))
+            note = self.negharm(max(24, min(96, root + iv)), self._root() % 12)
             _on(self.midi_out, note, 80)
             self.active.append(note)
         self.active_notes = list(self.active)
@@ -134,6 +135,8 @@ class ModeToArc(BaseMode):
         now = time.monotonic()
         dt  = now - self.last_t
         self.last_t = now
+        prev_neg = (self.neg_active, self.neg_axis)
+        self.poll_negharm(button_states, z)
 
         # X: Velocitat del cicle (0.5s - 6s per cicle complet)
         self.cycle_dur = 0.5 + (1.0 - x / 127.0) * 5.5
@@ -141,13 +144,18 @@ class ModeToArc(BaseMode):
         # Y: Modulacio (CC1) - igual que al mode teclat i ToDrone
         self._send_cc(1, y)
 
-        # Z: Octava (2-5)
-        new_oct = 2 + int((z / 127.0) * 3.99)
-        if new_oct != self.octave:
-            self.octave = new_oct
-            _cc(self.midi_out, 11, 0)
+        # Z: Octava (2-5) — congelada mentre Z tria l'eix d'harmonia negativa
+        if not self.neg_active:
+            new_oct = 2 + int((z / 127.0) * 3.99)
+            if new_oct != self.octave:
+                self.octave = new_oct
+                _cc(self.midi_out, 11, 0)
+                self._start_notes()
+                print(f"ToArc: oct{self.octave}")
+
+        # Re-voca el drone si ha canviat l'estat o l'eix d'harmonia negativa
+        if (self.neg_active, self.neg_axis) != prev_neg:
             self._start_notes()
-            print(f"ToArc: oct{self.octave}")
 
         # Avancar la fase del cicle d'arc
         self.phase = (self.phase + dt / self.cycle_dur) % 1.0
@@ -158,8 +166,10 @@ class ModeToArc(BaseMode):
             _cc(self.midi_out, 11, cc11_val)
             self.last_cc11 = cc11_val
 
-        # Doble click: canvi de tonalitat
+        # Doble click: canvi de tonalitat (botó 16 reservat per harmonia negativa)
         for i in range(min(len(button_states), 16)):
+            if i == 15:
+                continue
             cur = bool(button_states[i])
             if self.last_btn[i] and not cur:
                 gap = now - self.last_release[i]
@@ -179,6 +189,8 @@ class ModeToArc(BaseMode):
             'harm':  _HNAMES[self.harm_idx],
             'oct':   self.octave,
             'phase': round(self.phase, 2),
+            'neg':   self.neg_active,
+            'axis':  self.negharm_axis_name() if self.neg_active else '-',
         }
 
     def stop(self):

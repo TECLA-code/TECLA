@@ -4,6 +4,7 @@ X: Velocitat (molt lent per defecte)
 Y: Figura (NearLight, Brot, Saman, Near, Drift)
 Z: Octava
 Doble click: canvi de tonalitat
+Mantenir premut botó 16: harmonia negativa (pot Z tria l'eix)
 """
 import time
 from modes.base_mode import BaseMode
@@ -62,6 +63,9 @@ class ModeArnalds(BaseMode):
     def _root(self):
         return self.octave * 12 + _OFF[self.key_idx]
 
+    def _nh(self, note):
+        return self.negharm(note, self._root() % 12)
+
     def _cc(self, cc, val):
         try:
             self.midi_out.send(ControlChange(cc, max(0, min(127, val))))
@@ -72,6 +76,7 @@ class ModeArnalds(BaseMode):
         pat  = _PATTERNS[self.pat_idx]
         interval = pat[self.step % len(pat)]
         note = max(24, min(108, self._root() + interval))
+        note = self._nh(note)
         # interval=0 primer pas: fort; repetit: molt fluix (silenci Arnalds)
         base_vel = _VELS[self.step % len(_VELS)]
         # Si el pas és 0 i no és el primer del patró: molt fluix
@@ -86,6 +91,7 @@ class ModeArnalds(BaseMode):
     def update(self, pot_values, button_states):
         x, y, z = pot_values
         now = time.monotonic()
+        self.poll_negharm(button_states, z)
 
         # X: Velocitat (2s molt lent → 0.2s moderat — mai arriba a ser rapid)
         self.speed = max(0.2, 2.0 - (x / 127.0) * 1.8)
@@ -96,16 +102,19 @@ class ModeArnalds(BaseMode):
             self.pat_idx = new_pat
             self.step = 0
 
-        # Z: Octava (3-6)
-        new_oct = 3 + int((z / 127.0) * 3.99)
-        if new_oct != self.octave:
-            self.octave = new_oct
+        # Z: Octava (3-6) — congelada mentre Z tria l'eix d'harmonia negativa
+        if not self.neg_active:
+            new_oct = 3 + int((z / 127.0) * 3.99)
+            if new_oct != self.octave:
+                self.octave = new_oct
 
         if now >= self.next_note_t:
             self._play_step()
             self.next_note_t = now + self.speed
 
         for i in range(min(len(button_states), 16)):
+            if i == 15:
+                continue
             cur = bool(button_states[i])
             if self.last_btn[i] and not cur:
                 gap = now - self.last_release[i]
@@ -118,7 +127,9 @@ class ModeArnalds(BaseMode):
                     self.last_release[i] = now
             self.last_btn[i] = cur
 
-        return {'key': _KEYS[self.key_idx], 'pat': _PNAMES[self.pat_idx], 'oct': self.octave}
+        return {'key': _KEYS[self.key_idx], 'pat': _PNAMES[self.pat_idx],
+                'oct': self.octave, 'neg': self.neg_active,
+                'axis': self.negharm_axis_name() if self.neg_active else '-'}
 
     def cleanup(self):
         if self.last_note >= 0:

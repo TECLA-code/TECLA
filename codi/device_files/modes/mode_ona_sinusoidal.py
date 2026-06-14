@@ -74,9 +74,9 @@ class ModeOnaSinusoidal(BaseMode):
         }
     
     def cleanup(self):
-        notes_to_stop = list(self.notes_playing)
+        for note in list(self.notes_playing):
+            self.midi_out.send(self.note_off(note, 0))
         self.notes_playing.clear()
         if self.current_note is not None:
             self.midi_out.send(self.note_off(self.current_note, 0))
             self.current_note = None
-        return [(note, 0) for note in notes_to_stop]
