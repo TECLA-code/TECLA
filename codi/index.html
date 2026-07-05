@@ -1951,21 +1951,14 @@
       border-radius: 3px
     }
 
-    /* ══ DISPOSITIU — gestor de capes ══ */
-    .disp-layout { display: flex; gap: 16px; align-items: flex-start; }
-    .disp-sidebar {
-      flex: 0 0 232px; position: sticky; top: 12px;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--r2); padding: 10px; display: flex; flex-direction: column; gap: 8px;
+    /* ══ DISPOSITIU — gestor de capes (barra SUPERIOR) ══ */
+    .disp-topbar {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      padding-bottom: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--border);
     }
-    .disp-sidebar-head {
-      display: flex; align-items: center; justify-content: space-between;
-      font-size: 11.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
-      color: var(--text2); padding: 2px 2px 6px;
-    }
-    .layer-list { display: flex; flex-direction: column; gap: 5px; min-height: 30px; }
+    .layer-tabs { display: flex; gap: 6px; flex-wrap: wrap; flex: 1 1 auto; min-width: 0; }
     .layer-item {
-      display: flex; align-items: center; gap: 8px; padding: 8px 9px;
+      display: flex; align-items: center; gap: 8px; padding: 6px 12px;
       background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius);
       cursor: pointer; user-select: none; transition: border-color .12s, background .12s;
     }
@@ -1973,23 +1966,16 @@
     .layer-item.active { border-color: var(--accent); background: var(--surface3); }
     .layer-item.drag-over { border-color: var(--accent); }
     .layer-item.dragging { opacity: .45; }
-    .layer-item .li-grip { color: var(--text3); cursor: grab; font-size: 13px; line-height: 1; }
-    .layer-item .li-icon { font-size: 15px; line-height: 1; }
-    .layer-item .li-body { flex: 1 1 auto; min-width: 0; }
-    .layer-item .li-name {
-      font-size: 12.5px; color: var(--text); font-weight: 500;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .layer-item .li-type { font-size: 10.5px; color: var(--text2); }
+    .layer-item .li-name { font-size: 12.5px; color: var(--text); font-weight: 500; white-space: nowrap; }
+    .layer-item .li-type { font-size: 9.5px; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; }
     .layer-item .li-del {
-      opacity: 0; color: var(--text2); background: none; border: none; cursor: pointer;
-      font-size: 13px; padding: 2px 4px; border-radius: 3px; transition: opacity .12s, color .12s;
+      opacity: .3; color: var(--text2); background: none; border: none; cursor: pointer;
+      font-size: 12px; padding: 0 1px; border-radius: 3px; line-height: 1; transition: opacity .12s, color .12s;
     }
     .layer-item:hover .li-del { opacity: 1; }
     .layer-item .li-del:hover { color: var(--red); }
-    .disp-sidebar-hint { font-size: 10px; color: var(--text3); text-align: center; padding-top: 4px; }
-    .disp-config { flex: 1 1 auto; min-width: 0; }
-    /* els configuradors reparentats: treu el marge de tab-panel */
+    .disp-config { width: 100%; min-width: 0; }
+    /* els configuradors reparentats */
     .disp-config > .cfg-embed { display: none; }
     .disp-config > .cfg-embed.show { display: block; }
     /* selector de tipus dins la capçalera del configurador */
@@ -2030,19 +2016,13 @@
 
     <!-- ══ DISPOSITIU (capes: teclat / modes) ═══════════════════════ -->
     <div class="tab-panel active" id="tab-dispositiu">
-      <div class="disp-layout">
-        <aside class="disp-sidebar">
-          <div class="disp-sidebar-head">
-            <span>Capes</span>
-            <button class="btn btn-sm btn-primary" id="btn-add-layer" title="Afegir capa">+ Capa</button>
-          </div>
-          <div id="layer-list" class="layer-list"></div>
-          <div class="disp-sidebar-hint">Arrossega per reordenar · clic per editar</div>
-        </aside>
-        <section class="disp-config" id="layer-config-host">
-          <!-- Els configuradors (teclat/modes) es reparenteixen aquí per JS -->
-        </section>
+      <div class="disp-topbar">
+        <div id="layer-list" class="layer-tabs"></div>
+        <button class="btn btn-sm" id="btn-add-layer" title="Afegir una capa nova">+ Capa</button>
       </div>
+      <section class="disp-config" id="layer-config-host">
+        <!-- Els configuradors (teclat/modes) es reparenteixen aquí per JS -->
+      </section>
     </div>
 
     <!-- ══ TECLES ══════════════════════════════════════════════════ -->
@@ -2962,7 +2942,6 @@
       const modesBankBar = modesCfg.querySelector('.bank-bar');
       if (modesBankBar) modesBankBar.style.display = 'none';
 
-      const _typeIcon = t => (t === 'teclat' ? '🎹' : '🎛');
       const _typeLabel = t => (t === 'teclat' ? 'Teclat' : 'Modes');
       function _clampSel() {
         const b = _keysConfig.banks;
@@ -2978,14 +2957,10 @@
           item.className = 'layer-item' + (i === _keysConfig.currentBank ? ' active' : '');
           item.draggable = true;
           item.dataset.idx = i;
-          const grip = document.createElement('span'); grip.className = 'li-grip'; grip.textContent = '⋮⋮';
-          const icon = document.createElement('span'); icon.className = 'li-icon'; icon.textContent = _typeIcon(b.type);
-          const body = document.createElement('span'); body.className = 'li-body';
           const nm = document.createElement('span'); nm.className = 'li-name'; nm.textContent = b.name || ('Capa ' + (i + 1));
           const tp = document.createElement('span'); tp.className = 'li-type'; tp.textContent = _typeLabel(b.type);
-          body.appendChild(nm); body.appendChild(tp);
-          const del = document.createElement('button'); del.className = 'li-del'; del.title = 'Eliminar capa'; del.textContent = '✕';
-          item.append(grip, icon, body, del);
+          const del = document.createElement('button'); del.className = 'li-del'; del.title = 'Eliminar capa'; del.textContent = '×';
+          item.append(nm, tp, del);
           item.addEventListener('click', e => { if (e.target.closest('.li-del')) return; selectLayer(i); });
           del.addEventListener('click', e => { e.stopPropagation(); deleteLayer(i); });
           nm.addEventListener('dblclick', e => { e.stopPropagation(); renameLayer(i); });
@@ -3000,7 +2975,7 @@
         title.style.cssText = 'font-weight:600;font-size:14px;color:var(--text)';
         title.textContent = b.name || 'Capa';
         const bar = document.createElement('div'); bar.className = 'layer-type-bar';
-        [['teclat', '🎹 Teclat'], ['modes', '🎛 Modes']].forEach(([t, lbl]) => {
+        [['teclat', 'Teclat'], ['modes', 'Modes']].forEach(([t, lbl]) => {
           const btn = document.createElement('button');
           btn.className = 'btn btn-sm' + (b.type === t ? ' active' : '');
           btn.textContent = lbl;
