@@ -2,10 +2,16 @@
 import http.server
 import socketserver
 import sys
+import os
 import json
 import subprocess
 
-PORT = 8080
+# Serveix sempre des del directori d'aquest script (codi/), passi el que passi
+# el cwd de qui l'engega (p. ex. el harness de preview).
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+# Port: variable d'entorn PORT (preview) > argument > 8080 per defecte.
+PORT = int(os.environ.get('PORT') or (sys.argv[1] if len(sys.argv) > 1 else 8080))
 
 class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):

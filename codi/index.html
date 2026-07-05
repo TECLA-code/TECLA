@@ -1950,6 +1950,52 @@
       background: var(--surface3);
       border-radius: 3px
     }
+
+    /* ══ DISPOSITIU — gestor de capes ══ */
+    .disp-layout { display: flex; gap: 16px; align-items: flex-start; }
+    .disp-sidebar {
+      flex: 0 0 232px; position: sticky; top: 12px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r2); padding: 10px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .disp-sidebar-head {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 11.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+      color: var(--text2); padding: 2px 2px 6px;
+    }
+    .layer-list { display: flex; flex-direction: column; gap: 5px; min-height: 30px; }
+    .layer-item {
+      display: flex; align-items: center; gap: 8px; padding: 8px 9px;
+      background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius);
+      cursor: pointer; user-select: none; transition: border-color .12s, background .12s;
+    }
+    .layer-item:hover { border-color: var(--border-h); }
+    .layer-item.active { border-color: var(--accent); background: var(--surface3); }
+    .layer-item.drag-over { border-color: var(--accent); }
+    .layer-item.dragging { opacity: .45; }
+    .layer-item .li-grip { color: var(--text3); cursor: grab; font-size: 13px; line-height: 1; }
+    .layer-item .li-icon { font-size: 15px; line-height: 1; }
+    .layer-item .li-body { flex: 1 1 auto; min-width: 0; }
+    .layer-item .li-name {
+      font-size: 12.5px; color: var(--text); font-weight: 500;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .layer-item .li-type { font-size: 10.5px; color: var(--text2); }
+    .layer-item .li-del {
+      opacity: 0; color: var(--text2); background: none; border: none; cursor: pointer;
+      font-size: 13px; padding: 2px 4px; border-radius: 3px; transition: opacity .12s, color .12s;
+    }
+    .layer-item:hover .li-del { opacity: 1; }
+    .layer-item .li-del:hover { color: var(--red); }
+    .disp-sidebar-hint { font-size: 10px; color: var(--text3); text-align: center; padding-top: 4px; }
+    .disp-config { flex: 1 1 auto; min-width: 0; }
+    /* els configuradors reparentats: treu el marge de tab-panel */
+    .disp-config > .cfg-embed { display: none; }
+    .disp-config > .cfg-embed.show { display: block; }
+    /* selector de tipus dins la capçalera del configurador */
+    .layer-type-bar { display: inline-flex; gap: 4px; background: var(--surface2); padding: 3px; border-radius: var(--radius); }
+    .layer-type-bar button { font-size: 11.5px; }
+    .layer-type-bar button.active { background: var(--accent); color: #fff; }
   </style>
 </head>
 
@@ -1972,8 +2018,7 @@
   </header>
 
   <nav>
-    <span class="nav-tab active" data-tab="modes" data-i18n="nav_modes">Teclat</span>
-    <span class="nav-tab" data-tab="keys" data-i18n="nav_keys">Modes</span>
+    <span class="nav-tab active" data-tab="dispositiu">Dispositiu</span>
     <span class="nav-tab" data-tab="simulator" data-i18n="nav_simulator">Simulador</span>
     <span class="nav-tab" data-tab="firmware" data-i18n="firmware">Firmware</span>
     <span class="nav-tab" data-tab="theme" data-i18n="nav_theme">Aparença</span>
@@ -1982,6 +2027,23 @@
   </nav>
 
   <main>
+
+    <!-- ══ DISPOSITIU (capes: teclat / modes) ═══════════════════════ -->
+    <div class="tab-panel active" id="tab-dispositiu">
+      <div class="disp-layout">
+        <aside class="disp-sidebar">
+          <div class="disp-sidebar-head">
+            <span>Capes</span>
+            <button class="btn btn-sm btn-primary" id="btn-add-layer" title="Afegir capa">+ Capa</button>
+          </div>
+          <div id="layer-list" class="layer-list"></div>
+          <div class="disp-sidebar-hint">Arrossega per reordenar · clic per editar</div>
+        </aside>
+        <section class="disp-config" id="layer-config-host">
+          <!-- Els configuradors (teclat/modes) es reparenteixen aquí per JS -->
+        </section>
+      </div>
+    </div>
 
     <!-- ══ TECLES ══════════════════════════════════════════════════ -->
     <div class="tab-panel" id="tab-keys">
@@ -2121,7 +2183,7 @@
     </div>
 
     <!-- ══ MODES I ESCALES ════════════════════════════════════════ -->
-    <div class="tab-panel active" id="tab-modes">
+    <div class="tab-panel" id="tab-modes">
 
       <div style="margin-bottom:14px">
         <div style="font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:12px;letter-spacing:.04em;text-transform:uppercase" data-i18n="assignacio_de_funcions_del_mode_te">Assignació de funcions del mode teclat</div>
@@ -2877,6 +2939,185 @@
     buildModesTab();
     _builtModes = true;
 
+    // ══ DISPOSITIU — gestor de capes tipades (v3) ═══════════════════════════
+    // Reutilitza els configuradors existents (tab-modes = teclat, tab-keys =
+    // modes) reparentant-los dins d'un amfitrió i mostrant-ne un segons el TIPUS
+    // de la capa seleccionada a la barra lateral. Una sola pestanya "Dispositiu".
+    // DEFERIT (setTimeout): aquest bloc usa `_keysConfig`, un `let` definit més
+    // avall → executar-lo ara donaria ReferenceError (TDZ). El timeout el fa
+    // córrer quan el mòdul ja s'ha avaluat sencer.
+    setTimeout(function initDispositiu() {
+      const host = document.getElementById('layer-config-host');
+      const teclatCfg = document.getElementById('tab-modes');
+      const modesCfg = document.getElementById('tab-keys');
+      if (!host || !teclatCfg || !modesCfg) return;
+
+      [teclatCfg, modesCfg].forEach(el => { el.classList.remove('tab-panel', 'active'); el.classList.add('cfg-embed'); });
+      const typeHeader = document.createElement('div');
+      typeHeader.id = 'layer-type-header';
+      typeHeader.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap';
+      host.appendChild(typeHeader);
+      host.appendChild(teclatCfg);
+      host.appendChild(modesCfg);
+      const modesBankBar = modesCfg.querySelector('.bank-bar');
+      if (modesBankBar) modesBankBar.style.display = 'none';
+
+      const _typeIcon = t => (t === 'teclat' ? '🎹' : '🎛');
+      const _typeLabel = t => (t === 'teclat' ? 'Teclat' : 'Modes');
+      function _clampSel() {
+        const b = _keysConfig.banks;
+        if (_keysConfig.currentBank == null || _keysConfig.currentBank < 0 || _keysConfig.currentBank >= b.length) _keysConfig.currentBank = 0;
+      }
+
+      function renderLayerList() {
+        const list = document.getElementById('layer-list');
+        if (!list) return;
+        list.innerHTML = '';
+        _keysConfig.banks.forEach((b, i) => {
+          const item = document.createElement('div');
+          item.className = 'layer-item' + (i === _keysConfig.currentBank ? ' active' : '');
+          item.draggable = true;
+          item.dataset.idx = i;
+          const grip = document.createElement('span'); grip.className = 'li-grip'; grip.textContent = '⋮⋮';
+          const icon = document.createElement('span'); icon.className = 'li-icon'; icon.textContent = _typeIcon(b.type);
+          const body = document.createElement('span'); body.className = 'li-body';
+          const nm = document.createElement('span'); nm.className = 'li-name'; nm.textContent = b.name || ('Capa ' + (i + 1));
+          const tp = document.createElement('span'); tp.className = 'li-type'; tp.textContent = _typeLabel(b.type);
+          body.appendChild(nm); body.appendChild(tp);
+          const del = document.createElement('button'); del.className = 'li-del'; del.title = 'Eliminar capa'; del.textContent = '✕';
+          item.append(grip, icon, body, del);
+          item.addEventListener('click', e => { if (e.target.closest('.li-del')) return; selectLayer(i); });
+          del.addEventListener('click', e => { e.stopPropagation(); deleteLayer(i); });
+          nm.addEventListener('dblclick', e => { e.stopPropagation(); renameLayer(i); });
+          _wireDrag(item);
+          list.appendChild(item);
+        });
+      }
+
+      function _renderTypeHeader(b) {
+        typeHeader.innerHTML = '';
+        const title = document.createElement('span');
+        title.style.cssText = 'font-weight:600;font-size:14px;color:var(--text)';
+        title.textContent = b.name || 'Capa';
+        const bar = document.createElement('div'); bar.className = 'layer-type-bar';
+        [['teclat', '🎹 Teclat'], ['modes', '🎛 Modes']].forEach(([t, lbl]) => {
+          const btn = document.createElement('button');
+          btn.className = 'btn btn-sm' + (b.type === t ? ' active' : '');
+          btn.textContent = lbl;
+          btn.addEventListener('click', () => setLayerType(_keysConfig.currentBank, t));
+          bar.appendChild(btn);
+        });
+        typeHeader.append(title, bar);
+      }
+
+      function showConfigForType(type) {
+        teclatCfg.classList.toggle('show', type === 'teclat');
+        modesCfg.classList.toggle('show', type === 'modes');
+      }
+
+      function selectLayer(i, opts) {
+        opts = opts || {};
+        _clampSel();
+        const prev = _keysConfig.currentBank;
+        const pb = _keysConfig.banks[prev];
+        // Desa la config de la capa que DEIXEM (snapshot swap).
+        if (!opts.initial && pb && prev !== i) {
+          if (pb.type === 'modes') { try { _readGridIntoBank(prev); } catch (e) {} }
+          else if (pb.type === 'teclat') { pb.kb = _captureKb(); }
+        }
+        if (i < 0 || i >= _keysConfig.banks.length) return;
+        _keysConfig.currentBank = i;
+        const b = _keysConfig.banks[i];
+        showConfigForType(b.type);
+        _renderTypeHeader(b);
+        // Carrega la config de la capa ENTRANT.
+        if (!opts.initial) {
+          if (b.type === 'modes') {
+            try { _syncBankSelect(); _loadBankIntoGrid(i); } catch (e) {}
+          } else if (b.type === 'teclat') {
+            // Restaura la foto d'aquesta capa (o defaults si és nova) i re-renderitza
+            // TOT el configurador de teclat (buildModesTab és idempotent).
+            _restoreKb(b.kb && Object.keys(b.kb).length ? b.kb : {});
+            try { buildModesTab(); } catch (e) {}
+            if (!b.kb || !Object.keys(b.kb).length) b.kb = _captureKb();
+          }
+        }
+        _saveKeysConfig(_keysConfig);
+        renderLayerList();
+      }
+
+      function setLayerType(i, type) {
+        const b = _keysConfig.banks[i];
+        if (!b || b.type === type) return;
+        b.type = type;
+        if (type === 'teclat' && !b.kb) b.kb = {};
+        _saveKeysConfig(_keysConfig);
+        selectLayer(i);
+      }
+
+      function addLayer() {
+        _keysConfig.banks.push({ name: 'Capa ' + (_keysConfig.banks.length + 1), type: 'modes', modes: Array(12).fill(''), efectos: { '13': 'Sustain', '14': 'Pausa' }, kb: {} });
+        _saveKeysConfig(_keysConfig);
+        selectLayer(_keysConfig.banks.length - 1);
+      }
+
+      function deleteLayer(i) {
+        if (_keysConfig.banks.length <= 1) { alert('Ha de quedar almenys una capa.'); return; }
+        const nm = _keysConfig.banks[i].name || ('Capa ' + (i + 1));
+        if (!confirm('Eliminar la capa "' + nm + '"?')) return;
+        _keysConfig.banks.splice(i, 1);
+        if (_keysConfig.currentBank >= _keysConfig.banks.length) _keysConfig.currentBank = _keysConfig.banks.length - 1;
+        else if (_keysConfig.currentBank > i) _keysConfig.currentBank--;
+        _saveKeysConfig(_keysConfig);
+        selectLayer(_keysConfig.currentBank);
+      }
+
+      function renameLayer(i) {
+        const cur = _keysConfig.banks[i].name || '';
+        const nm = prompt('Nom de la capa:', cur);
+        if (nm == null) return;
+        _keysConfig.banks[i].name = (nm.trim() || cur || ('Capa ' + (i + 1)));
+        _saveKeysConfig(_keysConfig);
+        selectLayer(_keysConfig.currentBank);
+      }
+
+      let _dragIdx = null;
+      function _wireDrag(item) {
+        item.addEventListener('dragstart', e => { _dragIdx = +item.dataset.idx; item.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+        item.addEventListener('dragend', () => { item.classList.remove('dragging'); document.querySelectorAll('.layer-item.drag-over').forEach(el => el.classList.remove('drag-over')); });
+        item.addEventListener('dragover', e => { e.preventDefault(); item.classList.add('drag-over'); });
+        item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
+        item.addEventListener('drop', e => {
+          e.preventDefault(); item.classList.remove('drag-over');
+          const to = +item.dataset.idx;
+          if (_dragIdx == null || _dragIdx === to) return;
+          _reorder(_dragIdx, to); _dragIdx = null;
+        });
+      }
+      function _reorder(from, to) {
+        const banks = _keysConfig.banks, cur = _keysConfig.currentBank;
+        const moved = banks.splice(from, 1)[0];
+        banks.splice(to, 0, moved);
+        let nc = cur;
+        if (cur === from) nc = to;
+        else if (from < cur && to >= cur) nc = cur - 1;
+        else if (from > cur && to <= cur) nc = cur + 1;
+        _keysConfig.currentBank = nc;
+        _saveKeysConfig(_keysConfig);
+        selectLayer(nc);
+      }
+
+      document.getElementById('btn-add-layer')?.addEventListener('click', addLayer);
+
+      // Render inicial: la graella de modes ja l'ha carregat buildKeysGrid, així
+      // que a l'inici NO la toquem (evita curses amb el seu async).
+      _clampSel();
+      renderLayerList();
+      const b0 = _keysConfig.banks[_keysConfig.currentBank];
+      showConfigForType(b0.type);
+      _renderTypeHeader(b0);
+    }, 0);
+
     navigator.usb?.addEventListener('disconnect', () => {
       if (device.isConnected()) { modes = null; setDisconnected(); log('Dispositiu desconnectat.', 'info'); }
     });
@@ -3106,9 +3347,41 @@
 
     function _loadKeysConfig() { try { return JSON.parse(localStorage.getItem('tecla-keys-config') || 'null'); } catch { return null; } }
     function _saveKeysConfig(c) { localStorage.setItem('tecla-keys-config', JSON.stringify(c)); }
-    function _defaultKeysConfig() { return { banks: [{ name: 'Capa 1', modes: Array(12).fill(''), efectos: { '13': 'Sustain', '14': 'Pausa' } }], currentBank: 0 }; }
+
+    // ── Config de TECLAT per capa (v3, "snapshot swap") ────────────────────
+    // Cada capa de tipus 'teclat' guarda una foto (kb) de TOTES les claus de
+    // config de teclat. En seleccionar una capa teclat es restaura la seva foto
+    // a les claus globals (que la UI ja fa servir sense canvis); en editar o
+    // canviar de capa es torna a capturar. Així cada capa teclat és independent
+    // sense reescriure desenes de funcions de config.
+    const KB_KEYS = ['tecla-modes-config', 'tecla-diatonic-fns', 'tecla-neg-harm-type',
+      'tecla-neg-harm-axes', 'tecla-chord-inversions', 'tecla-kb-btn-functions',
+      'tecla-progressions', 'tecla-custom-scales', 'tecla-custom-arps'];
+    function _captureKb() {
+      const snap = {};
+      KB_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v !== null) snap[k] = v; });
+      return snap;
+    }
+    function _restoreKb(snap) {
+      snap = snap || {};
+      KB_KEYS.forEach(k => {
+        if (k in snap) localStorage.setItem(k, snap[k]); else localStorage.removeItem(k);
+      });
+      // Recarrega les variables en memòria que reflecteixen aquestes claus.
+      try { _loadCustomScales(); } catch (e) {}
+      try { _loadCustomArps(); } catch (e) {}
+      try { _loadProgressions(); } catch (e) {}
+    }
+
+    function _defaultKeysConfig() {
+      return { banks: [{ name: 'Teclat', type: 'teclat', modes: Array(12).fill(''), efectos: { '13': 'Sustain', '14': 'Pausa' }, kb: _captureKb() }], currentBank: 0 };
+    }
     let _keysConfig = _loadKeysConfig() || _defaultKeysConfig();
-    _keysConfig.banks.forEach(b => { if (!b.efectos) b.efectos = { '13': 'Sustain', '14': 'Pausa' }; });
+    _keysConfig.banks.forEach(b => {
+      if (!b.efectos) b.efectos = { '13': 'Sustain', '14': 'Pausa' };
+      if (!b.type) b.type = 'modes';                    // capes antigues = capes de modes
+      if (b.type === 'teclat' && !b.kb) b.kb = {};      // es sembrarà en seleccionar-la
+    });
 
     // ══════════════════════════════════════════════════════════════
     // CAPES GUARDADES — snapshots de la pestanya Tecles
@@ -3637,51 +3910,70 @@
     });
 
     function buildDeviceConfig() {
-      const mc = _loadModesConfig();
-      // Convert file names ("mode_mandelbrot.py") → display names ("Mandelbrot") that mode_manager.py expects
       const customNames = _getModeNames();
       const fileToName = Object.fromEntries(_modesIndex.map(m => [m.file, customNames[m.file] || m.name]));
-      const midiChannel = mc.midi_channel || 1;
       const DEFAULT_KB_SCALES = [0, 1, 4, 5, 7, 8, 13, 15, 18, 19];
-      const kbScales = (mc.keyboard_scales && mc.keyboard_scales.length > 0) ? mc.keyboard_scales : DEFAULT_KB_SCALES;
-      const kbKeys = mc.keyboard_keys || ALL_KEYS;
-      const arpModes = mc.arpeggiator_modes || Array.from({ length: 16 }, (_, i) => i);
-      const potFns    = mc.potentiometer_functions || {};
-      const arpPotFns = mc.arp_potentiometer_functions || {};
-      const chordPotFns = mc.chord_potentiometer_functions || {};
-      const negPotFns   = mc.neg_potentiometer_functions   || {};
-      const chordTypes = mc.chord_types || ['Major'];
+
+      // Llegeix la config de teclat de les claus globals ACTUALS (working copy).
+      function _readKbConfig() {
+        const mc = _loadModesConfig();
+        try { _loadCustomArps(); } catch (e) {}
+        return {
+          keyboard_scales: (mc.keyboard_scales && mc.keyboard_scales.length) ? mc.keyboard_scales : DEFAULT_KB_SCALES,
+          keyboard_keys: mc.keyboard_keys || ALL_KEYS,
+          arpeggiator_modes: mc.arpeggiator_modes || Array.from({ length: 16 }, (_, i) => i),
+          potentiometer_functions: mc.potentiometer_functions || {},
+          arp_potentiometer_functions: mc.arp_potentiometer_functions || {},
+          chord_potentiometer_functions: mc.chord_potentiometer_functions || {},
+          neg_potentiometer_functions: mc.neg_potentiometer_functions || {},
+          chord_types: mc.chord_types || ['Major'],
+          keyboard_button_functions: _loadKbBtnFunctions(),
+          neg_harmony_axes: _loadNegHarmAxes(),
+          neg_harmony_type: _loadNegHarmType(),
+          chord_inversions: _loadChordInversions(),
+          diatonic_functions: _loadDiatonicFns(),
+          custom_arpeggiator_patterns: _customArps,
+          custom_chord_progressions: _getProgressions()
+        };
+      }
+
+      // Assegura que els canvis de la capa ACTUAL són a les seves dades abans de
+      // construir (encara no s'ha canviat de capa, així que no s'ha capturat).
+      try {
+        const cb = _keysConfig.banks[_keysConfig.currentBank];
+        if (cb) {
+          if (cb.type === 'teclat') cb.kb = _captureKb();
+          else _readGridIntoBank(_keysConfig.currentBank);
+        }
+      } catch (e) {}
+
+      // Foto de la config de teclat actual, per restaurar-la després de llegir
+      // les capes teclat una a una (snapshot swap durant la construcció).
+      const _savedKb = _captureKb();
+
+      const banks = _keysConfig.banks.map(b => {
+        const type = b.type || 'modes';
+        const bank = { name: b.name, type: type, efectos_temporales: b.efectos || {} };
+        if (type === 'teclat') {
+          _restoreKb(b.kb && Object.keys(b.kb).length ? b.kb : _savedKb);
+          Object.assign(bank, _readKbConfig());
+          bank.modes = Array(12).fill('');                       // capa teclat: sense modes
+        } else {
+          bank.modes = (b.modes || []).map(f => f ? (fileToName[f] || f) : '');
+        }
+        return bank;
+      });
+      _restoreKb(_savedKb);   // torna la config de teclat de la capa seleccionada
+
+      const mc = _loadModesConfig();
       return {
-        banks: _keysConfig.banks.map(b => ({
-          name: b.name,
-          modes: b.modes.map(f => f ? (fileToName[f] || f) : ''),
-          efectos_temporales: b.efectos || {},
-          keyboard_scales: kbScales,
-          keyboard_keys: kbKeys,
-          arpeggiator_modes: arpModes,
-          potentiometer_functions: potFns,
-          arp_potentiometer_functions: arpPotFns,
-          chord_types: chordTypes
-        })),
+        banks: banks,
         current_bank: _keysConfig.currentBank,
-        midi_channel: midiChannel,
+        midi_channel: mc.midi_channel || 1,
         enabled_modes: _getAssignedModes(),
         available_effects: mc.available_effects || ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend', 'Harmonia Negativa'],
-        keyboard_scales: kbScales,
-        keyboard_keys: kbKeys,
-        arpeggiator_modes: arpModes,
-        custom_arpeggiator_patterns: _customArps,
-        custom_chord_progressions: _getProgressions(),
-        potentiometer_functions: potFns,
-        arp_potentiometer_functions: arpPotFns,
-        chord_potentiometer_functions: chordPotFns,
-        neg_potentiometer_functions:   negPotFns,
-        chord_types: chordTypes,
-        keyboard_button_functions: _loadKbBtnFunctions(),
-        neg_harmony_axes: _loadNegHarmAxes(),
-        neg_harmony_type: _loadNegHarmType(),
-        chord_inversions: _loadChordInversions(),
-        diatonic_functions: _loadDiatonicFns()
+        // Config de teclat GLOBAL = la de la capa seleccionada (fallback del firmware).
+        ..._readKbConfig()
       };
     }
 
