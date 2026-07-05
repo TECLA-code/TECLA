@@ -1,0 +1,213 @@
+{
+  "_comment": "Registre de modes: nom -> file_name + class_name. APRIMAT a propòsit (sense metadata/added_date) perquè el json.load del dispositiu no peti per MemoryError. No editar a ma: tools/register_mode.py.",
+  "custom_modes": {
+    "Acid": {
+      "file_name": "mode_acid",
+      "class_name": "ModeAcid"
+    },
+    "Arnalds": {
+      "file_name": "mode_arnalds",
+      "class_name": "ModeArnalds"
+    },
+    "Bach": {
+      "file_name": "mode_bach",
+      "class_name": "ModeBach"
+    },
+    "Beethoven": {
+      "file_name": "mode_beethoven",
+      "class_name": "ModeBeethoven"
+    },
+    "Billar": {
+      "file_name": "mode_billar",
+      "class_name": "ModeBillar"
+    },
+    "Bit": {
+      "file_name": "mode_bit",
+      "class_name": "ModeBit"
+    },
+    "Brasa": {
+      "file_name": "mode_brasa",
+      "class_name": "ModeBrasa"
+    },
+    "Chopin": {
+      "file_name": "mode_chopin",
+      "class_name": "ModeChopin"
+    },
+    "Crackle": {
+      "file_name": "mode_crackle",
+      "class_name": "ModeCrackle"
+    },
+    "Debussy": {
+      "file_name": "mode_debussy",
+      "class_name": "ModeDebussy"
+    },
+    "Dinamo": {
+      "file_name": "mode_dinamo",
+      "class_name": "ModeDinamo"
+    },
+    "Dub": {
+      "file_name": "mode_dub",
+      "class_name": "ModeDub"
+    },
+    "Einaudi": {
+      "file_name": "mode_einaudi",
+      "class_name": "ModeEinaudi"
+    },
+    "Estatic": {
+      "file_name": "mode_estatic",
+      "class_name": "ModeEstatic"
+    },
+    "Euclid": {
+      "file_name": "mode_euclid",
+      "class_name": "ModeEuclid"
+    },
+    "Frahm": {
+      "file_name": "mode_frahm",
+      "class_name": "ModeFrahm"
+    },
+    "Gamelan": {
+      "file_name": "mode_gamelan",
+      "class_name": "ModeGamelan"
+    },
+    "Glass": {
+      "file_name": "mode_glass",
+      "class_name": "ModeGlass"
+    },
+    "Glitch": {
+      "file_name": "mode_glitch",
+      "class_name": "ModeGlitch"
+    },
+    "Grana": {
+      "file_name": "mode_grana",
+      "class_name": "ModeGrana"
+    },
+    "Groove": {
+      "file_name": "mode_groove",
+      "class_name": "ModeGroove"
+    },
+    "HardGroove": {
+      "file_name": "mode_hardgroove",
+      "class_name": "ModeHardGroove"
+    },
+    "HardNoise": {
+      "file_name": "mode_hardnoise",
+      "class_name": "ModeHardNoise"
+    },
+    "HardTechno": {
+      "file_name": "mode_hardtechno",
+      "class_name": "ModeHardTechno"
+    },
+    "Industrial": {
+      "file_name": "mode_industrial",
+      "class_name": "ModeIndustrial"
+    },
+    "Jazz": {
+      "file_name": "mode_jazz_chords",
+      "class_name": "ModeJazzChords"
+    },
+    "Makina": {
+      "file_name": "mode_makina",
+      "class_name": "ModeMakina"
+    },
+    "Mandelbrot": {
+      "file_name": "mode_mandelbrot",
+      "class_name": "ModeMandelbrot"
+    },
+    "MarkovGenre": {
+      "file_name": "mode_markov_genre",
+      "class_name": "ModeMarkovGenre"
+    },
+    "Mozart": {
+      "file_name": "mode_mozart",
+      "class_name": "ModeMozart"
+    },
+    "Noise": {
+      "file_name": "mode_noise",
+      "class_name": "ModeNoise"
+    },
+    "OnaCaos": {
+      "file_name": "mode_ona_caos",
+      "class_name": "ModeOnaCaos"
+    },
+    "OnaPols": {
+      "file_name": "mode_ona_pols",
+      "class_name": "ModeOnaPols"
+    },
+    "OnaQuadrada": {
+      "file_name": "mode_ona_quadrada",
+      "class_name": "ModeOnaQuadrada"
+    },
+    "OnaRespiracio": {
+      "file_name": "mode_ona_respiracio",
+      "class_name": "ModeOnaRespiracio"
+    },
+    "OnaSerra": {
+      "file_name": "mode_ona_serra",
+      "class_name": "ModeOnaSerra"
+    },
+    "OnaTriangular": {
+      "file_name": "mode_ona_triangular",
+      "class_name": "ModeOnaTriangular"
+    },
+    "OnaWalk": {
+      "file_name": "mode_ona_walk",
+      "class_name": "ModeOnaWalk"
+    },
+    "Part": {
+      "file_name": "mode_part",
+      "class_name": "ModePart"
+    },
+    "PedalJazz": {
+      "file_name": "mode_pedaljazz",
+      "class_name": "ModePedalJazz"
+    },
+    "Phase": {
+      "file_name": "mode_phase",
+      "class_name": "ModePhase"
+    },
+    "Satie": {
+      "file_name": "mode_satie",
+      "class_name": "ModeSatie"
+    },
+    "Sinusoidal": {
+      "file_name": "mode_ona_sinusoidal",
+      "class_name": "ModeOnaSinusoidal"
+    },
+    "Techno": {
+      "file_name": "mode_techno",
+      "class_name": "ModeTechno"
+    },
+    "Tempesta": {
+      "file_name": "mode_tormenta",
+      "class_name": "ModeTormenta"
+    },
+    "ToAcord": {
+      "file_name": "mode_toacord",
+      "class_name": "ModeToAcord"
+    },
+    "ToArc": {
+      "file_name": "mode_toarc",
+      "class_name": "ModeToArc"
+    },
+    "ToCampanes": {
+      "file_name": "mode_tocampanes",
+      "class_name": "ModeToCampanes"
+    },
+    "ToDrone": {
+      "file_name": "mode_todrone",
+      "class_name": "ModeToDrone"
+    },
+    "ToJazz": {
+      "file_name": "mode_tojazz",
+      "class_name": "ModeToJazz"
+    },
+    "Vida": {
+      "file_name": "mode_vida",
+      "class_name": "ModeVida"
+    },
+    "Wolfram": {
+      "file_name": "mode_wolfram",
+      "class_name": "ModeWolfram"
+    }
+  }
+}
