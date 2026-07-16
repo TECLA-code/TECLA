@@ -146,10 +146,17 @@
     .tab-panel.active { display: flex; flex-direction: column; }
     #tab-config.active { overflow: hidden; }
     #tab-profiles.active { overflow-y: auto; }
+    #tab-settings.active { overflow-y: auto; }
     #tab-firmware.active, #tab-guide.active, #tab-theme.active { overflow-y: auto; }
     /* Card */
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r2); padding: 18px; }
     .card-title { font-size: 11px; font-weight: 600; color: var(--text2); margin-bottom: 12px; letter-spacing: .06em; text-transform: uppercase; }
+    /* Toast */
+    .toast-wrap { position: fixed; top: 54px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+    .toast { background: var(--surface2); border: 1px solid var(--border-h); border-left: 3px solid var(--accent); color: var(--text); font-size: 12.5px; line-height: 1.45; padding: 10px 14px; border-radius: var(--r2); box-shadow: 0 6px 22px rgba(0,0,0,0.4); max-width: 320px; opacity: 0; transform: translateX(14px); transition: opacity .2s ease, transform .2s ease; pointer-events: auto; }
+    .toast.show { opacity: 1; transform: translateX(0); }
+    .toast-ok { border-left-color: var(--green); }
+    .toast-err { border-left-color: #ef4444; }
     /* Firmware */
     .fw-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; padding: 20px; }
     .fw-status-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); }
@@ -238,8 +245,9 @@
   </header>
 
   <nav>
-    <span class="nav-tab active" data-tab="config">Configuraci&oacute;</span>
+    <span class="nav-tab active" data-tab="config">Dispositiu</span>
     <span class="nav-tab" data-tab="profiles">Capes</span>
+    <span class="nav-tab" data-tab="settings">Configuraci&oacute;</span>
     <span class="nav-tab" data-tab="firmware">Firmware</span>
     <span class="nav-tab" data-tab="guide">Guia d'&uacute;s</span>
     <span class="nav-tab" data-tab="theme">Aparen&ccedil;a</span>
@@ -298,16 +306,6 @@
   <div class="tab-panel" id="tab-profiles">
     <div style="max-width:720px;padding:20px;display:flex;flex-direction:column;gap:16px">
       <div class="card">
-        <div class="card-title">Configuracions</div>
-        <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.65" data-th="profiles_config_desc">Marca les que vols usar i prem <strong>Afegir al dispositiu</strong> per incloure-les com a capes.</p>
-        <div class="checklist" id="preset-grid" style="margin-bottom:14px"></div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button class="btn btn-sm btn-primary" id="btn-add-presets" data-t="profiles_add">+ Afegir al dispositiu</button>
-          <button class="btn btn-sm" id="btn-presets-all" data-t="profiles_all">Totes</button>
-          <button class="btn btn-sm" id="btn-presets-none" data-t="profiles_none">Cap</button>
-        </div>
-      </div>
-      <div class="card">
         <div class="card-title">Les meves capes</div>
         <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.65" data-th="profiles_my_desc">Totes les capes del dispositiu en ordre. La tecla <em>Canviar de capa</em> les recorre seq&uuml;encialment. La capa activa apareix ressaltada.</p>
         <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
@@ -317,6 +315,50 @@
           <input type="file" id="import-profile-file" accept=".json" style="display:none">
         </div>
         <div id="profiles-list" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIGURACIÓ -->
+  <div class="tab-panel" id="tab-settings">
+    <div style="max-width:460px;padding:20px;display:flex;flex-direction:column;gap:14px">
+      <div class="card">
+        <div class="card-title" data-t="cfg_midi_title">Canal MIDI</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.65" data-th="cfg_midi_desc">Canal MIDI per defecte que s'aplicar&agrave; a les tecles i potenci&ograve;metres MIDI nous.</p>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+          <label style="font-size:12px;font-weight:500;min-width:80px" data-t="cfg_midi_ch">Canal:</label>
+          <select id="cfg-midi-channel" style="width:70px">
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+            <option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
+            <option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
+            <option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option>
+          </select>
+          <button class="btn btn-sm btn-primary" id="btn-save-midi-channel" data-t="cfg_save">Guardar</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" data-t="cfg_usb_title">Identitat USB</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <label style="font-size:12px;font-weight:500;min-width:90px" data-t="cfg_port_name">Nom del port:</label>
+            <input type="text" id="cfg-device-name" maxlength="32" placeholder="Ex: TECLA-1" style="width:140px">
+            <button class="btn btn-sm btn-primary" id="btn-save-device-name" data-t="cfg_save">Guardar</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <label style="font-size:12px;font-weight:500;min-width:90px" data-t="cfg_disk_name">Nom del disc:</label>
+            <div style="display:flex;align-items:center;gap:4px">
+              <span style="font-size:12px;font-weight:600;padding:5px 7px;background:var(--surface2);border:1px solid var(--border);border-radius:5px">TECLA</span>
+              <input type="text" id="cfg-disk-suffix" maxlength="6" placeholder="-1" style="width:64px;text-transform:uppercase">
+            </div>
+            <button class="btn btn-sm btn-primary" id="btn-save-disk-label" data-t="cfg_save">Guardar</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" data-t="cfg_device_title">Dispositiu</div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-sm" id="btn-cfg-disconnect" data-t="cfg_disconnect">Desconnectar</button>
+        </div>
       </div>
     </div>
   </div>
@@ -415,10 +457,6 @@
 
   <!-- Formulari de configuració: es munta dins l'inspector en inicialitzar -->
   <div id="elem-form" style="display:none">
-      <div class="form-group">
-        <label data-t="drawer_label">Nom de l'acci&oacute; (Etiqueta opcional)</label>
-        <input type="text" id="elem-label" placeholder="Ex: Guardar, Copiar...">
-      </div>
       <div class="form-group">
         <label data-t="drawer_type">Funci&oacute; Principal</label>
         <select id="elem-type"><!-- Opcions per JS --></select>
@@ -624,6 +662,18 @@
       term.scrollTop = term.scrollHeight;
     }
 
+    // Notificació temporal no bloquejant. type: 'info' | 'ok' | 'err'
+    function showToast(msg, type = 'info', duration = 3200) {
+      let wrap = document.getElementById('toast-wrap');
+      if (!wrap) { wrap = document.createElement('div'); wrap.id = 'toast-wrap'; wrap.className = 'toast-wrap'; document.body.appendChild(wrap); }
+      const el = document.createElement('div');
+      el.className = 'toast' + (type === 'ok' ? ' toast-ok' : type === 'err' ? ' toast-err' : '');
+      el.textContent = msg;
+      wrap.appendChild(el);
+      requestAnimationFrame(() => el.classList.add('show'));
+      setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 220); }, duration);
+    }
+
     // Pot drag state
     let _potDrag = null, _potDragY = 0, _potDragVal = 0;
     config.pots.forEach(p => { if (p.value === undefined) p.value = 0; });
@@ -742,7 +792,6 @@
       _formLoading = true;
       const { type, id } = currentSelection;
       const title = document.getElementById('form-element-title');
-      const labelInput = document.getElementById('elem-label');
       
       // Neteja general opcions
       typeSelect.innerHTML = '';
@@ -750,7 +799,6 @@
       if (type === 'key') {
         const k = config.keys[id];
         title.innerText = `Configurant Tecla ${id + 1}`;
-        labelInput.value = k.label;
         
         typeSelect.innerHTML = `
           <option value="none" data-t="type_none">${_i('type_none')}</option>
@@ -791,13 +839,12 @@
           document.getElementById('key-hold-mod').value = k.modifier || 'Keycode.COMMAND';
         } else if (k.type === 'midi_note') {
           document.getElementById('key-midi-note').value = k.midi_note ?? 60;
-          document.getElementById('key-midi-channel').value = k.midi_channel ?? 1;
+          document.getElementById('key-midi-channel').value = k.midi_channel ?? _loadMidiChannel();
           document.getElementById('key-midi-velocity').value = k.midi_velocity ?? 100;
         }
       } else if (type === 'pot') {
         const p = config.pots[id];
         title.innerText = `Configurant Potenciòmetre ${POT_NAMES[id]}`;
-        labelInput.value = p.label;
         
         typeSelect.innerHTML = `
           <option value="none">Cap (Desactivat)</option>
@@ -830,11 +877,10 @@
     function applyElement() {
       if (!currentSelection.type) return;
       const { type, id } = currentSelection;
-      const label = document.getElementById('elem-label').value;
       const fType = document.getElementById('elem-type').value;
       
       if (type === 'key') {
-        const k = { type: fType, label: label || `${id + 1}`, id };
+        const k = { type: fType, label: `${id + 1}`, id };
         if (fType === 'key') {
           k.keycode = document.getElementById('key-keycode').value;
           k.mods = [];
@@ -859,7 +905,7 @@
         }
         config.keys[id] = k;
       } else if (type === 'pot') {
-        const potData = { function: fType, label: label || `Pot ${POT_NAMES[id]}`, id, value: config.pots[id]?.value || 0 };
+        const potData = { function: fType, label: `Pot ${POT_NAMES[id]}`, id, value: config.pots[id]?.value || 0 };
         if (fType === 'click_step') potData.step_size = parseInt(document.getElementById('pot-step-size').value) || 10;
         if (fType === 'midi_cc') {
           potData.midi_cc_num = Math.min(127, Math.max(0, parseInt(document.getElementById('pot-midi-cc-num').value) || 7));
@@ -977,6 +1023,38 @@
 
     // Generador Codi CircuitPython (multi-capa)
     const ADAFRUIT_HID_PY = {"__init__.py": "# SPDX-FileCopyrightText: 2017 Scott Shawcroft for Adafruit Industries\n#\n# SPDX-License-Identifier: MIT\n\n\"\"\"\n`adafruit_hid`\n====================================================\n\nThis driver simulates USB HID devices.\n\n* Author(s): Scott Shawcroft, Dan Halbert\n\"\"\"\n\n# imports\nfrom __future__ import annotations\n\nimport time\n\ntry:\n    import supervisor\nexcept ImportError:\n    supervisor = None\n\ntry:\n    from typing import Sequence\nexcept ImportError:\n    pass\n\n# usb_hid may not exist on some boards that still provide BLE or other HID devices.\ntry:\n    from usb_hid import Device\nexcept ImportError:\n    Device = None\n\n__version__ = \"0.0.0+auto.0\"\n__repo__ = \"https://github.com/adafruit/Adafruit_CircuitPython_HID.git\"\n\n\ndef find_device(\n    devices: Sequence[object],\n    *,\n    usage_page: int,\n    usage: int,\n    timeout: int = None,\n) -> object:\n    \"\"\"\n    Search through the provided sequence of devices to find the one with the matching\n    usage_page and usage.\n\n    :param timeout: Time in seconds to wait for USB to become ready before timing out.\n      Defaults to None to wait indefinitely.\n      Ignored if device is not a `usb_hid.Device`; it might be BLE, for instance.\n    \"\"\"\n\n    if hasattr(devices, \"send_report\"):\n        devices = [devices]  # type: ignore\n    device = None\n    for dev in devices:\n        if dev.usage_page == usage_page and dev.usage == usage and hasattr(dev, \"send_report\"):\n            device = dev\n            break\n    if device is None:\n        raise ValueError(\"Could not find matching HID device.\")\n\n    # Wait for USB to be connected only if this is a usb_hid.Device.\n    if Device and isinstance(device, Device):\n        if supervisor is None:\n            # Blinka doesn't have supervisor (see issue Adafruit_Blinka#711), so wait\n            # one second for USB to become ready\n            time.sleep(1.0)\n        elif timeout is None:\n            # default behavior: wait indefinitely for USB to become ready\n            while not supervisor.runtime.usb_connected:\n                time.sleep(1.0)\n        else:\n            # wait up to timeout seconds for USB to become ready\n            for _ in range(timeout):\n                if supervisor.runtime.usb_connected:\n                    return device\n                time.sleep(1.0)\n            raise OSError(\"Failed to initialize HID device. Is USB connected?\")\n\n    return device\n", "consumer_control.py": "# SPDX-FileCopyrightText: 2018 Dan Halbert for Adafruit Industries\n#\n# SPDX-License-Identifier: MIT\n\n\"\"\"\n`adafruit_hid.consumer_control.ConsumerControl`\n====================================================\n\n* Author(s): Dan Halbert\n\"\"\"\n\nimport sys\n\nif sys.implementation.version[0] < 3:\n    raise ImportError(f\"{__name__} is not supported in CircuitPython 2.x or lower\")\n\nimport struct\n\nfrom . import find_device\n\ntry:\n    from typing import Sequence\n\n    import usb_hid\nexcept ImportError:\n    pass\n\n\nclass ConsumerControl:\n    \"\"\"Send ConsumerControl code reports, used by multimedia keyboards, remote controls, etc.\"\"\"\n\n    def __init__(self, devices: Sequence[usb_hid.Device], timeout: int = None) -> None:\n        \"\"\"Create a ConsumerControl object that will send Consumer Control Device HID reports.\n\n        :param timeout: Time in seconds to wait for USB to become ready before timing out.\n          Defaults to None to wait indefinitely.\n\n        Devices can be a sequence of devices that includes a Consumer Control device or a CC device\n        itself. A device is any object that implements ``send_report()``, ``usage_page`` and\n        ``usage``.\n        \"\"\"\n        self._consumer_device = find_device(devices, usage_page=0x0C, usage=0x01, timeout=timeout)\n\n        # Reuse this bytearray to send consumer reports.\n        self._report = bytearray(2)\n\n    def send(self, consumer_code: int) -> None:\n        \"\"\"Send a report to do the specified consumer control action,\n        and then stop the action (so it will not repeat).\n\n        :param consumer_code: a 16-bit consumer control code.\n\n        Examples::\n\n            from adafruit_hid.consumer_control_code import ConsumerControlCode\n\n            # Raise volume.\n            consumer_control.send(ConsumerControlCode.VOLUME_INCREMENT)\n\n            # Advance to next track (song).\n            consumer_control.send(ConsumerControlCode.SCAN_NEXT_TRACK)\n        \"\"\"\n        self.press(consumer_code)\n        self.release()\n\n    def press(self, consumer_code: int) -> None:\n        \"\"\"Send a report to indicate that the given key has been pressed.\n        Only one consumer control action can be pressed at a time, so any one\n        that was previously pressed will be released.\n\n        :param consumer_code: a 16-bit consumer control code.\n\n        Examples::\n\n            from adafruit_hid.consumer_control_code import ConsumerControlCode\n\n            # Raise volume for 0.5 seconds\n            consumer_control.press(ConsumerControlCode.VOLUME_INCREMENT)\n            time.sleep(0.5)\n            consumer_control.release()\n        \"\"\"\n        struct.pack_into(\"<H\", self._report, 0, consumer_code)\n        self._consumer_device.send_report(self._report)\n\n    def release(self) -> None:\n        \"\"\"Send a report indicating that the consumer control key has been\n        released. Only one consumer control key can be pressed at a time.\n\n        Examples::\n\n            from adafruit_hid.consumer_control_code import ConsumerControlCode\n\n            # Raise volume for 0.5 seconds\n            consumer_control.press(ConsumerControlCode.VOLUME_INCREMENT)\n            time.sleep(0.5)\n            consumer_control.release()\n        \"\"\"\n        self._report[0] = self._report[1] = 0x0\n        self._consumer_device.send_report(self._report)\n", "consumer_control_code.py": "# SPDX-FileCopyrightText: 2018 Dan Halbert for Adafruit Industries\n#\n# SPDX-License-Identifier: MIT\n\n\"\"\"\n`adafruit_hid.consumer_control_code.ConsumerControlCode`\n========================================================\n\n* Author(s): Dan Halbert\n\"\"\"\n\n\nclass ConsumerControlCode:\n    \"\"\"USB HID Consumer Control Device constants.\n\n    This list includes a few common consumer control codes from\n    https://www.usb.org/sites/default/files/hut1_21_0.pdf#page=118.\n    \"\"\"\n\n    RECORD = 0xB2\n    \"\"\"Record\"\"\"\n    FAST_FORWARD = 0xB3\n    \"\"\"Fast Forward\"\"\"\n    REWIND = 0xB4\n    \"\"\"Rewind\"\"\"\n    SCAN_NEXT_TRACK = 0xB5\n    \"\"\"Skip to next track\"\"\"\n    SCAN_PREVIOUS_TRACK = 0xB6\n    \"\"\"Go back to previous track\"\"\"\n    STOP = 0xB7\n    \"\"\"Stop\"\"\"\n    EJECT = 0xB8\n    \"\"\"Eject\"\"\"\n    PLAY_PAUSE = 0xCD\n    \"\"\"Play/Pause toggle\"\"\"\n    MUTE = 0xE2\n    \"\"\"Mute\"\"\"\n    VOLUME_DECREMENT = 0xEA\n    \"\"\"Decrease volume\"\"\"\n    VOLUME_INCREMENT = 0xE9\n    \"\"\"Increase volume\"\"\"\n    BRIGHTNESS_DECREMENT = 0x70\n    \"\"\"Decrease Brightness\"\"\"\n    BRIGHTNESS_INCREMENT = 0x6F\n    \"\"\"Increase Brightness\"\"\"\n", "keyboard.py": "# SPDX-FileCopyrightText: 2017 Dan Halbert for Adafruit Industries\n#\n# SPDX-License-Identifier: MIT\n\n\"\"\"\n`adafruit_hid.keyboard.Keyboard`\n====================================================\n\n* Author(s): Scott Shawcroft, Dan Halbert\n\"\"\"\n\nfrom micropython import const\n\nfrom . import find_device\nfrom .keycode import Keycode\n\ntry:\n    from typing import Sequence\n\n    import usb_hid\nexcept ImportError:\n    pass\n\n_MAX_KEYPRESSES = const(6)\n\n\nclass Keyboard:\n    \"\"\"Send HID keyboard reports.\"\"\"\n\n    LED_NUM_LOCK = 0x01\n    \"\"\"LED Usage ID for Num Lock\"\"\"\n    LED_CAPS_LOCK = 0x02\n    \"\"\"LED Usage ID for Caps Lock\"\"\"\n    LED_SCROLL_LOCK = 0x04\n    \"\"\"LED Usage ID for Scroll Lock\"\"\"\n    LED_COMPOSE = 0x08\n    \"\"\"LED Usage ID for Compose\"\"\"\n\n    # No more than _MAX_KEYPRESSES regular keys may be pressed at once.\n\n    def __init__(self, devices: Sequence[usb_hid.Device], timeout: int = None) -> None:\n        \"\"\"Create a Keyboard object that will send keyboard HID reports.\n\n        :param timeout: Time in seconds to wait for USB to become ready before timing out.\n          Defaults to None to wait indefinitely.\n\n        Devices can be a sequence of devices that includes a keyboard device or a keyboard device\n        itself. A device is any object that implements ``send_report()``, ``usage_page`` and\n        ``usage``.\n        \"\"\"\n        self._keyboard_device = find_device(devices, usage_page=0x1, usage=0x06, timeout=timeout)\n\n        # Reuse this bytearray to send keyboard reports.\n        self.report = bytearray(8)\n\n        # report[0] modifiers\n        # report[1] unused\n        # report[2:8] regular key presses\n\n        # View onto byte 0 in report.\n        self.report_modifier = memoryview(self.report)[0:1]\n\n        # List of regular keys currently pressed.\n        # View onto bytes 2-7 in report.\n        self.report_keys = memoryview(self.report)[2:]\n\n        # No keyboard LEDs on.\n        self._led_status = b\"\\x00\"\n\n    def press(self, *keycodes: int) -> None:\n        \"\"\"Send a report indicating that the given keys have been pressed.\n\n        :param keycodes: Press these keycodes all at once.\n        :raises ValueError: if more than six regular keys are pressed.\n\n        Keycodes may be modifiers or regular keys.\n        No more than six regular keys may be pressed simultaneously.\n\n        Examples::\n\n            from adafruit_hid.keycode import Keycode\n\n            # Press ctrl-x.\n            kbd.press(Keycode.LEFT_CONTROL, Keycode.X)\n\n            # Or, more conveniently, use the CONTROL alias for LEFT_CONTROL:\n            kbd.press(Keycode.CONTROL, Keycode.X)\n\n            # Press a, b, c keys all at once.\n            kbd.press(Keycode.A, Keycode.B, Keycode.C)\n        \"\"\"\n        for keycode in keycodes:\n            self._add_keycode_to_report(keycode)\n        self._keyboard_device.send_report(self.report)\n\n    def release(self, *keycodes: int) -> None:\n        \"\"\"Send a USB HID report indicating that the given keys have been released.\n\n        :param keycodes: Release these keycodes all at once.\n\n        If a keycode to be released was not pressed, it is ignored.\n\n        Example::\n\n            # release SHIFT key\n            kbd.release(Keycode.SHIFT)\n        \"\"\"\n        for keycode in keycodes:\n            self._remove_keycode_from_report(keycode)\n        self._keyboard_device.send_report(self.report)\n\n    def release_all(self) -> None:\n        \"\"\"Release all pressed keys.\"\"\"\n        for i in range(8):\n            self.report[i] = 0\n        self._keyboard_device.send_report(self.report)\n\n    def send(self, *keycodes: int) -> None:\n        \"\"\"Press the given keycodes and then release all pressed keys.\n\n        :param keycodes: keycodes to send together\n        \"\"\"\n        self.press(*keycodes)\n        self.release_all()\n\n    def _add_keycode_to_report(self, keycode: int) -> None:\n        \"\"\"Add a single keycode to the USB HID report.\"\"\"\n        modifier = Keycode.modifier_bit(keycode)\n        if modifier:\n            # Set bit for this modifier.\n            self.report_modifier[0] |= modifier\n        else:\n            report_keys = self.report_keys\n            # Don't press twice.\n            for i in range(_MAX_KEYPRESSES):\n                report_key = report_keys[i]\n                if report_key == 0:\n                    # Put keycode in first empty slot. Since the report_keys\n                    # are compact and unique, this is not a repeated key\n                    report_keys[i] = keycode\n                    return\n                if report_key == keycode:\n                    # Already pressed.\n                    return\n            # All slots are filled. Shuffle down and reuse last slot\n            for i in range(_MAX_KEYPRESSES - 1):\n                report_keys[i] = report_keys[i + 1]\n            report_keys[-1] = keycode\n\n    def _remove_keycode_from_report(self, keycode: int) -> None:\n        \"\"\"Remove a single keycode from the report.\"\"\"\n        modifier = Keycode.modifier_bit(keycode)\n        if modifier:\n            # Turn off the bit for this modifier.\n            self.report_modifier[0] &= ~modifier\n        else:\n            report_keys = self.report_keys\n            # Clear the at most one matching slot and move remaining keys down\n            j = 0\n            for i in range(_MAX_KEYPRESSES):\n                pressed = report_keys[i]\n                if not pressed:\n                    break  # Handled all used report slots\n                if pressed == keycode:\n                    continue  # Remove this entry\n                if i != j:\n                    report_keys[j] = report_keys[i]\n                j += 1\n            # Clear any remaining slots\n            while j < _MAX_KEYPRESSES and report_keys[j]:\n                report_keys[j] = 0\n                j += 1\n\n    @property\n    def led_status(self) -> bytes:\n        \"\"\"Returns the last received report\"\"\"\n        # get_last_received_report() returns None when nothing was received\n        led_report = self._keyboard_device.get_last_received_report()\n        if led_report is not None:\n            self._led_status = led_report\n        return self._led_status\n\n    def led_on(self, led_code: int) -> bool:\n        \"\"\"Returns whether an LED is on based on the led code\n\n        Examples::\n\n            import usb_hid\n            from adafruit_hid.keyboard import Keyboard\n            from adafruit_hid.keycode import Keycode\n            import time\n\n            # Initialize Keyboard\n            kbd = Keyboard(usb_hid.devices)\n\n            # Press and release CapsLock.\n            kbd.press(Keycode.CAPS_LOCK)\n            time.sleep(.09)\n            kbd.release(Keycode.CAPS_LOCK)\n\n            # Check status of the LED_CAPS_LOCK\n            print(kbd.led_on(Keyboard.LED_CAPS_LOCK))\n\n        \"\"\"\n        return bool(self.led_status[0] & led_code)\n", "keyboard_layout_base.py": "# SPDX-FileCopyrightText: 2017 Dan Halbert for Adafruit Industries\n#\n# SPDX-License-Identifier: MIT\n\n\"\"\"\n`adafruit_hid.keyboard_layout_base.KeyboardLayoutBase`\n=======================================================\n\n* Author(s): Dan Halbert, AngainorDev, Neradoc\n\"\"\"\n\ntry:\n    from typing import Tuple\n\n    from .keyboard import Keyboard\nexcept ImportError:\n    pass\n\nfrom time import sleep\n\n__version__ = \"0.0.0+auto.0\"\n__repo__ = \"https://github.com/adafruit/Adafruit_CircuitPython_HID.git\"\n\n\nclass KeyboardLayoutBase:\n    \"\"\"Base class for keyboard layouts. Uses the tables defined in the subclass\n    to map UTF-8 characters to appropriate keypresses.\n\n    Non-supported characters and most control characters will raise an exception.\n    \"\"\"\n\n    SHIFT_FLAG = 0x80\n    \"\"\"Bit set in any keycode byte if the shift key is required for the character.\"\"\"\n    ALTGR_FLAG = 0x80\n    \"\"\"Bit set in the combined keys table if altgr is required for the first key.\"\"\"\n    SHIFT_CODE = 0xE1\n    \"\"\"The SHIFT keycode, to avoid dependency to the Keycode class.\"\"\"\n    RIGHT_ALT_CODE = 0xE6\n    \"\"\"The ALTGR keycode, to avoid dependency to the Keycode class.\"\"\"\n    ASCII_TO_KEYCODE = ()\n    \"\"\"Bytes string of keycodes for low ASCII characters, indexed by the ASCII value.\n    Keycodes use the `SHIFT_FLAG` if needed.\n    Dead keys are excluded by assigning the keycode 0.\"\"\"\n    HIGHER_ASCII = {}\n    \"\"\"Dictionary that associates the ord() int value of high ascii and utf8 characters\n    to their keycode. Keycodes use the `SHIFT_FLAG` if needed.\"\"\"\n    NEED_ALTGR = \"\"\n    \"\"\"Characters in `ASCII_TO_KEYCODE` and `HIGHER_ASCII` that need\n    the ALTGR key pressed to type.\"\"\"\n    COMBINED_KEYS = {}\n    \"\"\"\n    Dictionary of characters (indexed by ord() value) that can be accessed by typing first\n    a dead key followed by a regular key, like ``\u00f1`` as ``~ + n``. The value is a 2-bytes int:\n    the high byte is the dead-key keycode (including SHIFT_FLAG), the low byte is the ascii code\n    of the second character, with ALTGR_FLAG set if the dead key (the first key) needs ALTGR.\n\n    The combined-key codes bits are: ``0b SDDD DDDD AKKK KKKK``:\n    ``S`` is the shift flag for the **first** key,\n    ``DDD DDDD`` is the keycode for the **first** key,\n    ``A`` is the altgr flag for the **first** key,\n    ``KKK KKKK`` is the (low) ASCII code for the second character.\n    \"\"\"\n\n    def __init__(self, keyboard: Keyboard) -> None:\n        \"\"\"Specify the layout for the given keyboard.\n\n        :param keyboard: a Keyboard object. Write characters to this keyboard when requested.\n\n        Example::\n\n            kbd = Keyboard(usb_hid.devices)\n            layout = KeyboardLayout(kbd)\n        \"\"\"\n        self.keyboard = keyboard\n\n    def _write(self, keycode: int, altgr: bool = False) -> None:\n        \"\"\"Type a key combination based on shift bit and altgr bool\n\n        :param keycode: int value of the keycode, with the shift bit.\n        :param altgr: bool indicating if the altgr key should be pressed too.\n        \"\"\"\n        # Add altgr modifier if needed\n        if altgr:\n            self.keyboard.press(self.RIGHT_ALT_CODE)\n        # If this is a shifted char, clear the SHIFT flag and press the SHIFT key.\n        if keycode & self.SHIFT_FLAG:\n            keycode &= ~self.SHIFT_FLAG\n            self.keyboard.press(self.SHIFT_CODE)\n        self.keyboard.press(keycode)\n        self.keyboard.release_all()\n\n    def write(self, string: str, delay: float = None) -> None:\n        \"\"\"Type the string by pressing and releasing keys on my keyboard.\n\n        :param string: A string of UTF-8 characters to convert to key presses and send.\n        :param float delay: Optional delay in seconds between key presses.\n        :raises ValueError: if any of the characters has no keycode\n            (such as some control characters).\n\n        Example::\n\n            # Write abc followed by Enter to the keyboard\n            layout.write('abc\\\\n')\n        \"\"\"\n        for char in string:\n            # find easy ones first\n            keycode = self._char_to_keycode(char)\n            if keycode > 0:\n                self._write(keycode, char in self.NEED_ALTGR)\n            # find combined keys\n            elif ord(char) in self.COMBINED_KEYS:\n                # first key (including shift bit)\n                cchar = self.COMBINED_KEYS[ord(char)]\n                self._write(cchar >> 8, cchar & self.ALTGR_FLAG)\n                # second key (removing the altgr bit)\n                char = chr(cchar & 0xFF & (~self.ALTGR_FLAG))\n                keycode = self._char_to_keycode(char)\n                # assume no altgr needed for second key\n                self._write(keycode, False)\n            else:\n                raise ValueError(\n                    \"No keycode available for character {letter} ({num}/0x{num:02x}).\".format(\n                        letter=repr(char), num=ord(char)\n                    )\n                )\n\n            if delay is not None:\n                sleep(delay)\n\n    def keycodes(self, char: str) -> Tuple[int, ...]:\n        \"\"\"Return a tuple of keycodes needed to type the given character.\n\n        :param char: A single UTF8 character in a string.\n        :type char: str of length one.\n        :returns: tuple of Keycode keycodes.\n        :raises ValueError: if there is no keycode for ``char``.\n\n        Examples::\n\n            # Returns (Keycode.TAB,)\n            keycodes('\\t')\n            # Returns (Keycode.A,)\n            keycode('a')\n            # Returns (Keycode.SHIFT, Keycode.A)\n            keycode('A')\n            # Raises ValueError with a US layout because it's an unknown character\n            keycode('\u00e9')\n        \"\"\"\n        keycode = self._char_to_keycode(char)\n        if keycode == 0:\n            raise ValueError(\n                \"No keycode available for character {letter} ({num}/0x{num:02x}).\".format(\n                    letter=repr(char), num=ord(char)\n                )\n            )\n\n        codes = []\n        if char in self.NEED_ALTGR:\n            codes.append(self.RIGHT_ALT_CODE)\n        if keycode & self.SHIFT_FLAG:\n            codes.extend((self.SHIFT_CODE, keycode & ~self.SHIFT_FLAG))\n        else:\n            codes.append(keycode)\n\n        return codes\n\n    def _above128char_to_keycode(self, char: str) -> int:\n        \"\"\"Return keycode for above 128 utf8 codes.\n\n        A character can be indexed by the char itself or its int ord() value.\n\n        :param char_val: char value\n        :return: keycode, with modifiers if needed\n        \"\"\"\n        if ord(char) in self.HIGHER_ASCII:\n            return self.HIGHER_ASCII[ord(char)]\n        if char in self.HIGHER_ASCII:\n            return self.HIGHER_ASCII[char]\n        return 0\n\n    def _char_to_keycode(self, char: str) -> int:\n        \"\"\"Return the HID keycode for the given character, with the SHIFT_FLAG possibly set.\n\n        If the character requires pressing the Shift key, the SHIFT_FLAG bit is set.\n        You must clear this bit before passing the keycode in a USB report.\n        \"\"\"\n        char_val = ord(char)\n        if char_val > len(self.ASCII_TO_KEYCODE):\n            return self._above128char_to_keycode(char)\n        keycode = self.ASCII_TO_KEYCODE[char_val]\n        return keycode\n", "keyboard_layout_us.py": "# SPDX-FileCopyrightText: 2017 Dan Halbert for Adafruit Industries\n#\n# SPDX-License-Identifier: MIT\n\n\"\"\"\n`adafruit_hid.keyboard_layout_us.KeyboardLayoutUS`\n=======================================================\n\n* Author(s): Dan Halbert\n\"\"\"\n\nfrom .keyboard_layout_base import KeyboardLayoutBase\n\n\nclass KeyboardLayoutUS(KeyboardLayoutBase):\n    \"\"\"Map ASCII characters to appropriate keypresses on a standard US PC keyboard.\n\n    Non-ASCII characters and most control characters will raise an exception.\n    \"\"\"\n\n    # The ASCII_TO_KEYCODE bytes object is used as a table to maps ASCII 0-127\n    # to the corresponding # keycode on a US 104-key keyboard.\n    # The user should not normally need to use this table,\n    # but it is not marked as private.\n    #\n    # Because the table only goes to 127, we use the top bit of each byte (ox80) to indicate\n    # that the shift key should be pressed. So any values 0x{8,9,a,b}* are shifted characters.\n    #\n    # The Python compiler will concatenate all these bytes literals into a single bytes object.\n    # Micropython/CircuitPython will store the resulting bytes constant in flash memory\n    # if it's in a .mpy file, so it doesn't use up valuable RAM.\n    #\n    # \\x00 entries have no keyboard key and so won't be sent.\n    ASCII_TO_KEYCODE = (\n        b\"\\x00\"  # NUL\n        b\"\\x00\"  # SOH\n        b\"\\x00\"  # STX\n        b\"\\x00\"  # ETX\n        b\"\\x00\"  # EOT\n        b\"\\x00\"  # ENQ\n        b\"\\x00\"  # ACK\n        b\"\\x00\"  # BEL \\a\n        b\"\\x2a\"  # BS BACKSPACE \\b (called DELETE in the usb.org document)\n        b\"\\x2b\"  # TAB \\t\n        b\"\\x28\"  # LF \\n (called Return or ENTER in the usb.org document)\n        b\"\\x00\"  # VT \\v\n        b\"\\x00\"  # FF \\f\n        b\"\\x00\"  # CR \\r\n        b\"\\x00\"  # SO\n        b\"\\x00\"  # SI\n        b\"\\x00\"  # DLE\n        b\"\\x00\"  # DC1\n        b\"\\x00\"  # DC2\n        b\"\\x00\"  # DC3\n        b\"\\x00\"  # DC4\n        b\"\\x00\"  # NAK\n        b\"\\x00\"  # SYN\n        b\"\\x00\"  # ETB\n        b\"\\x00\"  # CAN\n        b\"\\x00\"  # EM\n        b\"\\x00\"  # SUB\n        b\"\\x29\"  # ESC\n        b\"\\x00\"  # FS\n        b\"\\x00\"  # GS\n        b\"\\x00\"  # RS\n        b\"\\x00\"  # US\n        b\"\\x2c\"  # SPACE\n        b\"\\x9e\"  # ! x1e|SHIFT_FLAG (shift 1)\n        b\"\\xb4\"  # \" x34|SHIFT_FLAG (shift ')\n        b\"\\xa0\"  # # x20|SHIFT_FLAG (shift 3)\n        b\"\\xa1\"  # $ x21|SHIFT_FLAG (shift 4)\n        b\"\\xa2\"  # % x22|SHIFT_FLAG (shift 5)\n        b\"\\xa4\"  # & x24|SHIFT_FLAG (shift 7)\n        b\"\\x34\"  # '\n        b\"\\xa6\"  # ( x26|SHIFT_FLAG (shift 9)\n        b\"\\xa7\"  # ) x27|SHIFT_FLAG (shift 0)\n        b\"\\xa5\"  # * x25|SHIFT_FLAG (shift 8)\n        b\"\\xae\"  # + x2e|SHIFT_FLAG (shift =)\n        b\"\\x36\"  # ,\n        b\"\\x2d\"  # -\n        b\"\\x37\"  # .\n        b\"\\x38\"  # /\n        b\"\\x27\"  # 0\n        b\"\\x1e\"  # 1\n        b\"\\x1f\"  # 2\n        b\"\\x20\"  # 3\n        b\"\\x21\"  # 4\n        b\"\\x22\"  # 5\n        b\"\\x23\"  # 6\n        b\"\\x24\"  # 7\n        b\"\\x25\"  # 8\n        b\"\\x26\"  # 9\n        b\"\\xb3\"  # : x33|SHIFT_FLAG (shift ;)\n        b\"\\x33\"  # ;\n        b\"\\xb6\"  # < x36|SHIFT_FLAG (shift ,)\n        b\"\\x2e\"  # =\n        b\"\\xb7\"  # > x37|SHIFT_FLAG (shift .)\n        b\"\\xb8\"  # ? x38|SHIFT_FLAG (shift /)\n        b\"\\x9f\"  # @ x1f|SHIFT_FLAG (shift 2)\n        b\"\\x84\"  # A x04|SHIFT_FLAG (shift a)\n        b\"\\x85\"  # B x05|SHIFT_FLAG (etc.)\n        b\"\\x86\"  # C x06|SHIFT_FLAG\n        b\"\\x87\"  # D x07|SHIFT_FLAG\n        b\"\\x88\"  # E x08|SHIFT_FLAG\n        b\"\\x89\"  # F x09|SHIFT_FLAG\n        b\"\\x8a\"  # G x0a|SHIFT_FLAG\n        b\"\\x8b\"  # H x0b|SHIFT_FLAG\n        b\"\\x8c\"  # I x0c|SHIFT_FLAG\n        b\"\\x8d\"  # J x0d|SHIFT_FLAG\n        b\"\\x8e\"  # K x0e|SHIFT_FLAG\n        b\"\\x8f\"  # L x0f|SHIFT_FLAG\n        b\"\\x90\"  # M x10|SHIFT_FLAG\n        b\"\\x91\"  # N x11|SHIFT_FLAG\n        b\"\\x92\"  # O x12|SHIFT_FLAG\n        b\"\\x93\"  # P x13|SHIFT_FLAG\n        b\"\\x94\"  # Q x14|SHIFT_FLAG\n        b\"\\x95\"  # R x15|SHIFT_FLAG\n        b\"\\x96\"  # S x16|SHIFT_FLAG\n        b\"\\x97\"  # T x17|SHIFT_FLAG\n        b\"\\x98\"  # U x18|SHIFT_FLAG\n        b\"\\x99\"  # V x19|SHIFT_FLAG\n        b\"\\x9a\"  # W x1a|SHIFT_FLAG\n        b\"\\x9b\"  # X x1b|SHIFT_FLAG\n        b\"\\x9c\"  # Y x1c|SHIFT_FLAG\n        b\"\\x9d\"  # Z x1d|SHIFT_FLAG\n        b\"\\x2f\"  # [\n        b\"\\x31\"  # \\ backslash\n        b\"\\x30\"  # ]\n        b\"\\xa3\"  # ^ x23|SHIFT_FLAG (shift 6)\n        b\"\\xad\"  # _ x2d|SHIFT_FLAG (shift -)\n        b\"\\x35\"  # `\n        b\"\\x04\"  # a\n        b\"\\x05\"  # b\n        b\"\\x06\"  # c\n        b\"\\x07\"  # d\n        b\"\\x08\"  # e\n        b\"\\x09\"  # f\n        b\"\\x0a\"  # g\n        b\"\\x0b\"  # h\n        b\"\\x0c\"  # i\n        b\"\\x0d\"  # j\n        b\"\\x0e\"  # k\n        b\"\\x0f\"  # l\n        b\"\\x10\"  # m\n        b\"\\x11\"  # n\n        b\"\\x12\"  # o\n        b\"\\x13\"  # p\n        b\"\\x14\"  # q\n        b\"\\x15\"  # r\n        b\"\\x16\"  # s\n        b\"\\x17\"  # t\n        b\"\\x18\"  # u\n        b\"\\x19\"  # v\n        b\"\\x1a\"  # w\n        b\"\\x1b\"  # x\n        b\"\\x1c\"  # y\n        b\"\\x1d\"  # z\n        b\"\\xaf\"  # { x2f|SHIFT_FLAG (shift [)\n        b\"\\xb1\"  # | x31|SHIFT_FLAG (shift \\)\n        b\"\\xb0\"  # } x30|SHIFT_FLAG (shift ])\n        b\"\\xb5\"  # ~ x35|SHIFT_FLAG (shift `)\n        b\"\\x4c\"  # DEL DELETE (called Forward Delete in usb.org document)\n    )\n\n\nKeyboardLayout = KeyboardLayoutUS\n", "keycode.py": "# SPDX-FileCopyrightText: 2017 Scott Shawcroft for Adafruit Industries\n#\n# SPDX-License-Identifier: MIT\n\n\"\"\"\n`adafruit_hid.keycode.Keycode`\n====================================================\n\n* Author(s): Scott Shawcroft, Dan Halbert\n\"\"\"\n\n\nclass Keycode:\n    \"\"\"USB HID Keycode constants.\n\n    This list is modeled after the names for USB keycodes defined in\n    https://usb.org/sites/default/files/hut1_21_0.pdf#page=83.\n    This list does not include every single code, but does include all the keys on\n    a regular PC or Mac keyboard.\n\n    Remember that keycodes are the names for key *positions* on a US keyboard, and may\n    not correspond to the character that you mean to send if you want to emulate non-US keyboard.\n    For instance, on a French keyboard (AZERTY instead of QWERTY),\n    the keycode for 'q' is used to indicate an 'a'. Likewise, 'y' represents 'z' on\n    a German keyboard. This is historical: the idea was that the keycaps could be changed\n    without changing the keycodes sent, so that different firmware was not needed for\n    different variations of a keyboard.\n    \"\"\"\n\n    A = 0x04\n    \"\"\"``a`` and ``A``\"\"\"\n    B = 0x05\n    \"\"\"``b`` and ``B``\"\"\"\n    C = 0x06\n    \"\"\"``c`` and ``C``\"\"\"\n    D = 0x07\n    \"\"\"``d`` and ``D``\"\"\"\n    E = 0x08\n    \"\"\"``e`` and ``E``\"\"\"\n    F = 0x09\n    \"\"\"``f`` and ``F``\"\"\"\n    G = 0x0A\n    \"\"\"``g`` and ``G``\"\"\"\n    H = 0x0B\n    \"\"\"``h`` and ``H``\"\"\"\n    I = 0x0C\n    \"\"\"``i`` and ``I``\"\"\"\n    J = 0x0D\n    \"\"\"``j`` and ``J``\"\"\"\n    K = 0x0E\n    \"\"\"``k`` and ``K``\"\"\"\n    L = 0x0F\n    \"\"\"``l`` and ``L``\"\"\"\n    M = 0x10\n    \"\"\"``m`` and ``M``\"\"\"\n    N = 0x11\n    \"\"\"``n`` and ``N``\"\"\"\n    O = 0x12\n    \"\"\"``o`` and ``O``\"\"\"\n    P = 0x13\n    \"\"\"``p`` and ``P``\"\"\"\n    Q = 0x14\n    \"\"\"``q`` and ``Q``\"\"\"\n    R = 0x15\n    \"\"\"``r`` and ``R``\"\"\"\n    S = 0x16\n    \"\"\"``s`` and ``S``\"\"\"\n    T = 0x17\n    \"\"\"``t`` and ``T``\"\"\"\n    U = 0x18\n    \"\"\"``u`` and ``U``\"\"\"\n    V = 0x19\n    \"\"\"``v`` and ``V``\"\"\"\n    W = 0x1A\n    \"\"\"``w`` and ``W``\"\"\"\n    X = 0x1B\n    \"\"\"``x`` and ``X``\"\"\"\n    Y = 0x1C\n    \"\"\"``y`` and ``Y``\"\"\"\n    Z = 0x1D\n    \"\"\"``z`` and ``Z``\"\"\"\n\n    ONE = 0x1E\n    \"\"\"``1`` and ``!``\"\"\"\n    TWO = 0x1F\n    \"\"\"``2`` and ``@``\"\"\"\n    THREE = 0x20\n    \"\"\"``3`` and ``#``\"\"\"\n    FOUR = 0x21\n    \"\"\"``4`` and ``$``\"\"\"\n    FIVE = 0x22\n    \"\"\"``5`` and ``%``\"\"\"\n    SIX = 0x23\n    \"\"\"``6`` and ``^``\"\"\"\n    SEVEN = 0x24\n    \"\"\"``7`` and ``&``\"\"\"\n    EIGHT = 0x25\n    \"\"\"``8`` and ``*``\"\"\"\n    NINE = 0x26\n    \"\"\"``9`` and ``(``\"\"\"\n    ZERO = 0x27\n    \"\"\"``0`` and ``)``\"\"\"\n    ENTER = 0x28\n    \"\"\"Enter (Return)\"\"\"\n    RETURN = ENTER\n    \"\"\"Alias for ``ENTER``\"\"\"\n    ESCAPE = 0x29\n    \"\"\"Escape\"\"\"\n    BACKSPACE = 0x2A\n    \"\"\"Delete backward (Backspace)\"\"\"\n    TAB = 0x2B\n    \"\"\"Tab and Backtab\"\"\"\n    SPACEBAR = 0x2C\n    \"\"\"Spacebar\"\"\"\n    SPACE = SPACEBAR\n    \"\"\"Alias for SPACEBAR\"\"\"\n    MINUS = 0x2D\n    \"\"\"``-` and ``_``\"\"\"\n    EQUALS = 0x2E\n    \"\"\"``=` and ``+``\"\"\"\n    LEFT_BRACKET = 0x2F\n    \"\"\"``[`` and ``{``\"\"\"\n    RIGHT_BRACKET = 0x30\n    \"\"\"``]`` and ``}``\"\"\"\n    BACKSLASH = 0x31\n    r\"\"\"``\\`` and ``|``\"\"\"\n    POUND = 0x32\n    \"\"\"``#`` and ``~`` (Non-US keyboard)\"\"\"\n    SEMICOLON = 0x33\n    \"\"\"``;`` and ``:``\"\"\"\n    QUOTE = 0x34\n    \"\"\"``'`` and ``\"``\"\"\"\n    GRAVE_ACCENT = 0x35\n    r\"\"\":literal:`\\`` and ``~``\"\"\"\n    COMMA = 0x36\n    \"\"\"``,`` and ``<``\"\"\"\n    PERIOD = 0x37\n    \"\"\"``.`` and ``>``\"\"\"\n    FORWARD_SLASH = 0x38\n    \"\"\"``/`` and ``?``\"\"\"\n\n    CAPS_LOCK = 0x39\n    \"\"\"Caps Lock\"\"\"\n\n    F1 = 0x3A\n    \"\"\"Function key F1\"\"\"\n    F2 = 0x3B\n    \"\"\"Function key F2\"\"\"\n    F3 = 0x3C\n    \"\"\"Function key F3\"\"\"\n    F4 = 0x3D\n    \"\"\"Function key F4\"\"\"\n    F5 = 0x3E\n    \"\"\"Function key F5\"\"\"\n    F6 = 0x3F\n    \"\"\"Function key F6\"\"\"\n    F7 = 0x40\n    \"\"\"Function key F7\"\"\"\n    F8 = 0x41\n    \"\"\"Function key F8\"\"\"\n    F9 = 0x42\n    \"\"\"Function key F9\"\"\"\n    F10 = 0x43\n    \"\"\"Function key F10\"\"\"\n    F11 = 0x44\n    \"\"\"Function key F11\"\"\"\n    F12 = 0x45\n    \"\"\"Function key F12\"\"\"\n\n    PRINT_SCREEN = 0x46\n    \"\"\"Print Screen (SysRq)\"\"\"\n    SCROLL_LOCK = 0x47\n    \"\"\"Scroll Lock\"\"\"\n    PAUSE = 0x48\n    \"\"\"Pause (Break)\"\"\"\n\n    INSERT = 0x49\n    \"\"\"Insert\"\"\"\n    HOME = 0x4A\n    \"\"\"Home (often moves to beginning of line)\"\"\"\n    PAGE_UP = 0x4B\n    \"\"\"Go back one page\"\"\"\n    DELETE = 0x4C\n    \"\"\"Delete forward\"\"\"\n    END = 0x4D\n    \"\"\"End (often moves to end of line)\"\"\"\n    PAGE_DOWN = 0x4E\n    \"\"\"Go forward one page\"\"\"\n\n    RIGHT_ARROW = 0x4F\n    \"\"\"Move the cursor right\"\"\"\n    LEFT_ARROW = 0x50\n    \"\"\"Move the cursor left\"\"\"\n    DOWN_ARROW = 0x51\n    \"\"\"Move the cursor down\"\"\"\n    UP_ARROW = 0x52\n    \"\"\"Move the cursor up\"\"\"\n\n    KEYPAD_NUMLOCK = 0x53\n    \"\"\"Num Lock (Clear on Mac)\"\"\"\n    KEYPAD_FORWARD_SLASH = 0x54\n    \"\"\"Keypad ``/``\"\"\"\n    KEYPAD_ASTERISK = 0x55\n    \"\"\"Keypad ``*``\"\"\"\n    KEYPAD_MINUS = 0x56\n    \"\"\"Keyapd ``-``\"\"\"\n    KEYPAD_PLUS = 0x57\n    \"\"\"Keypad ``+``\"\"\"\n    KEYPAD_ENTER = 0x58\n    \"\"\"Keypad Enter\"\"\"\n    KEYPAD_ONE = 0x59\n    \"\"\"Keypad ``1`` and End\"\"\"\n    KEYPAD_TWO = 0x5A\n    \"\"\"Keypad ``2`` and Down Arrow\"\"\"\n    KEYPAD_THREE = 0x5B\n    \"\"\"Keypad ``3`` and PgDn\"\"\"\n    KEYPAD_FOUR = 0x5C\n    \"\"\"Keypad ``4`` and Left Arrow\"\"\"\n    KEYPAD_FIVE = 0x5D\n    \"\"\"Keypad ``5``\"\"\"\n    KEYPAD_SIX = 0x5E\n    \"\"\"Keypad ``6`` and Right Arrow\"\"\"\n    KEYPAD_SEVEN = 0x5F\n    \"\"\"Keypad ``7`` and Home\"\"\"\n    KEYPAD_EIGHT = 0x60\n    \"\"\"Keypad ``8`` and Up Arrow\"\"\"\n    KEYPAD_NINE = 0x61\n    \"\"\"Keypad ``9`` and PgUp\"\"\"\n    KEYPAD_ZERO = 0x62\n    \"\"\"Keypad ``0`` and Ins\"\"\"\n    KEYPAD_PERIOD = 0x63\n    \"\"\"Keypad ``.`` and Del\"\"\"\n    KEYPAD_BACKSLASH = 0x64\n    \"\"\"Keypad ``\\\\`` and ``|`` (Non-US)\"\"\"\n\n    APPLICATION = 0x65\n    \"\"\"Application: also known as the Menu key (Windows)\"\"\"\n    POWER = 0x66\n    \"\"\"Power (Mac)\"\"\"\n    KEYPAD_EQUALS = 0x67\n    \"\"\"Keypad ``=`` (Mac)\"\"\"\n    F13 = 0x68\n    \"\"\"Function key F13 (Mac)\"\"\"\n    F14 = 0x69\n    \"\"\"Function key F14 (Mac)\"\"\"\n    F15 = 0x6A\n    \"\"\"Function key F15 (Mac)\"\"\"\n    F16 = 0x6B\n    \"\"\"Function key F16 (Mac)\"\"\"\n    F17 = 0x6C\n    \"\"\"Function key F17 (Mac)\"\"\"\n    F18 = 0x6D\n    \"\"\"Function key F18 (Mac)\"\"\"\n    F19 = 0x6E\n    \"\"\"Function key F19 (Mac)\"\"\"\n\n    F20 = 0x6F\n    \"\"\"Function key F20\"\"\"\n    F21 = 0x70\n    \"\"\"Function key F21\"\"\"\n    F22 = 0x71\n    \"\"\"Function key F22\"\"\"\n    F23 = 0x72\n    \"\"\"Function key F23\"\"\"\n    F24 = 0x73\n    \"\"\"Function key F24\"\"\"\n\n    LEFT_CONTROL = 0xE0\n    \"\"\"Control modifier left of the spacebar\"\"\"\n    CONTROL = LEFT_CONTROL\n    \"\"\"Alias for LEFT_CONTROL\"\"\"\n    LEFT_SHIFT = 0xE1\n    \"\"\"Shift modifier left of the spacebar\"\"\"\n    SHIFT = LEFT_SHIFT\n    \"\"\"Alias for LEFT_SHIFT\"\"\"\n    LEFT_ALT = 0xE2\n    \"\"\"Alt modifier left of the spacebar\"\"\"\n    ALT = LEFT_ALT\n    \"\"\"Alias for LEFT_ALT; Alt is also known as Option (Mac)\"\"\"\n    OPTION = ALT\n    \"\"\"Labeled as Option on some Mac keyboards\"\"\"\n    LEFT_GUI = 0xE3\n    \"\"\"GUI modifier left of the spacebar\"\"\"\n    GUI = LEFT_GUI\n    \"\"\"Alias for LEFT_GUI; GUI is also known as the Windows key, Command (Mac), or Meta\"\"\"\n    WINDOWS = GUI\n    \"\"\"Labeled with a Windows logo on Windows keyboards\"\"\"\n    COMMAND = GUI\n    \"\"\"Labeled as Command on Mac keyboards, with a clover glyph\"\"\"\n    RIGHT_CONTROL = 0xE4\n    \"\"\"Control modifier right of the spacebar\"\"\"\n    RIGHT_SHIFT = 0xE5\n    \"\"\"Shift modifier right of the spacebar\"\"\"\n    RIGHT_ALT = 0xE6\n    \"\"\"Alt modifier right of the spacebar\"\"\"\n    RIGHT_GUI = 0xE7\n    \"\"\"GUI modifier right of the spacebar\"\"\"\n\n    @classmethod\n    def modifier_bit(cls, keycode: int) -> int:\n        \"\"\"Return the modifer bit to be set in an HID keycode report if this is a\n        modifier key; otherwise return 0.\"\"\"\n        return 1 << (keycode - 0xE0) if cls.LEFT_CONTROL <= keycode <= cls.RIGHT_GUI else 0\n", "mouse.py": "# SPDX-FileCopyrightText: 2017 Dan Halbert for Adafruit Industries\n#\n# SPDX-License-Identifier: MIT\n\n\"\"\"\n`adafruit_hid.mouse.Mouse`\n====================================================\n\n* Author(s): Dan Halbert\n\"\"\"\n\nfrom . import find_device\n\ntry:\n    from typing import Sequence\n\n    import usb_hid\nexcept ImportError:\n    pass\n\n\nclass Mouse:\n    \"\"\"Send USB HID mouse reports.\"\"\"\n\n    LEFT_BUTTON = 1\n    \"\"\"Left mouse button.\"\"\"\n    RIGHT_BUTTON = 2\n    \"\"\"Right mouse button.\"\"\"\n    MIDDLE_BUTTON = 4\n    \"\"\"Middle mouse button.\"\"\"\n    BACK_BUTTON = 8\n    \"\"\"Back mouse button.\"\"\"\n    FORWARD_BUTTON = 16\n    \"\"\"Forward mouse button.\"\"\"\n\n    def __init__(self, devices: Sequence[usb_hid.Device], timeout: int = None) -> None:\n        \"\"\"Create a Mouse object that will send USB mouse HID reports.\n\n        :param timeout: Time in seconds to wait for USB to become ready before timing out.\n          Defaults to None to wait indefinitely.\n\n        Devices can be a sequence of devices that includes a keyboard device or a keyboard device\n        itself. A device is any object that implements ``send_report()``, ``usage_page`` and\n        ``usage``.\n        \"\"\"\n        self._mouse_device = find_device(devices, usage_page=0x1, usage=0x02, timeout=timeout)\n\n        # Reuse this bytearray to send mouse reports.\n        # report[0] buttons pressed (LEFT, MIDDLE, RIGHT)\n        # report[1] x movement\n        # report[2] y movement\n        # report[3] wheel movement\n        self.report = bytearray(4)\n\n    def press(self, buttons: int) -> None:\n        \"\"\"Press the given mouse buttons.\n\n        :param buttons: a bitwise-or'd combination of ``LEFT_BUTTON``,\n            ``MIDDLE_BUTTON``, and ``RIGHT_BUTTON``.\n\n        Examples::\n\n            # Press the left button.\n            m.press(Mouse.LEFT_BUTTON)\n\n            # Press the left and right buttons simultaneously.\n            m.press(Mouse.LEFT_BUTTON | Mouse.RIGHT_BUTTON)\n        \"\"\"\n        self.report[0] |= buttons\n        self._send_no_move()\n\n    def release(self, buttons: int) -> None:\n        \"\"\"Release the given mouse buttons.\n\n        :param buttons: a bitwise-or'd combination of ``LEFT_BUTTON``,\n            ``MIDDLE_BUTTON``, and ``RIGHT_BUTTON``.\n        \"\"\"\n        self.report[0] &= ~buttons\n        self._send_no_move()\n\n    def release_all(self) -> None:\n        \"\"\"Release all the mouse buttons.\"\"\"\n        self.report[0] = 0\n        self._send_no_move()\n\n    def click(self, buttons: int) -> None:\n        \"\"\"Press and release the given mouse buttons.\n\n        :param buttons: a bitwise-or'd combination of ``LEFT_BUTTON``,\n            ``MIDDLE_BUTTON``, and ``RIGHT_BUTTON``.\n\n        Examples::\n\n            # Click the left button.\n            m.click(Mouse.LEFT_BUTTON)\n\n            # Double-click the left button.\n            m.click(Mouse.LEFT_BUTTON)\n            m.click(Mouse.LEFT_BUTTON)\n        \"\"\"\n        self.press(buttons)\n        self.release(buttons)\n\n    def move(self, x: int = 0, y: int = 0, wheel: int = 0) -> None:\n        \"\"\"Move the mouse and turn the wheel as directed.\n\n        :param x: Move the mouse along the x axis. Negative is to the left, positive\n            is to the right.\n        :param y: Move the mouse along the y axis. Negative is upwards on the display,\n            positive is downwards.\n        :param wheel: Rotate the wheel this amount. Negative is toward the user, positive\n            is away from the user. The scrolling effect depends on the host.\n\n        Examples::\n\n            # Move 100 to the left. Do not move up and down. Do not roll the scroll wheel.\n            m.move(-100, 0, 0)\n            # Same, with keyword arguments.\n            m.move(x=-100)\n\n            # Move diagonally to the upper right.\n            m.move(50, 20)\n            # Same.\n            m.move(x=50, y=-20)\n\n            # Roll the mouse wheel away from the user.\n            m.move(wheel=1)\n        \"\"\"\n        # Send multiple reports if necessary to move or scroll requested amounts.\n        while x != 0 or y != 0 or wheel != 0:\n            partial_x = self._limit(x)\n            partial_y = self._limit(y)\n            partial_wheel = self._limit(wheel)\n            self.report[1] = partial_x & 0xFF\n            self.report[2] = partial_y & 0xFF\n            self.report[3] = partial_wheel & 0xFF\n            self._mouse_device.send_report(self.report)\n            x -= partial_x\n            y -= partial_y\n            wheel -= partial_wheel\n\n    def _send_no_move(self) -> None:\n        \"\"\"Send a button-only report.\"\"\"\n        self.report[1] = 0\n        self.report[2] = 0\n        self.report[3] = 0\n        self._mouse_device.send_report(self.report)\n\n    @staticmethod\n    def _limit(dist: int) -> int:\n        return min(127, max(-127, dist))\n"};
+
+    // Sistema de boot unificat amb la resta d'apps TECLA: llegeix el nom del
+    // disc i el nom del port USB des de /config i els aplica en arrencar.
+    const BOOT_PY = `import storage
+
+# Canal de dades USB (usb_cdc.data): el fa servir el mode CONTROLADOR del firmware
+# (l'app web pren el control del dispositiu per WebSerial des del Simulador).
+# Innocu per a la resta: la consola REPL continua al primer port CDC.
+try:
+    import usb_cdc
+    usb_cdc.enable(console=True, data=True)
+except Exception:
+    pass
+
+try:
+    with open('/config/disk_label.txt', 'r') as f:
+        label = f.read().strip()[:11].upper()
+    if label:
+        m = storage.getmount("/")
+        m.label = label
+except Exception:
+    pass
+
+try:
+    with open('/config/device_name.txt', 'r') as f:
+        name = f.read().strip()
+    if name:
+        import supervisor
+        supervisor.set_usb_identification(product=name)
+except Exception:
+    pass
+`;
 
     function generateCode() {
       const hasLayerChange = layers.some(l => l.keys.some(k => k.type === 'layer_change'));
@@ -1152,9 +1230,9 @@
           const w = await fh.createWritable();
           await w.write(code);
           await w.close();
-          alert('code.py exportat correctament al dispositiu!');
+          showToast('code.py exportat correctament al dispositiu!', 'ok');
         } catch (e) {
-          if (e.name !== 'AbortError') alert('Error exportant: ' + e.message);
+          if (e.name !== 'AbortError') showToast('Error exportant: ' + e.message, 'err');
         }
       } else {
         const blob = new Blob([code], { type: 'text/x-python' });
@@ -1165,97 +1243,6 @@
       }
     });
 
-    // ── Presets integrats ─────────────────────────────────────────
-    function _k(type, label, extra={}) { return Object.assign({type, label, id:0}, extra); }
-    const _PRESETS = [
-      { id:'calc', name:'Calculadora', desc:'Teclat numèric 4×4 amb operadors aritmètics, Backspace i Enter.',
-        layers:[{ name:'Calculadora',
-          keys:[
-            _k('string','7',{string:'7'}),_k('string','8',{string:'8'}),_k('string','9',{string:'9'}),_k('string','/',{string:'/'}),
-            _k('string','4',{string:'4'}),_k('string','5',{string:'5'}),_k('string','6',{string:'6'}),_k('string','*',{string:'*'}),
-            _k('string','1',{string:'1'}),_k('string','2',{string:'2'}),_k('string','3',{string:'3'}),_k('string','-',{string:'-'}),
-            _k('string','0',{string:'0'}),_k('key','⌫',{keycode:'Keycode.BACKSPACE',mods:[]}),_k('key','↵',{keycode:'Keycode.ENTER',mods:[]}),_k('string','+',{string:'+'})
-          ].map((k,i)=>Object.assign(k,{id:i})),
-          pots:[{function:'none',label:'Pot X',id:0,value:0},{function:'none',label:'Pot Y',id:1,value:0},{function:'none',label:'Pot Z',id:2,value:0}]
-        }]
-      },
-      { id:'mouse', name:'Ratolí + Shortcuts', desc:'Clics de ratolí, navegació per pestanyes i dreceres del navegador.',
-        layers:[{ name:'Ratolí',
-          keys:[
-            _k('mouse','L-CLK',{mouse:'Mouse.LEFT_BUTTON'}),_k('mouse','R-CLK',{mouse:'Mouse.RIGHT_BUTTON'}),_k('mouse','M-CLK',{mouse:'Mouse.MIDDLE_BUTTON'}),_k('consumer','Mute',{consumer:'ConsumerControlCode.MUTE'}),
-            _k('key','⌃Tab',{keycode:'Keycode.TAB',mods:['Ctrl']}),_k('key','⌃⇧Tab',{keycode:'Keycode.TAB',mods:['Ctrl','Shift']}),_k('key','⌃W',{keycode:'Keycode.W',mods:['Ctrl']}),_k('key','⌃T',{keycode:'Keycode.T',mods:['Ctrl']}),
-            _k('key','Enrere',{keycode:'Keycode.LEFT_ARROW',mods:['Alt']}),_k('key','Endavant',{keycode:'Keycode.RIGHT_ARROW',mods:['Alt']}),_k('key','⌃R',{keycode:'Keycode.R',mods:['Ctrl']}),_k('key','⌃S',{keycode:'Keycode.S',mods:['Ctrl']}),
-            _k('key','↑',{keycode:'Keycode.UP_ARROW',mods:[]}),_k('key','↓',{keycode:'Keycode.DOWN_ARROW',mods:[]}),_k('key','←',{keycode:'Keycode.LEFT_ARROW',mods:[]}),_k('key','→',{keycode:'Keycode.RIGHT_ARROW',mods:[]})
-          ].map((k,i)=>Object.assign(k,{id:i})),
-          pots:[{function:'mouse_x',label:'Ratolí X',id:0,value:0},{function:'mouse_y',label:'Ratolí Y',id:1,value:0},{function:'scroll_y',label:'Scroll',id:2,value:0}]
-        }]
-      },
-      { id:'video', name:'Edició de Vídeo', desc:'Dreceres per a Premiere, DaVinci Resolve i similars. JKL jog, tall, punts de tall.',
-        layers:[{ name:'Vídeo',
-          keys:[
-            _k('key','▶/⏸',{keycode:'Keycode.SPACE',mods:[]}),_k('key','In',{keycode:'Keycode.I',mods:[]}),_k('key','Out',{keycode:'Keycode.O',mods:[]}),_k('key','Desa',{keycode:'Keycode.S',mods:['Ctrl']}),
-            _k('key','J ◀◀',{keycode:'Keycode.J',mods:[]}),_k('key','K ⏸',{keycode:'Keycode.K',mods:[]}),_k('key','L ▶▶',{keycode:'Keycode.L',mods:[]}),_k('key','Tallar',{keycode:'Keycode.C',mods:[]}),
-            _k('key','Desfer',{keycode:'Keycode.Z',mods:['Ctrl']}),_k('key','Refer',{keycode:'Keycode.Z',mods:['Ctrl','Shift']}),_k('key','↑Tall',{keycode:'Keycode.UP_ARROW',mods:[]}),_k('key','↓Tall',{keycode:'Keycode.DOWN_ARROW',mods:[]}),
-            _k('key','Sel.',{keycode:'Keycode.V',mods:[]}),_k('key','Full',{keycode:'Keycode.F',mods:[]}),_k('key','Esc',{keycode:'Keycode.ESCAPE',mods:[]}),_k('consumer','▶⏸',{consumer:'ConsumerControlCode.PLAY_PAUSE'})
-          ].map((k,i)=>Object.assign(k,{id:i})),
-          pots:[{function:'none',label:'Pot X',id:0,value:0},{function:'none',label:'Pot Y',id:1,value:0},{function:'volume',label:'Volum',id:2,value:0}]
-        }]
-      },
-      { id:'audio', name:'Edició d\'Audio', desc:'Dreceres per a DAWs com Ableton, Logic o Reaper. Record, mute, loop, navegació.',
-        layers:[{ name:'Àudio',
-          keys:[
-            _k('key','▶/⏸',{keycode:'Keycode.SPACE',mods:[]}),_k('key','● REC',{keycode:'Keycode.R',mods:[]}),_k('key','Desa',{keycode:'Keycode.S',mods:['Ctrl']}),_k('key','Desfer',{keycode:'Keycode.Z',mods:['Ctrl']}),
-            _k('key','Refer',{keycode:'Keycode.Z',mods:['Ctrl','Shift']}),_k('key','Mute',{keycode:'Keycode.M',mods:[]}),_k('key','Solo',{keycode:'Keycode.S',mods:[]}),_k('key','Loop',{keycode:'Keycode.L',mods:[]}),
-            _k('consumer','Mut',{consumer:'ConsumerControlCode.MUTE'}),_k('consumer','Vol+',{consumer:'ConsumerControlCode.VOLUME_INCREMENT'}),_k('consumer','Vol-',{consumer:'ConsumerControlCode.VOLUME_DECREMENT'}),_k('key','Tempo',{keycode:'Keycode.T',mods:[]}),
-            _k('key','↑Pista',{keycode:'Keycode.UP_ARROW',mods:[]}),_k('key','↓Pista',{keycode:'Keycode.DOWN_ARROW',mods:[]}),_k('key','← Pos',{keycode:'Keycode.LEFT_ARROW',mods:[]}),_k('key','→ Pos',{keycode:'Keycode.RIGHT_ARROW',mods:[]})
-          ].map((k,i)=>Object.assign(k,{id:i})),
-          pots:[{function:'volume',label:'Volum Master',id:0,value:0},{function:'scroll_y',label:'Scroll Pistes',id:1,value:0},{function:'none',label:'Pot Z',id:2,value:0}]
-        }]
-      },
-      { id:'produc', name:'Productivitat', desc:'Les dreceres més usades en ofimàtica i navegació: copiar, enganxar, cercar, canviar app.',
-        layers:[{ name:'Productivitat',
-          keys:[
-            _k('key','Desfer',{keycode:'Keycode.Z',mods:['Ctrl']}),_k('key','Refer',{keycode:'Keycode.Y',mods:['Ctrl']}),_k('key','Copiar',{keycode:'Keycode.C',mods:['Ctrl']}),_k('key','Enganxar',{keycode:'Keycode.V',mods:['Ctrl']}),
-            _k('key','Tallar',{keycode:'Keycode.X',mods:['Ctrl']}),_k('key','Desa',{keycode:'Keycode.S',mods:['Ctrl']}),_k('key','Tot',{keycode:'Keycode.A',mods:['Ctrl']}),_k('key','Cercar',{keycode:'Keycode.F',mods:['Ctrl']}),
-            _k('key','Nou',{keycode:'Keycode.N',mods:['Ctrl']}),_k('key','Impr.',{keycode:'Keycode.P',mods:['Ctrl']}),_k('key','Tancar',{keycode:'Keycode.W',mods:['Ctrl']}),_k('key','⌃Tab',{keycode:'Keycode.TAB',mods:['Ctrl']}),
-            _k('key','⌥Tab',{keycode:'Keycode.TAB',mods:['Alt']}),_k('key','F5',{keycode:'Keycode.F5',mods:[]}),_k('key','Esc',{keycode:'Keycode.ESCAPE',mods:[]}),_k('key','Entra',{keycode:'Keycode.ENTER',mods:[]})
-          ].map((k,i)=>Object.assign(k,{id:i})),
-          pots:[{function:'volume',label:'Volum',id:0,value:0},{function:'brightness',label:'Brillantor',id:1,value:0},{function:'scroll_y',label:'Scroll',id:2,value:0}]
-        }]
-      },
-    ];
-
-    function _renderPresetsGrid() {
-      const grid = document.getElementById('preset-grid'); if (!grid) return;
-      grid.innerHTML = _PRESETS.map((p, i) =>
-        `<label class="cb"><input type="checkbox" class="preset-chk" value="${i}"><span title="${p.desc}">${p.name}</span></label>`
-      ).join('');
-    }
-
-    document.getElementById('btn-add-presets')?.addEventListener('click', () => {
-      const checked = [...document.querySelectorAll('.preset-chk:checked')];
-      if (!checked.length) { alert('Selecciona almenys una configuració.'); return; }
-      checked.forEach(chk => {
-        const p = _PRESETS[+chk.value]; if (!p) return;
-        const newLayer = _defaultLayer(p.name);
-        const src = p.layers[0];
-        if (src?.keys) newLayer.keys = JSON.parse(JSON.stringify(src.keys));
-        if (src?.pots) { newLayer.pots = JSON.parse(JSON.stringify(src.pots)); }
-        _normalizeLayer(newLayer);
-        layers.push(newLayer);
-      });
-      currentLayerIdx = layers.length - 1;
-      config = layers[currentLayerIdx];
-      saveLayers(); _syncLayerBar(); renderDevice(); _renderDeviceLayers();
-      logSim(`${checked.length} capa${checked.length!==1?'es':''} afegida${checked.length!==1?'es':''} al dispositiu`, 'SYS');
-      document.querySelectorAll('.preset-chk').forEach(c => c.checked = false);
-      document.querySelector('[data-tab="config"]')?.click();
-    });
-    document.getElementById('btn-presets-all')?.addEventListener('click', () =>
-      document.querySelectorAll('.preset-chk').forEach(c => c.checked = true));
-    document.getElementById('btn-presets-none')?.addEventListener('click', () =>
-      document.querySelectorAll('.preset-chk').forEach(c => c.checked = false));
-
     // ── Capes de la biblioteca ─────────────────────────────────
     function loadProfiles() { return JSON.parse(localStorage.getItem('tecla_profiles_v2') || '{}'); }
     function _saveProfiles(profs) { localStorage.setItem('tecla_profiles_v2', JSON.stringify(profs)); }
@@ -1264,7 +1251,7 @@
       const list = document.getElementById('profiles-list'); if (!list) return;
       list.innerHTML = '';
       if (!layers.length) {
-        list.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0">Cap capa. Prem <strong>+ Nova capa</strong> o afegeix-ne des de Configuracions.</div>';
+        list.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0">Cap capa. Prem <strong>+ Nova capa</strong> per afegir-ne una.</div>';
         return;
       }
       layers.forEach((layer, idx) => {
@@ -1342,12 +1329,22 @@
     }
 
     function _removeDeviceLayer(idx) {
-      if (layers.length <= 1) { alert('Cal tenir almenys una capa al dispositiu.'); return; }
-      if (!confirm(`Eliminar "${layers[idx].name}" del dispositiu?`)) return;
-      layers.splice(idx, 1);
-      if (currentLayerIdx >= layers.length) currentLayerIdx = layers.length - 1;
+      const name = layers[idx]?.name || `Capa ${idx + 1}`;
+      const isLast = layers.length <= 1;
+      const msg = isLast
+        ? `Eliminar "${name}"? Es crearà una capa buida nova (el dispositiu necessita com a mínim una capa).`
+        : `Eliminar "${name}" del dispositiu?`;
+      if (!confirm(msg)) return;
+      if (isLast) {
+        layers = [_defaultLayer('Capa 1')];
+        currentLayerIdx = 0;
+      } else {
+        layers.splice(idx, 1);
+        if (currentLayerIdx >= layers.length) currentLayerIdx = layers.length - 1;
+      }
       config = layers[currentLayerIdx];
       saveLayers(); _syncLayerBar(); renderDevice(); renderProfiles();
+      showToast(isLast ? `Capa reiniciada.` : `Capa "${name}" eliminada.`, 'ok');
     }
 
     function _exportProfileJSON() {
@@ -1395,8 +1392,8 @@
             layers.push(nl); count++;
           }
           if (count) { currentLayerIdx = layers.length-1; config = layers[currentLayerIdx]; saveLayers(); _syncLayerBar(); renderDevice(); renderProfiles(); }
-          alert(`${count} capa${count!==1?'es':''} importada${count!==1?'es':''} correctament.`);
-        } catch { alert('Error: fitxer JSON inv\u00e0lid.'); }
+          showToast(`${count} capa${count!==1?'es':''} importada${count!==1?'es':''} correctament.`, 'ok');
+        } catch { showToast('Error: fitxer JSON inv\u00e0lid.'); }
         e.target.value = '';
       };
       reader.readAsText(file);
@@ -1409,7 +1406,8 @@
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
         tab.classList.add('active');
         document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
-        if (tab.dataset.tab === 'profiles') { _renderPresetsGrid(); renderProfiles(); _renderDeviceLayers(); }
+        if (tab.dataset.tab === 'profiles') { renderProfiles(); _renderDeviceLayers(); }
+        if (tab.dataset.tab === 'settings') _buildSettingsTab();
       });
     });
 
@@ -1440,6 +1438,21 @@
             }
           } catch(err) {
             console.error('Error writing libs', err);
+          }
+
+          progEl.value = 90; msgEl.textContent = 'Instal·lant sistema de boot...';
+          try {
+            const bfh = await dir.getFileHandle('boot.py', { create: true });
+            const bw = await bfh.createWritable(); await bw.write(BOOT_PY); await bw.close();
+            const savedName = localStorage.getItem('tecla_device_name');
+            const savedSuffix = localStorage.getItem('tecla_disk_suffix');
+            if (savedName || savedSuffix != null) {
+              const cfgDir = await dir.getDirectoryHandle('config', { create: true });
+              if (savedName) { const nf = await cfgDir.getFileHandle('device_name.txt', { create: true }); const nw = await nf.createWritable(); await nw.write(savedName); await nw.close(); }
+              if (savedSuffix != null) { const df = await cfgDir.getFileHandle('disk_label.txt', { create: true }); const dw = await df.createWritable(); await dw.write('TECLA' + savedSuffix); await dw.close(); }
+            }
+          } catch(err) {
+            console.error('Error writing boot system', err);
           }
 
           progEl.value = 100; msgEl.textContent = '✓ code.py exportat correctament!';
@@ -1508,13 +1521,81 @@
       document.getElementById('btn-disconnect').style.display = 'none';
     }
     document.getElementById('btn-connect')?.addEventListener('click', async () => {
-      if (!('showDirectoryPicker' in window)) { alert('Cal Chrome o Edge per connectar el dispositiu.'); return; }
+      if (!('showDirectoryPicker' in window)) { showToast('Cal Chrome o Edge per connectar el dispositiu.', 'err'); return; }
       try {
         const dir = await window.showDirectoryPicker({ mode: 'readwrite', startIn: 'desktop' });
         _deviceDir = dir; setConnected(dir.name);
-      } catch(e) { if (e.name !== 'AbortError') alert('Error: ' + e.message); }
+      } catch(e) { if (e.name !== 'AbortError') showToast('Error: ' + e.message, 'err'); }
     });
     document.getElementById('btn-disconnect')?.addEventListener('click', setDisconnected);
+
+    // ══ CONFIGURACIÓ (SETTINGS) ═════════════════════════════════════
+    const _MIDI_CH_KEY = 'tecla_midi_channel';
+    function _loadMidiChannel() { return Math.min(16, Math.max(1, parseInt(localStorage.getItem(_MIDI_CH_KEY) || '1', 10) || 1)); }
+    function _saveMidiChannel(ch) { localStorage.setItem(_MIDI_CH_KEY, String(ch)); }
+
+    // Escriu un fitxer al dispositiu (CIRCUITPY) creant els directoris intermedis.
+    async function _writeDeviceFile(path, content) {
+      if (!_deviceDir) throw new Error('Dispositiu no connectat');
+      const parts = path.split('/');
+      let dir = _deviceDir;
+      for (let i = 0; i < parts.length - 1; i++) dir = await dir.getDirectoryHandle(parts[i], { create: true });
+      const fh = await dir.getFileHandle(parts[parts.length - 1], { create: true });
+      const w = await fh.createWritable(); await w.write(content); await w.close();
+    }
+
+    // Instal·la el boot.py unificat que llegeix el nom del disc/port des de /config.
+    async function _deployBootPy() { await _writeDeviceFile('boot.py', BOOT_PY); }
+
+    function _buildSettingsTab() {
+      const chSel = document.getElementById('cfg-midi-channel');
+      if (chSel) chSel.value = String(_loadMidiChannel());
+      const nameInp = document.getElementById('cfg-device-name');
+      if (nameInp) nameInp.value = localStorage.getItem('tecla_device_name') || '';
+      const suffixInp = document.getElementById('cfg-disk-suffix');
+      if (suffixInp) suffixInp.value = localStorage.getItem('tecla_disk_suffix') || '';
+    }
+
+    document.getElementById('btn-save-midi-channel')?.addEventListener('click', () => {
+      const ch = Math.min(16, Math.max(1, parseInt(document.getElementById('cfg-midi-channel')?.value || '1', 10) || 1));
+      _saveMidiChannel(ch);
+      const fillCh = document.getElementById('midi-fill-ch'); if (fillCh) fillCh.value = String(ch);
+      logSim(`Canal MIDI per defecte: ${ch}`, 'SYS');
+      showToast(`Canal MIDI per defecte desat: ${ch}`, 'ok');
+    });
+
+    document.getElementById('cfg-disk-suffix')?.addEventListener('input', function () {
+      this.value = this.value.toUpperCase().replace(/[^A-Z0-9_\- ]/g, '').slice(0, 6);
+    });
+
+    document.getElementById('btn-save-device-name')?.addEventListener('click', async () => {
+      const name = (document.getElementById('cfg-device-name')?.value || '').trim();
+      if (!name) { showToast('Escriu un nom per al dispositiu (ex: TECLA-1).', 'err'); return; }
+      localStorage.setItem('tecla_device_name', name);
+      if (!_deviceDir) { showToast('Nom desat. Connecta el dispositiu per aplicar-lo al maquinari.'); return; }
+      try {
+        await _writeDeviceFile('config/device_name.txt', name);
+        await _deployBootPy();
+        showToast(`Nom del port "${name}" desat. Desconnecta i reconnecta el dispositiu per aplicar-lo.`, 'ok');
+      } catch (e) { showToast('Error desant el nom: ' + e.message, 'err'); }
+    });
+
+    document.getElementById('btn-save-disk-label')?.addEventListener('click', async () => {
+      const suffix = (document.getElementById('cfg-disk-suffix')?.value || '').trim().toUpperCase().replace(/[^A-Z0-9_\- ]/g, '').slice(0, 6);
+      const label = 'TECLA' + suffix;
+      localStorage.setItem('tecla_disk_suffix', suffix);
+      if (!_deviceDir) { showToast('Etiqueta desada. Connecta el dispositiu per aplicar-la al maquinari.'); return; }
+      try {
+        await _writeDeviceFile('config/disk_label.txt', label);
+        await _deployBootPy();
+        showToast(`Nom del disc "${label}" desat. Desconnecta i reconnecta el dispositiu per aplicar-lo.`, 'ok');
+      } catch (e) { showToast('Error desant l\'etiqueta: ' + e.message, 'err'); }
+    });
+
+    document.getElementById('btn-cfg-disconnect')?.addEventListener('click', setDisconnected);
+
+    // Aplica el canal MIDI per defecte a l'eina de farciment ràpid en iniciar.
+    { const _fc = document.getElementById('midi-fill-ch'); if (_fc) _fc.value = String(_loadMidiChannel()); }
 
     // ══ CAPES (LAYERS) ══════════════════════════════════════════════
     function switchLayer(i) {
@@ -1687,7 +1768,9 @@
     };
     const _DICT = {
       ca: {
-        nav_config:'Configuració', nav_profiles:'Capes', nav_fw:'Firmware', nav_guide:"Guia d'ús", nav_theme:'Aparença',
+        nav_config:'Dispositiu', nav_profiles:'Capes', nav_settings:'Configuració', nav_fw:'Firmware', nav_guide:"Guia d'ús", nav_theme:'Aparença',
+        cfg_midi_title:'Canal MIDI', cfg_midi_desc:"Canal MIDI per defecte que s'aplicarà a les tecles i potenciòmetres MIDI nous.", cfg_midi_ch:'Canal:', cfg_save:'Guardar',
+        cfg_usb_title:'Identitat USB', cfg_port_name:'Nom del port:', cfg_disk_name:'Nom del disc:', cfg_device_title:'Dispositiu', cfg_disconnect:'Desconnectar',
         btn_connect:'Connecta', btn_disconnect:'Desconnectar',
         device_off:'desconnectat',
         layer_lbl:'Capes:', btn_new_layer:'+ Nova', btn_rename:'Reanomenar la capa activa', btn_del:'Eliminar la capa activa',
@@ -1711,11 +1794,9 @@
         fw_step3_title:'Pas 3 — Actualitzar el firmware',
         fw_step3_desc:'Un cop el CIRCUITPY és visible, genera i exporta el fitxer <strong>code.py</strong> amb la teva configuració al dispositiu.',
         profiles_new:'+ Nova capa', profiles_export:'↓ Exportar', profiles_import:'↑ Importar',
-        profiles_add:'+ Afegir al dispositiu', profiles_all:'Totes', profiles_none:'Cap',
         profiles_edit:'Editar',
-        profiles_config_desc:'Marca les que vols usar i prem <strong>Afegir al dispositiu</strong> per incloure-les com a capes.',
         profiles_my_desc:'Totes les capes del dispositiu en ordre. La tecla <em>Canviar de capa</em> les recorre seqüencialment. La capa activa apareix ressaltada.',
-        drawer_label:"Nom de l'acció (Etiqueta opcional)", drawer_type:'Funció Principal', btn_save_elem:'Aplicar Canvis',
+        drawer_type:'Funció Principal', btn_save_elem:'Aplicar Canvis',
         drawer_key_label:'Tecla Principal', drawer_mods_label:'Modificadors (Drecera)',
         drawer_text_label:'Escriu el text exacte', drawer_consumer_label:'Acció Multimèdia',
         drawer_mouse_label:'Acció Ratolí', drawer_hold_mod_label:'Modificador a mantenir',
@@ -1734,7 +1815,9 @@
         lang_title:'Idioma',
       },
       es: {
-        nav_config:'Configuración', nav_profiles:'Capas', nav_fw:'Firmware', nav_guide:'Guía de uso', nav_theme:'Apariencia',
+        nav_config:'Dispositivo', nav_profiles:'Capas', nav_settings:'Configuración', nav_fw:'Firmware', nav_guide:'Guía de uso', nav_theme:'Apariencia',
+        cfg_midi_title:'Canal MIDI', cfg_midi_desc:'Canal MIDI por defecto que se aplicará a las teclas y potenciómetros MIDI nuevos.', cfg_midi_ch:'Canal:', cfg_save:'Guardar',
+        cfg_usb_title:'Identidad USB', cfg_port_name:'Nombre del puerto:', cfg_disk_name:'Nombre del disco:', cfg_device_title:'Dispositivo', cfg_disconnect:'Desconectar',
         btn_connect:'Conectar', btn_disconnect:'Desconectar',
         device_off:'desconectado',
         layer_lbl:'Capas:', btn_new_layer:'+ Nueva', btn_rename:'Renombrar la capa activa', btn_del:'Eliminar la capa activa',
@@ -1758,11 +1841,9 @@
         fw_step3_title:'Paso 3 — Actualizar el firmware',
         fw_step3_desc:'Una vez CIRCUITPY está visible, genera y exporta el archivo <strong>code.py</strong> con tu configuración al dispositivo.',
         profiles_new:'+ Nueva capa', profiles_export:'↓ Exportar', profiles_import:'↑ Importar',
-        profiles_add:'+ Añadir al dispositivo', profiles_all:'Todas', profiles_none:'Ninguna',
         profiles_edit:'Editar',
-        profiles_config_desc:'Marca las que quieras usar y pulsa <strong>Añadir al dispositivo</strong> para incluirlas como capas.',
         profiles_my_desc:'Todas las capas del dispositivo en orden. La tecla <em>Cambiar de capa</em> las recorre secuencialmente. La capa activa aparece resaltada.',
-        drawer_label:'Nombre de la acción (Etiqueta opcional)', drawer_type:'Función Principal', btn_save_elem:'Aplicar Cambios',
+        drawer_type:'Función Principal', btn_save_elem:'Aplicar Cambios',
         drawer_key_label:'Tecla Principal', drawer_mods_label:'Modificadores (Atajo)',
         drawer_text_label:'Escribe el texto exacto', drawer_consumer_label:'Acción Multimedia',
         drawer_mouse_label:'Acción Ratón', drawer_hold_mod_label:'Modificador a mantener',
@@ -1781,7 +1862,9 @@
         lang_title:'Idioma',
       },
       en: {
-        nav_config:'Configuration', nav_profiles:'Layers', nav_fw:'Firmware', nav_guide:'User Guide', nav_theme:'Appearance',
+        nav_config:'Device', nav_profiles:'Layers', nav_settings:'Configuration', nav_fw:'Firmware', nav_guide:'User Guide', nav_theme:'Appearance',
+        cfg_midi_title:'MIDI Channel', cfg_midi_desc:'Default MIDI channel applied to new MIDI keys and potentiometers.', cfg_midi_ch:'Channel:', cfg_save:'Save',
+        cfg_usb_title:'USB Identity', cfg_port_name:'Port name:', cfg_disk_name:'Disk name:', cfg_device_title:'Device', cfg_disconnect:'Disconnect',
         btn_connect:'Connect', btn_disconnect:'Disconnect',
         device_off:'disconnected',
         layer_lbl:'Layers:', btn_new_layer:'+ New', btn_rename:'Rename active layer', btn_del:'Delete active layer',
@@ -1805,11 +1888,9 @@
         fw_step3_title:'Step 3 — Update firmware',
         fw_step3_desc:'Once CIRCUITPY is visible, generate and export the <strong>code.py</strong> file with your configuration to the device.',
         profiles_new:'+ New layer', profiles_export:'↓ Export', profiles_import:'↑ Import',
-        profiles_add:'+ Add to device', profiles_all:'All', profiles_none:'None',
         profiles_edit:'Edit',
-        profiles_config_desc:'Check the ones you want and press <strong>Add to device</strong> to include them as layers.',
         profiles_my_desc:'All device layers in order. The <em>Switch layer</em> key cycles through them sequentially. The active layer is highlighted.',
-        drawer_label:'Action name (optional label)', drawer_type:'Main function', btn_save_elem:'Apply Changes',
+        drawer_type:'Main function', btn_save_elem:'Apply Changes',
         drawer_key_label:'Main key', drawer_mods_label:'Modifiers (Shortcut)',
         drawer_text_label:'Type exact text', drawer_consumer_label:'Media action',
         drawer_mouse_label:'Mouse action', drawer_hold_mod_label:'Modifier to hold',
@@ -1835,7 +1916,7 @@
       const t = _DICT[lang] || _DICT.ca;
       // Nav
       document.querySelectorAll('.nav-tab').forEach(el => {
-        const map = {config:'nav_config', profiles:'nav_profiles', firmware:'nav_fw', guide:'nav_guide', theme:'nav_theme'};
+        const map = {config:'nav_config', profiles:'nav_profiles', settings:'nav_settings', firmware:'nav_fw', guide:'nav_guide', theme:'nav_theme'};
         if (map[el.dataset.tab]) el.innerHTML = t[map[el.dataset.tab]];
       });
       // Header
@@ -1891,7 +1972,6 @@
     _syncLayerBar();
     renderDevice();
     renderProfiles();
-    _renderPresetsGrid();
     handleElementClick('key', 0); // l'inspector sempre mostra alguna cosa
   </script>
 </body>
