@@ -67,18 +67,14 @@ def update_parameters(kbd, pot_values, force_update=False):
     if getattr(kbd, '_audio_cfg_key', -1) >= 0:
         _apply_audio_cfg_pots(kbd, pot_values, force_update)
         return
+    # NOMÉS dues capes de potes: teclat i arpegiador. Les capes d'acords i
+    # d'harmonia negativa s'han retirat (decisió de tancament v3.1: menys
+    # sorpreses en directe — amb acords o h.neg actius els potes segueixen
+    # fent les funcions del teclat).
     if kbd.arp_mode_active:
         apply_arp_pot_function(kbd, 'arp_pot_x', pot_values[1], force_update=force_update)
         apply_arp_pot_function(kbd, 'arp_pot_y', pot_values[0], force_update=force_update)
         apply_arp_pot_function(kbd, 'arp_pot_z', pot_values[2], force_update=force_update)
-    elif getattr(kbd, 'neg_harmony_active', False):
-        apply_neg_pot_function(kbd, 'neg_pot_x', pot_values[1], force_update=force_update)
-        apply_neg_pot_function(kbd, 'neg_pot_y', pot_values[0], force_update=force_update)
-        apply_neg_pot_function(kbd, 'neg_pot_z', pot_values[2], force_update=force_update)
-    elif getattr(kbd, 'chord_mode_active', False):
-        apply_chord_pot_function(kbd, 'chord_pot_x', pot_values[1], force_update=force_update)
-        apply_chord_pot_function(kbd, 'chord_pot_y', pot_values[0], force_update=force_update)
-        apply_chord_pot_function(kbd, 'chord_pot_z', pot_values[2], force_update=force_update)
     else:
         apply_pot_function(kbd, 'pot_x', pot_values[1], force_update=force_update)
         apply_pot_function(kbd, 'pot_y', pot_values[0], force_update=force_update)
@@ -262,47 +258,10 @@ def apply_arp_pot_function(kbd, pot_name, pot_value, force_update=False):
         print(f"🎹 Arp Pot: {function}")
 
 
-def apply_chord_pot_function(kbd, pot_name, pot_value, force_update=False):
-    _map = {'chord_pot_x': 'chord_pot_x_function',
-            'chord_pot_y': 'chord_pot_y_function',
-            'chord_pot_z': 'chord_pot_z_function'}
-    attr = _map.get(pot_name)
-    if not attr:
-        return
-    defaults = {'chord_pot_x_function': "Tipologia d'Acords",
-                'chord_pot_y_function': "Inversió d'Acord",
-                'chord_pot_z_function': 'Modulació'}
-    function = getattr(kbd, attr, defaults[attr])
-
-    threshold = 0 if force_update else 2
-
-    if function == "Tipologia d'Acords":
-        types = kbd.available_chord_types if kbd.available_chord_types else ['Major']
-        last_val = getattr(kbd, '_chord_type_pot_last_val', None)
-        if last_val is None:
-            kbd._chord_type_pot_last_val = pot_value
-        elif abs(pot_value - last_val) >= 3:
-            kbd._chord_type_pot_last_val = pot_value
-            new_idx = min(int((pot_value / 128.0) * len(types)), len(types) - 1)
-            if new_idx != kbd.chord_type_index:
-                kbd.chord_type_index = new_idx
-                print(f"♪ (pot) {types[new_idx]}")
-    else:
-        _apply_standard_fn(kbd, function, pot_value, threshold)
-
-
-def apply_neg_pot_function(kbd, pot_name, pot_value, force_update=False):
-    _map = {'neg_pot_x': 'neg_pot_x_function',
-            'neg_pot_y': 'neg_pot_y_function',
-            'neg_pot_z': 'neg_pot_z_function'}
-    attr = _map.get(pot_name)
-    if not attr:
-        return
-    defaults = {'neg_pot_x_function': "Eix d'Harmonia",
-                'neg_pot_y_function': "Inversió d'Acord",
-                'neg_pot_z_function': 'Modulació'}
-    function = getattr(kbd, attr, defaults[attr])
-    _apply_standard_fn(kbd, function, pot_value, 0 if force_update else 2)
+# (apply_chord_pot_function i apply_neg_pot_function s'han retirat: les capes
+#  de potes d'acords i d'harmonia negativa ja no existeixen — vegeu
+#  update_parameters. Amb acords o h.neg actius, els potes fan les funcions
+#  del teclat.)
 
 
 def _apply_standard_fn(kbd, function, pot_value, threshold=2):

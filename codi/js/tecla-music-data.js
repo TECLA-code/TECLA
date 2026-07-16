@@ -21,7 +21,78 @@ export const ARP_PATTERNS = [
   [5, "Alberti"], [6, "Alberti Alt"], [7, "Vals"], [8, "Broken"], [9, "Trèmolo"],
   [10, "Zig-Zag"], [11, "Block"], [12, "Rolled"], [13, "Octaves"], [14, "Contrari"], [15, "Spread"]
 ];
-export const AVAILABLE_EFFECTS = ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend', 'Harmonia Negativa'];
+// Presets de "Config àudio" per a la capa de modes (tecles 14/15): en activar-ne
+// un, els 3 potes editen el so intern segons el mapatge del preset.
+export const AUDIO_FX_PRESETS = ['Àudio 1', 'Àudio 2', 'Àudio 3', 'Àudio 4', 'Àudio 5', 'Àudio 6'];
+
+// Efectes del DISPOSITIU (sense els presets d'àudio: el motor intern queda
+// reservat per a la propera revisió del maquinari — Pico 2). 'Config Modes'
+// cicla capes de potes (Mescla/Timbre/Expressió) per modificar el mode en viu.
+export const DEVICE_EFFECTS = ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend', 'Harmonia Negativa', 'Config Modes', 'Loop'];
+// Capes de potes de 'Config Modes' (mateixos defaults que device_files/modes/potlayers.py)
+export const MODE_POT_LAYERS_DEFAULT = [
+  { name: 'Mescla', x: 'Volum', y: 'Reverb (CC91)', z: 'Pan (CC10)' },
+  { name: 'Timbre', x: 'Brillantor (CC74)', y: 'Timbre (CC71)', z: 'Release (CC72)' },
+  { name: 'Expressio', x: 'Expressió', y: 'Modulació', z: 'Chorus (CC93)' },
+];
+export const MODE_POT_CC = {
+  'Volum': 7, 'Volume': 7, 'Modulació': 1, 'Modulation': 1,
+  'Expressió': 11, 'Expression': 11, 'Pan': 10, 'Reverb': 91, 'Chorus': 93,
+  'Filtre': 74, 'Ressonància': 71, 'Atac': 73, 'Release': 72,
+  'Decay': 75, "Forma d'ona": 70, 'Detune': 85,
+};
+// Catàleg de funcions assignables als potes d'una capa de 'Config Modes'
+// (configurador de la pestanya Dispositiu). EXCLUSIVAMENT efectes MIDI
+// ESTÀNDARD (mateixa família que els potes de la capa de teclat: brillantor,
+// modulació, volum…): CCs que qualsevol DAW mapeja sense dependre del sinte
+// intern. Tots resolen a un CC via modePotFnToCC — mirall de
+// potlayers.potfn_to_cc al firmware. '—' = pot inactiu.
+export const MODE_POT_FNS = ['—', 'Volum', 'Expressió', 'Modulació',
+  'Brillantor (CC74)', 'Timbre (CC71)', 'Pan (CC10)', 'Reverb (CC91)',
+  'Chorus (CC93)', 'Atac (CC73)', 'Release (CC72)', 'Portamento (CC5)',
+  'CC Lliure (CC16)', 'CC Lliure (CC17)', 'CC Lliure (CC18)'];
+/** Nom de funció de capa de potes → CC (els dígits després de 'CC' manen). */
+export function modePotFnToCC(fn) {
+  if (!fn) return null;
+  const i = fn.indexOf('CC');
+  if (i >= 0) { const m = fn.slice(i + 2).match(/\d+/); if (m) return Math.min(127, +m[0]); }
+  return MODE_POT_CC[fn] ?? null;
+}
+// Efectes del SIMULADOR (hi conviu el motor d'àudio Web Audio complet).
+export const AVAILABLE_EFFECTS = [...DEVICE_EFFECTS, ...AUDIO_FX_PRESETS];
+
+// Funcions assignables als potes d'una Config àudio (sinte intern + CC Lliure per al DAW).
+export const AUDIO_CFG_POT_FNS = ['Filtre', 'Ressonància', 'Atac', 'Decay', 'Env Sustain', 'Release', 'LFO Vel.', 'LFO Prof.', 'Env Filtre', 'Env Decay', 'LFO→Filtre', 'Trèmol', 'Trèmol vel.', 'Detune', 'Filtre tipus', 'Pitch env', "Forma d'ona", 'Volum', 'CC Lliure (CC16)', 'CC Lliure (CC17)', 'CC Lliure (CC18)'];
+
+// Mapatge funció → Sound Controller MIDI (font de veritat compartida).
+export const AUDIO_FN_CC = {
+  'Filtre': 74, 'Ressonància': 71, 'Atac': 73, 'Decay': 75, 'Release': 72,
+  'LFO Vel.': 76, 'LFO Prof.': 77, 'Env Filtre': 78, 'Env Decay': 79,
+  'LFO→Filtre': 80, "Forma d'ona": 70, 'Volum': 7,
+  'Env Sustain': 81, 'Trèmol': 82, 'Trèmol vel.': 83, 'Detune': 85,
+  'Filtre tipus': 86, 'Pitch env': 87,
+};
+
+/** Resol una funció de pot d'àudio (o 'CC Lliure (CCnn)') al seu número de CC, o null. */
+export function audioFnToCC(fn) {
+  if (fn == null) return null;
+  if (AUDIO_FN_CC[fn] !== undefined) return AUDIO_FN_CC[fn];
+  if (typeof fn === 'string' && fn.startsWith('CC Lliure')) {
+    const m = fn.match(/\d+/);
+    return m ? Math.min(127, +m[0]) : null;
+  }
+  return null;
+}
+
+// Mapatges per defecte de cada preset (varietat d'entrada; l'usuari els pot canviar).
+export const AUDIO_FX_DEFAULTS = {
+  'Àudio 1': { x: 'Filtre', y: 'Ressonància', z: 'Env Filtre' },
+  'Àudio 2': { x: 'Atac', y: 'Release', z: 'Env Decay' },
+  'Àudio 3': { x: 'LFO Vel.', y: 'LFO Prof.', z: 'LFO→Filtre' },
+  'Àudio 4': { x: "Forma d'ona", y: 'Volum', z: 'Filtre' },
+  'Àudio 5': { x: 'Filtre', y: 'Env Filtre', z: 'Env Decay' },
+  'Àudio 6': { x: 'Ressonància', y: 'LFO→Filtre', z: 'LFO Vel.' },
+};
 
 export const KB_BTN_FN_META = {
   note:        { name: 'Nota MIDI',     color: '#4a80f0', icon: '♩', multi: true },
@@ -38,13 +109,25 @@ export const KB_BTN_FN_META = {
   looper_q:        { name: 'Looper ♩ quant.', color: '#d35400', icon: '◈' },
   looper_dub:      { name: 'Overdub',        color: '#c0392b', icon: '➕' },
   voice_lead:      { name: 'Cond. de veus',  color: '#27ae60', icon: '𝆔' },
-  modes_layer:     { name: 'Capa de Modes', color: '#888',    icon: '⇄', locked: true },
+  accomp:          { name: 'Base (acomp.)',  color: '#2e9e5b', icon: '𝄆' },
+  synth_wave:      { name: 'Forma d\'ona',    color: '#1abc9c', icon: '∿' },
+  synth_cfg:       { name: 'Config àudio',   color: '#8e44ad', icon: '⊞', multi: true },
+  modes_layer:     { name: 'Canvi de Capa', color: '#888',    icon: '⇄', locked: true },
   stop:            { name: 'Aturar So',     color: '#888',    icon: '■', locked: true },
 };
 // 'looper_q' s'ha integrat dins 'looper' (auto-quantitza quan l'arp intervé) i ja
 // no és assignable: una sola funció de loop. La metadata es conserva per a configs
 // antigues que encara el referencien.
-export const KB_BTN_FN_DRAGGABLE = ['note','scale','tonality','chord','arp','octave_down','octave_up','neg_harmony','diatonic','latch','looper','looper_dub','voice_lead'];
+// 'synth_wave' i 'synth_cfg' (config del motor d'àudio intern) han sortit de la
+// llista assignable: l'àudio del dispositiu es reserva per a la propera revisió
+// del maquinari. La metadata es conserva per a configs antigues i el firmware
+// encara les entén si hi són.
+export const KB_BTN_FN_DRAGGABLE = ['note','scale','tonality','chord','arp','octave_down','octave_up','neg_harmony','diatonic','latch','looper','looper_dub','voice_lead','accomp'];
+// Base d'acompanyament de la capa teclat (mateixos ids i ordre que
+// ACCOMP_PATTERN_IDS a device_files/modes/accompaniment.py).
+export const ACCOMP_PATTERN_IDS = ['pols', 'baix', 'arpegi', 'sequencia'];
+export const ACCOMP_PATTERN_NAMES = ['Pols', 'Baix', 'Arpegi', 'Seqüència'];
+export const ACCOMP_CHANNEL = 1;   // canal MIDI 0-indexat (el teclat toca pel 0)
 export const NEG_HARMONY_TYPES = [
   [0, 'Quinta (Levy)', 3.5],
   [1, 'Unisonant',     0.0],
@@ -70,6 +153,15 @@ export const DIATONIC_FNS = [
   { id: 'aug6_fr',       name: 'Sisena Aug. Francesa',    desc: 'Fr+6 → V — ♭6 amb #4 afegit (color impressionista)' },
   { id: 'tonics',        name: 'Tonalitza (7ens)',         desc: 'Acords de 7a diatònica: Imaj7, iim7, iiim7, IVmaj7, V7, vim7, viiø7' },
   { id: 'modulation',    name: 'Modulació',               desc: 'V7 del grau següent — cada botó anticipa la nova tonalitat' },
+];
+// Formes de conducció de veus (voice leading). Mateixos ids i ordre que
+// VL_TYPE_IDS a device_files/modes/kbd_voicelead.py — paritat app/firmware.
+export const VL_TYPES = [
+  { id: 'proximitat', name: 'Proximitat',    desc: 'Mínim moviment total — el voicing més proper a l\'anterior (pianístic, lligat)' },
+  { id: 'comu',       name: 'Tons comuns',   desc: 'Manté les notes compartides amb l\'acord anterior; només mou la resta' },
+  { id: 'baix',       name: 'Baix conduït',  desc: 'Prioritza un baix llis (poc salt al greu) — bona línia de baix' },
+  { id: 'ascendent',  name: 'Ascendent',     desc: 'Les veus tendeixen a pujar a cada acord — sensació d\'enlairament' },
+  { id: 'obert',      name: 'Obert',         desc: 'Distribució oberta (veus separades) — so més ampli i orquestral' },
 ];
 
 // ══════════════════════════════════════════════════════════════

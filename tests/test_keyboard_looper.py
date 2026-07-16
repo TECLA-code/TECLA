@@ -278,30 +278,47 @@ def test_loop_sense_sustain_conserva_durades(kbd):
     assert kbd.loop_events[0][1] == pytest.approx(0.4)   # durada real (release - press)
 
 
-# ── Zona morta del pot de sustain (CC64 net ON/OFF) ──────────────────────────
+# ── Sustain progressiu (el pot fixa el temps de release; sense CC64) ─────────
 
-def test_sustain_zona_morta(kbd):
-    """El pot de sustain a posició mitjana NO ha d'enviar pedal (CC64=0): evita el
-    sustain accidental en directe (símptoma 2). Només s'activa prop del màxim."""
+def test_sustain_progressiu(kbd):
+    """El pot de sustain fixa el release TECLA-side: zona morta baixa (release
+    immediat), corba creixent fins a SUSTAIN_MAX_S, i hold indefinit només prop
+    del màxim (>=125)."""
     kbd.pot_z_function = 'Sustain (CC64)'
+    apply_pot_function(kbd, 'pot_z', 4, force_update=True)
+    assert kbd.sustain_release_time == 0.0
+    assert kbd.sustain_hold_enabled is False
+    prev = 0.0
     for v in (40, 70, 100, 124):
         apply_pot_function(kbd, 'pot_z', v, force_update=True)
-        assert kbd.sustain_level == 0, f"pot={v}: CC64 hauria de ser 0 (zona morta)"
+        assert 0 < kbd.sustain_release_time <= kbd.SUSTAIN_MAX_S, f"pot={v}"
+        assert kbd.sustain_release_time > prev, f"pot={v}: corba creixent"
         assert kbd.sustain_hold_enabled is False
+        prev = kbd.sustain_release_time
     for v in (125, 127):
         apply_pot_function(kbd, 'pot_z', v, force_update=True)
-        assert kbd.sustain_level == 127, f"pot={v}: sustain hauria d'estar actiu"
+        assert kbd.sustain_release_time == -1.0, f"pot={v}: hold indefinit"
         assert kbd.sustain_hold_enabled is True
 
 
-def test_loop_gravat_amb_pot_mig_no_es_lliga(kbd):
-    """Conseqüència de la zona morta: gravar amb el pot de sustain a mig camí NO
-    activa el baking (el loop NO es lliga sense voler) — corregeix el fals positiu."""
+def test_loop_gravat_amb_pot_baix_no_es_lliga(kbd):
+    """Gravar amb el pot de sustain a la zona baixa (<64) NO activa el baking:
+    el loop conserva les durades tal com s'han tocat."""
     kbd.pot_z_function = 'Sustain (CC64)'
-    apply_pot_function(kbd, 'pot_z', 70, force_update=True)   # pot a mig → sense sustain
+    apply_pot_function(kbd, 'pot_z', 40, force_update=True)
     _grava_dos_acords(kbd)
     assert kbd._loop_had_sustain is False
     assert kbd.loop_events[0][1] == pytest.approx(0.4)       # durada intacta
+
+
+def test_loop_gravat_amb_pot_alt_es_lliga(kbd):
+    """Gravar amb el pot de sustain a la zona alta (>=64) marca la presa i el
+    baking lliga les durades: el loop queda independent del pot en directe."""
+    kbd.pot_z_function = 'Sustain (CC64)'
+    apply_pot_function(kbd, 'pot_z', 70, force_update=True)
+    _grava_dos_acords(kbd)
+    assert kbd._loop_had_sustain is True
+    assert kbd.loop_events[0][1] > 0.9                       # lligat fins al següent
 
 
 def test_arp_capturat_via_note_on(kbd):

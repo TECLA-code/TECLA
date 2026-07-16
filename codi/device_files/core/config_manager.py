@@ -5,6 +5,11 @@ import json
 import os
 
 class ConfigManager:
+    # Límit dur de capes (banks): tota la config viu en RAM i cada capa de
+    # teclat pot pesar 1-2KB de JSON; 6 capes deixen marge còmode per carregar
+    # modes a la Pico 1. L'app aplica el mateix límit en crear capes.
+    MAX_BANKS = 6
+
     def __init__(self, config_path='config/tecla_config.json'):
         """Inicialitza el gestor de configuració"""
         self.config_path = config_path
@@ -97,6 +102,30 @@ class ConfigManager:
                             bank['chord_types'] = top_chord_types
                 except Exception as e:
                     print(f"Avís: No s'ha pogut migrar la configuració: {e}")
+
+                # Migració a CAPES TIPADES (v3): cada banc és 'teclat' o 'modes'.
+                # Configs antigues no porten 'type' → són bancs de modes; i si cap
+                # banc no és de teclat, se n'afegeix un al final perquè la tecla 13
+                # (que ara CICLA les capes) sempre pugui arribar al teclat.
+                try:
+                    banks = config.get('banks', [])
+                    # LÍMIT DUR de capes (RAM): tota la config viu en memòria i
+                    # cada capa de teclat pot pesar 1-2KB. Més enllà de MAX_BANKS
+                    # el marge per carregar modes es fa perillós → es retallen
+                    # (l'app té el mateix límit; això és l'última xarxa).
+                    if len(banks) > self.MAX_BANKS:
+                        print(f"Avís: {len(banks)} capes; es retallen a {self.MAX_BANKS} (límit de RAM)")
+                        del banks[self.MAX_BANKS:]
+                        if config.get('current_bank', 0) >= self.MAX_BANKS:
+                            config['current_bank'] = 0
+                    for bank in banks:
+                        if bank.get('type') not in ('teclat', 'modes'):
+                            bank['type'] = 'modes'
+                    if banks and not any(b.get('type') == 'teclat' for b in banks):
+                        banks.append({'name': 'Teclat', 'type': 'teclat',
+                                      'modes': ['Silenci'] * 16})
+                except Exception as e:
+                    print(f"Avís: No s'ha pogut tipar les capes: {e}")
                 
                 return config
         except (OSError, ValueError) as e:  # ValueError atrapa errors de JSON en CircuitPython
@@ -130,14 +159,24 @@ class ConfigManager:
         while len(default_modes) < 16:
             default_modes.append('Silenci')
         
-        # Crear els 4 bancs per defecte amb còpies independents
-        banks = []
+        # Crear els bancs per defecte amb còpies independents.
+        # El primer és una CAPA DE TECLAT (capes tipades v3): en arrencar de
+        # fàbrica el dispositiu comença al teclat i la tecla 13 cicla les capes.
+        banks = [{
+            'name': 'Teclat',
+            'type': 'teclat',
+            'modes': ['Silenci'] * 16,
+            'keyboard_scales': [0, 1, 4, 5, 7, 8, 13, 15, 18, 19],
+            'arpeggiator_modes': list(range(16)),
+            'chord_types': ['Major'],
+        }]
         bank_names = ['Noise', 'Melodia', 'Natura', 'Ritme']
-        
+
         for bank_name in bank_names:
             # IMPORTANT: Crear còpies independents per a cada banc
             bank = {
                 'name': bank_name,
+                'type': 'modes',
                 'modes': list(default_modes[:16]),  # Còpia independent
                 'keyboard_scales': [0, 1, 4, 5, 7, 8, 13, 15, 18, 19],
                 'arpeggiator_modes': list(range(16)),
@@ -163,7 +202,11 @@ class ConfigManager:
             'current_bank': 0,
             'button_actions': {},
             'custom_chord_progressions': [],
-            'available_effects': ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend', 'Harmonia Negativa', 'Àudio 1', 'Àudio 2', 'Àudio 3', 'Àudio 4', 'Àudio 5', 'Àudio 6'],
+            # Sense presets 'Àudio N': el motor d'àudio intern queda reservat
+            # per a la propera revisió del maquinari (Pico 2). 'Config Modes'
+            # cicla capes de potes (Mescla/Timbre/Expressió) per modificar el
+            # mode mentre sona.
+            'available_effects': ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend', 'Harmonia Negativa', 'Config Modes', 'Loop'],
             # Efectes temporals GLOBALS - apliquen a TOTS els bancs
             'efectos_temporales': {
                 '13': 'Sustain',
@@ -445,8 +488,8 @@ class ConfigManager:
         return False
     
     def get_all_custom_arps(self):
-        """Retorna tots els patrons d'arpegiador personalitzats"""
-        return self.config.get('custom_arpeggiator_patterns', [])
+        """Retorna tots els patrons d'arpegiador personalitzats (per-capa)"""
+        return self._bank_or_global('custom_arpeggiator_patterns', []) or []
         
     def get_custom_arp_by_id(self, pattern_id):
         """Retorna un patró d'arpegiador específic pel seu ID"""
@@ -458,8 +501,8 @@ class ConfigManager:
     # ========== GESTIÓ DE PROGRESSIONS D'ACORDS CUSTOM ==========
     
     def get_all_progressions(self):
-        """Retorna totes les progressions d'acords personalitzades"""
-        return self.config.get('custom_chord_progressions', [])
+        """Retorna totes les progressions d'acords personalitzades (per-capa)"""
+        return self._bank_or_global('custom_chord_progressions', []) or []
     
     def get_progression_by_id(self, progression_id):
         """Retorna una progressió específica pel seu ID"""
@@ -755,17 +798,32 @@ class ConfigManager:
         
         return self.set_global_temporal_effects(effects)
 
+    def _bank_or_global(self, key, default=None):
+        """Valor de configuració amb prioritat de CAPA: primer el banc actual
+        (cada capa de teclat porta una còpia pròpia de la seva config), després
+        la config global (fallback del firmware) i finalment `default`. És la
+        peça que fa que cada capa de teclat soni amb la SEVA configuració."""
+        try:
+            bank = self.get_current_bank() or {}
+            v = bank.get(key, None)
+            if v not in (None, [], {}, ''):
+                return v
+        except Exception:
+            pass
+        v = self.config.get(key, None)
+        return v if v not in (None, [], {}, '') else default
+
     def get_keyboard_button_functions(self):
         """Retorna les funcions assignades als 16 botons del mode teclat.
         Índexs 12 i 15 sempre retornen 'modes_layer' i 'stop' (blocats).
-        Format: llista de 16 strings.
+        Format: llista de 16 strings. Per-capa amb fallback global.
         """
         _default = (
             'note','note','note','note','note','note','note','note',
             'scale','tonality','chord','arp',
             'modes_layer','octave_down','octave_up','stop'
         )
-        fns = self.config.get('keyboard_button_functions', None)
+        fns = self._bank_or_global('keyboard_button_functions', None)
         if not fns or len(fns) != 16:
             return list(_default)
         result = list(fns)
@@ -774,9 +832,9 @@ class ConfigManager:
         return result
 
     def get_neg_harmony_type(self):
-        """Retorna el tipus d'eix per a l'harmonia negativa (0-7)."""
+        """Retorna el tipus d'eix per a l'harmonia negativa (0-7). Per-capa."""
         try:
-            v = int(self.config.get('neg_harmony_type', 0))
+            v = int(self._bank_or_global('neg_harmony_type', 0) or 0)
             return v if 0 <= v <= 7 else 0
         except (ValueError, TypeError):
             # Valor no numèric a la config: no fer petar el setup del teclat
@@ -784,9 +842,9 @@ class ConfigManager:
 
     def get_neg_harmony_axes(self):
         """Retorna la llista d'IDs d'eixos d'harmonia negativa activats.
-        Per defecte retorna tots els eixos disponibles (0-7).
+        Per defecte retorna tots els eixos disponibles (0-7). Per-capa.
         """
-        axes = self.config.get('neg_harmony_axes', None)
+        axes = self._bank_or_global('neg_harmony_axes', None)
         if axes and isinstance(axes, list):
             result = []
             for a in axes:
@@ -812,18 +870,13 @@ class ConfigManager:
         return self.save_config()
 
 
-    def get_chord_potentiometer_functions(self):
-        """Retorna les funcions dels potenciòmetres per al mode acords"""
-        return self.config.get('chord_potentiometer_functions', {})
-
-    def get_neg_potentiometer_functions(self):
-        """Retorna les funcions dels potenciòmetres per a l'harmonia negativa"""
-        return self.config.get('neg_potentiometer_functions', {})
+    # (get_chord_potentiometer_functions i get_neg_potentiometer_functions
+    #  retirats: les capes de potes d'acords i h.negativa ja no existeixen.)
 
     def get_audio_potentiometer_functions(self):
         """Mapatge dels 3 potes per cada tecla amb 'synth_cfg' (Config àudio).
-        Clau = índex de tecla (string) → {x, y, z}."""
-        return self.config.get('audio_potentiometer_functions', {})
+        Clau = índex de tecla (string) → {x, y, z}. Per-capa."""
+        return self._bank_or_global('audio_potentiometer_functions', {}) or {}
 
     def get_modes_audio_pot_functions(self):
         """Mapatge dels 3 potes per cada preset 'Àudio N' de la capa de modes
@@ -849,14 +902,14 @@ class ConfigManager:
         """Retorna la llista de funcions harmòniques diatòniques activades.
         Per defecte retorna ['diatonic'].
         """
-        fns = self.config.get('diatonic_functions', None)
+        fns = self._bank_or_global('diatonic_functions', None)
         if fns:
             return list(fns)
         return ['diatonic']
 
     def get_voice_lead_types(self):
-        """Formes de conducció de veus activades (ids). Per defecte, totes."""
-        t = self.config.get('voice_lead_types', None)
+        """Formes de conducció de veus activades (ids). Per defecte, totes. Per-capa."""
+        t = self._bank_or_global('voice_lead_types', None)
         if t:
             return list(t)
         return ['proximitat', 'comu', 'baix', 'ascendent', 'obert']

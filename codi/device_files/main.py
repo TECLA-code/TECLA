@@ -4,20 +4,13 @@ Controla el maquinari i gestiona els diferents modes MIDI
 """
 import time
 import board
-import pwmio
 import digitalio
 import analogio
 import usb_midi
 from adafruit_midi import MIDI
-from adafruit_midi.note_off import NoteOff
 from adafruit_midi.control_change import ControlChange
 
-
-# Funció global per convertir notes MIDI a freqüència
-def midi_to_frequency(midi_note):
-    """Converteix una nota MIDI a freqüència en Hz"""
-    return round(440 * (2 ** ((midi_note - 69) / 12)))
-
+# El PWM intern (i midi_to_frequency) viu a core/tone.py.
 # mode_manager i mode_keyboard s'importen de forma lazy dins main() per estalviar RAM a l'inici
 
 # Configuració de pins
@@ -125,6 +118,142 @@ class TeclaHardware:
                 values.append(0)
         return values
     
+    def _switch_layer(self, step):
+        """Cicla a la capa (banc) següent/anterior i activa el motor del seu tipus.
+
+        Les capes són TIPADES ('teclat' o 'modes'): una capa de teclat porta la
+        seva pròpia configuració (escales, funcions de botó, harmonia, potes…)
+        que config_manager llegeix per-banc; per això el teclat es RECREA a cada
+        canvi — sense recrear-lo, una segona capa de teclat sonaria com la primera.
+        """
+        try:
+            banks = self.config_manager.config.get('banks', []) or []
+            if not banks:
+                return
+            old_name = self.config_manager.get_current_bank().get('name', '')
+            new_index = (self.config_manager.current_bank_index + step) % len(banks)
+            self.config_manager.set_current_bank(new_index)
+            bank = self.config_manager.get_current_bank() or {}
+            name = bank.get('name', '') or ('Capa %d' % (new_index + 1))
+            btype = bank.get('type', 'modes')
+            print(f"🔁 Capa: {old_name} → {name} ({btype})")
+            self.display_event('show_layer', name)
+            self.keyboard_toggle_blocked_until = time.monotonic() + 0.5
+            if btype == 'teclat':
+                self._activate_keyboard_layer()
+            else:
+                self._activate_modes_layer()
+            # (cada _activate_* ja fa el seu gc.collect; no en cal un altre aquí
+            #  — cada collect extra són ~10-30ms que es noten al toc)
+        except Exception as e:
+            print(f"Error canviant de capa: {e}")
+
+    def _all_notes_off(self):
+        """CC120 (All Sound Off) + CC123 (All Notes Off) a tots els canals,
+        amb UN missatge reutilitzat (32 al·locacions costaven gc al canvi de capa)."""
+        cc = ControlChange(120, 0, channel=0)
+        for ch in range(16):
+            for ctrl in (120, 123):
+                cc.control = ctrl
+                cc.value = 0
+                cc.channel = ch
+                self.midi_out.send(cc)
+
+    def _activate_keyboard_layer(self):
+        """Activa una capa de tipus TECLAT amb la config del banc actual."""
+        # Desactivar els efectes temporals NO persistents (Sustain, Pausa…)
+        # amb el seu on_deactivate: si el Sustain quedés actiu en passar al
+        # teclat, el pedal CC64 continuaria premut al synth i la primera nota
+        # del teclat quedaria enganxada. 'Config Modes' i 'Loop' es conserven.
+        if self.mode_manager:
+            try:
+                from modes.mm_update import mm_deactivate_efecte_temporal, _clear_susp_flags
+                for _btn, _info in self.mode_manager.efectes_temporals.items():
+                    if _info['active'] and _info['tipus'] not in ('Config Modes', 'Loop'):
+                        mm_deactivate_efecte_temporal(self.mode_manager, _btn)
+                        _clear_susp_flags(self.mode_manager, _info['tipus'])
+            except Exception:
+                pass
+        # Aturar i descarregar el mode actiu ABANS de crear el teclat: evita
+        # notes penjades (el mode deixaria de rebre update() i no enviaria mai
+        # els NoteOff) i allibera RAM per a la instància nova.
+        if self.mode_manager and self.mode_manager.current_mode:
+            prev_mode = self.mode_manager.current_mode_name
+            try:
+                self.mode_manager._stop_current_mode()
+            except Exception:
+                pass
+            self.mode_manager.current_mode = None
+            self.mode_manager.current_mode_name = None
+            if prev_mode and prev_mode != 'Teclat':
+                try:
+                    self.mode_manager._unload_mode(prev_mode)
+                except Exception:
+                    pass
+        self._all_notes_off()
+        # RECREAR sempre el teclat: cada capa de teclat té la seva pròpia config
+        # (config_manager la llegeix per-banc). Els bytecodes ja són a sys.modules,
+        # així que només es paga la instanciació.
+        if self.keyboard_mode:
+            try:
+                self.keyboard_mode.cleanup()
+            except Exception:
+                pass
+            self.keyboard_mode = None
+        import gc
+        gc.collect()
+        try:
+            from modes.mode_keyboard import KeyboardMode
+            self.keyboard_mode = KeyboardMode(
+                self.midi_out,
+                {'octave': self.keyboard_octave},
+                config_manager=self.config_manager
+            )
+            self.keyboard_mode.setup()
+        except Exception as e:
+            print(f"Error creant teclat: {e}")
+        self.keyboard_mode_active = True
+        # Diagnòstic: la capa porta config pròpia o cau a la global? Si aquí
+        # surt "global" per a una capa que hauries configurat, guarda-la de nou
+        # des de l'app (Guardar configuració) i reinstal·la la config.
+        try:
+            _own = 'pròpia' if (self.config_manager.get_current_bank() or {}).get('keyboard_button_functions') else 'global'
+            print(f"Capa teclat activa | Octava: {self.keyboard_octave} | config: {_own}")
+        except Exception:
+            print(f"Capa teclat activa | Octava: {self.keyboard_octave}")
+
+    def _activate_modes_layer(self):
+        """Activa una capa de tipus MODES amb els modes/efectes del banc actual."""
+        if not self.mode_manager:
+            print("⚠ Capa de modes no disponible")
+            return
+        self.keyboard_mode_active = False
+        # Cleanup i destruir la instància del teclat (es manté el bytecode:
+        # evita recompilar 29KB en tornar a una capa de teclat)
+        if self.keyboard_mode:
+            try:
+                self.keyboard_mode.cleanup()
+            except Exception:
+                pass
+            self.keyboard_mode = None
+        import gc
+        gc.collect()
+        # Netejar l'estat del mode actual i carregar els del banc nou
+        if self.mode_manager.current_mode:
+            try:
+                if hasattr(self.mode_manager.current_mode, 'cleanup'):
+                    self.mode_manager.current_mode.cleanup()
+            except Exception:
+                pass
+            self.mode_manager.current_mode = None
+            self.mode_manager.current_mode_name = None
+        try:
+            self.mode_manager.load_config()
+        except Exception as e:
+            print(f"Error carregant config de modes: {e}")
+        print("Capa de modes activa")
+        self._all_notes_off()
+
     def check_mode_change(self, mode_names, button_states=None):
         """Comprova si s'ha canviat de mode i retorna el nou mode o None"""
         if button_states is None:
@@ -141,125 +270,21 @@ class TeclaHardware:
         elif (not button_states[12]) and self.last_button_states[12]:
             pressed_time = self.button_press_times[12] or 0.0
             duration = time.monotonic() - pressed_time if pressed_time else 0.0
-            if duration >= self.long_press_threshold:
-                # Canvi de banc
-                try:
-                    old_bank_name = self.config_manager.get_current_bank().get('name', 'N/A')
-                    
-                    # CRÍTIC: Alliberar memòria abans de canviar de banc
-                    import gc
-                    gc.collect()
-                    mem_before = gc.mem_free() if hasattr(gc, 'mem_free') else None
-                    
-                    self.config_manager.next_bank()
-                    new_bank_name = self.config_manager.get_current_bank().get('name', 'N/A')
-                    print(f"🔁 Capa canviada: {old_bank_name} → {new_bank_name}")
-                    self.display_event('show_layer', new_bank_name)
-                    
-                    # IMPORTANT: Recarregar la configuració del mode_manager
-                    # per actualitzar els efectes temporals i modes del nou banc
-                    if self.mode_manager:
-                        self.mode_manager.load_config()
-                        print("✓ Configuració de la nova capa carregada")
-                    
-                    # Forçar garbage collection després del canvi
-                    gc.collect()
-                    mem_after = gc.mem_free() if hasattr(gc, 'mem_free') else None
-                    
-                    if mem_before and mem_after:
-                        mem_freed = mem_after - mem_before
-                        print(f"[MEMÒRIA] RAM alliberada: {mem_freed} bytes | Lliure ara: {mem_after} bytes")
-                    
-                except Exception as e:
-                    print(f"Error canviant de capa: {e}")
-            else:
-                # Curt: toggle entre mode teclat i capa de modes
-                current_time = time.monotonic()
-                if current_time < self.keyboard_toggle_blocked_until:
-                    # Descartar el flanc, no ajornar-lo: cal actualitzar l'estat
-                    # anterior del botó 13; si no, el release es re-detecta a cada
-                    # cicle i en expirar el bloqueig la duració acumulada pot
-                    # superar el llindar i disparar un canvi de banc no desitjat.
-                    # NOMÉS l'índex 12: copiar tota la llista podria empassar-se
-                    # un flanc simultani d'un altre botó (p.ex. l'emergency stop).
-                    self.last_button_states[12] = button_states[12]
-                    return None
-                
-                if not self.keyboard_mode_active:
-                    # Tornar a mode teclat
-                    print("Activant capa teclat...")
-                    # Aturar i descarregar el mode actiu ABANS de crear el teclat:
-                    # evita notes penjades (el mode deixa de rebre update() i no
-                    # enviaria mai els NoteOff) i allibera RAM per a la instància nova
-                    if self.mode_manager and self.mode_manager.current_mode:
-                        prev_mode = self.mode_manager.current_mode_name
-                        try:
-                            self.mode_manager._stop_current_mode()
-                        except Exception:
-                            pass
-                        self.mode_manager.current_mode = None
-                        self.mode_manager.current_mode_name = None
-                        if prev_mode and prev_mode != 'Teclat':
-                            try:
-                                self.mode_manager._unload_mode(prev_mode)
-                            except Exception:
-                                pass
-                    for ch in range(16):
-                        self.midi_out.send(ControlChange(120, 0, channel=ch))
-                        self.midi_out.send(ControlChange(123, 0, channel=ch))
-                    self.keyboard_mode_active = True
-                    self.keyboard_toggle_blocked_until = time.monotonic() + 0.5
-                    import gc; gc.collect()
-                    # Crear instància del teclat (bytecodes ja en sys.modules)
-                    try:
-                        from modes.mode_keyboard import KeyboardMode
-                        self.keyboard_mode = KeyboardMode(
-                            self.midi_out,
-                            {'octave': self.keyboard_octave},
-                            config_manager=self.config_manager
-                        )
-                        self.keyboard_mode.setup()
-                    except Exception as e:
-                        print(f"Error creant teclat: {e}")
-                    print(f"Capa teclat activa | Octava: {self.keyboard_octave}")
-                    self.display_event('show_keyboard', self.keyboard_octave)
-                else:
-                    # Canviar a capa de modes
-                    if not self.mode_manager:
-                        print("⚠ Capa de modes no disponible")
-                        return None
-                    print("Activant capa de modes...")
-                    self.keyboard_mode_active = False
-                    self.keyboard_toggle_blocked_until = time.monotonic() + 0.5
-                    # Cleanup i destruir la instància del teclat
-                    if self.keyboard_mode:
-                        try:
-                            self.keyboard_mode.cleanup()
-                        except Exception:
-                            pass
-                        self.keyboard_mode = None  # Allibera la instància
-                    # Alliberar memòria: esborrar INSTÀNCIA però mantenir bytecodes
-                    # (evita recompilació de 29KB en tornar al teclat)
-                    import gc
-                    gc.collect()
-                    # Netejar estat del mode actual
-                    if self.mode_manager.current_mode:
-                        try:
-                            if hasattr(self.mode_manager.current_mode, 'cleanup'):
-                                self.mode_manager.current_mode.cleanup()
-                        except Exception:
-                            pass
-                        self.mode_manager.current_mode = None
-                        self.mode_manager.current_mode_name = None
-                    print("Capa de modes activa")
-                    try:
-                        _bn = self.config_manager.get_current_bank().get('name', '')
-                    except Exception:
-                        _bn = ''
-                    self.display_event('show_layer', _bn)
-                    for ch in range(16):
-                        self.midi_out.send(ControlChange(120, 0, channel=ch))
-                        self.midi_out.send(ControlChange(123, 0, channel=ch))
+            current_time = time.monotonic()
+            if current_time < self.keyboard_toggle_blocked_until:
+                # Descartar el flanc, no ajornar-lo: cal actualitzar l'estat
+                # anterior del botó 13; si no, el release es re-detecta a cada
+                # cicle i en expirar el bloqueig la duració acumulada pot
+                # superar el llindar i disparar un canvi no desitjat.
+                # NOMÉS l'índex 12: copiar tota la llista podria empassar-se
+                # un flanc simultani d'un altre botó (p.ex. l'emergency stop).
+                self.last_button_states[12] = button_states[12]
+                return None
+            # Tecla 13 = CICLAR CAPES (noves capes tipades: teclat o modes).
+            # Toc curt → capa següent (esquerra→dreta, amb volta) · premuda
+            # llarga → capa anterior. Cada capa s'activa amb el motor del seu
+            # tipus i la SEVA configuració pròpia.
+            self._switch_layer(-1 if duration >= self.long_press_threshold else 1)
         
         # Botó 16 (index 15) - EMERGENCY STOP + NETEJA DE MEMÒRIA
         if button_states[15] and not self.last_button_states[15]:
@@ -275,10 +300,26 @@ class TeclaHardware:
                     try:
                         if hasattr(self.keyboard_mode, 'pause_looper'):
                             self.keyboard_mode.pause_looper()
+                        _acc = getattr(self.keyboard_mode, '_accomp', None)
+                        if _acc is not None:
+                            _acc.clear()
+                            self.keyboard_mode._accomp_active = False
                         self.keyboard_mode.stop_all_notes()
                     except:
                         pass
                 
+                # 2b. Aturar el loop MIDI i les capes de potes de la capa de modes
+                if self.mode_manager:
+                    _lp = getattr(self.mode_manager, '_modeloop', None)
+                    if _lp is not None:
+                        try:
+                            _lp.clear(self.midi_out)
+                        except Exception:
+                            pass
+                    _lay = getattr(self.mode_manager, '_potcfg', None)
+                    if _lay is not None:
+                        _lay.off()
+
                 # 3. EMERGENCY STOP del mode_manager: descarrega tots els modes
                 if self.mode_manager:
                     self.mode_manager.emergency_stop_and_cleanup()
@@ -439,34 +480,24 @@ def main():
         pass
     hardware.midi_out = midi_out
 
-    # ── Motor d'àudio intern (synthio sobre GP22) ───────────────────────────
-    # Mirall del motor Web Audio del simulador. Si synthio/audiopwmio fallen,
-    # audio.ok == False → es manté el camí PWM antic com a alternativa i res no
-    # es trenca (integritat per davant de tot).
-    # Exposat com a atribut del MÒDUL 'main' (com fa main.pwm), perquè el mode
-    # teclat el consulti via `import main; main.audio`. Els modes veuen el mòdul
-    # 'main', no '__main__', així que escrivim l'atribut allà.
-    hardware.audio = None
+    # SEMPRE arrencar a la PRIMERA capa (ordre previsible en connectar): la
+    # config porta el 'current_bank' que l'app tenia seleccionat en guardar
+    # (s'usa per al hot-reload mentre edites), però una arrencada freda ha de
+    # començar per la capa 1 de la pestanya Dispositiu. Es fa ABANS de crear
+    # KeyboardMode/ModeManager perquè llegeixen la config per-banc del banc
+    # actual. No es desa a disc.
     try:
-        from core.audio_engine import AudioEngine
-        _ae = AudioEngine()
-        if _ae.ok:
-            hardware.audio = _ae
-            try:
-                import main as _mainmod
-                _mainmod.audio = _ae
-            except Exception:
-                pass
-            print("🔊 Motor d'àudio synthio actiu (GP22)")
-        else:
-            print("⚠ Motor d'àudio inactiu; s'usa el PWM antic")
-    except Exception as _ae_err:
-        print("⚠ Motor d'àudio no disponible:", _ae_err)
+        config_manager.current_bank_index = 0
+    except Exception:
+        pass
 
-    # Qualsevol mode que enviï NoteOn/NoteOff/CC sonarà pel motor (tota la
-    # mecànica viu al mòdul; main.py només l'enganxa). Mirall del simulador.
-    if hardware.audio is not None:
-        hardware.audio.attach_to_midi(midi_out)
+    # ── So intern: NOMÉS PWM monofònic (GP22, mòdul core/tone) ─────────────
+    # Decisió de tancament v3.1: el firmware és MIDI + PWM simple (com les
+    # primeres versions — midi_to_frequency + PWMOut, vegeu core/tone.py).
+    # El motor synthio s'ha retirat: amb la sortida PWM+RC de la Pico 1 el so
+    # clipejava i consumia RAM necessària per als modes. Es reserva per a la
+    # propera revisió del maquinari (Pico 2 + DAC).
+    hardware.audio = None
 
     # CRÍTIC: Crear KeyboardMode ANTES de ModeManager mentre la memòria és neta
     if gc:
@@ -515,11 +546,22 @@ def main():
         bank_name = current_bank.get('name', 'Defecte')
         print(f"\nCapa actual: {bank_name}\n")
     except Exception:
-        pass
+        current_bank = {}
 
-    # Pantalla inicial: el dispositiu arrenca a la capa teclat
-    if hardware.keyboard_mode_active:
-        hardware.display_event('show_keyboard', hardware.keyboard_octave)
+    # Arrencar amb el motor del TIPUS de la capa actual (capes tipades v3).
+    # El KeyboardMode ja s'ha creat abans (moment de RAM neta: així els seus
+    # bytecodes queden carregats); si la capa inicial és de modes, se'n destrueix
+    # la instància (els bytecodes es conserven per al proper canvi de capa).
+    # En MODE SEGUR (sense mode_manager) sempre queda el teclat.
+    try:
+        if (current_bank or {}).get('type', 'teclat') == 'modes' and mode_manager is not None:
+            hardware._activate_modes_layer()
+            hardware.display_event('show_layer', bank_name)
+        elif hardware.keyboard_mode_active:
+            hardware.display_event('show_keyboard', hardware.keyboard_octave)
+    except Exception:
+        if hardware.keyboard_mode_active:
+            hardware.display_event('show_keyboard', hardware.keyboard_octave)
     
     # Sincronització periòdica del sistema de fitxers
     last_sync_time = time.monotonic()
@@ -645,6 +687,19 @@ def main():
                             # Actualitzar hash després de recarregar
                             last_config_hash = config_manager.get_config_hash()
 
+                            # Re-aplicar el motor de la capa actual amb la config
+                            # NOVA: si és de teclat, el KeyboardMode es recrea (si
+                            # no, seguiria sonant amb la config antiga); si ara és
+                            # de modes i el teclat era actiu, s'hi canvia.
+                            try:
+                                _bt = (config_manager.get_current_bank() or {}).get('type', 'teclat')
+                                if _bt == 'teclat':
+                                    hardware._activate_keyboard_layer()
+                                elif hardware.keyboard_mode_active:
+                                    hardware._activate_modes_layer()
+                            except Exception as e:
+                                print(f"Error re-aplicant capa: {e}")
+
                             # Tornar a mostrar l'estat actual a la pantalla
                             if hardware.keyboard_mode_active:
                                 hardware.display_event('show_keyboard', hardware.keyboard_octave)
@@ -691,9 +746,12 @@ def main():
                     except (ImportError, AttributeError, NotImplementedError):
                         pass
                 
-                # Control de velocitat del bucle adaptativo
+                # Control de velocitat del bucle. 2ms de tope: sense el motor
+                # d'àudio l'RP2040 va sobrat, i el que mana és la LATÈNCIA de
+                # tecla — amb l'antic 20ms (50Hz) una pulsació podia esperar
+                # fins a 20ms només per ser detectada, i es notava al toc.
                 elapsed = time.monotonic() - current_time
-                target_cycle_time = 0.02  # 20ms (50Hz) para mejor estabilidad
+                target_cycle_time = 0.002
                 if elapsed < target_cycle_time:
                     time.sleep(target_cycle_time - elapsed)
                     

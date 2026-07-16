@@ -7,6 +7,7 @@ fa servir Pyodide al navegador.
 
 Execució:  python3 -m pytest
 """
+import copy
 import os
 import sys
 
@@ -28,10 +29,14 @@ tecla_mocks.install_mocks()
 
 
 class FakeMidiOut:
-    """Sortida MIDI que captura els missatges enviats, per a assercions."""
+    """Sortida MIDI que captura els missatges enviats, per a assercions.
+
+    Guarda una CÒPIA de cada missatge: base_mode reutilitza un pool de NoteOn/
+    NoteOff mutables (send serialitza a l'acte), així que conservar només la
+    referència mostraria l'estat de l'última mutació a tots els elements."""
 
     def __init__(self):
         self.sent = []
 
     def send(self, msg):
-        self.sent.append(msg)
+        self.sent.append(copy.copy(msg))

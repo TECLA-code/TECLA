@@ -52,19 +52,27 @@ def _count_registered_modes():
 def _build_mode_info_cache(mgr, configured_modes):
     """Llegeix el registre UNA SOLA VEGADA i crea un cache per als modes del banc."""
     import gc
+    # RAM/LATÈNCIA: si tots els modes del banc són de fàbrica (MODE_CLASSES) o
+    # marcadors buits ('', 'Silenci', 'Teclat'), NO cal ni obrir el registre —
+    # el json.load d'aquest fitxer té un pic transitori de RAM (~3x la mida)
+    # i és una de les parts lentes del canvi de capa.
+    needed = [m for m in configured_modes
+              if m not in ('', 'Silenci', 'Teclat', None) and m not in MODE_CLASSES]
+    if not needed:
+        mgr.mode_info_cache = {}
+        return
     try:
         registry_path = 'modes/custom_modes_registry.json'
         with open(registry_path, 'r') as f:
             registry = json.load(f)
         modes_data = registry.get('custom_modes', {})
         mgr.mode_info_cache = {}
-        for mode_name in configured_modes:
-            if mode_name and mode_name not in MODE_CLASSES:
-                if mode_name in modes_data:
-                    info = modes_data[mode_name]
-                    mgr.mode_info_cache[mode_name] = (info['file_name'], info['class_name'])
-                else:
-                    print(f"Mode '{mode_name}' no al registre")
+        for mode_name in needed:
+            if mode_name in modes_data:
+                info = modes_data[mode_name]
+                mgr.mode_info_cache[mode_name] = (info['file_name'], info['class_name'])
+            else:
+                print(f"Mode '{mode_name}' no al registre")
         del registry, modes_data
         gc.collect()
     except Exception as e:
@@ -150,6 +158,16 @@ def mm_load_config(mgr):
 
         if mgr.config_manager:
             mgr.available_effects = mgr.config_manager.get_available_effects()
+
+        # Refrescar les capes de potes de 'Config Modes' amb la config del banc
+        # nou (només si ja s'havien fet servir; el mòdul és lazy).
+        _lay = mgr.__dict__.get('_potcfg')
+        if _lay is not None:
+            try:
+                _lay.set_layers(mgr.config_manager.get_mode_pot_layers()
+                                if mgr.config_manager else None)
+            except Exception:
+                _lay.off()
 
         for btn in mgr.effect_buttons:
             mgr.button_mappings[btn] = f"RESERVADO_EFECTO_{mgr.efectes_temporals[btn]['tipus']}"
@@ -260,6 +278,21 @@ def mm_set_mode(mgr, mode_name, force_reload=False, capture_state=True):
     """Canvia al mode especificat: PARA l'actual primer, CARREGA el nou despres."""
     try:
         import gc
+
+        # 0. Els efectes temporals NO persisteixen entre modes: en canviar de
+        # mode es desactiven TOTS (amb el seu on_deactivate — el Sustain, per
+        # exemple, ha d'aixecar el pedal CC64 o les notes següents queden
+        # enganxades). Úniques excepcions: 'Config Modes' (capes de pots) i
+        # 'Loop' (la gràcia és canviar de mode i tocar sobre el loop).
+        if mgr.current_mode_name != mode_name or force_reload:
+            try:
+                from modes.mm_update import mm_deactivate_efecte_temporal, _clear_susp_flags
+                for _btn, _info in mgr.efectes_temporals.items():
+                    if _info['active'] and _info['tipus'] not in ('Config Modes', 'Loop'):
+                        mm_deactivate_efecte_temporal(mgr, _btn)
+                        _clear_susp_flags(mgr, _info['tipus'])
+            except Exception as _fx_e:
+                print(f"Error desactivant efectes: {_fx_e}")
 
         # 1. PRIMER: aturar i descarregar el mode actual per alliberar RAM
         if mgr.current_mode and (mgr.current_mode_name != mode_name or force_reload):

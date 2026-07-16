@@ -1,5 +1,29 @@
 """Classe base per a tots els modes d'operació"""
 
+# Pool de missatges MIDI (RENDIMENT): un NoteOn i un NoteOff compartits que es
+# MUTEN i s'envien a l'acte — send() serialitza síncronament, així que cap
+# receptor no en guarda referència. Elimina les al·locacions per nota de TOTS
+# els modes: aquella brossa era una font d'auto-GC imprevisibles (jitter).
+_pool_on = None
+_pool_off = None
+
+
+def _note_on_msg():
+    global _pool_on
+    if _pool_on is None:
+        from adafruit_midi.note_on import NoteOn
+        _pool_on = NoteOn(0, 0)
+    return _pool_on
+
+
+def _note_off_msg():
+    global _pool_off
+    if _pool_off is None:
+        from adafruit_midi.note_off import NoteOff
+        _pool_off = NoteOff(0, 0)
+    return _pool_off
+
+
 class BaseMode:
     def __init__(self, midi_out, config=None):
         self.midi_out = midi_out
@@ -41,16 +65,18 @@ class BaseMode:
 
     def send_note_on(self, note, velocity=127, channel=0):
         """Envia NoteOn i registra la nota com a sonant."""
-        from adafruit_midi.note_on import NoteOn
-        msg = NoteOn(note & 0x7F, velocity & 0x7F)
+        msg = _note_on_msg()
+        msg.note = note & 0x7F
+        msg.velocity = velocity & 0x7F
         msg.channel = channel
         self.midi_out.send(msg)
         self.tracked_notes.add((note & 0x7F, channel))
 
     def send_note_off(self, note, velocity=0, channel=0):
         """Envia NoteOff i desregistra la nota."""
-        from adafruit_midi.note_off import NoteOff
-        msg = NoteOff(note & 0x7F, velocity & 0x7F)
+        msg = _note_off_msg()
+        msg.note = note & 0x7F
+        msg.velocity = velocity & 0x7F
         msg.channel = channel
         self.midi_out.send(msg)
         self.tracked_notes.discard((note & 0x7F, channel))
@@ -60,10 +86,11 @@ class BaseMode:
         notes = getattr(self, 'tracked_notes', None)
         if not notes:
             return
-        from adafruit_midi.note_off import NoteOff
         for note, channel in list(notes):
             try:
-                msg = NoteOff(note, 0)
+                msg = _note_off_msg()
+                msg.note = note
+                msg.velocity = 0
                 msg.channel = channel
                 self.midi_out.send(msg)
             except Exception:

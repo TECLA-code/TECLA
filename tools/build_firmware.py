@@ -17,15 +17,34 @@ amb el pic de compilacio eliminat i menys ocupacio de disc.
 Requereix: tools/mpy-cross (binari de CircuitPython compatible amb el device).
 Us: python3 tools/build_firmware.py
 """
+import hashlib
 import json
 import os
 import subprocess
 import sys
+import time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DF = os.path.join(ROOT, "codi", "device_files")
 MPY = os.environ.get("MPY_CROSS", os.path.join(ROOT, "tools", "mpy-cross"))
 MANIFEST = os.path.join(ROOT, "codi", "device_files_manifest.json")
+VERSION_FILE = os.path.join(ROOT, "codi", "VERSION")
+
+
+def read_version():
+    try:
+        with open(VERSION_FILE) as fh:
+            return fh.read().strip()
+    except OSError:
+        return "0.0.0"
+
+
+def sha256_of(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
 
 # Fitxers .py que NO es compilen (queden com a font al dispositiu)
 KEEP_PY = {"boot.py", "main.py", "reset.py"}
@@ -136,9 +155,21 @@ def main():
                 files.append(rel)                # .json i altres assets
 
     files = sorted(set(files))
+
+    # Versió + hash sha256 per fitxer (ACTUALITZACIÓ INCREMENTAL): l'instal·lador
+    # de l'app compara aquests hashos amb el tecla_manifest.json que deixa escrit
+    # al dispositiu i NOMÉS copia els fitxers que han canviat (minuts → segons).
+    version = read_version()
+    generated = time.strftime("%Y-%m-%d %H:%M")
+    sha = {}
+    for rel in files:
+        p = os.path.join(DF, rel)
+        if os.path.isfile(p):
+            sha[rel] = sha256_of(p)
     with open(MANIFEST, "w") as fh:
-        json.dump({"files": files}, fh, indent=2)
-    print(f"Manifest: {len(files)} fitxers -> {os.path.relpath(MANIFEST, ROOT)}")
+        json.dump({"version": version, "generated": generated,
+                   "files": files, "sha": sha}, fh, indent=2)
+    print(f"Manifest: {len(files)} fitxers (v{version}) -> {os.path.relpath(MANIFEST, ROOT)}")
     print("FET.")
 
 

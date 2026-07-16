@@ -5,10 +5,10 @@ Activat pel botó 13, amb controls de potenciòmetres per personalitzar
 """
 
 import time
-from adafruit_midi.note_on import NoteOn
-from adafruit_midi.note_off import NoteOff
 from adafruit_midi.control_change import ControlChange
 from adafruit_midi.pitch_bend import PitchBend
+# (NoteOn/NoteOff ja no s'importen: tot el camí calent usa els missatges
+#  POOLED de modes.base_mode — zero al·locacions per nota.)
 
 # Importar constants des de mòdul compartit per estalviar RAM
 try:
@@ -72,6 +72,11 @@ class KeyboardMode:
         self.latch_active = False  # Latch: les notes/acords continuen sonant en deixar anar
         self.loop_state = 0  # Looper: 0=inactiu (la resta d'estat es crea lazy a kbd_looper)
         self.voice_lead_active = False  # Conducció de veus (kbd_voicelead, lazy)
+        # Base d'acompanyament (modes/accompaniment.py, lazy): motor i estat
+        self._accomp = None
+        self._accomp_active = False
+        self._accomp_pat_idx = 0
+        self._accomp_btn_press_time = 0.0
         self._vl_type = 'proximitat'
         self._vl_type_idx = 0
         self.available_vl_types = ['proximitat', 'comu', 'baix', 'ascendent', 'obert']
@@ -109,20 +114,12 @@ class KeyboardMode:
             self.pot_y_function = pot_functions.get('pot_y', 'Modulation (CC1)')
             self.pot_z_function = pot_functions.get('pot_z', 'Sustain (CC64)')
             # Obtenir funcions dels potenciòmetres (MODE ARPEGIADOR)
+            # (Les capes de potes d'acords i d'harmonia negativa s'han retirat:
+            #  només queden teclat i arpegiador — vegeu kbd_pots.update_parameters.)
             arp_pf = self.config_manager.get_arp_potentiometer_functions()
             self.arp_pot_x_function = arp_pf.get('arp_pot_x', 'Arp Speed (BPM)')
             self.arp_pot_y_function = arp_pf.get('arp_pot_y', 'Arp Pattern Selector')
             self.arp_pot_z_function = arp_pf.get('arp_pot_z', 'Gate Length')
-            # Obtenir funcions dels potenciòmetres (MODE ACORDS)
-            chord_pf = self.config_manager.get_chord_potentiometer_functions()
-            self.chord_pot_x_function = chord_pf.get('chord_pot_x', "Tipologia d'Acords")
-            self.chord_pot_y_function = chord_pf.get('chord_pot_y', "Inversió d'Acord")
-            self.chord_pot_z_function = chord_pf.get('chord_pot_z', 'Modulació')
-            # Obtenir funcions dels potenciòmetres (HARMONIA NEGATIVA)
-            neg_pf = self.config_manager.get_neg_potentiometer_functions()
-            self.neg_pot_x_function = neg_pf.get('neg_pot_x', "Eix d'Harmonia")
-            self.neg_pot_y_function = neg_pf.get('neg_pot_y', "Inversió d'Acord")
-            self.neg_pot_z_function = neg_pf.get('neg_pot_z', 'Modulació')
             # Config àudio: mapatge dels potes per tecla amb 'synth_cfg'
             self.audio_pot_functions = self.config_manager.get_audio_potentiometer_functions()
             # Obtenir tipologies d'acord disponibles
@@ -246,21 +243,11 @@ class KeyboardMode:
             self.pot_z_function = pot_functions.get('pot_z', 'Sustain (CC64)')
             
             # Recarregar funcions dels potenciòmetres (MODE ARPEGIADOR)
+            # (Capes d'acords i h.negativa retirades — només teclat i arpegiador.)
             arp_pot_functions = self.config_manager.get_arp_potentiometer_functions()
             self.arp_pot_x_function = arp_pot_functions.get('arp_pot_x', 'Arp Speed (BPM)')
             self.arp_pot_y_function = arp_pot_functions.get('arp_pot_y', 'Arp Pattern Selector')
             self.arp_pot_z_function = arp_pot_functions.get('arp_pot_z', 'Gate Length')
-            
-            # Recarregar funcions dels potenciòmetres (MODE ACORDS)
-            chord_pf = self.config_manager.get_chord_potentiometer_functions()
-            self.chord_pot_x_function = chord_pf.get('chord_pot_x', "Tipologia d'Acords")
-            self.chord_pot_y_function = chord_pf.get('chord_pot_y', "Inversió d'Acord")
-            self.chord_pot_z_function = chord_pf.get('chord_pot_z', 'Modulació')
-            # Recarregar funcions dels potenciòmetres (HARMONIA NEGATIVA)
-            neg_pf = self.config_manager.get_neg_potentiometer_functions()
-            self.neg_pot_x_function = neg_pf.get('neg_pot_x', "Eix d'Harmonia")
-            self.neg_pot_y_function = neg_pf.get('neg_pot_y', "Inversió d'Acord")
-            self.neg_pot_z_function = neg_pf.get('neg_pot_z', 'Modulació')
             # Config àudio: mapatge dels potes per tecla amb 'synth_cfg'
             self.audio_pot_functions = self.config_manager.get_audio_potentiometer_functions()
             # Recarregar tipologies d'acord disponibles
@@ -288,6 +275,13 @@ class KeyboardMode:
         # Silenciar el looper (les seves notes no són a active_notes i quedarien
         # penjades en destruir la instància en canviar de capa)
         self.pause_looper()
+        # Aturar la base d'acompanyament (les seves notes van per canal propi)
+        if self._accomp is not None:
+            try:
+                from modes.accompaniment import stop as _accomp_stop
+                _accomp_stop(self)
+            except Exception:
+                pass
         self.stop_all_notes()
         self.active_notes.clear()
         for i in range(15):
@@ -304,15 +298,11 @@ class KeyboardMode:
         
         # Apagar el PWM quan no hi ha notes actives
         try:
-            # sys.modules en lloc d'import: si 'main' no està importat, el pwm
-            # no existeix i l'import re-executaria tot main.py (pic de RAM)
-            import sys
-            _main = sys.modules.get('main')
-            if _main is not None and getattr(_main, 'pwm', None) is not None:
-                _main.pwm.duty_cycle = 0
+            from core import tone
+            tone.off()
         except Exception:
             pass
-        
+
         print("🎹 Mode Teclat desactivat")
         
     def pause_looper(self):
@@ -336,26 +326,28 @@ class KeyboardMode:
             pass
         self._sustain_pending = {}  # descarta els note-offs de sustain ajornats
 
-        # Enviar NoteOff per totes les notes actives
+        # Enviar NoteOff per totes les notes actives (missatge POOLED: zero
+        # al·locacions — l'arpegiador passa per aquí a cada pas)
+        from modes.base_mode import _note_off_msg
+        off = _note_off_msg()
+        off.velocity = 0
+        off.channel = None
         for note in self.active_notes.copy():
             try:
-                self.midi.send(NoteOff(note, 0))
+                off.note = note
+                self.midi.send(off)
             except Exception:
                 pass
-        
+
         # Netejar tots els trackings
         self.active_notes.clear()
         for i in range(15):
             self.button_notes[i].clear()
-        
+
         # Apagar el PWM
         try:
-            # sys.modules en lloc d'import: si 'main' no està importat, el pwm
-            # no existeix i l'import re-executaria tot main.py (pic de RAM)
-            import sys
-            _main = sys.modules.get('main')
-            if _main is not None and getattr(_main, 'pwm', None) is not None:
-                _main.pwm.duty_cycle = 0
+            from core import tone
+            tone.off()
         except Exception:
             pass
             
@@ -381,6 +373,10 @@ class KeyboardMode:
         if self.loop_state == 3:  # PLAYING
             from modes.kbd_looper import tick
             tick(self, time.monotonic())
+
+        # Rellotge de la base d'acompanyament (només si s'ha creat el motor)
+        if self._accomp is not None:
+            self._accomp.tick(time.monotonic())
             
     def _update_parameters(self, pot_values, force_update=False):
         from modes.kbd_pots import update_parameters
@@ -492,9 +488,16 @@ class KeyboardMode:
         if button_index >= 0:
             self._note_off_for_button(button_index)
         
-        # Envia NoteOn amb velocitat del potenciòmetre
+        # Envia NoteOn amb velocitat del potenciòmetre (missatge POOLED: una
+        # al·locació aquí pot disparar un gc.collect de 10-40ms — el "no va
+        # al toc" que se sent en directe)
         try:
-            self.midi.send(NoteOn(note, self.velocity))
+            from modes.base_mode import _note_on_msg
+            msg = _note_on_msg()
+            msg.note = note
+            msg.velocity = self.velocity
+            msg.channel = None
+            self.midi.send(msg)
             self.active_notes.add(note)
             if button_index >= 0:
                 self.button_notes[button_index].add(note)
@@ -556,9 +559,16 @@ class KeyboardMode:
             return
         now = time.monotonic()
         due = [n for n, t in self._sustain_pending.items() if t is not None and now >= t]
+        if not due:
+            return
+        from modes.base_mode import _note_off_msg
+        off = _note_off_msg()
+        off.velocity = 0
+        off.channel = None
         for note in due:
             try:
-                self.midi.send(NoteOff(note, 0))
+                off.note = note
+                self.midi.send(off)
             except Exception:
                 pass
             self.active_notes.discard(note)
@@ -566,9 +576,14 @@ class KeyboardMode:
 
     def _flush_sustain_pending(self):
         """Atura immediatament totes les notes amb release ajornat."""
+        from modes.base_mode import _note_off_msg
+        off = _note_off_msg()
+        off.velocity = 0
+        off.channel = None
         for note in list(self._sustain_pending.keys()):
             try:
-                self.midi.send(NoteOff(note, 0))
+                off.note = note
+                self.midi.send(off)
             except Exception:
                 pass
             self.active_notes.discard(note)
@@ -582,59 +597,55 @@ class KeyboardMode:
             from_release: True si ve d'alliberar el botó, False si ve de tocar una nova nota
         """
         # Sustain progressiu: en alliberar la tecla, els note-offs s'AJORNEN segons
-        # sustain_release_time (indefinit si -1). NOMÉS en mode normal: en capes
-        # especials (arpegiador/harmonia negativa/acords) el pot Sustain NO es polleja,
-        # així que sempre s'envia NoteOff (evita notes penjades). Les notes ajornades
-        # segueixen a active_notes (sonant) i s'alliberen del botó; les atura update()
-        # via _process_sustain_pending. El loop NO es veu afectat (gestiona les seves).
-        if from_release and self.sustain_release_time != 0:
-            in_special_layer = (self.arp_mode_active or
-                                self.neg_harmony_active or
-                                self.chord_mode_active)
-            if not in_special_layer:
-                notes_set = self.button_notes.get(button_index)
-                if notes_set:
-                    off_t = None if self.sustain_release_time < 0 else (
-                        time.monotonic() + self.sustain_release_time)
-                    for note in list(notes_set):
-                        self._sustain_pending[note] = off_t
-                    notes_set.clear()
-                return
-        
+        # sustain_release_time (indefinit si -1). Val per a notes, ACORDS i
+        # harmonia negativa (des del tancament v3.1 el pot Z fa Sustain també
+        # en aquests modes). NOMÉS l'arpegiador en queda fora: cada pas seu ja
+        # gestiona els seus note-offs i el sustain hi faria una pasta de notes.
+        # Les notes ajornades segueixen a active_notes (sonant) i s'alliberen
+        # del botó; les atura update() via _process_sustain_pending. El loop NO
+        # es veu afectat (gestiona les seves).
+        if from_release and self.sustain_release_time != 0 and not self.arp_mode_active:
+            notes_set = self.button_notes.get(button_index)
+            if notes_set:
+                off_t = None if self.sustain_release_time < 0 else (
+                    time.monotonic() + self.sustain_release_time)
+                for note in list(notes_set):
+                    self._sustain_pending[note] = off_t
+                notes_set.clear()
+            return
+
         try:
             notes_set = self.button_notes.get(button_index, set())
             if not notes_set:
                 return
-            
-            # Crear una còpia de les notes per iterar
-            notes_to_stop = list(notes_set)
-            
-            for note in notes_to_stop:
+
+            # Missatge POOLED: cap al·locació al camí calent (vegeu _note_on)
+            from modes.base_mode import _note_off_msg
+            off = _note_off_msg()
+            off.velocity = 0
+            off.channel = None
+            for note in list(notes_set):
                 try:
-                    # Enviar NoteOff
-                    self.midi.send(NoteOff(note, 0))
+                    off.note = note
+                    self.midi.send(off)
                 except Exception as e:
                     if self.debug:
                         print(f"Error enviant NoteOff per nota {note}: {e}")
-                
+
                 # Sempre netejar del tracking
                 self.active_notes.discard(note)
-                
-                # Gate funciona amb CC11 Expression, no necessita tracking de notes
-            
+
             # Netejar completament el set d'aquest botó
             notes_set.clear()
-            
+
             # Si no queden notes actives, apagar el PWM
             if len(self.active_notes) == 0:
                 try:
-                    import sys
-                    _main = sys.modules.get('main')
-                    if _main is not None and getattr(_main, 'pwm', None) is not None:
-                        _main.pwm.duty_cycle = 0
+                    from core import tone
+                    tone.off()
                 except Exception:
                     pass
-            
+
         except Exception as e:
             if self.debug:
                 print(f"Error _note_off_for_button: {e}")
@@ -664,40 +675,14 @@ class KeyboardMode:
         self._send_cc(11, val)
     
     def _update_pwm_for_note(self, note):
-        """Actualitza el PWM per a una nota específica (inicialitza si no existeix).
+        """Actualitza el PWM per a una nota (core/tone, singleton a GP22).
 
-        Si el motor d'àudio synthio està actiu, el so ja el genera el wrap de
-        midi_out.send (polifònic, GP22 ocupat per audiopwmio): aquí no fem res,
-        perquè obrir pwmio sobre el mateix pin donaria error."""
+        Abans això feia `import main`: el primer toc recompilava main.py
+        sencer (centenars de ms de lag + pic de RAM). Ara el PWM viu al mòdul
+        mínim core/tone i el primer toc només paga crear el PWMOut."""
         try:
-            import main
-            import pwmio
-            import board
-
-            # Motor synthio actiu → el PWM antic no s'usa (evita conflicte a GP22)
-            if getattr(main, 'audio', None) is not None:
-                return
-
-            # Calcular freqüència
-            freq = main.midi_to_frequency(note)
-            
-            # Si el PWM ja existeix, actualitzar-lo
-            if hasattr(main, 'pwm') and main.pwm is not None:
-                try:
-                    main.pwm.frequency = freq
-                    main.pwm.duty_cycle = 32767  # 50% duty cycle
-                    return
-                except Exception:
-                    # Si falla, reinicialitzar
-                    pass
-            
-            # Si no existeix o ha fallat, inicialitzar-lo
-            try:
-                main.pwm = pwmio.PWMOut(board.GP22, frequency=freq, duty_cycle=32767, variable_frequency=True)
-            except ValueError as e:
-                # Pin ja en ús - no fer res (probablement ja està inicialitzat per altre mode)
-                if "in use" not in str(e):
-                    print(f"Error inicialitzant PWM: {e}")
+            from core import tone
+            tone.play(note)
         except Exception as e:
             # Silenciar errors per no interrompre el flux MIDI
             pass
@@ -720,6 +705,9 @@ class KeyboardMode:
         else:
             limit = "màxima (8)" if direction > 0 else "mínima (0)"
             print(f"🎹 Ja estàs a l'octava {limit}")
+        if getattr(self, '_accomp_active', False):
+            from modes.accompaniment import sync_context
+            sync_context(self)
             
     def get_info(self):
         """Retorna informació de l'estat actual"""

@@ -14,8 +14,6 @@ except ImportError:
         try: return _N.index(n)
         except: return 0
 
-from adafruit_midi.note_on import NoteOn
-
 _KEY_OFFSET = {'C':0,'C#':1,'D':2,'Eb':3,'E':4,'F':5,'F#':6,'G':7,'Ab':8,'A':9,'Bb':10,'B':11}
 _NEG_HARM_AXES = (3.5, 0.0, 2.0, 1.5, 6.0, 2.5, 4.5, 5.5)
 
@@ -159,15 +157,33 @@ def _send_chord(kbd, chord_notes, btn_idx):
         from modes.kbd_voicelead import apply_voice_leading
         final_notes = apply_voice_leading(kbd, final_notes)
 
-    for i, note in enumerate(final_notes):
+    # Les notes d'un acord han de sortir JUNTES. Dues fonts de retard mortes:
+    #  1) missatge POOLED (reutilitzat i mutat) → zero al·locacions dins
+    #     l'acord; amb la RAM justa, un NoteOn nou per nota pot disparar un
+    #     gc.collect enmig (10-40ms) i les notes s'esglaonen.
+    #  2) el PWM intern (imports + freqüència en float + reconfigurar el pin)
+    #     es fa DESPRÉS d'enviar tot l'acord per MIDI, no entre nota i nota.
+    from modes.base_mode import _note_on_msg
+    msg = _note_on_msg()
+    msg.velocity = kbd.velocity
+    msg.channel = None   # None → el canal MIDI configurat (out_channel), com abans
+    pending = kbd._sustain_pending
+    for note in final_notes:
         try:
-            kbd.midi.send(NoteOn(note, kbd.velocity))
+            # Re-articulació: si la nota ressonava per sustain amb un off
+            # ajornat, cancel·la'l — si no, aquell off vell tallaria la nota
+            # NOVA al cap d'uns segons (so "estrany" amb sustain + acords).
+            if pending:
+                pending.pop(note, None)
+            msg.note = note
+            kbd.midi.send(msg)
             kbd.active_notes.add(note)
             kbd.button_notes[btn_idx].add(note)
-            if i == 0:
-                kbd._update_pwm_for_note(note)
         except Exception as e:
             print(f"Error tocant acord: {e}")
+    # So intern (PWM monofònic): només la fonamental de l'acord.
+    if final_notes:
+        kbd._update_pwm_for_note(final_notes[0])
 
 
 _MINOR_SCALE = (0, 2, 3, 5, 7, 8, 10)

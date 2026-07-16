@@ -60,12 +60,45 @@ def _route_audio_pots(mgr, preset, pot_values):
                 pass
 
 
+def _potcfg(mgr):
+    """Instància lazy de PotLayers (efecte 'Config Modes'): capes de funcions
+    de potes per modificar el mode mentre sona."""
+    lay = mgr.__dict__.get('_potcfg')
+    if lay is None:
+        from modes.potlayers import PotLayers
+        layers = None
+        if mgr.config_manager:
+            try:
+                layers = mgr.config_manager.get_mode_pot_layers()
+            except Exception:
+                layers = None
+        lay = PotLayers(layers)
+        mgr._potcfg = lay
+    return lay
+
+
+def _modeloop(mgr):
+    """Instància lazy del loop MIDI de la capa de modes (efecte 'Loop')."""
+    lp = mgr.__dict__.get('_modeloop')
+    if lp is None:
+        from modes.modeloop import ModeLoop
+        lp = ModeLoop()
+        lp.attach(mgr.effect_manager.midi)
+        mgr._modeloop = lp
+    return lp
+
+
 def mm_update(mgr, pot_values, button_states):
     """Actualitza el mode actual i processa botons d'efecte."""
     change_mode = None
     try:
         status = {'change_mode': None}
         current_time = time.monotonic()
+
+        # Motor del loop MIDI (només si s'ha fet servir; el mòdul és lazy)
+        _lp = mgr.__dict__.get('_modeloop')
+        if _lp is not None and _lp.state != 0:
+            _lp.tick(mgr.effect_manager.midi, current_time)
 
         # === PRIORITAT 1: Canvis de capa (botons 13 i 16) ===
         if isinstance(button_states, list) and len(button_states) > 15:
@@ -101,6 +134,29 @@ def mm_update(mgr, pot_values, button_states):
                                 mm_deactivate_efecte_temporal(mgr, efecte_button)
                                 _clear_susp_flags(mgr, efecte_info['tipus'])
                             mm_cycle_effect(mgr, efecte_button)
+                        elif efecte_info['tipus'] == 'Config Modes':
+                            # TAP: capa de potes següent (OFF→Mescla→Timbre→…→OFF).
+                            # Mentre una capa és activa, els potes modifiquen el MODE
+                            # (CCs de mescla/timbre/expressió); el mode segueix sonant.
+                            lay = _potcfg(mgr)
+                            lay.cycle(pot_values)
+                            efecte_info['active'] = lay.active
+                            if lay.active:
+                                print("🎚 Pots→mode: %s" % lay.name())
+                            else:
+                                print("🎚 Pots→normal")
+                        elif efecte_info['tipus'] == 'Loop':
+                            # TAP: grava → tanca i sona → atura+esborra. El loop
+                            # repeteix el MIDI del mode i s'hi pot tocar a sobre.
+                            lp = _modeloop(mgr)
+                            st = lp.tap(current_time)
+                            efecte_info['active'] = st != 0
+                            if st == 1:
+                                print("● Loop: gravant…")
+                            elif st == 2:
+                                print("⟳ Loop: sonant (%.1fs)" % lp.loop_len)
+                            else:
+                                print("⟳ Loop: esborrat")
                         elif efecte_info['active']:
                             # TAP amb latch actiu: desactiva
                             print(f"{efecte_info['tipus']} OFF")
@@ -116,10 +172,24 @@ def mm_update(mgr, pot_values, button_states):
         algun_efecte_actiu = False
         efecte_actiu_nom = None
         audio_cfg_active = False
+        potcfg_active = False
         for efecte_button, efecte_info in mgr.efectes_temporals.items():
             if efecte_info['active'] and efecte_info['tipus'] != 'Harmonia Negativa':
                 tipus = efecte_info['tipus']
-                if tipus in _AUDIO_FX:
+                if tipus == 'Loop':
+                    # El loop no pren el control: el mode segueix sonant i el
+                    # motor del loop ja gira al principi de mm_update.
+                    continue
+                if tipus == 'Config Modes':
+                    # Capes de potes del MODE: els potes envien CCs de mescla/
+                    # timbre/expressió al mode; aquest segueix sonant amb els
+                    # seus paràmetres congelats.
+                    potcfg_active = True
+                    try:
+                        _potcfg(mgr).apply(mgr.effect_manager.midi, pot_values)
+                    except Exception:
+                        pass
+                elif tipus in _AUDIO_FX:
                     # Config d'àudio (preset): els potes editen el sinte segons el
                     # mapatge configurable; el mode NO es congela (segueix tocant).
                     audio_cfg_active = True
@@ -163,9 +233,10 @@ def mm_update(mgr, pot_values, button_states):
                 # l'estat real de la tecla 16 (STOP, gestionada a main.py).
                 if isinstance(filtered, list) and len(filtered) > 15:
                     filtered[15] = negharm_held
-                # Config d'àudio activa: passa al mode un snapshot congelat dels
-                # potes (els girs en viu només afecten el sinte, no el mode).
-                if audio_cfg_active:
+                # Config d'àudio o capes de potes actives: passa al mode un
+                # snapshot congelat dels potes (els girs en viu només afecten
+                # el sinte o els CCs de la capa, no els paràmetres del mode).
+                if audio_cfg_active or potcfg_active:
                     if getattr(mgr, '_frozen_pots', None) is None:
                         mgr._frozen_pots = list(pot_values)
                     pots_for_mode = mgr._frozen_pots
@@ -213,6 +284,10 @@ def mm_activate_efecte_temporal(mgr, efecte_button):
     efecte_info = mgr.efectes_temporals[efecte_button]
     efecte_tipus = efecte_info['tipus']
     for altre_button, altre_info in mgr.efectes_temporals.items():
+        # 'Loop' conviu amb la resta (la gràcia és tocar-hi efectes a sobre):
+        # activar Sustain/Pausa/… NO ha d'esborrar un loop que sona.
+        if altre_info['tipus'] == 'Loop':
+            continue
         if altre_button != efecte_button and altre_info['active']:
             mm_deactivate_efecte_temporal(mgr, altre_button)
             _clear_susp_flags(mgr, altre_info['tipus'])
@@ -240,6 +315,20 @@ def mm_deactivate_efecte_temporal(mgr, efecte_button):
     if efecte_button not in mgr.efectes_temporals or not mgr.efectes_temporals[efecte_button]['active']:
         return
     efecte_info = mgr.efectes_temporals[efecte_button]
+    if efecte_info['tipus'] == 'Config Modes':
+        # No és un efecte del effect_manager: només apaga la capa de potes.
+        lay = mgr.__dict__.get('_potcfg')
+        if lay is not None:
+            lay.off()
+        efecte_info['active'] = False
+        return
+    if efecte_info['tipus'] == 'Loop':
+        # No és un efecte del effect_manager: atura i esborra el loop.
+        lp = mgr.__dict__.get('_modeloop')
+        if lp is not None:
+            lp.clear(mgr.effect_manager.midi)
+        efecte_info['active'] = False
+        return
     print(f"Desactivant efecte {efecte_info['tipus']}")
     try:
         mgr.effect_manager.deactivate()

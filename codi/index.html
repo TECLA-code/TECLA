@@ -524,7 +524,35 @@
 
     /* KB FUNCTION ASSIGNMENT */
     .kb-assign-layout { display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap; justify-content:center }
-    .kb-fn-chips-panel { display:flex; flex-direction:column; gap:5px; min-width:130px; flex-shrink:0; order:0 }
+    /* Panell de funcions del teclat: mateix patró que "Modes disponibles" de la
+       capa modes (llista vertical scrollejable d'amplada fixa). */
+    .kb-fn-panel { width: 196px; flex-shrink: 0; order: 0 }
+    .kb-fn-chips-panel { display:flex; flex-direction:column; gap:5px; max-height: 272px; overflow-y: auto; padding-right: 4px }
+    .kb-pot-knob-range { font-size:8.5px; color:var(--text3); text-align:center; max-width:110px; line-height:1.3 }
+    /* Llegenda de controls (pestanya Guia) */
+    .guide-legend { display:flex; flex-direction:column; gap:10px; margin-top:10px }
+    .legend-row { display:flex; gap:12px; align-items:flex-start }
+    .legend-icon { font-size:17px; width:26px; flex-shrink:0; text-align:center; line-height:1.2 }
+    .legend-body { font-size:12px; color:var(--text2); line-height:1.55 }
+    .legend-body strong { color:var(--text) }
+    .legend-body em { color:var(--text3); font-style:normal; font-size:11.5px }
+    /* Panell de configuració del simulador (columna dreta plegable) */
+    .sim-config { width: 0; overflow: hidden; transition: width .15s ease; border-left: 1px solid transparent; }
+    .sim-config.show { width: 230px; overflow-y: auto; border-left: 1px solid var(--border); }
+    .sim-config-inner { padding: 12px; display: flex; flex-direction: column; gap: 16px; width: 230px; }
+    .sim-cfg-title { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text2); margin-bottom: 6px; }
+    .sim-cfg-row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+    .sim-cfg-row label { font-size: 11px; color: var(--text2); min-width: 18px; }
+    .sim-cfg-row select { flex: 1; min-width: 0; font-size: 11px; }
+    /* Pestanyes de presets de Config àudio (capa modes) */
+    .modes-audio-tab-bar { display:flex; flex-direction:column; gap:4px; align-items:stretch }
+    .modes-audio-tab { font-size:9px; padding:3px 9px; opacity:.6; white-space:nowrap }
+    .modes-audio-tab.pot-mode-active { opacity:1; background:var(--accent); color:#fff; border-color:var(--accent) }
+    /* Menú de seccions de configuració del teclat (compacta la pestanya) */
+    .kb-cfg-menu { display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin:18px 0 4px; padding-top:14px; border-top:1px solid var(--border); }
+    .kb-cfg-menu .kb-sec-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .kb-sec { display:none; }
+    .kb-sec.show { display:block; }
     .kb-fn-chip {
       display:flex; align-items:center; gap:7px;
       padding:6px 11px; border-radius:8px;
@@ -812,7 +840,7 @@
 
     .sim-layout {
       display: grid;
-      grid-template-columns: 200px 1fr;
+      grid-template-columns: 200px 1fr auto;
       min-height: 520px;
       background: var(--surface);
       border: 1px solid var(--border);
@@ -1518,6 +1546,8 @@
     .keys-tab-layout { display: flex; gap: 16px; align-items: flex-start; }
     .keys-main { flex: 1; min-width: 0; }
     .modes-panel { width: 196px; flex-shrink: 0; }
+    /* Columna dreta de config d'àudio (capa modes) — mirall dels potes del teclat */
+    .modes-audio-panel { width: 196px; flex-shrink: 0; }
     .modes-panel-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--text2); margin-bottom: 8px; }
     #modes-panel-list { max-height: 272px; overflow-y: auto; }
     details.modes-install-drawer summary { font-size: 11px; color: var(--text3); cursor: pointer; list-style: none; display: flex; align-items: center; gap: 4px; padding: 4px 0; user-select: none; }
@@ -1530,7 +1560,7 @@
     .mode-panel-item.selected { border-color: var(--accent); }
     .mode-panel-grip { color: var(--text3); font-size: 13px; line-height: 1; }
     .key-btn.drag-over { background: color-mix(in srgb, var(--accent) 30%, var(--sim-key)) !important; border-color: var(--accent) !important; }
-    @media (max-width: 600px) { .keys-tab-layout { flex-direction: column; } .modes-panel { width: 100%; } }
+    @media (max-width: 600px) { .keys-tab-layout { flex-direction: column; } .modes-panel { width: 100%; } .modes-audio-panel { width: 100%; } }
 
     .modes-list {
       display: flex;
@@ -2039,7 +2069,18 @@
         </div>
       </div>
 
+      <!-- Layout mirall de la capa teclat: modes disponibles a l'ESQUERRA de les
+           tecles, potes de config d'àudio a la DRETA, efectes temporals A SOTA. -->
       <div class="keys-tab-layout">
+        <div class="modes-panel">
+          <div class="modes-panel-title" data-i18n="modes_disponibles">Modes disponibles</div>
+          <div id="modes-panel-list"><div class="empty" style="font-size:11px" data-i18n="carregant_2">Carregant...</div></div>
+          <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+            <button class="btn btn-sm" id="btn-import-modes" data-i18n="afegir">+ Afegir</button>
+            <button class="btn btn-sm btn-danger" id="btn-del-mode" disabled data-i18n="eliminar_2">Eliminar</button>
+          </div>
+          <div id="mode-selected-indicator" style="display:none;margin-top:6px;font-size:11px;color:var(--accent)">Seleccionat: <strong id="mode-selected-name"></strong></div>
+        </div>
         <div class="keys-main">
           <div class="section">
             <div class="device-wrap">
@@ -2062,14 +2103,32 @@
             </div>
           </div>
         </div>
-        <div class="modes-panel">
-          <div class="modes-panel-title" data-i18n="modes_disponibles">Modes disponibles</div>
-          <div id="modes-panel-list"><div class="empty" style="font-size:11px" data-i18n="carregant_2">Carregant...</div></div>
-          <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
-            <button class="btn btn-sm" id="btn-import-modes" data-i18n="afegir">+ Afegir</button>
-            <button class="btn btn-sm btn-danger" id="btn-del-mode" disabled data-i18n="eliminar_2">Eliminar</button>
-          </div>
-          <div id="mode-selected-indicator" style="display:none;margin-top:6px;font-size:11px;color:var(--accent)">Seleccionat: <strong id="mode-selected-name"></strong></div>
+      </div>
+
+      <!-- Efectes temporals (tecles 14/15): franja inferior compacta -->
+      <div class="card" style="margin-top:14px" id="card-effects">
+        <div class="card-title" data-i18n="efectes_temporals_tecles_14_i_15_c">Efectes temporals</div>
+        <p style="font-size:10.5px;color:var(--text3);margin:0 0 8px" data-i18n="cicla_amb_doble_clic_a_les_tecles">Tecles 14 i 15 — cicla amb doble clic</p>
+        <div class="effects-row" id="effects-list"></div>
+        <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
+          <button class="btn btn-sm btn-primary" id="btn-save-effects" data-i18n="guardar">Guardar</button>
+          <button class="btn btn-sm" id="btn-effects-all" data-i18n="tots_2">Tots</button>
+          <button class="btn btn-sm" id="btn-effects-none" data-i18n="cap_2">Cap</button>
+        </div>
+      </div>
+
+      <!-- Config Modes: capes de funcions dels potes per modificar el MODE en viu.
+           Cada TAP a la tecla amb l'efecte 'Config Modes' cicla OFF → capa 1 → … → OFF. -->
+      <div class="card" style="margin-top:14px" id="card-potlayers">
+        <div class="card-title">Config Modes — capes de pots</div>
+        <p style="font-size:10.5px;color:var(--text3);margin:0 0 8px">
+          Amb l'efecte <strong>Config Modes</strong> actiu (tecla 14/15), cada tap cicla aquestes capes:
+          els 3 potes modifiquen el mode que sona (volum, filtre, expressió…) sense aturar-lo. Màxim 4 capes.
+        </p>
+        <div id="potlayers-list" style="display:flex;flex-direction:column;gap:6px"></div>
+        <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
+          <button class="btn btn-sm" id="btn-potlayer-add">+ Afegir capa</button>
+          <button class="btn btn-sm" id="btn-potlayer-reset">Restaurar per defecte</button>
         </div>
       </div>
 
@@ -2089,17 +2148,6 @@
         </div>
         <div id="saved-layers-list" style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto"></div>
         <div id="saved-layers-empty" style="font-size:11.5px;color:var(--text3);padding:6px 0" data-i18n="cap_capa_guardada_encara">Cap capa guardada encara.</div>
-      </div>
-
-      <div class="card" style="margin-top:14px">
-        <div class="card-title" data-i18n="efectes_temporals_tecles_14_i_15_c">Efectes temporals — Tecles 14 i 15 (capa modes)</div>
-        <p style="font-size:11.5px;color:var(--text2);margin-bottom:10px" data-i18n="cicla_amb_doble_clic_a_les_tecles">Cicla amb doble clic a les tecles 14 i 15</p>
-        <div class="effects-row" id="effects-list"></div>
-        <div style="display:flex;gap:6px;margin-top:12px">
-          <button class="btn btn-sm btn-primary" id="btn-save-effects" data-i18n="guardar">Guardar</button>
-          <button class="btn btn-sm" id="btn-effects-all" data-i18n="tots_2">Tots</button>
-          <button class="btn btn-sm" id="btn-effects-none" data-i18n="cap_2">Cap</button>
-        </div>
       </div>
 
       <div class="log-wrap" id="log-section">
@@ -2168,18 +2216,22 @@
       <div style="margin-bottom:14px">
         <div style="font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:12px;letter-spacing:.04em;text-transform:uppercase" data-i18n="assignacio_de_funcions_del_mode_te">Assignació de funcions del mode teclat</div>
         <div class="kb-assign-layout">
-          <div class="kb-fn-chips-panel" id="kb-fn-chips"></div>
+          <div class="kb-fn-panel">
+            <div class="modes-panel-title" data-i18n="funcions_disponibles">Funcions disponibles</div>
+            <div class="kb-fn-chips-panel" id="kb-fn-chips"></div>
+          </div>
           <div class="kb-device-area">
             <div class="keys-grid" id="kb-fn-grid"></div>
           </div>
           <div class="kb-pots-col">
+            <!-- Capes de potes d'acords i h.negativa retirades (tancament v3.1):
+                 amb acords o h.neg actius, els potes fan les funcions del teclat. -->
             <div class="kb-pot-mode-bar">
               <button class="btn btn-sm pot-mode-active" id="kb-pot-mode-kbd" data-i18n="teclat">Teclat</button>
               <button class="btn btn-sm" id="kb-pot-mode-arp" data-i18n="arp">Arp</button>
-              <button class="btn btn-sm" id="kb-pot-mode-chord" data-i18n="acords">Acords</button>
-              <button class="btn btn-sm" id="kb-pot-mode-neg" data-i18n="h_neg">H.Neg</button>
             </div>
             <div id="kb-pots-col-knobs"></div>
+            <p style="font-size:9.5px;color:var(--text3);max-width:130px;line-height:1.45;margin-top:6px" data-i18n="pots_llegenda">Els 3 potes canvien de funció segons el context actiu (teclat, arpegiador, acords, h. negativa o config àudio). Clica un knob per canviar-ne la funció.</p>
           </div>
         </div>
         <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;justify-content:center">
@@ -2188,6 +2240,18 @@
         </div>
       </div>
 
+      <!-- Menú de configuració del teclat: agrupa les seccions en un selector
+           (mateix patró que el selector de modes de la capa modes). Només es
+           mostra la secció activa; re-clicar-la la plega. -->
+      <div class="kb-cfg-menu" id="kb-cfg-menu">
+        <span style="font-size:11.5px;font-weight:600;color:var(--text2);letter-spacing:.04em;text-transform:uppercase" data-i18n="configuracio_del_teclat">Configuració del teclat</span>
+        <button class="btn btn-sm kb-sec-btn" data-sec="escales" data-i18n="sec_escales">Escales i arpegiador</button>
+        <button class="btn btn-sm kb-sec-btn" data-sec="harmonia" data-i18n="sec_harmonia">Harmonia</button>
+        <button class="btn btn-sm kb-sec-btn" data-sec="acords" data-i18n="sec_acords">Tipologies d'acords</button>
+        <button class="btn btn-sm kb-sec-btn" data-sec="progressions" data-i18n="sec_progressions">Progressions i escales pròpies</button>
+      </div>
+
+      <div class="kb-sec" data-sec="escales">
       <div class="panel-grid cols3">
         <div class="card">
           <div class="card-title" data-i18n="escales_del_mode_teclat">Escales del mode teclat</div>
@@ -2230,7 +2294,9 @@
           </div>
         </div>
       </div>
+      </div>
 
+      <div class="kb-sec" data-sec="harmonia">
       <div class="card" style="margin-top:14px">
         <div class="card-title" data-i18n="eix_d_rsquo_harmonia_negativa">Eix d&rsquo;Harmonia Negativa</div>
         <div class="pill-toggles" id="neg-harmony-types"></div>
@@ -2246,6 +2312,14 @@
         <div class="pill-toggles" id="diatonic-fns"></div>
       </div>
 
+      <div class="card" style="margin-top:14px">
+        <div class="card-title" data-i18n="conduccio_de_veus">𝆔 Conducció de Veus</div>
+        <p style="font-size:11.5px;color:var(--text2);margin-bottom:10px" data-i18n="conduccio_de_veus_desc">Formes de re-distribució dels acords en una progressió. Amb la funció activa a una tecla: tap = canvia de forma · premuda llarga = desactiva.</p>
+        <div class="pill-toggles" id="voice-lead-types"></div>
+      </div>
+      </div>
+
+      <div class="kb-sec" data-sec="progressions">
       <div class="panel-grid cols2" style="margin-top:14px">
         <div class="card">
           <div class="card-title" data-i18n="progressions_d_acords">Progressions d'Acords</div>
@@ -2266,7 +2340,9 @@
           <div class="crud-list" id="scale-items"></div>
         </div>
       </div>
+      </div>
 
+      <div class="kb-sec" data-sec="acords">
       <div class="card" style="margin-top:14px">
         <div class="card-title" data-i18n="tipologies_d_acords">Tipologies d'Acords</div>
         <div class="pill-toggles" id="chord-types-list"></div>
@@ -2275,6 +2351,7 @@
           <button class="btn btn-sm" id="btn-chord-all" data-i18n="tots_4">Tots</button>
           <button class="btn btn-sm" id="btn-chord-none" data-i18n="cap_6">Cap</button>
         </div>
+      </div>
       </div>
 
       <div class="panel-grid cols2" style="margin-top:14px;display:none">
@@ -2475,6 +2552,9 @@
             </select>
             <button class="btn btn-sm" id="btn-sim-start" disabled data-i18n="iniciar">▶ Iniciar</button>
             <button class="btn btn-sm btn-danger" id="btn-sim-stop" disabled data-i18n="aturar">■ Aturar</button>
+            <button class="btn btn-sm" id="btn-sim-sound" data-i18n="so" title="Motor de so intern (sense DAW)">So</button>
+            <select id="sim-voice-select" title="Veu del motor de so" style="display:none"></select>
+            <button class="btn btn-sm" id="btn-sim-config" title="Configuració del simulador (potes, modes, efectes, so)" data-i18n="config_sim">Config</button>
             <button class="btn btn-sm" id="btn-sim-float" title="Obrir simulador en finestra independent" data-i18n="finestra_independent">Finestra
               independent</button>
             <div class="sim-status">
@@ -2494,6 +2574,11 @@
             <pre id="sim-log"><span class="slog-info" data-i18n="log_midi">— log midi —
 </span></pre>
           </div>
+        </div>
+        <!-- Configuració completa del simulador: potes del teclat, modes (mix),
+             paràmetres dels efectes d'àudio i motor sonor. Es pobla per JS. -->
+        <div class="sim-config" id="sim-config">
+          <div class="sim-config-inner" id="sim-config-inner"></div>
         </div>
       </div>
     </div>
@@ -2527,7 +2612,11 @@
           <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.65">Quan el dispositiu apareix
             com <strong data-i18n="circuitpy">CIRCUITPY</strong>, connecta'l a la pestanya <strong data-i18n="tecles">Tecles</strong> i instal·la el firmware.
           </p>
-          <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin-bottom:10px;cursor:pointer">
+          <!-- Pantalla OLED: opció OCULTA en aquesta versió (reservada, com el
+               motor d'àudio, per a la propera revisió del maquinari). El codi
+               de l'instal·lador (_includeDisplay) segueix funcionant si es
+               torna a mostrar. -->
+          <label style="display:none;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin-bottom:10px;cursor:pointer">
             <input type="checkbox" id="fw-include-display" style="accent-color:var(--accent)">
             <span data-i18n="incloure_pantalla_oled">Pantalla OLED (SSD1306): instal·lar el mòdul de pantalla</span>
           </label>
@@ -2714,6 +2803,7 @@
 <a href="#gca-5">5. La capa Modes</a>
 <a href="#gca-6">6. Configurar des de l’app</a>
 <a href="#gca-7">7. Recomanacions</a>
+<a href="#gca-8">8. Llegenda de controls</a>
 </div>
 <div id="gca-1">
 <div class="guide-h1">1. Què és TECLA</div><p class="guide-li">TECLA és un <strong>instrument MIDI</strong> de 16 tecles i 3 potenciòmetres. No fa so per si sol: envia notes MIDI per USB a qualsevol sintetitzador, DAW (Ableton, Logic, GarageBand…) o app de música.</p><p class="guide-li">Té dues grans capes: la <strong>capa Teclat</strong> (un instrument harmònic amb escales, acords, arpegiador, looper…) i la <strong>capa Modes</strong> (generadors musicals algorítmics: ones, clàssics, ritmes…).</p><p class="guide-li">Tot es configura des d’aquesta app web, sense instal·lar res: connecta el dispositiu per USB i prem <strong>connecta dispositiu</strong>.</p><div class="guide-note">Fes servir Chrome o Edge: l’app necessita l’accés a fitxers (File System Access) per escriure al dispositiu.</div>
@@ -2739,19 +2829,23 @@
 <div class="key-btn key-fx special"><div class="key-num">14</div></div>
 <div class="key-btn key-fx special"><div class="key-num">15</div></div>
 <div class="key-btn key-stop special"><div class="key-num">16</div></div>
-</div><p class="guide-li"><strong>Tecles 1–8</strong>: notes de l’escala activa (o acords, si el mode acords està actiu).</p><p class="guide-li"><strong>Tecles 9–12, 14, 15</strong>: funcions <em>reassignables</em> des de la pestanya <em>Teclat</em>. Per defecte: escala, tonalitat, acords, arpegiador i octava ±.</p><p class="guide-li"><strong>Tecla 13</strong> (fixa): toc curt → canviar a la capa Modes · mantinguda ≈1 s → canviar de banc de modes.</p><p class="guide-li"><strong>Tecla 16</strong> (fixa): STOP — atura tot el so.</p><div class="guide-h2">Funcions assignables</div><p class="guide-li"><strong>𝄞 Escala</strong>: toc → següent escala · toc llarg → anterior. <strong>♭ Tonalitat</strong>: cicla el cercle de quintes.</p><p class="guide-li"><strong>♪ Acords</strong>: toc → activar / ciclar tipus d’acord · toc llarg → desactivar. <strong>≈ Arpegiador</strong>: toc → activar / ciclar patró · toc llarg → desactivar.</p><p class="guide-li"><strong>↕ Harmonia Negativa</strong>: reflecteix les notes sobre un eix harmònic. <strong>Δ Funcions Diatòniques</strong>: dominants secundàries, acords prestats, napolitans…</p><p class="guide-li"><strong>∞ Latch</strong>: les notes/acords continuen sonant en deixar anar; re-prémer un botó l’apaga; útil per drones.</p><p class="guide-li"><strong>𝆔 Conducció de veus</strong>: cada acord nou tria la inversió més propera a l’anterior — les progressions sonen lligades, com un pianista.</p><div class="guide-h2">Potenciòmetres</div><p class="guide-li">3 pots amb funcions per capa (normal, arpegiador, acords, h. negativa), configurables des de l’app: velocity, modulació, sustain, gate, BPM de l’arp, inversions, <strong>CC Lliure</strong> (envia el CC MIDI que triïs, per controlar el teu synth)…</p>
+</div><p class="guide-li"><strong>Tecles 1–8</strong>: notes de l’escala activa (o acords, si el mode acords està actiu).</p><p class="guide-li"><strong>Tecles 9–12, 14, 15</strong>: funcions <em>reassignables</em> des de la pestanya <em>Teclat</em>. Per defecte: escala, tonalitat, acords, arpegiador i octava ±.</p><p class="guide-li"><strong>Tecla 13</strong> (fixa): toc curt → capa següent (cicla totes les capes creades, teclat i modes, d’esquerra a dreta) · mantinguda ≈1 s → capa anterior.</p><p class="guide-li"><strong>Tecla 16</strong> (fixa): STOP — atura tot el so.</p><div class="guide-h2">Funcions assignables</div><p class="guide-li"><strong>𝄞 Escala</strong>: toc → següent escala · toc llarg → anterior. <strong>♭ Tonalitat</strong>: cicla el cercle de quintes.</p><p class="guide-li"><strong>♪ Acords</strong>: toc → activar / ciclar tipus d’acord · toc llarg → desactivar. <strong>≈ Arpegiador</strong>: toc → activar / ciclar patró · toc llarg → desactivar.</p><p class="guide-li"><strong>↕ Harmonia Negativa</strong>: reflecteix les notes sobre un eix harmònic. <strong>Δ Funcions Diatòniques</strong>: dominants secundàries, acords prestats, napolitans…</p><p class="guide-li"><strong>∞ Latch</strong>: les notes/acords continuen sonant en deixar anar; re-prémer un botó l’apaga; útil per drones.</p><p class="guide-li"><strong>𝆔 Conducció de veus</strong>: cada acord nou tria la inversió més propera a l’anterior — les progressions sonen lligades, com un pianista.</p><div class="guide-h2">Potenciòmetres</div><p class="guide-li">3 pots amb dues capes de funcions (teclat i arpegiador), configurables des de l’app: velocity, modulació, sustain, gate, BPM de l’arp, <strong>CC Lliure</strong> (envia el CC MIDI que triïs, per controlar el teu synth)…</p>
 </div>
 <div id="gca-4">
 <div class="guide-h1">4. Looper i Overdub</div><p class="guide-li">Dues funcions assignables que converteixen TECLA en una màquina de directe: <strong>⟳ Looper</strong> (timing lliure) i <strong>➕ Overdub</strong> (capes).</p><div class="guide-h2">⟳ Gestos del looper</div><p class="guide-li"><strong>1r toc</strong>: armar (la gravació comença amb la primera nota) · <strong>2n toc</strong>: el loop arrenca a l’instant.</p><p class="guide-li"><strong>Toc curt</strong> mentre sona: pausa / represa des del principi · <strong>Toc llarg</strong> (0,8 s): esborrar el loop.</p><p class="guide-li">El looper <strong>capta bé l’arpegiador</strong>: activa l’arp, arma el looper i el patró es grava sol. Si l’arp ha sonat durant la presa, el loop s’<strong>auto-quantitza</strong> a la graella de l’arp (captura fina, sense desfasament); si només graves acords/notes manuals, conserva el timing lliure exacte. Per canviar el tempo d’un loop d’arp: pausa → mou el pot de BPM → represa.</p><p class="guide-li">Si graves amb el <strong>sustain</strong> del pot actiu, el loop <strong>fixa el sustain</strong> a la gravació (les notes queden lligades): sona sostingut per si mateix i és <strong>independent</strong> del sustain en directe — pots abaixar el sustain per tocar notes seques a sobre sense que el loop s’alteri.</p><div class="guide-h2">➕ Overdub (capes)</div><p class="guide-li"><strong>Toc curt</strong> amb el loop sonant: entrar/sortir del mode overdub — tot el que toquis s’afegeix al loop com una capa nova.</p><p class="guide-li"><strong>Toc llarg</strong> (0,8 s): desfer l’última capa (repeteix per anar pelant capes).</p><p class="guide-li"><strong>Toc molt llarg</strong> (1,6 s): esborrar TOTES les capes de cop — el loop base es manté.</p><div class="guide-note">Flux típic: grava una progressió d’acords → overdub d’una melodia → overdub de l’arp → toca en directe per sobre. La tecla 16 pausa el loop sense esborrar-lo.</div>
 </div>
 <div id="gca-5">
-<div class="guide-h1">5. La capa Modes</div><p class="guide-li">S’hi entra amb la <strong>tecla 13</strong> (toc curt). Les tecles <strong>1–12</strong> activen els modes generatius assignats al banc actual.</p><p class="guide-li"><strong>Tecla 13 mantinguda ≈1 s</strong>: canvia de banc de modes (Capa 1 → Capa 2 → Capa 3…).</p><p class="guide-li"><strong>Tecles 14 i 15</strong>: efectes temporals (mantenir premuda: sustain, pausa, gate…) · doble clic → canviar l’efecte assignat.</p><p class="guide-li"><strong>Tecla 16</strong>: STOP total + neteja de memòria.</p><p class="guide-li">Els modes es trien i s’assignen a la pestanya <em>Modes</em>; els potenciòmetres modulen paràmetres propis de cada mode.</p>
+<div class="guide-h1">5. La capa Modes</div><p class="guide-li">S’hi arriba ciclant amb la <strong>tecla 13</strong>. Les tecles <strong>1–12</strong> activen els modes generatius assignats a la capa actual.</p><p class="guide-li"><strong>Tecla 13</strong>: toc curt → capa següent · mantinguda ≈1 s → capa anterior.</p><p class="guide-li"><strong>Tecles 14 i 15</strong>: efectes temporals (mantenir premuda: sustain, pausa, gate…) · doble clic → canviar l’efecte assignat.</p><p class="guide-li"><strong>Tecla 16</strong>: STOP total + neteja de memòria.</p><p class="guide-li">Els modes es trien i s’assignen a la pestanya <em>Modes</em>; els potenciòmetres modulen paràmetres propis de cada mode.</p>
 </div>
 <div id="gca-6">
 <div class="guide-h1">6. Configurar des de l’app</div><div class="guide-h2">Pestanya Teclat</div><p class="guide-li">Arrossega funcions a les tecles, tria escales, tonalitats, tipus d’acord, patrons d’arpegiador, progressions i funcions dels potenciòmetres.</p><div class="guide-h2">Pestanya Modes</div><p class="guide-li">Crea bancs (capes) de modes i assigna un mode a cada tecla 1–12. Tria els efectes temporals de les tecles 14–15.</p><div class="guide-h2">Pestanya Simulador</div><p class="guide-li">Prova-ho tot <em>sense dispositiu</em>: el teclat i els modes corren al navegador i envien MIDI via WebMIDI al teu DAW.</p><div class="guide-h2">Pestanya Firmware</div><p class="guide-li">Instal·la CircuitPython (Pas 1) i el firmware TECLA (Pas 2). Cal repetir el Pas 2 després de canviar els modes assignats.</p><div class="guide-h2">Pestanya Aparença</div><p class="guide-li">Temes de color de l’app i editor de temes personalitzats.</p><div class="guide-note">Flux de treball: edita → <strong>Guardar configuració</strong> → si has canviat modes, <em>Firmware</em> → <strong>Instal·lar / Actualitzar</strong> → reset del dispositiu.</div>
 </div>
 <div id="gca-7">
 <div class="guide-h1">7. Recomanacions</div><p class="guide-li">Guarda sempre la configuració després de fer canvis.</p><p class="guide-li">Fins a <strong>3 bancs de modes</strong> funcionen amb total comoditat (validat amb mesures de memòria reals).</p><p class="guide-li">Prova els modes nous al simulador abans d’instal·lar-los.</p><p class="guide-li">Si una nota es queda penjada o el so descontrola: <strong>tecla 16</strong> (STOP).</p><p class="guide-li">Si el dispositiu no respon: reset físic (botó del Pico) — el watchdog també el reinicia sol si es penja durant una actuació.</p><p class="guide-li">Si l’app no veu el dispositiu: comprova que el disc CIRCUITPY/TECLA està muntat i que fas servir Chrome o Edge.</p>
+</div>
+<div id="gca-8">
+<div class="guide-h1">8. Llegenda de controls</div>
+<div class="guide-legend" data-legend="ca"></div>
 </div>
 </div>
 <div class="guide-lang" data-lang="es" style="display:none">
@@ -2763,6 +2857,7 @@
 <a href="#ges-5">5. La capa Modos</a>
 <a href="#ges-6">6. Configurar desde la app</a>
 <a href="#ges-7">7. Recomendaciones</a>
+<a href="#ges-8">8. Leyenda de controles</a>
 </div>
 <div id="ges-1">
 <div class="guide-h1">1. Qué es TECLA</div><p class="guide-li">TECLA es un <strong>instrumento MIDI</strong> de 16 teclas y 3 potenciómetros. No suena por sí solo: envía notas MIDI por USB a cualquier sintetizador, DAW (Ableton, Logic, GarageBand…) o app de música.</p><p class="guide-li">Tiene dos grandes capas: la <strong>capa Teclado</strong> (instrumento armónico con escalas, acordes, arpegiador, looper…) y la <strong>capa Modos</strong> (generadores musicales algorítmicos).</p><p class="guide-li">Todo se configura desde esta app web, sin instalar nada: conecta el dispositivo por USB y pulsa <strong>conectar dispositivo</strong>.</p><div class="guide-note">Usa Chrome o Edge: la app necesita File System Access para escribir en el dispositivo.</div>
@@ -2802,6 +2897,10 @@
 <div id="ges-7">
 <div class="guide-h1">7. Recomendaciones</div><p class="guide-li">Guarda siempre la configuración tras hacer cambios.</p><p class="guide-li">Hasta <strong>3 bancos de modos</strong> funcionan con total comodidad (validado con medidas de memoria reales).</p><p class="guide-li">Prueba los modos nuevos en el simulador antes de instalarlos.</p><p class="guide-li">Si una nota se queda colgada: <strong>tecla 16</strong> (STOP).</p><p class="guide-li">Si el dispositivo no responde: reset físico (botón del Pico) — el watchdog también lo reinicia solo si se cuelga.</p><p class="guide-li">Si la app no ve el dispositivo: comprueba que el disco CIRCUITPY/TECLA está montado y que usas Chrome o Edge.</p>
 </div>
+<div id="ges-8">
+<div class="guide-h1">8. Leyenda de controles</div>
+<div class="guide-legend" data-legend="es"></div>
+</div>
 </div>
 <div class="guide-lang" data-lang="en" style="display:none">
 <div class="guide-toc">
@@ -2812,6 +2911,7 @@
 <a href="#gen-5">5. The Modes layer</a>
 <a href="#gen-6">6. Configuring from the app</a>
 <a href="#gen-7">7. Tips</a>
+<a href="#gen-8">8. Controls legend</a>
 </div>
 <div id="gen-1">
 <div class="guide-h1">1. What is TECLA</div><p class="guide-li">TECLA is a 16-key, 3-knob <strong>MIDI instrument</strong>. It makes no sound on its own: it sends MIDI notes over USB to any synthesizer, DAW (Ableton, Logic, GarageBand…) or music app.</p><p class="guide-li">It has two main layers: the <strong>Keyboard layer</strong> (a harmonic instrument with scales, chords, arpeggiator, looper…) and the <strong>Modes layer</strong> (algorithmic music generators).</p><p class="guide-li">Everything is configured from this web app, nothing to install: plug the device in via USB and press <strong>connect device</strong>.</p><div class="guide-note">Use Chrome or Edge: the app needs File System Access to write to the device.</div>
@@ -2851,6 +2951,10 @@
 <div id="gen-7">
 <div class="guide-h1">7. Tips</div><p class="guide-li">Always save your settings after making changes.</p><p class="guide-li">Up to <strong>3 mode banks</strong> run comfortably (validated with real memory measurements).</p><p class="guide-li">Test new modes in the simulator before installing them.</p><p class="guide-li">Stuck note or runaway sound: <strong>key 16</strong> (STOP).</p><p class="guide-li">Device unresponsive: physical reset (Pico button) — the watchdog also auto-restarts it if it ever hangs live.</p><p class="guide-li">App can’t see the device: check the CIRCUITPY/TECLA disk is mounted and that you’re using Chrome or Edge.</p>
 </div>
+<div id="gen-8">
+<div class="guide-h1">8. Controls legend</div>
+<div class="guide-legend" data-legend="en"></div>
+</div>
 </div>
         </div>
       </div>
@@ -2863,11 +2967,66 @@
     import { TECLAModes } from './js/tecla-modes.js';
     import { TECLASimulator } from './js/tecla-simulator.js';
     import { WebMidiManager } from './js/tecla-webmidi.js';
-    import { ALL_KEYS, KEYBOARD_SCALES, ARP_PATTERNS, AVAILABLE_EFFECTS, KB_BTN_FN_META, KB_BTN_FN_DRAGGABLE, NEG_HARMONY_TYPES, DIATONIC_FNS, applyHarmonicFn, SCALES_JS, SCALE_NAMES_JS, KEY_CIRCLE_JS, KEY_OFFSETS_JS, NOTES_JS, ARP_NAMES_JS, CHORDS_JS, _getChordIntervals, _sysVolTimer, _setSysVol } from './js/tecla-music-data.js';
+    import { ALL_KEYS, KEYBOARD_SCALES, ARP_PATTERNS, AVAILABLE_EFFECTS, DEVICE_EFFECTS, MODE_POT_LAYERS_DEFAULT, MODE_POT_FNS, modePotFnToCC, AUDIO_FX_PRESETS, AUDIO_FX_DEFAULTS, AUDIO_CFG_POT_FNS, audioFnToCC, KB_BTN_FN_META, KB_BTN_FN_DRAGGABLE, NEG_HARMONY_TYPES, DIATONIC_FNS, VL_TYPES, ACCOMP_PATTERN_IDS, ACCOMP_PATTERN_NAMES, ACCOMP_CHANNEL, applyHarmonicFn, SCALES_JS, SCALE_NAMES_JS, KEY_CIRCLE_JS, KEY_OFFSETS_JS, NOTES_JS, ARP_NAMES_JS, CHORDS_JS, _getChordIntervals, _sysVolTimer, _setSysVol } from './js/tecla-music-data.js';
+    import { Accompaniment } from './js/tecla-accompaniment.js';
+    import { TeclaSynth, PRESETS } from './js/tecla-synth.js';
+    import { MixPotRouter, MixChannelPool } from './js/tecla-mix.js';
+    import { MidiLooper } from './js/tecla-midiloop.js';
 
     // ── Instàncies ─────────────────────────────────────────────────
     const device = new TECLADevice();
     const webMidi = new WebMidiManager();
+    // Motor de so intern (Web Audio): escolta TOT el MIDI del simulador sense
+    // tocar el camí MIDI real. S'activa amb el botó "So" (gest d'usuari).
+    const synth = new TeclaSynth();
+    // Loop MIDI de la capa de modes (mirall de modes/modeloop.py): grava el que
+    // emeten els modes i ho repeteix en bucle per tocar-hi a sobre.
+    const midiLoop = new MidiLooper((type, a, b, ch) => webMidi.send(type, a, b, ch));
+    {
+      const _origSend = webMidi.send.bind(webMidi);
+      webMidi.send = (type, a, b, ch = 0) => {
+        try { synth.handleMidi(type, a, b, ch); } catch (e) { /* el so mai no ha de trencar el MIDI */ }
+        try { midiLoop.capture(type, a, b, ch); } catch (e) { /* el loop mai no trenca el MIDI */ }
+        return _origSend(type, a, b, ch);
+      };
+    }
+    // Botó "So" + selector de veu del motor intern (toolbar del simulador)
+    {
+      const btnSimSound = document.getElementById('btn-sim-sound');
+      const simVoiceSelect = document.getElementById('sim-voice-select');
+      if (simVoiceSelect) {
+        simVoiceSelect.innerHTML = Object.keys(PRESETS)
+          .map(n => `<option value="${n}">${n}</option>`).join('');
+        synth.setPreset(simVoiceSelect.value);
+        simVoiceSelect.addEventListener('change', () => synth.setPreset(simVoiceSelect.value));
+      }
+      if (btnSimSound) {
+        btnSimSound.addEventListener('click', () => {
+          if (synth.enabled) {
+            synth.disable();
+            btnSimSound.classList.remove('btn-primary');
+            if (simVoiceSelect) simVoiceSelect.style.display = 'none';
+          } else {
+            synth.enable();            // gest d'usuari → desbloqueja l'AudioContext
+            btnSimSound.classList.add('btn-primary');
+            if (simVoiceSelect) simVoiceSelect.style.display = '';
+            _applySimChPresets();      // veus per canal configurades al panell Config
+          }
+        });
+      }
+      // Panell de configuració del simulador (columna dreta plegable)
+      const btnSimConfig = document.getElementById('btn-sim-config');
+      if (btnSimConfig) {
+        btnSimConfig.addEventListener('click', () => {
+          const panel = document.getElementById('sim-config');
+          if (!panel) return;
+          const show = !panel.classList.contains('show');
+          panel.classList.toggle('show', show);
+          btnSimConfig.classList.toggle('btn-primary', show);
+          if (show) _renderSimConfig();
+        });
+      }
+    }
     let modes = null;
     let simulator = null;
     let kbMode = null;
@@ -2895,6 +3054,25 @@
     const simStatusText = document.getElementById('sim-status-text');
 
     const buttonModes = new Array(12).fill(null);
+    // ── SIMULADOR HÍBRID (nou concepte v3) ──────────────────────────────────
+    // El simulador NO corre al dispositiu: és un entorn d'experimentació on el
+    // teclat, diversos MODES alhora (un canal MIDI per mode), EFECTES temporals
+    // i la base d'acompanyament conviuen lliurement. Port de la capa MIX de v2.
+    const buttonEffects = new Array(16).fill(null);   // efecte temporal assignat per tecla
+    const _mixPots = new MixPotRouter('hold');        // presa de potes: manté/fixa tecla-mode
+    const _mixChannelPool = new MixChannelPool([4, 5, 6, 7]);   // canals dels modes
+    const _MIX_MODE_PRESETS = ['Saw pad', 'Pluck', 'Bass', 'Square (clàssic)'];
+    // Gest de tecla-mode: TAP (<0.3s) = engega/atura · MANTENIR = edita els potes.
+    const _MIX_TAP = 0.3;
+    const _mixKeyPress = {};   // idx → timestamp de premuda
+    const _mixJustOn = {};     // idx → true si aquesta premuda ha engegat el mode
+    function _loadSimMixCfg() { try { return JSON.parse(localStorage.getItem('tecla-sim-mix') || '{}'); } catch { return {}; } }
+    function _saveSimMixCfg(c) { localStorage.setItem('tecla-sim-mix', JSON.stringify(c)); }
+    {
+      const c = _loadSimMixCfg();
+      _mixChannelPool.setCapacity(Math.max(1, Math.min(4, c.cap || 4)));
+      _mixPots.setTakeover(c.takeover === 'latch' ? 'latch' : 'hold');
+    }
     let selectedSidebarMode = null;
     let _floatLogCallback = null;
 
@@ -2958,6 +3136,7 @@
           item.draggable = true;
           item.dataset.idx = i;
           const nm = document.createElement('span'); nm.className = 'li-name'; nm.textContent = b.name || ('Capa ' + (i + 1));
+          nm.title = 'Doble clic per reanomenar';
           const tp = document.createElement('span'); tp.className = 'li-type'; tp.textContent = _typeLabel(b.type);
           const del = document.createElement('button'); del.className = 'li-del'; del.title = 'Eliminar capa'; del.textContent = '×';
           item.append(nm, tp, del);
@@ -2972,8 +3151,15 @@
       function _renderTypeHeader(b) {
         typeHeader.innerHTML = '';
         const title = document.createElement('span');
-        title.style.cssText = 'font-weight:600;font-size:14px;color:var(--text)';
+        title.style.cssText = 'font-weight:600;font-size:14px;color:var(--text);cursor:text';
         title.textContent = b.name || 'Capa';
+        title.title = 'Clica per reanomenar la capa';
+        title.addEventListener('click', () => renameLayer(_keysConfig.currentBank));
+        const renameBtn = document.createElement('button');
+        renameBtn.className = 'btn btn-sm';
+        renameBtn.textContent = 'Reanomenar';
+        renameBtn.title = 'Posar nom personalitzat a la capa';
+        renameBtn.addEventListener('click', () => renameLayer(_keysConfig.currentBank));
         const bar = document.createElement('div'); bar.className = 'layer-type-bar';
         [['teclat', 'Teclat'], ['modes', 'Modes']].forEach(([t, lbl]) => {
           const btn = document.createElement('button');
@@ -2982,7 +3168,7 @@
           btn.addEventListener('click', () => setLayerType(_keysConfig.currentBank, t));
           bar.appendChild(btn);
         });
-        typeHeader.append(title, bar);
+        typeHeader.append(title, renameBtn, bar);
       }
 
       function showConfigForType(type) {
@@ -3030,7 +3216,14 @@
         selectLayer(i);
       }
 
+      // Límit dur de capes (mateix que el firmware, ConfigManager.MAX_BANKS):
+      // tota la config viu a la RAM de la Pico i cada capa de teclat pesa 1-2KB.
+      const MAX_LAYERS = 6;
       function addLayer() {
+        if (_keysConfig.banks.length >= MAX_LAYERS) {
+          showGlobalToast(`Màxim ${MAX_LAYERS} capes (límit de memòria del dispositiu)`, 'error');
+          return;
+        }
         _keysConfig.banks.push({ name: 'Capa ' + (_keysConfig.banks.length + 1), type: 'modes', modes: Array(12).fill(''), efectos: { '13': 'Sustain', '14': 'Pausa' }, kb: {} });
         _saveKeysConfig(_keysConfig);
         selectLayer(_keysConfig.banks.length - 1);
@@ -3083,6 +3276,7 @@
       }
 
       document.getElementById('btn-add-layer')?.addEventListener('click', addLayer);
+      _dispSelectLayer = selectLayer;
 
       // Render inicial: la graella de modes ja l'ha carregat buildKeysGrid, així
       // que a l'inici NO la toquem (evita curses amb el seu async).
@@ -3331,16 +3525,23 @@
     // sense reescriure desenes de funcions de config.
     const KB_KEYS = ['tecla-modes-config', 'tecla-diatonic-fns', 'tecla-neg-harm-type',
       'tecla-neg-harm-axes', 'tecla-chord-inversions', 'tecla-kb-btn-functions',
-      'tecla-progressions', 'tecla-custom-scales', 'tecla-custom-arps'];
+      'tecla-progressions', 'tecla-custom-scales', 'tecla-custom-arps', 'tecla-vl-types'];
     function _captureKb() {
+      // Fotografia COMPLETA: les claus absents es guarden com a null explícit
+      // ("aquesta capa usa el default"). Sense això, una capa nova/no editada
+      // quedava amb kb = {} per sempre i buildDeviceConfig no podia distingir
+      // "capa amb defaults" de "capa sense foto" — totes les capes de teclat
+      // s'exportaven al dispositiu amb la config de la capa SELECCIONADA
+      // (el bug de "només em carrega una capa de teclat").
       const snap = {};
-      KB_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v !== null) snap[k] = v; });
+      KB_KEYS.forEach(k => { snap[k] = localStorage.getItem(k); });
       return snap;
     }
     function _restoreKb(snap) {
       snap = snap || {};
       KB_KEYS.forEach(k => {
-        if (k in snap) localStorage.setItem(k, snap[k]); else localStorage.removeItem(k);
+        const v = snap[k];
+        if (v !== null && v !== undefined) localStorage.setItem(k, v); else localStorage.removeItem(k);
       });
       // Recarrega les variables en memòria que reflecteixen aquestes claus.
       try { _loadCustomScales(); } catch (e) {}
@@ -3352,6 +3553,10 @@
       return { banks: [{ name: 'Teclat', type: 'teclat', modes: Array(12).fill(''), efectos: { '13': 'Sustain', '14': 'Pausa' }, kb: _captureKb() }], currentBank: 0 };
     }
     let _keysConfig = _loadKeysConfig() || _defaultKeysConfig();
+    // Pont cap al gestor de capes de la pestanya Dispositiu (el pobla initDispositiu):
+    // permet refrescar la capa activa des de fora del seu closure (p. ex. en
+    // carregar una capa guardada).
+    let _dispSelectLayer = null;
     _keysConfig.banks.forEach(b => {
       if (!b.efectos) b.efectos = { '13': 'Sustain', '14': 'Pausa' };
       if (!b.type) b.type = 'modes';                    // capes antigues = capes de modes
@@ -3401,6 +3606,12 @@
 
     function _saveCurrentLayerAsNew() {
       const bank = _keysConfig.banks[_keysConfig.currentBank];
+      // Captura l'estat viu de la capa abans de fotografiar-la (la working copy
+      // és a les claus globals / a la graella fins que es canvia de capa).
+      try {
+        if (bank.type === 'teclat') bank.kb = _captureKb();
+        else _readGridIntoBank(_keysConfig.currentBank);
+      } catch (e) {}
       const defaultName = bank.name || `Capa ${_loadSavedLayers().length + 1}`;
       const name = prompt('Nom per a la capa guardada:', defaultName);
       if (!name?.trim()) return;
@@ -3419,7 +3630,12 @@
       const bank = _keysConfig.banks[_keysConfig.currentBank];
       bank.modes = [...(layer.bank.modes || Array(12).fill(''))];
       bank.efectos = { ...(layer.bank.efectos || { '13': 'Sustain', '14': 'Pausa' }) };
+      // Restaura també el tipus, la config de teclat i el nom guardats amb la capa.
+      if (layer.bank.type) bank.type = layer.bank.type;
+      if (layer.bank.kb) bank.kb = JSON.parse(JSON.stringify(layer.bank.kb));
+      bank.name = layer.name;
       _saveKeysConfig(_keysConfig);
+      if (_dispSelectLayer) _dispSelectLayer(_keysConfig.currentBank);
       renderDeviceKeys();
       showGlobalToast(`Capa "${layer.name}" carregada.`);
     }
@@ -3560,10 +3776,33 @@
       if (knobEl) knobEl.style.transform = `rotate(${_potAngle(v)}deg)`;
       
       if (context === 'sim') {
+        // 0) 'Config Modes' actiu: els potes envien la seva capa (Mescla/Timbre/
+        //    Expressió) a TOTS els canals dels modes actius (mirall del device).
+        const _mplCC = (typeof _activeModePotLayerCC === 'function') ? _activeModePotLayerCC() : null;
+        if (_mplCC) {
+          if (_mplCC[i] != null) {
+            const chans = _mixChannelPool.entries().map(([, ch]) => ch);
+            for (const ch of (chans.length ? chans : [0])) webMidi.send('control_change', _mplCC[i], v, ch);
+          }
+          return;
+        }
+        // 1) Config d'àudio activa en una tecla d'efecte: els potes editen el so intern.
+        const _audioCC = (typeof _activeAudioFxCC === 'function') ? _activeAudioFxCC() : null;
+        if (_audioCC) {
+          if (_audioCC[i] != null) webMidi.send('control_change', _audioCC[i], v, 0);
+          return;
+        }
+        // 2) Presa de potes d'un MODE (mantens/fixes la seva tecla): editen el mode.
+        if (typeof _mixPots !== 'undefined' && _mixPots.owner() === 'mode'
+            && typeof simulator !== 'undefined' && simulator) {
+          simulator.setPot(i, v);
+          return;
+        }
+        // 3) Per defecte: teclat si és actiu; si no, el motor de modes.
         if (typeof isKbMode !== 'undefined' && isKbMode) {
           if (typeof kbMode !== 'undefined' && kbMode) kbMode.setPot(i, v);
-        } else {
-          if (typeof simulator !== 'undefined' && simulator) simulator.setPot(i, v);
+        } else if (typeof simulator !== 'undefined' && simulator) {
+          simulator.setPot(i, v);
         }
       }
     }
@@ -3727,9 +3966,84 @@
       // The grid directly updates the bank object via drawer, so nothing to read from DOM.
     }
     function _availableEffects() {
+      // Efectes del DISPOSITIU: sense els presets Àudio (el motor d'àudio intern
+      // queda reservat per a la propera revisió del maquinari; al simulador els
+      // presets segueixen disponibles via AVAILABLE_EFFECTS).
       const mc = _loadModesConfig();
-      return mc.available_effects || ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend', 'Harmonia Negativa'];
+      return (mc.available_effects || DEVICE_EFFECTS).filter(e => !AUDIO_FX_PRESETS.includes(e));
     }
+
+    // ── Config Modes: configurador de les capes de pots ─────────────────────
+    // Les capes viuen a tecla-modes-config.mode_pot_layers (GLOBALS: les
+    // mateixes per a totes les capes de modes). El simulador les llegeix de la
+    // mateixa clau (_modePotLayers) i el firmware les rep via buildDeviceConfig
+    // → 'mode_pot_layers' (potlayers.py, amb els defaults com a fallback).
+    const MAX_POT_LAYERS = 4;
+    function _getPotLayersCfg() {
+      const mc = _loadModesConfig();
+      const src = Array.isArray(mc.mode_pot_layers) && mc.mode_pot_layers.length
+        ? mc.mode_pot_layers : MODE_POT_LAYERS_DEFAULT;
+      return src.filter(l => l && typeof l === 'object').slice(0, MAX_POT_LAYERS)
+        .map(l => ({ name: l.name || '', x: l.x || '', y: l.y || '', z: l.z || '' }));
+    }
+    function _savePotLayersCfg(layers) {
+      const mc = _loadModesConfig();
+      mc.mode_pot_layers = layers;
+      _saveModesConfig(mc);
+    }
+    function _renderPotLayersCfg() {
+      const cont = document.getElementById('potlayers-list');
+      if (!cont) return;
+      const layers = _getPotLayersCfg();
+      const fnOptions = sel => {
+        // Valor antic fora del catàleg actual (p. ex. 'Filtre' d'una config
+        // vella): es mostra igualment — el firmware encara el resol a CC.
+        const cataleg = (sel && !MODE_POT_FNS.includes(sel)) ? [...MODE_POT_FNS, sel] : MODE_POT_FNS;
+        return cataleg.map(f =>
+          `<option value="${f === '—' ? '' : f}" ${((f === '—' && !sel) || f === sel) ? 'selected' : ''}>${f}</option>`).join('');
+      };
+      cont.innerHTML = layers.map((l, i) => `
+        <div class="potlayer-row" data-idx="${i}" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--text3);width:14px">${i + 1}</span>
+          <input type="text" class="pl-name" value="${l.name}" placeholder="Nom" maxlength="12"
+                 style="width:110px;font-size:12px">
+          ${['x', 'y', 'z'].map(ax => `
+            <label style="display:flex;align-items:center;gap:3px;font-size:11px;color:var(--text3)">
+              ${ax.toUpperCase()}
+              <select class="pl-fn" data-axis="${ax}" style="font-size:12px">${fnOptions(l[ax])}</select>
+            </label>`).join('')}
+          <button class="btn btn-sm btn-danger pl-del" title="Eliminar capa" ${layers.length <= 1 ? 'disabled' : ''}>✕</button>
+        </div>`).join('');
+
+      const readRows = () => Array.from(cont.querySelectorAll('.potlayer-row')).map(row => ({
+        name: row.querySelector('.pl-name').value.trim() || ('Capa ' + (+row.dataset.idx + 1)),
+        x: row.querySelector('.pl-fn[data-axis="x"]').value,
+        y: row.querySelector('.pl-fn[data-axis="y"]').value,
+        z: row.querySelector('.pl-fn[data-axis="z"]').value,
+      }));
+      cont.querySelectorAll('.pl-name, .pl-fn').forEach(el =>
+        el.addEventListener('change', () => _savePotLayersCfg(readRows())));
+      cont.querySelectorAll('.pl-del').forEach((btn, i) =>
+        btn.addEventListener('click', () => {
+          const rows = readRows(); rows.splice(i, 1);
+          _savePotLayersCfg(rows); _renderPotLayersCfg();
+        }));
+    }
+    document.getElementById('btn-potlayer-add')?.addEventListener('click', () => {
+      const layers = _getPotLayersCfg();
+      if (layers.length >= MAX_POT_LAYERS) {
+        showGlobalToast(`Màxim ${MAX_POT_LAYERS} capes (cada tap n'és una: més capes = més clics per sortir)`, 'error');
+        return;
+      }
+      layers.push({ name: 'Capa ' + (layers.length + 1), x: 'Volum', y: 'Expressió', z: 'Filtre' });
+      _savePotLayersCfg(layers); _renderPotLayersCfg();
+    });
+    document.getElementById('btn-potlayer-reset')?.addEventListener('click', () => {
+      _savePotLayersCfg([]);   // buit = defaults (Mescla/Timbre/Expressió)
+      _renderPotLayersCfg();
+      showGlobalToast('Capes de pots restaurades (Mescla · Timbre · Expressió)');
+    });
+    _renderPotLayersCfg();
 
     function _getAssignedModes() {
       const assigned = new Set();
@@ -3772,6 +4086,72 @@
           document.getElementById('btn-del-mode')?.removeAttribute('disabled');
         });
       });
+
+    }
+
+    // ── Diagrama de potes de Config àudio (només SIMULADOR; el panell del
+    //    Dispositiu s'ha retirat — l'àudio intern queda per a la Pico 2) ─────
+    let _modesAudioPreset = 'Àudio 1';
+    function _renderModesAudio() {
+      const bar = document.getElementById('modes-audio-preset-bar');
+      if (!bar) return;
+      if (!_modesAudioPotFunctions) _loadModesAudioPots();
+      bar.innerHTML = AUDIO_FX_PRESETS.map((name, i) =>
+        `<button class="btn btn-sm modes-audio-tab${name === _modesAudioPreset ? ' pot-mode-active' : ''}" data-preset="${i}" title="${name}">À${i + 1}</button>`
+      ).join('');
+      bar.querySelectorAll('button').forEach(b => {
+        b.addEventListener('click', () => { _modesAudioPreset = AUDIO_FX_PRESETS[+b.dataset.preset]; _renderModesAudio(); });
+      });
+      _renderModesAudioKnobs();
+    }
+    function _renderModesAudioKnobs() {
+      const col = document.getElementById('modes-audio-knobs');
+      if (!col) return;
+      const pIdx = AUDIO_FX_PRESETS.indexOf(_modesAudioPreset);
+      const map = _modesAudioMapFor(_modesAudioPreset);
+      const defs = [{ ax: 'x', lbl: 'X' }, { ax: 'y', lbl: 'Y' }, { ax: 'z', lbl: 'Z' }];
+      col.style.display = 'flex'; col.style.flexDirection = 'column'; col.style.gap = '10px'; col.style.alignItems = 'center';
+      col.innerHTML = defs.map(({ ax, lbl }) => {
+        const fn = map[ax] || '—';
+        return `<div class="kb-pot-knob" data-mpot="${pIdx}:${ax}" title="${fn}">
+          <div class="kb-pot-knob-id">${lbl}</div>
+          <div class="kb-pot-knob-circle"><div class="kb-pot-knob-indicator"></div></div>
+          <div class="kb-pot-knob-fn">${fn}</div>
+          <div class="kb-pot-knob-range">${_potRangeFor(fn)}</div>
+        </div>`;
+      }).join('');
+      col.querySelectorAll('.kb-pot-knob').forEach(el => {
+        el.addEventListener('click', () => _openModesAudioPotMenu(el.dataset.mpot, el));
+      });
+    }
+    function _openModesAudioPotMenu(mpot, anchorEl) {
+      document.getElementById('kb-pot-menu')?.remove();
+      const [pIdx, ax] = mpot.split(':');
+      const preset = AUDIO_FX_PRESETS[+pIdx];
+      const current = _modesAudioMapFor(preset)[ax];
+      const menu = document.createElement('div');
+      menu.id = 'kb-pot-menu';
+      menu.style.cssText = 'position:fixed;z-index:9999;background:var(--surface3,var(--surface2));border:1px solid var(--border-h,var(--border));border-radius:8px;padding:6px;min-width:160px;box-shadow:0 6px 20px rgba(0,0,0,.35);max-height:320px;overflow-y:auto';
+      const rect = anchorEl.getBoundingClientRect();
+      menu.style.top = Math.min(rect.bottom + 4, window.innerHeight - 340) + 'px';
+      menu.style.left = Math.min(rect.left, window.innerWidth - 180) + 'px';
+      AUDIO_CFG_POT_FNS.forEach(fn => {
+        const item = document.createElement('div');
+        item.style.cssText = 'padding:5px 9px;border-radius:5px;cursor:pointer;font-size:11.5px;font-weight:500;';
+        item.textContent = fn;
+        if (fn === current) item.style.background = 'rgba(74,128,240,.14)';
+        item.addEventListener('mouseenter', () => { item.style.background = 'color-mix(in srgb,var(--accent) 12%,transparent)'; });
+        item.addEventListener('mouseleave', () => { item.style.background = fn === current ? 'rgba(74,128,240,.14)' : ''; });
+        item.addEventListener('click', () => {
+          _modesAudioMapFor(preset)[ax] = fn;
+          _saveModesAudioPots();
+          _renderModesAudioKnobs();
+          menu.remove();
+        });
+        menu.appendChild(item);
+      });
+      document.body.appendChild(menu);
+      setTimeout(() => document.addEventListener('click', () => menu.remove(), { once: true }), 0);
     }
 
     // Grid is static HTML — just populate selects and wire bank events.
@@ -3899,8 +4279,6 @@
           arpeggiator_modes: mc.arpeggiator_modes || Array.from({ length: 16 }, (_, i) => i),
           potentiometer_functions: mc.potentiometer_functions || {},
           arp_potentiometer_functions: mc.arp_potentiometer_functions || {},
-          chord_potentiometer_functions: mc.chord_potentiometer_functions || {},
-          neg_potentiometer_functions: mc.neg_potentiometer_functions || {},
           chord_types: mc.chord_types || ['Major'],
           keyboard_button_functions: _loadKbBtnFunctions(),
           neg_harmony_axes: _loadNegHarmAxes(),
@@ -3908,7 +4286,9 @@
           chord_inversions: _loadChordInversions(),
           diatonic_functions: _loadDiatonicFns(),
           custom_arpeggiator_patterns: _customArps,
-          custom_chord_progressions: _getProgressions()
+          custom_chord_progressions: _getProgressions(),
+          voice_lead_types: _loadVlTypes(),
+          audio_potentiometer_functions: mc.audio_potentiometer_functions || {}
         };
       }
 
@@ -3930,7 +4310,10 @@
         const type = b.type || 'modes';
         const bank = { name: b.name, type: type, efectos_temporales: b.efectos || {} };
         if (type === 'teclat') {
-          _restoreKb(b.kb && Object.keys(b.kb).length ? b.kb : _savedKb);
+          // Capa antiga sense foto (kb buit) → DEFAULTS ({} neteja les claus),
+          // mai la config de la capa seleccionada: exportar _savedKb feia que
+          // totes les capes de teclat sonessin com l'activa al dispositiu.
+          _restoreKb(b.kb && Object.keys(b.kb).length ? b.kb : {});
           Object.assign(bank, _readKbConfig());
           bank.modes = Array(12).fill('');                       // capa teclat: sense modes
         } else {
@@ -3946,7 +4329,12 @@
         current_bank: _keysConfig.currentBank,
         midi_channel: mc.midi_channel || 1,
         enabled_modes: _getAssignedModes(),
-        available_effects: mc.available_effects || ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend', 'Harmonia Negativa'],
+        available_effects: _availableEffects(),
+        modes_audio_pot_functions: mc.modes_audio_pot_functions || {},
+        // Capes de pots de 'Config Modes' (potlayers.py). Només si l'usuari
+        // n'ha definit: buit/absent = el firmware usa els seus defaults.
+        ...((Array.isArray(mc.mode_pot_layers) && mc.mode_pot_layers.length)
+          ? { mode_pot_layers: mc.mode_pot_layers } : {}),
         // Config de teclat GLOBAL = la de la capa seleccionada (fallback del firmware).
         ..._readKbConfig()
       };
@@ -3963,6 +4351,13 @@
       return ['diatonic'];
     }
     function _saveDiatonicFns(arr) { localStorage.setItem('tecla-diatonic-fns', JSON.stringify(arr)); }
+
+    function _loadVlTypes() {
+      try { const a = JSON.parse(localStorage.getItem('tecla-vl-types') || 'null'); if (Array.isArray(a) && a.length > 0) return a; } catch {}
+      return VL_TYPES.map(t => t.id);
+    }
+    function _saveVlTypes(arr) { localStorage.setItem('tecla-vl-types', JSON.stringify(arr)); }
+    function _vlTypeName(id) { return (VL_TYPES.find(t => t.id === id) || {}).name || id; }
 
     function _loadNegHarmType() { return parseInt(localStorage.getItem('tecla-neg-harm-type') || '0', 10); }
     function _saveNegHarmType(t) { localStorage.setItem('tecla-neg-harm-type', t); }
@@ -4077,8 +4472,8 @@
       // Effects checklist
       const effCont = document.getElementById('effects-list');
       if (effCont) {
-        const enabledEff = new Set(mc.available_effects || AVAILABLE_EFFECTS);
-        effCont.innerHTML = AVAILABLE_EFFECTS.map(e =>
+        const enabledEff = new Set(_availableEffects());
+        effCont.innerHTML = DEVICE_EFFECTS.map(e =>
           `<label class="cb"><input type="checkbox" class="effect-chk" value="${e}" ${enabledEff.has(e) ? 'checked' : ''}>
        <span>${e}</span></label>`).join('');
       }
@@ -4095,12 +4490,9 @@
       // Pots
       const pf  = mc.potentiometer_functions || {};
       const apf = mc.arp_potentiometer_functions || {};
-      const cpf = mc.chord_potentiometer_functions || {};
-      const npf = mc.neg_potentiometer_functions || {};
       _potFunctions    = { pot_x: pf.pot_x     || 'Brillantor',        pot_y: pf.pot_y     || 'Modulació',           pot_z: pf.pot_z     || 'Sustain' };
       _arpPotFunctions = { arp_pot_x: apf.arp_pot_x || 'Velocitat (BPM)', arp_pot_y: apf.arp_pot_y || 'Patró De Direcció', arp_pot_z: apf.arp_pot_z || 'Modulació' };
-      _chordPotFunctions = { chord_pot_x: cpf.chord_pot_x || "Tipologia d'Acords", chord_pot_y: cpf.chord_pot_y || "Inversió d'Acord", chord_pot_z: cpf.chord_pot_z || 'Modulació' };
-      _negPotFunctions   = { neg_pot_x: npf.neg_pot_x || "Eix d'Harmonia",     neg_pot_y: npf.neg_pot_y || "Inversió d'Acord", neg_pot_z: npf.neg_pot_z || 'Modulació' };
+      _audioPotFunctions = mc.audio_potentiometer_functions || {};
 
       buildKbFunctionGrid();
     }
@@ -4108,19 +4500,74 @@
     let _potDiagramMode = 'kbd';
     let _potFunctions = null;
     let _arpPotFunctions = null;
-    let _chordPotFunctions = null;
-    let _negPotFunctions = null;
-    const KB_POT_FNS    = ['Brillantor','Modulació','Sustain','Pitch Bend','Volum','Gate','Octava'];
-    const ARP_POT_FNS   = ['Velocitat (BPM)','Patró De Direcció','Brillantor','Volum','Modulació','Pitch Bend','Gate','Octava'];
-    const CHORD_POT_FNS = ["Tipologia d'Acords","Inversió d'Acord",'Brillantor','Modulació','Sustain','Pitch Bend','Volum','Gate','Octava'];
-    const NEG_POT_FNS   = ["Eix d'Harmonia","Inversió d'Acord",'Brillantor','Modulació','Sustain','Pitch Bend','Volum','Gate','Octava'];
+    // Config àudio: mapatge dels 3 potes PER TECLA amb la funció 'synth_cfg'
+    // (cada tecla = un preset). Clau = índex de tecla → { x, y, z }.
+    let _audioPotFunctions = null;
+    function _audioMapFor(idx) {
+      _audioPotFunctions = _audioPotFunctions || {};
+      if (!_audioPotFunctions[idx]) _audioPotFunctions[idx] = { x: 'Filtre', y: 'Ressonància', z: "Forma d'ona" };
+      return _audioPotFunctions[idx];
+    }
+    // Funcions del sinte intern (envien Sound Controllers al motor d'àudio). Es poden
+    // assignar a qualsevol pot, en qualsevol sub-mode. Vegeu _applyPotFn / kbd_pots.py.
+    const SYNTH_POT_FNS = ['Filtre','Ressonància','Atac','Decay','Env Sustain','Release','LFO Vel.','LFO Prof.','Env Filtre','Env Decay','LFO→Filtre','Trèmol','Trèmol vel.','Detune','Filtre tipus','Pitch env','Forma d\'ona'];
+    const KB_POT_FNS    = ['Brillantor','Modulació','Sustain','Pitch Bend','Volum','Gate','Octava', ...SYNTH_POT_FNS];
+    const ARP_POT_FNS   = ['Velocitat (BPM)','Patró De Direcció','Brillantor','Volum','Modulació','Pitch Bend','Gate','Octava', ...SYNTH_POT_FNS];
+
+    // Rang de control de cada funció de pot (Pot → Funció → Rang, llegible per
+    // l'usuari sota cada knob del diagrama).
+    const _POT_FN_RANGES = {
+      'Brillantor': 'velocity 20–127',
+      'Modulació': 'CC1 · 0–127',
+      'Sustain': 'release 0 → 4s → ∞',
+      'Pitch Bend': '0 → +8191',
+      'Volum': 'CC7 · 0–127',
+      'Gate': 'OFF / període 0.05–0.5s',
+      'Octava': '0–8',
+      'Velocitat (BPM)': '30–2000 passos/min',
+      'Patró De Direcció': 'cicla els patrons actius',
+      "Tipologia d'Acords": 'cicla els tipus actius',
+      "Inversió d'Acord": 'cicla les inversions actives',
+      "Eix d'Harmonia": 'cicla els eixos actius',
+      "Forma d'ona": 'CC70 · 4 formes',
+      'Filtre tipus': 'CC86 · LP/HP/BP',
+    };
+    function _potRangeFor(fn) {
+      if (!fn || fn === '—') return '';
+      if (_POT_FN_RANGES[fn] !== undefined) return _POT_FN_RANGES[fn];
+      const cc = audioFnToCC(fn);
+      return cc != null ? `CC${cc} · 0–127` : '0–127';
+    }
+
+    // Reconstrueix la barra de modes del diagrama: 4 estàtics + una pestanya "Àudio"
+    // per cada tecla amb 'synth_cfg' (cada una és un preset configurable a part).
+    function _renderPotModeBar() {
+      const bar = document.querySelector('.kb-pot-mode-bar');
+      if (!bar) return;
+      bar.querySelectorAll('.pot-mode-audio').forEach(b => b.remove());
+      const stat = { 'kb-pot-mode-kbd': 'kbd', 'kb-pot-mode-arp': 'arp' };
+      Object.entries(stat).forEach(([id, m]) => { const b = document.getElementById(id); if (b) b.dataset.potmode = m; });
+      const fns = _kbBtnFunctions || _loadKbBtnFunctions();
+      fns.forEach((f, idx) => {
+        if (f !== 'synth_cfg') return;
+        const b = document.createElement('button');
+        b.className = 'btn btn-sm pot-mode-audio';
+        b.dataset.potmode = 'audio:' + idx;
+        b.textContent = 'K' + (idx + 1);
+        b.title = 'Config àudio — tecla ' + (idx + 1);
+        b.addEventListener('click', () => _setPotDiagramMode('audio:' + idx));
+        bar.appendChild(b);
+      });
+      // Si el mode actiu apuntava a una tecla que ja no té config àudio, torna a 'kbd'
+      if (_potDiagramMode.startsWith('audio:') && !bar.querySelector(`[data-potmode="${_potDiagramMode}"]`)) {
+        _potDiagramMode = 'kbd';
+      }
+      bar.querySelectorAll('[data-potmode]').forEach(b => b.classList.toggle('pot-mode-active', b.dataset.potmode === _potDiagramMode));
+    }
 
     function _setPotDiagramMode(mode) {
       _potDiagramMode = mode;
-      document.getElementById('kb-pot-mode-kbd')?.classList.toggle('pot-mode-active', mode === 'kbd');
-      document.getElementById('kb-pot-mode-arp')?.classList.toggle('pot-mode-active', mode === 'arp');
-      document.getElementById('kb-pot-mode-chord')?.classList.toggle('pot-mode-active', mode === 'chord');
-      document.getElementById('kb-pot-mode-neg')?.classList.toggle('pot-mode-active', mode === 'neg');
+      document.querySelectorAll('.kb-pot-mode-bar [data-potmode]').forEach(b => b.classList.toggle('pot-mode-active', b.dataset.potmode === mode));
       _updatePotDiagram();
     }
 
@@ -4128,8 +4575,27 @@
       const col = document.getElementById('kb-pots-col-knobs');
       if (!col) return;
       const m = _potDiagramMode;
-      const prefixMap = { kbd: 'pot', arp: 'arp_pot', chord: 'chord_pot', neg: 'neg_pot' };
-      const fnsMap    = { kbd: _potFunctions, arp: _arpPotFunctions, chord: _chordPotFunctions, neg: _negPotFunctions };
+      // Mode "Config àudio" d'una tecla concreta: mapatge propi dels 3 potes.
+      if (m.startsWith('audio:')) {
+        const idx = +m.slice(6);
+        const map = _audioMapFor(idx);
+        const defs = [{ ax: 'x', lbl: 'X' }, { ax: 'y', lbl: 'Y' }, { ax: 'z', lbl: 'Z' }];
+        col.innerHTML = defs.map(({ ax, lbl }) => {
+          const fn = map[ax] || '—';
+          return `<div class="kb-pot-knob" data-pot="audio:${idx}:${ax}" title="${fn}">
+            <div class="kb-pot-knob-id">${lbl}</div>
+            <div class="kb-pot-knob-circle"><div class="kb-pot-knob-indicator"></div></div>
+            <div class="kb-pot-knob-fn">${fn}</div>
+            <div class="kb-pot-knob-range">${_potRangeFor(fn)}</div>
+          </div>`;
+        }).join('');
+        col.querySelectorAll('.kb-pot-knob').forEach(el => {
+          el.addEventListener('click', () => _openPotMenu(el.dataset.pot, el));
+        });
+        return;
+      }
+      const prefixMap = { kbd: 'pot', arp: 'arp_pot' };
+      const fnsMap    = { kbd: _potFunctions, arp: _arpPotFunctions };
       const prefix = prefixMap[m] || 'pot';
       const fns    = fnsMap[m] || {};
       const defs = [
@@ -4143,6 +4609,7 @@
           <div class="kb-pot-knob-id">${lbl}</div>
           <div class="kb-pot-knob-circle"><div class="kb-pot-knob-indicator"></div></div>
           <div class="kb-pot-knob-fn">${fn}</div>
+          <div class="kb-pot-knob-range">${_potRangeFor(fn)}</div>
         </div>`;
       }).join('');
       col.querySelectorAll('.kb-pot-knob').forEach(el => {
@@ -4150,34 +4617,176 @@
       });
     }
 
+    // ── Guia: llegenda completa de controls ─────────────────────────────────
+    // Cada entrada: id de funció (icona/color de KB_BTN_FN_META) + per idioma
+    // [nom, explicació breu, comportament]. Es genera al DOM de la pestanya Guia
+    // per a cada guide-lang, així la llegenda viu al costat de la resta de la guia.
+    const GUIDE_LEGEND_FNS = [
+      ['note', {
+        ca: ['Nota MIDI', "Toca la nota de l'escala activa (o l'acord, si el mode acords està actiu).", 'Prémer = sona · deixar anar = s\'atura (segons Latch/Sustain).'],
+        es: ['Nota MIDI', 'Toca la nota de la escala activa (o el acorde, si el modo acordes está activo).', 'Pulsar = suena · soltar = se detiene (según Latch/Sustain).'],
+        en: ['MIDI note', 'Plays the note of the active scale (or the chord, when chord mode is on).', 'Press = sound · release = stop (subject to Latch/Sustain).'],
+      }],
+      ['scale', {
+        ca: ['Escala', "Canvia l'escala del teclat (de les seleccionades a la configuració).", 'Toc = següent escala · toc llarg = anterior.'],
+        es: ['Escala', 'Cambia la escala del teclado (de las seleccionadas en la configuración).', 'Toque = siguiente escala · toque largo = anterior.'],
+        en: ['Scale', 'Cycles the keyboard scale (among the ones enabled in settings).', 'Tap = next scale · long press = previous.'],
+      }],
+      ['tonality', {
+        ca: ['Tonalitat', 'Canvia la tònica (cercle de quintes o l\'ordre que triïs).', 'Toc = següent tonalitat · toc llarg = anterior.'],
+        es: ['Tonalidad', 'Cambia la tónica (círculo de quintas o el orden que elijas).', 'Toque = siguiente tonalidad · toque largo = anterior.'],
+        en: ['Key', 'Changes the tonic (circle of fifths or your custom order).', 'Tap = next key · long press = previous.'],
+      }],
+      ['chord', {
+        ca: ['Acords', 'Les tecles 1-8 toquen acords complets en lloc de notes.', "Toc = activar / ciclar tipus d'acord · toc llarg = desactivar."],
+        es: ['Acordes', 'Las teclas 1-8 tocan acordes completos en lugar de notas.', 'Toque = activar / ciclar tipo de acorde · toque largo = desactivar.'],
+        en: ['Chords', 'Keys 1-8 play full chords instead of single notes.', 'Tap = enable / cycle chord type · long press = disable.'],
+      }],
+      ['arp', {
+        ca: ['Arpegiador', 'Arpegia les notes de les tecles mantingudes segons el patró actiu.', 'Toc = activar / ciclar patró · toc llarg = desactivar. El pot de BPM en controla la velocitat.'],
+        es: ['Arpegiador', 'Arpegia las notas de las teclas mantenidas según el patrón activo.', 'Toque = activar / ciclar patrón · toque largo = desactivar. El pot de BPM controla la velocidad.'],
+        en: ['Arpeggiator', 'Arpeggiates the held keys following the active pattern.', 'Tap = enable / cycle pattern · long press = disable. The BPM knob sets the speed.'],
+      }],
+      ['octave_down', {
+        ca: ['Octava avall', "Baixa una octava el teclat.", 'Toc = −1 octava (mínim 0).'],
+        es: ['Octava abajo', 'Baja una octava el teclado.', 'Toque = −1 octava (mínimo 0).'],
+        en: ['Octave down', 'Shifts the keyboard one octave down.', 'Tap = −1 octave (min 0).'],
+      }],
+      ['octave_up', {
+        ca: ['Octava amunt', 'Puja una octava el teclat.', 'Toc = +1 octava (màxim 8).'],
+        es: ['Octava arriba', 'Sube una octava el teclado.', 'Toque = +1 octava (máximo 8).'],
+        en: ['Octave up', 'Shifts the keyboard one octave up.', 'Tap = +1 octave (max 8).'],
+      }],
+      ['neg_harmony', {
+        ca: ['Harmonia Negativa', 'Reflecteix les notes sobre un eix harmònic (Levy).', "Toc = activar / ciclar eix · toc llarg = desactivar."],
+        es: ['Armonía Negativa', 'Refleja las notas sobre un eje armónico (Levy).', 'Toque = activar / ciclar eje · toque largo = desactivar.'],
+        en: ['Negative Harmony', 'Mirrors notes across a harmonic axis (Levy).', 'Tap = enable / cycle axis · long press = disable.'],
+      }],
+      ['diatonic', {
+        ca: ['Acords Diatònics', 'Funcions harmòniques: dominants secundàries, prestats, napolitans…', 'Toc = activar / ciclar funció · toc llarg = desactivar.'],
+        es: ['Acordes Diatónicos', 'Funciones armónicas: dominantes secundarias, prestados, napolitanos…', 'Toque = activar / ciclar función · toque largo = desactivar.'],
+        en: ['Diatonic Chords', 'Harmonic functions: secondary dominants, borrowed chords, Neapolitans…', 'Tap = enable / cycle function · long press = disable.'],
+      }],
+      ['latch', {
+        ca: ['Latch (manté)', 'Les notes/acords continuen sonant en deixar anar la tecla — ideal per drones.', 'Toc = commutar. Re-prémer una tecla que sona l\'apaga.'],
+        es: ['Latch (mantiene)', 'Las notas/acordes siguen sonando al soltar la tecla — ideal para drones.', 'Toque = conmutar. Re-pulsar una tecla que suena la apaga.'],
+        en: ['Latch (hold)', 'Notes/chords keep sounding after release — great for drones.', 'Tap = toggle. Pressing a sounding key again stops it.'],
+      }],
+      ['looper', {
+        ca: ['Looper', 'Grava i reprodueix en bucle el que toques (timing lliure; auto-quantitza si hi intervé l\'arp).', '1r toc = armar · 2n toc = arrencar el loop · toc curt = pausa/represa · toc llarg = esborrar.'],
+        es: ['Looper', 'Graba y reproduce en bucle lo que tocas (timing libre; auto-cuantiza si interviene el arp).', '1er toque = armar · 2º toque = arrancar el loop · toque corto = pausa/reanudar · toque largo = borrar.'],
+        en: ['Looper', 'Records and loops what you play (free timing; auto-quantizes when the arp is involved).', '1st tap = arm · 2nd tap = start loop · short tap = pause/resume · long press = erase.'],
+      }],
+      ['looper_dub', {
+        ca: ['Overdub', 'Afegeix capes al loop mentre sona.', 'Toc = entrar/sortir d\'overdub · toc llarg = desfer última capa · molt llarg = esborrar totes les capes.'],
+        es: ['Overdub', 'Añade capas al loop mientras suena.', 'Toque = entrar/salir de overdub · toque largo = deshacer última capa · muy largo = borrar todas las capas.'],
+        en: ['Overdub', 'Adds layers on top of the running loop.', 'Tap = enter/exit overdub · long press = undo last layer · very long = clear all layers.'],
+      }],
+      ['voice_lead', {
+        ca: ['Conducció de veus', 'Re-voiceja cada acord nou segons la forma activa (proximitat, tons comuns, baix, ascendent, obert) — progressions lligades.', 'Toc = activar / ciclar forma · toc llarg = desactivar.'],
+        es: ['Conducción de voces', 'Re-voicea cada acorde nuevo según la forma activa (proximidad, tonos comunes, bajo, ascendente, abierto) — progresiones ligadas.', 'Toque = activar / ciclar forma · toque largo = desactivar.'],
+        en: ['Voice leading', 'Re-voices each new chord using the active strategy (proximity, common tones, bass, ascending, open) — smooth progressions.', 'Tap = enable / cycle strategy · long press = disable.'],
+      }],
+      ['accomp', {
+        ca: ['Base (acompanyament)', 'Fa sonar una base que segueix la tonalitat i l\'escala del teclat: pols, baix, arpegi o seqüència (canal MIDI 2).', 'Toc = activar / ciclar patró · toc llarg = desactivar. El pot de BPM de l\'arp en marca el tempo.'],
+        es: ['Base (acompañamiento)', 'Hace sonar una base que sigue la tonalidad y la escala del teclado: pulso, bajo, arpegio o secuencia (canal MIDI 2).', 'Toque = activar / ciclar patrón · toque largo = desactivar. El pot de BPM del arp marca el tempo.'],
+        en: ['Backing (accompaniment)', 'Plays a backing that follows the keyboard key and scale: pulse, bass, arpeggio or sequence (MIDI channel 2).', 'Tap = enable / cycle pattern · long press = disable. The arp BPM knob sets the tempo.'],
+      }],
+      ['modes_layer', {
+        ca: ['Canvi de Capa', 'Tecla 13, fixa: cicla totes les capes creades (teclat i modes), d\'esquerra a dreta.', 'Toc curt = capa següent · mantinguda ≈1 s = capa anterior.'],
+        es: ['Cambio de Capa', 'Tecla 13, fija: cicla todas las capas creadas (teclado y modos), de izquierda a derecha.', 'Toque corto = capa siguiente · mantenida ≈1 s = capa anterior.'],
+        en: ['Layer switch', 'Key 13, fixed: cycles through every created layer (keyboard and modes), left to right.', 'Short tap = next layer · hold ≈1 s = previous layer.'],
+      }],
+      ['stop', {
+        ca: ['Aturar so', 'Tecla 16, fixa: STOP — atura tot el so (notes, base, loop en pausa).', 'Toc = All Notes Off.'],
+        es: ['Detener sonido', 'Tecla 16, fija: STOP — detiene todo el sonido (notas, base, loop en pausa).', 'Toque = All Notes Off.'],
+        en: ['Stop sound', 'Key 16, fixed: STOP — kills all sound (notes, backing, loop paused).', 'Tap = All Notes Off.'],
+      }],
+    ];
+    const GUIDE_LEGEND_EXTRA = {
+      ca: [
+        ['⟳', 'Loop (efecte, tecles 14/15)', 'Grava en bucle el MIDI que emet el mode actiu (màx. ~8s) per tocar-hi un altre mode o el teclat a sobre.', 'Tap = grava · tap = tanca i sona · tap = esborra. La tecla 16 (STOP) també l\'esborra.'],
+        ['☰', "Config Modes (efecte, tecles 14/15)", 'Capes de potes per modificar el mode mentre sona: Mescla (volum · reverb · pan), Timbre (filtre · ressonància · release) i Expressió.', "Tap = capa següent (l'última torna a OFF) · els potes tenen pickup (no salten)."],
+        ['⚡', 'Efectes temporals (capa modes, tecles 14/15)', 'Sustain, Pausa, Gate, Modulació, Pitch Bend i Harmonia Negativa. (Els presets Àudio 1-6 viuen al simulador.)', 'Tap = activar/desactivar · doble clic = canviar l\'efecte assignat.'],
+        ['◉', 'Potenciòmetres X · Y · Z', 'Canvien de funció segons el context actiu: teclat o arpegiador (i les capes de Config Modes a la capa de modes).', 'El diagrama de potes de l\'app mostra Pot → Funció → Rang per a cada context.'],
+      ],
+      es: [
+        ['⟳', 'Loop (efecto, teclas 14/15)', 'Graba en bucle el MIDI que emite el modo activo (máx. ~8s) para tocar otro modo o el teclado encima.', 'Tap = graba · tap = cierra y suena · tap = borra. La tecla 16 (STOP) también lo borra.'],
+        ['☰', 'Config Modos (efecto, teclas 14/15)', 'Capas de pots para modificar el modo mientras suena: Mezcla (volumen · reverb · pan), Timbre (filtro · resonancia · release) y Expresión.', 'Tap = capa siguiente (la última vuelve a OFF) · los pots tienen pickup (no saltan).'],
+        ['⚡', 'Efectos temporales (capa modos, teclas 14/15)', 'Sustain, Pausa, Gate, Modulación, Pitch Bend y Armonía Negativa. (Los presets Audio 1-6 viven en el simulador.)', 'Tap = activar/desactivar · doble clic = cambiar el efecto asignado.'],
+        ['◉', 'Potenciómetros X · Y · Z', 'Cambian de función según el contexto activo: teclado o arpegiador (y las capas de Config Modos en la capa de modos).', 'El diagrama de pots de la app muestra Pot → Función → Rango para cada contexto.'],
+      ],
+      en: [
+        ['⟳', 'Loop (effect, keys 14/15)', 'Loops the MIDI emitted by the active mode (max ~8s) so you can play another mode or the keyboard on top.', 'Tap = record · tap = close & play · tap = erase. Key 16 (STOP) also clears it.'],
+        ['☰', 'Modes Config (effect, keys 14/15)', 'Knob layers to tweak the mode while it plays: Mix (volume · reverb · pan), Timbre (filter · resonance · release) and Expression.', 'Tap = next layer (the last one goes back to OFF) · knobs use pickup (no jumps).'],
+        ['⚡', 'Temporary effects (modes layer, keys 14/15)', 'Sustain, Pause, Gate, Modulation, Pitch Bend and Negative Harmony. (The Audio 1-6 presets live in the simulator.)', 'Tap = toggle · double click = change the assigned effect.'],
+        ['◉', 'Knobs X · Y · Z', 'Change function with the active context: keyboard or arpeggiator (plus the Modes Config layers on the modes layer).', 'The app\'s knob diagram shows Knob → Function → Range for each context.'],
+      ],
+    };
+    (function _buildGuideLegend() {
+      document.querySelectorAll('.guide-legend').forEach(cont => {
+        const lang = cont.dataset.legend || 'ca';
+        const rows = [];
+        for (const [fnId, texts] of GUIDE_LEGEND_FNS) {
+          const meta = KB_BTN_FN_META[fnId] || { icon: '·', color: 'var(--text2)' };
+          const [name, desc, behavior] = texts[lang] || texts.ca;
+          rows.push(`<div class="legend-row">
+            <span class="legend-icon" style="color:${meta.color}">${meta.icon}</span>
+            <div class="legend-body"><strong>${name}</strong> — ${desc}<br><em>${behavior}</em></div>
+          </div>`);
+        }
+        for (const [icon, name, desc, behavior] of (GUIDE_LEGEND_EXTRA[lang] || [])) {
+          rows.push(`<div class="legend-row">
+            <span class="legend-icon">${icon}</span>
+            <div class="legend-body"><strong>${name}</strong> — ${desc}<br><em>${behavior}</em></div>
+          </div>`);
+        }
+        cont.innerHTML = rows.join('');
+      });
+    })();
+
+    // ── Menú de seccions del configurador de teclat ─────────────────────────
+    // Una sola secció visible alhora; re-clicar el botó actiu la plega.
+    (function _wireKbCfgMenu() {
+      const btns = [...document.querySelectorAll('.kb-sec-btn')];
+      if (!btns.length) return;
+      const show = sec => {
+        btns.forEach(b => b.classList.toggle('active', b.dataset.sec === sec));
+        document.querySelectorAll('.kb-sec').forEach(el => el.classList.toggle('show', el.dataset.sec === sec));
+        try { localStorage.setItem('tecla-kb-cfg-sec', sec || ''); } catch {}
+      };
+      btns.forEach(b => b.addEventListener('click', () => {
+        show(b.classList.contains('active') ? '' : b.dataset.sec);
+      }));
+      let initial = '';
+      try { initial = localStorage.getItem('tecla-kb-cfg-sec') || ''; } catch {}
+      if (initial) show(initial);
+    })();
+
     let _potListenersWired = false;
     function _wirePotDiagramListeners() {
       if (_potListenersWired) return;
       _potListenersWired = true;
       document.getElementById('kb-pot-mode-kbd')?.addEventListener('click', () => _setPotDiagramMode('kbd'));
       document.getElementById('kb-pot-mode-arp')?.addEventListener('click', () => _setPotDiagramMode('arp'));
-      document.getElementById('kb-pot-mode-chord')?.addEventListener('click', () => _setPotDiagramMode('chord'));
-      document.getElementById('kb-pot-mode-neg')?.addEventListener('click', () => _setPotDiagramMode('neg'));
     }
 
     function _savePotFunctions() {
       const mc = _loadModesConfig();
       if (_potFunctions)      mc.potentiometer_functions       = _potFunctions;
       if (_arpPotFunctions)   mc.arp_potentiometer_functions   = _arpPotFunctions;
-      if (_chordPotFunctions) mc.chord_potentiometer_functions = _chordPotFunctions;
-      if (_negPotFunctions)   mc.neg_potentiometer_functions   = _negPotFunctions;
+      if (_audioPotFunctions) mc.audio_potentiometer_functions = _audioPotFunctions;
       _saveModesConfig(mc);
       if (typeof kbMode !== 'undefined' && kbMode) kbMode._reloadConfig();
     }
 
     function _openPotMenu(potId, anchorEl) {
       document.getElementById('kb-pot-menu')?.remove();
+      const isAudio = potId.startsWith('audio:');
       const isArp   = potId.startsWith('arp_');
-      const isChord = potId.startsWith('chord_');
-      const isNeg   = potId.startsWith('neg_');
-      const options    = isArp ? ARP_POT_FNS : isChord ? CHORD_POT_FNS : isNeg ? NEG_POT_FNS : KB_POT_FNS;
-      const currentFns = isArp ? _arpPotFunctions : isChord ? _chordPotFunctions : isNeg ? _negPotFunctions : _potFunctions;
-      const current = currentFns?.[potId];
+      const options    = isAudio ? AUDIO_CFG_POT_FNS : isArp ? ARP_POT_FNS : KB_POT_FNS;
+      const currentFns = isArp ? _arpPotFunctions : _potFunctions;
+      const current = isAudio ? (() => { const [, i, ax] = potId.split(':'); return _audioMapFor(+i)[ax]; })() : currentFns?.[potId];
       const menu = document.createElement('div');
       menu.id = 'kb-pot-menu';
       menu.style.cssText = 'position:fixed;z-index:9999;background:var(--surface3,var(--surface2));border:1px solid var(--border-h,var(--border));border-radius:8px;padding:6px;min-width:160px;box-shadow:0 6px 20px rgba(0,0,0,.35)';
@@ -4192,9 +4801,8 @@
         item.addEventListener('mouseenter', () => { item.style.background = 'color-mix(in srgb,var(--accent) 12%,transparent)'; });
         item.addEventListener('mouseleave', () => { item.style.background = fn === current ? 'rgba(74,128,240,.14)' : ''; });
         item.addEventListener('click', () => {
-          if (isArp)         { _arpPotFunctions   = _arpPotFunctions   || {}; _arpPotFunctions[potId]   = fn; }
-          else if (isChord)  { _chordPotFunctions = _chordPotFunctions || {}; _chordPotFunctions[potId] = fn; }
-          else if (isNeg)    { _negPotFunctions   = _negPotFunctions   || {}; _negPotFunctions[potId]   = fn; }
+          if (isAudio)       { const [, i, ax] = potId.split(':'); _audioMapFor(+i)[ax] = fn; }
+          else if (isArp)    { _arpPotFunctions   = _arpPotFunctions   || {}; _arpPotFunctions[potId]   = fn; }
           else               { _potFunctions      = _potFunctions      || {}; _potFunctions[potId]      = fn; }
           _savePotFunctions();
           _updatePotDiagram();
@@ -4213,7 +4821,9 @@
       _renderNegHarmTypes();
       _renderChordInversions();
       _renderDiatonicFns();
+      _renderVlTypes();
       _wirePotDiagramListeners();
+      _renderPotModeBar();
       _updatePotDiagram();
     }
 
@@ -4227,6 +4837,20 @@
       cont.querySelectorAll('.diatonic-fn-chk').forEach(chk => chk.addEventListener('change', () => {
         const active = [...cont.querySelectorAll('.diatonic-fn-chk:checked')].map(c => c.value);
         _saveDiatonicFns(active.length > 0 ? active : ['diatonic']);
+      }));
+    }
+
+    function _renderVlTypes() {
+      const cont = document.getElementById('voice-lead-types');
+      if (!cont) return;
+      const enabled = new Set(_loadVlTypes());
+      cont.innerHTML = VL_TYPES.map(t =>
+        `<label class="cb" title="${t.desc}"><input type="checkbox" class="vl-type-chk" value="${t.id}" ${enabled.has(t.id) ? 'checked' : ''}>${t.name}</label>`
+      ).join('');
+      cont.querySelectorAll('.vl-type-chk').forEach(chk => chk.addEventListener('change', () => {
+        const active = [...cont.querySelectorAll('.vl-type-chk:checked')].map(c => c.value);
+        _saveVlTypes(active.length > 0 ? active : ['proximitat']);
+        if (typeof kbMode !== 'undefined' && kbMode) { kbMode.availableVlTypes = _loadVlTypes(); kbMode.vlTypeIdx = 0; }
       }));
     }
 
@@ -4303,6 +4927,9 @@
         }
         grid.appendChild(btn);
       }
+      // Mantén sincronitzades les pestanyes "Àudio" del diagrama de potes amb les
+      // tecles que tenen 'synth_cfg' assignada.
+      _renderPotModeBar();
     }
 
     function _renderNegHarmTypes() {
@@ -5230,6 +5857,15 @@
         this.arpMode = false;
         this.latchMode = false;
         this.voiceLead = false; this._vlPrev = null;
+        this.vlTypeIdx = 0; this.availableVlTypes = VL_TYPES.map(t => t.id);
+        this.voiceLeadBtnPressTime = 0;
+        // Base d'acompanyament (tecla-accompaniment.js, lazy): motor i estat
+        this._accomp = null; this.accompActive = false;
+        this.accompPatIdx = 0; this.accompBtnPressTime = 0;
+        // Config àudio del sinte intern: tecla activa (-1 = cap) i mapatge per tecla
+        this._audioPotFns = {};
+        this._audioCfgKey = -1;
+        this._synthWaveIdx = 0;
         this.velocity = 100;
         // Looper: 0=IDLE 1=ARMAT 2=GRAVANT 3=SONANT 4=PAUSA
         // loopQuantized: el loop està en PASSOS de graella (escala amb arpSpeed)
@@ -5281,10 +5917,9 @@
         this.chordBtnPressTime = 0;
         this.arpBtnPressTime = 0;
         this._arpBlockNotes = [];
+        // Només dues capes de potes: teclat i arpegiador (acords/h.neg retirades).
         this.potXFn = 'Brillantor'; this.potYFn = 'Modulació'; this.potZFn = 'Sustain';
         this.arpPotXFn = 'Velocitat (BPM)'; this.arpPotYFn = 'Patró De Direcció'; this.arpPotZFn = 'Modulació';
-        this.chordPotXFn = "Tipologia d'Acords"; this.chordPotYFn = "Inversió d'Acord"; this.chordPotZFn = 'Modulació';
-        this.negPotXFn   = "Eix d'Harmonia";    this.negPotYFn   = "Inversió d'Acord"; this.negPotZFn   = 'Modulació';
         this._reloadConfig();
       }
 
@@ -5305,6 +5940,9 @@
         this.availableDiatonicFns = dfns.length ? dfns : ['diatonic'];
         if (this.diatonicFnIdx >= this.availableDiatonicFns.length) this.diatonicFnIdx = -1;
         this.negHarmBtnIdx = this._btnFns.indexOf('neg_harmony');
+        this._audioPotFns = mc.audio_potentiometer_functions || {};
+        this.availableVlTypes = _loadVlTypes();
+        if (this.vlTypeIdx >= this.availableVlTypes.length) this.vlTypeIdx = 0;
         const pf  = mc.potentiometer_functions || mc.pot_functions || {};
         const apf = mc.arp_potentiometer_functions || {};
         this.potXFn = pf.pot_x || 'Brillantor';
@@ -5313,14 +5951,6 @@
         this.arpPotXFn   = apf.arp_pot_x   || 'Velocitat (BPM)';
         this.arpPotYFn   = apf.arp_pot_y   || 'Patró De Direcció';
         this.arpPotZFn   = apf.arp_pot_z   || 'Modulació';
-        const cpf2 = mc.chord_potentiometer_functions || {};
-        const npf2 = mc.neg_potentiometer_functions   || {};
-        this.chordPotXFn = cpf2.chord_pot_x || "Tipologia d'Acords";
-        this.chordPotYFn = cpf2.chord_pot_y || "Inversió d'Acord";
-        this.chordPotZFn = cpf2.chord_pot_z || 'Modulació';
-        this.negPotXFn   = npf2.neg_pot_x   || "Eix d'Harmonia";
-        this.negPotYFn   = npf2.neg_pot_y   || "Inversió d'Acord";
-        this.negPotZFn   = npf2.neg_pot_z   || 'Modulació';
       }
 
       get scaleName() {
@@ -5343,6 +5973,7 @@
       stop() {
         this.active = false;
         if (this._loopId) { clearInterval(this._loopId); this._loopId = null; }
+        this._accomp?.clear(); this.accompActive = false;
         this._allNotesOff();
       }
 
@@ -5373,11 +6004,13 @@
             this._allNotesOff();
             this.scaleIdx = (this.scaleIdx + 1) % this.availableScales.length;
             this.onLog(`🎼 Escala: ${this.scaleName}  (${this.scaleIdx + 1}/${this.availableScales.length})`, 'info');
+            if (this.accompActive) this._accompSyncCtx();
             this._updateHUD();
           } else if (fn === 'tonality') {
             this._allNotesOff();
             this.keyIndex = (this.keyIndex + 1) % 12;
             this.onLog(`🎵 Tonalitat: ${this.keyName}`, 'info');
+            if (this.accompActive) this._accompSyncCtx();
             this._updateHUD();
           } else if (fn === 'chord')          { this.chordBtnPressTime = now;
           } else if (fn === 'arp')            { this.arpBtnPressTime = now;
@@ -5385,9 +6018,11 @@
           } else if (fn === 'neg_harmony')    { this.negHarmBtnPressTime = now;
           } else if (fn === 'octave_down') {
             this.octave = Math.max(0, this.octave - 1);
+            if (this.accompActive) this._accompSyncCtx();
             this.onLog(`Octava: ${this.octave}`, 'info'); this._updateHUD();
           } else if (fn === 'octave_up') {
             this.octave = Math.min(8, this.octave + 1);
+            if (this.accompActive) this._accompSyncCtx();
             this.onLog(`Octava: ${this.octave}`, 'info'); this._updateHUD();
           } else if (fn === 'latch') {
             this.latchMode = !this.latchMode;
@@ -5399,14 +6034,33 @@
           } else if (fn === 'looper_dub') {
             this.dubBtnPressTime = now;
           } else if (fn === 'voice_lead') {
-            this.voiceLead = !this.voiceLead;
-            if (this.voiceLead) this._vlPrev = null;
-            this.onLog(`𝆔 Conducció de veus ${this.voiceLead ? 'ACTIVADA' : 'DESACTIVADA'}`, 'info');
+            this.voiceLeadBtnPressTime = now;
+          } else if (fn === 'accomp') {
+            this.accompBtnPressTime = now;
+          } else if (fn === 'synth_wave') {
+            // Cada clic cicla la forma d'ona del sinte (CC70 → motor d'àudio)
+            this._synthWaveIdx = ((this._synthWaveIdx ?? 0) + 1) % 4;
+            const names = ['Sinus', 'Dent de serra', 'Triangle', 'Quadrada'];
+            this.webMidi.send('control_change', 70, this._synthWaveIdx * 32, 0);
+            this.onLog(`∿ Forma d'ona: ${names[this._synthWaveIdx]}`, 'info');
+            this._updateHUD();
+          } else if (fn === 'synth_cfg') {
+            // Commuta la Config àudio d'aquesta tecla: mentre activa, els 3 potes
+            // editen el so segons el mapatge propi de la tecla (el teclat segueix tocant).
+            if (this._audioCfgKey === idx) {
+              this._audioCfgKey = -1;
+              this.onLog('⊞ Config àudio OFF', 'info');
+            } else {
+              this._audioCfgKey = idx;
+              const map = (this._audioPotFns && this._audioPotFns[idx]) || { x: 'Filtre', y: 'Ressonància', z: "Forma d'ona" };
+              this.onLog(`⊞ Config àudio K${idx + 1}: X=${map.x} · Y=${map.y} · Z=${map.z}`, 'info');
+            }
             this._updateHUD();
           } else if (fn === 'modes_layer') {
             this.onLog('→ Modes: selecciona un mode de la llista lateral', 'info');
           } else if (fn === 'stop') {
             this._allNotesOff(); this.onLog('All Notes Off', 'info');
+            if (this.accompActive) { this._accomp?.clear(); this.accompActive = false; this._updateHUD(); }
             if (this.loopState === 3) { if (this.loopOverdub) this._endOverdub(); this._loopSilence(); this.loopState = 4; this.onLog('⟳ Loop en pausa (STOP)', 'info'); this._updateHUD(); }
           }
         }
@@ -5493,18 +6147,63 @@
             this.onLog(`↕ H. Negativa: ${axisName}`, 'info');
           }
           this._updateHUD();
+        } else if (fn === 'voice_lead') {
+          // Tap = activa / cicla la forma de conducció · premuda llarga = desactiva
+          // (mirall de kbd_buttons.py)
+          const dur = now - (this.voiceLeadBtnPressTime || now);
+          if (dur >= this.longPressThreshold && this.voiceLead) {
+            this.voiceLead = false;
+            this.onLog('𝆔 Conducció de veus DESACTIVADA (premuda llarga)', 'info');
+          } else if (!this.voiceLead) {
+            this.voiceLead = true; this._vlPrev = null; this.vlTypeIdx = 0;
+            this.onLog(`𝆔 Conducció: ${_vlTypeName(this._vlType())}`, 'info');
+          } else {
+            this.vlTypeIdx = (this.vlTypeIdx + 1) % Math.max((this.availableVlTypes || ['proximitat']).length, 1);
+            this.onLog(`𝆔 Conducció: ${_vlTypeName(this._vlType())}`, 'info');
+          }
+          this._updateHUD();
+        } else if (fn === 'accomp') {
+          // Base d'acompanyament: tap = activa/cicla patró · llarga = desactiva
+          // (mirall de modes/accompaniment.py)
+          const dur = now - (this.accompBtnPressTime || now);
+          if (dur >= this.longPressThreshold && this.accompActive) {
+            this.accompActive = false;
+            this._accomp?.clear();
+            this.onLog('𝄆 Base DESACTIVADA (premuda llarga)', 'info');
+          } else {
+            if (!this.accompActive) { this.accompActive = true; this.accompPatIdx = 0; }
+            else this.accompPatIdx = (this.accompPatIdx + 1) % ACCOMP_PATTERN_IDS.length;
+            if (!this._accomp) this._accomp = new Accompaniment((t, a, b, ch) => this.webMidi.send(t, a, b, ch));
+            this._accompSyncCtx();
+            this._accomp.addPattern(ACCOMP_PATTERN_IDS[this.accompPatIdx], ACCOMP_CHANNEL);
+            this.onLog(`𝄆 Base: ${ACCOMP_PATTERN_NAMES[this.accompPatIdx]} (canal ${ACCOMP_CHANNEL + 1})`, 'info');
+          }
+          this._updateHUD();
         }
+      }
+
+      // Context harmònic de la base: tònica + escala actuals del teclat.
+      // Es re-sincronitza en canviar escala/tonalitat/octava.
+      _accompSyncCtx() {
+        if (!this._accomp) return;
+        const id = this.availableScales[this.scaleIdx] ?? 0;
+        // Escales custom/progressions (ids >= 1000): la base cau a l'escala major.
+        const intervals = SCALES_JS[id] ?? SCALES_JS[0];
+        const root = Math.max(24, Math.min(96, this.octave * 12 + KEY_OFFSETS_JS[this.keyIndex]));
+        this._accomp.setContext(root, intervals);
       }
 
       setPot(idx, value) {
         if (!this.active) return;
+        // Config àudio activa: els 3 potes editen el so segons el mapatge de la tecla.
+        if (this._audioCfgKey >= 0) {
+          const map = (this._audioPotFns && this._audioPotFns[this._audioCfgKey]) || { x: 'Filtre', y: 'Ressonància', z: "Forma d'ona" };
+          this._applyPotFn([map.x, map.y, map.z][idx], Math.max(0, Math.min(127, value | 0)));
+          return;
+        }
         const fns = this.arpMode
           ? [this.arpPotXFn, this.arpPotYFn, this.arpPotZFn]
-          : this.negHarmMode
-            ? [this.negPotXFn, this.negPotYFn, this.negPotZFn]
-            : this.chordMode
-              ? [this.chordPotXFn, this.chordPotYFn, this.chordPotZFn]
-              : [this.potXFn, this.potYFn, this.potZFn];
+          : [this.potXFn, this.potYFn, this.potZFn];
         this._applyPotFn(fns[idx], Math.max(0, Math.min(127, value | 0)));
       }
 
@@ -5516,13 +6215,16 @@
         else if (['Volum', 'Volume', 'Expression (CC11)'].includes(fn)) { this.webMidi.send('control_change', 7, v, 0); _setSysVol(v); }
         else if (['Gate', 'Gate Length'].includes(fn)) { if (v < 10) { this.gateEnabled = false; this.webMidi.send('control_change', 11, 127, 0); } else { this.gateEnabled = true; this.gatePeriod = 0.5 - (v / 127) * 0.45; } }
         else if (fn === 'Pitch Bend') { this.webMidi.send('pitchwheel', v < 5 ? 0 : Math.round((v / 127) * 8191), 0, 0); }
-        else if (['Velocitat (BPM)', 'Arp Speed (BPM)'].includes(fn)) { this.arpSpeed = 60.0 / (30 + (v / 127) * 1970); }
+        else if (['Velocitat (BPM)', 'Arp Speed (BPM)'].includes(fn)) { this.arpSpeed = 60.0 / (30 + (v / 127) * 1970); if (this._accomp) this._accomp.setTempo(Math.round(15 / this.arpSpeed)); }
         else if (['Patró De Direcció', 'Arp Pattern Selector'].includes(fn)) { if (this.availableArpModes.length > 0) { const mi = Math.min(Math.floor((v / 128) * this.availableArpModes.length), this.availableArpModes.length - 1); this.arpModeIndex = this.availableArpModes[mi]; } }
         else if (fn === 'Octava') { this.octave = Math.round((v / 127) * 8); this._updateHUD(); }
         else if (["Inversió d'Acord", 'Tipus Inversió'].includes(fn)) { if (this.availableInversions.length > 0) { this.chordInversionIdx = Math.min(Math.floor((v / 128) * this.availableInversions.length), this.availableInversions.length - 1); this._updateHUD(); } }
         else if (fn === "Eix d'Harmonia") { const axes = _loadNegHarmAxes(); if (axes.length > 0) { this.negHarmAxisIdx = Math.min(Math.floor((v / 128) * axes.length), axes.length - 1); } }
         else if (fn === "Tipologia d'Acords") { if (this.availableChordTypes.length > 0) { this.chordTypeIndex = Math.min(Math.floor((v / 128) * this.availableChordTypes.length), this.availableChordTypes.length - 1); this._updateHUD(); } }
-        else if (fn.startsWith('CC Lliure')) { const m = fn.match(/\d+/); if (m) this.webMidi.send('control_change', Math.min(127, +m[0]), v, 0); }
+        // ── Sinte intern + CC Lliure (Sound Controllers → motor d'àudio) ──
+        // Catch-all: qualsevol funció d'àudio (inclòs 'CC Lliure (CCnn)') es
+        // resol al seu CC. Afegir-ne de noves només requereix AUDIO_FN_CC.
+        else { const cc = audioFnToCC(fn); if (cc != null) this.webMidi.send('control_change', cc, v, 0); }
       }
 
       _noteForBtn(btnIdx) {
@@ -5626,24 +6328,40 @@
       }
 
       // ── Conducció de veus (mirall de kbd_voicelead.py) ──────────
+      _vlType() { return (this.availableVlTypes && this.availableVlTypes[this.vlTypeIdx]) || 'proximitat'; }
+      _vlCandidates(notes, open) {
+        const base = [...notes].sort((a, b) => a - b), n = base.length, cands = [];
+        for (let inv = 0; inv < n; inv++) {
+          const v = [...base.slice(inv), ...base.slice(0, inv).map(x => x + 12)].sort((a, b) => a - b);
+          const variants = [v];
+          if (open && n >= 3) variants.push(v.map((x, i) => i % 2 === 1 ? x + 12 : x).sort((a, b) => a - b));
+          for (const vv of variants) for (const shift of [-12, 0, 12]) {
+            const cand = vv.map(x => x + shift);
+            if (!cand.some(x => x < 0 || x > 127)) cands.push(cand);
+          }
+        }
+        return cands.length ? cands : [base];
+      }
+      _vlCost(cand, prev, type) {
+        let total = 0; for (const n of cand) total += Math.min(...prev.map(p => Math.abs(n - p)));
+        const bass = Math.abs(Math.min(...cand) - Math.min(...prev));
+        if (type === 'comu') { const common = cand.filter(n => prev.includes(n)).length; return -4 * common + total; }
+        if (type === 'baix') return 3 * bass + total;
+        if (type === 'ascendent') return (Math.min(...cand) < Math.min(...prev) ? 60 : 0) + total;
+        if (type === 'obert') return -(Math.max(...cand) - Math.min(...cand)) + total;
+        return total + Math.floor(bass / 2);   // proximitat (per defecte)
+      }
       _vlApply(notes) {
         if (!notes.length) return notes;
         const prev = this._vlPrev;
         if (!prev) { this._vlPrev = [...notes].sort((a, b) => a - b); return notes; }
-        const base = [...notes].sort((a, b) => a - b);
+        const type = this._vlType();
         let best = null, bestCost = Infinity;
-        for (let inv = 0; inv < base.length; inv++) {
-          const v = [...base.slice(inv), ...base.slice(0, inv).map(x => x + 12)].sort((a, b) => a - b);
-          for (const shift of [-12, 0, 12]) {
-            const cand = v.map(x => x + shift);
-            if (cand.some(x => x < 0 || x > 127)) continue;
-            let cost = 0;
-            for (const n of cand) cost += Math.min(...prev.map(p => Math.abs(n - p)));
-            cost += Math.floor(Math.abs(Math.min(...cand) - Math.min(...prev)) / 2);
-            if (cost < bestCost) { bestCost = cost; best = cand; }
-          }
+        for (const cand of this._vlCandidates(notes, type === 'obert')) {
+          const cost = this._vlCost(cand, prev, type);
+          if (cost < bestCost) { bestCost = cost; best = cand; }
         }
-        this._vlPrev = best || base;
+        this._vlPrev = best || [...notes].sort((a, b) => a - b);
         return best || notes;
       }
 
@@ -5889,6 +6607,7 @@
       _tick() {
         if (!this.active) return;
         const now = performance.now() / 1000;
+        if (this._accomp) this._accomp.tick();   // rellotge de la base d'acompanyament
         if (this.loopState === 3) this._loopTick(now);
         if (this.arpMode && this.arpNotes.length > 0 && (now - this.lastArpTime) >= this.arpSpeed) {
           this.lastArpTime = now; this._arpTick();
@@ -5989,8 +6708,13 @@
         const id = this.availableScales[this.scaleIdx] ?? 0;
         const intervals = SCALES_JS[id] ?? SCALES_JS[0];
         const keyOff = KEY_OFFSETS_JS[this.keyIndex];
+        // Simulador híbrid: les tecles amb mode/efecte assignat (i la T13, que hi
+        // commuta el teclat) conserven la seva etiqueta pròpia — no les toquem.
+        const _simSkip = i => (typeof buttonModes !== 'undefined')
+          && (i === 12 || (i < 12 && buttonModes[i]) || (typeof buttonEffects !== 'undefined' && buttonEffects[i]));
         // Buttons 1-8: show note names
         for (let i = 0; i < 8; i++) {
+          if (_simSkip(i)) continue;
           const el = document.getElementById(`key-ml-${i}`); if (!el) continue;
           const deg = i % intervals.length; const octOff = Math.floor(i / intervals.length);
           const noteNum = (this.octave + octOff) * 12 + keyOff + intervals[deg];
@@ -6007,10 +6731,14 @@
           chord:           this.chordMode ? `▣ ${(this.availableChordTypes[this.chordTypeIndex] || 'Major').substring(0, 6)}` : 'Acords',
           arp:             this.arpMode ? `♪ ${_getArpName(this.arpModeIndex).substring(0, 7)}` : 'Arp.',
           neg_harmony:     this.negHarmMode ? `↕ ${(NEG_HARMONY_TYPES.find(([id]) => id === _axisId)?.[1] ?? 'H.Neg').substring(0, 6)}` : 'H.Neg',
-          octave_down:     'Oct−', octave_up: 'Oct+', modes_layer: '→ Modes', stop: 'STOP',
+          voice_lead:      this.voiceLead ? `𝆔 ${_vlTypeName(this._vlType()).substring(0, 7)}` : 'C.veus',
+          accomp:          this.accompActive ? `𝄆 ${ACCOMP_PATTERN_NAMES[this.accompPatIdx]}` : 'Base',
+          synth_wave:      `∿ ${['Sinus', 'Serra', 'Triangle', 'Quadra.'][this._synthWaveIdx ?? 0]}`,
+          octave_down:     'Oct−', octave_up: 'Oct+', modes_layer: '⇄ Capa', stop: 'STOP',
         };
         if (this._btnFns) {
           for (let i = 8; i < 16; i++) {
+            if (_simSkip(i)) continue;
             const fn = this._btnFns[i] || (i === 12 ? 'modes_layer' : i === 15 ? 'stop' : '');
             const el = document.getElementById(`key-ml-${i}`);
             if (el && fn) el.textContent = _fnLabels[fn] ?? fn;
@@ -6052,11 +6780,16 @@
         key.addEventListener('mouseleave', () => { if (key.classList.contains('pressed')) onKeyUp(i, key); });
         key.addEventListener('touchstart', e => { e.preventDefault(); onKeyDown(i, key); }, { passive: false });
         key.addEventListener('touchend', e => { e.preventDefault(); onKeyUp(i, key); }, { passive: false });
-        if (i < 12) key.addEventListener('contextmenu', e => {
+        if (i !== 12) key.addEventListener('contextmenu', e => {
           e.preventDefault();
-          if (isKbMode) return;
-          buttonModes[i] = null; updateButtonLabel(i, null);
-          simlog(`Botó ${i + 1}: assignació eliminada`, 'info');
+          if (i < 12 && buttonModes[i]) { _mixModeOff(i); buttonModes[i] = null; }
+          if (buttonEffects[i]) {
+            if (_fxActive[i]) { _fxActive[i] = false; _applyTemporalEffect(i, false); }
+            buttonEffects[i] = null; _fxSelected[i] = null;
+          }
+          updateButtonLabel(i, null);
+          _renderSimAssignLabels();
+          simlog(`Tecla ${i + 1}: assignació eliminada`, 'info');
         });
         grid.appendChild(key);
       }
@@ -6083,6 +6816,58 @@
       'PitchBend': { cc: null, pb: true },
       'Expression': { cc: 11, on: 127, off: 0 }
     };
+
+    // ── Config àudio de la capa modes (presets "Àudio 1-6" a les tecles 14/15) ──
+    // Cada preset té el seu mapatge {x,y,z} de funcions del sinte intern; en
+    // activar-lo, els potes editen el so (el mode segueix sonant).
+    let _modesAudioPotFunctions = null;
+    function _modesAudioMapFor(preset) {
+      _modesAudioPotFunctions = _modesAudioPotFunctions || {};
+      if (!_modesAudioPotFunctions[preset]) {
+        _modesAudioPotFunctions[preset] = { ...(AUDIO_FX_DEFAULTS[preset] || { x: 'Filtre', y: 'Ressonància', z: "Forma d'ona" }) };
+      }
+      return _modesAudioPotFunctions[preset];
+    }
+    function _isAudioFx(name) { return AUDIO_FX_PRESETS.includes(name); }
+    function _loadModesAudioPots() {
+      const mc = _loadModesConfig();
+      _modesAudioPotFunctions = mc.modes_audio_pot_functions || {};
+    }
+    function _saveModesAudioPots() {
+      const mc = _loadModesConfig();
+      mc.modes_audio_pot_functions = _modesAudioPotFunctions || {};
+      _saveModesConfig(mc);
+    }
+    // ── 'Config Modes' (mirall de modes/potlayers.py): capes de potes per
+    //    modificar els MODES en directe. Tap = capa següent (OFF→…→OFF).
+    let _modePotLayerIdx = -1;
+    function _modePotLayers() {
+      const mc = _loadModesConfig();
+      const src = Array.isArray(mc.mode_pot_layers) && mc.mode_pot_layers.length
+        ? mc.mode_pot_layers : MODE_POT_LAYERS_DEFAULT;
+      return src.filter(l => l && typeof l === 'object').slice(0, 4);
+    }
+    // Si la capa de potes és activa, retorna [ccX,ccY,ccZ]; si no, null.
+    function _activeModePotLayerCC() {
+      if (_modePotLayerIdx < 0) return null;
+      const l = _modePotLayers()[_modePotLayerIdx];
+      if (!l) return null;
+      return [modePotFnToCC(l.x), modePotFnToCC(l.y), modePotFnToCC(l.z)];
+    }
+
+    // Retorna l'array [ccX,ccY,ccZ] de la config d'àudio activa (qualsevol tecla
+    // d'efecte del simulador híbrid), o null.
+    function _activeAudioFxCC() {
+      for (const b of Object.keys(_fxActive).map(Number)) {
+        const name = _getEffectForBtn(b);
+        if (_fxActive[b] && _isAudioFx(name)) {
+          if (!_modesAudioPotFunctions) _loadModesAudioPots();
+          const m = _modesAudioMapFor(name);
+          return [audioFnToCC(m.x), audioFnToCC(m.y), audioFnToCC(m.z)];
+        }
+      }
+      return null;
+    }
 
     // Efecte temporal actiu als botons 14 (idx 13) i 15 (idx 14)
     const _fxActive = { 13: false, 14: false };
@@ -6121,7 +6906,16 @@
       // via poll_negharm(). El pot Z tria l'eix harmònic.
       if (efName === 'Harmonia Negativa') {
         if (simulator) simulator.buttons[15] = active;
-        if (active) simlog(`FX ${btnIdx === 13 ? '14' : '15'}: Harmonia Negativa activa (pot Z = eix)`, 'info');
+        if (active) simlog(`FX tecla ${btnIdx + 1}: Harmonia Negativa activa (pot Z = eix)`, 'info');
+        return;
+      }
+      // Configuració d'àudio: no pren el control (el mode segueix sonant). Mentre
+      // actiu, els potes es redirigeixen al motor de so (vegeu _updateVisualPot).
+      if (_isAudioFx(efName)) {
+        if (active) {
+          const m = _modesAudioMapFor(efName);
+          simlog(`FX tecla ${btnIdx + 1}: ${efName} — potes: X=${m.x} · Y=${m.y} · Z=${m.z}`, 'info');
+        }
         return;
       }
       const fx = _FX_CC_MAP[efName];
@@ -6131,143 +6925,318 @@
       } else {
         webMidi.send('control_change', fx.cc, active ? fx.on : fx.off, 0);
       }
-      if (active) simlog(`FX ${btnIdx === 13 ? '14' : '15'}: ${efName} actiu`, 'info');
+      if (active) simlog(`FX tecla ${btnIdx + 1}: ${efName} actiu`, 'info');
     }
 
     function onKeyDown(idx, el) {
       el.classList.add('pressed');
-      // Botó 13 (T13): commuta capes teclat ↔ modes
+      // T13: el simulador és HÍBRID — la tecla commuta el teclat (on/off);
+      // els modes i efectes continuen sonant independentment.
       if (idx === 12) {
-        if (isKbMode) _switchToModesLayer();
+        if (isKbMode) deactivateKeyboardMode();
         else activateKeyboardMode();
         return;
       }
 
-      if (isKbMode) { kbMode?.pressButton(idx); return; }
-
-      // Capa modes: efectes temporals als botons 14 i 15 (index 13/14)
-      if (idx === 13 || idx === 14) {
-        const _now = Date.now();
-        if (_now - (_fxDblClick[idx] || 0) < 350) {
-          _cycleEffect(idx);
-          _fxDblClick[idx] = 0;
+      // Assignació des de la barra lateral: mode/efecte seleccionat → clic a la tecla
+      if (selectedSidebarMode) {
+        if (selectedSidebarMode.kind === 'effect') {
+          buttonEffects[idx] = selectedSidebarMode.name;
+          _fxSelected[idx] = selectedSidebarMode.name;
+          simlog(`⚡ '${selectedSidebarMode.name}' → tecla ${idx + 1} (tap = on/off · clic dret = buidar)`, 'ok');
+        } else if (idx < 12) {
+          buttonModes[idx] = { name: selectedSidebarMode.name, file: selectedSidebarMode.file };
+          simlog(`'${selectedSidebarMode.name}' → tecla ${idx + 1} (tap = engega/atura · manté = edita potes)`, 'ok');
+        } else {
+          simlog('Els modes només es poden assignar a les tecles 1–12', 'warn');
           return;
         }
-        _fxDblClick[idx] = _now;
-        _fxActive[idx] = true;
-        _applyTemporalEffect(idx, true);
+        selectedSidebarMode = null;
+        document.querySelectorAll('.sim-mode-item').forEach(i => i.classList.remove('selected'));
+        _renderSimAssignLabels();
         return;
       }
 
-      if (selectedSidebarMode && idx < 12 && !simulator?.isRunning) {
-        buttonModes[idx] = { ...selectedSidebarMode };
-        updateButtonLabel(idx, buttonModes[idx]);
-        simlog(`'${selectedSidebarMode.name}' → botó ${idx + 1}`, 'ok');
-        selectedSidebarMode = null;
-        document.querySelectorAll('.sim-mode-item').forEach(i => i.classList.remove('selected'));
+      // Tecla amb MODE: tap = engega/atura · mantenir = edita els seus potes
+      // (mirall del gest de la capa MIX de v2; el teclat es toca per sobre).
+      if (idx < 12 && buttonModes[idx]) {
+        _mixKeyPress[idx] = Date.now();
+        _mixPots.pressModeKey(idx);
+        if (!simulator?.isMixActive(idx)) { _mixJustOn[idx] = true; _mixModeOn(idx); }
+        else _mixJustOn[idx] = false;
+        if (simulator) simulator.mixEditTarget = _mixPots.editTarget();
         return;
       }
-      if (idx === 15) {
-        webMidi.allNotesOff();
-        if (simulator?.isRunning) {
-          simulator.stopLoop();
-          simStatusDot.className = 'sim-dot ready'; simStatusText.textContent = 'aturat';
-          btnSimStart.disabled = false; btnSimStop.disabled = true;
-          document.querySelectorAll('.sim-key').forEach(k => k.classList.remove('sim-active-mode'));
-          simlog('Aturat. All Notes Off.', 'ok');
+
+      // Tecla amb EFECTE temporal: tap = activa/desactiva (es queda actiu, com al device)
+      if (buttonEffects[idx]) {
+        if (buttonEffects[idx] === 'Loop') {
+          // Tap: grava → tanca i sona → atura+esborra (mirall del device)
+          if (midiLoop.state === 0 || midiLoop.state === 1) { midiLoop.toggle(); simlog('● Loop: gravant…', 'info'); }
+          else if (midiLoop.state === 2) { midiLoop.toggle(); simlog(`⟳ Loop: sonant (${(midiLoop.loopLen / 1000).toFixed(1)}s)`, 'ok'); }
+          else { midiLoop.clear(); simlog('⟳ Loop: esborrat', 'info'); }
+          _fxActive[idx] = midiLoop.state !== 0;
+          document.querySelector(`.sim-key[data-idx="${idx}"]`)?.classList.toggle('sim-active-mode', !!_fxActive[idx]);
+          return;
         }
+        if (buttonEffects[idx] === 'Config Modes') {
+          // Tap = capa de potes següent (OFF → Mescla → Timbre → … → OFF)
+          const layers = _modePotLayers();
+          _modePotLayerIdx = (_modePotLayerIdx + 1 >= layers.length) ? -1 : _modePotLayerIdx + 1;
+          _fxActive[idx] = _modePotLayerIdx >= 0;
+          simlog(_modePotLayerIdx >= 0
+            ? `🎚 Pots→modes: ${layers[_modePotLayerIdx].name || 'Capa ' + (_modePotLayerIdx + 1)}`
+            : '🎚 Pots→normal', 'info');
+          document.querySelector(`.sim-key[data-idx="${idx}"]`)?.classList.toggle('sim-active-mode', !!_fxActive[idx]);
+          return;
+        }
+        _fxActive[idx] = !_fxActive[idx];
+        _applyTemporalEffect(idx, _fxActive[idx]);
+        document.querySelector(`.sim-key[data-idx="${idx}"]`)?.classList.toggle('sim-active-mode', !!_fxActive[idx]);
         return;
       }
-      if (idx < 12 && buttonModes[idx] && simulator?.isReady) { switchToButtonMode(idx); return; }
+
+      // Tecla 16 sense assignació: STOP total de l'entorn (teclat + modes + efectes + base)
+      if (idx === 15) { _simStopAll(); return; }
+
+      if (isKbMode) { kbMode?.pressButton(idx); return; }
       simulator?.pressButton(idx);
     }
     function onKeyUp(idx, el) {
       el.classList.remove('pressed');
-
-      // Botó 13 no fa res a key-up
       if (idx === 12) return;
 
-      if (isKbMode) { kbMode?.releaseButton(idx); return; }
-
-      // Capa modes: alliberar efecte temporal botons 14/15
-      if ((idx === 13 || idx === 14) && _fxActive[idx]) {
-        _fxActive[idx] = false;
-        _applyTemporalEffect(idx, false);
+      if (idx < 12 && buttonModes[idx]) {
+        // TAP sobre un mode ja actiu = atura'l · MANTENIR = només s'ha editat.
+        const t = _mixKeyPress[idx]; delete _mixKeyPress[idx];
+        _mixPots.releaseModeKey(idx);
+        const held = t ? (Date.now() - t) / 1000 : 0;
+        if (held < _MIX_TAP && !_mixJustOn[idx]) _mixModeOff(idx);
+        _mixJustOn[idx] = false;
+        if (simulator) simulator.mixEditTarget = _mixPots.editTarget();
         return;
       }
+      if (buttonEffects[idx]) return;   // l'efecte actua al press (latch)
+      if (idx === 15) return;
+      if (isKbMode) { kbMode?.releaseButton(idx); return; }
       simulator?.releaseButton(idx);
     }
 
-    async function switchToButtonMode(idx) {
-      const modeInfo = buttonModes[idx]; if (!modeInfo || !simulator?.isReady) return;
+    // STOP total de l'entorn híbrid: modes, efectes, base, teclat i MIDI penjat.
+    function _simStopAll() {
+      try { simulator?.clearMixModes(); } catch (e) { }
+      _mixChannelPool.clear();
+      _mixPots.clear(); _mixPots.setModeActive(false);
+      if (simulator) simulator.mixEditTarget = null;
+      for (const k of Object.keys(_fxActive)) {
+        if (_fxActive[k]) { _fxActive[k] = false; _applyTemporalEffect(+k, false); }
+      }
+      _modePotLayerIdx = -1;
+      try { midiLoop.clear(); } catch (e) { }
+      if (kbMode) {
+        kbMode._accomp?.clear(); kbMode.accompActive = false;
+        kbMode._allNotesOff();
+      }
+      webMidi.allNotesOff();
+      document.querySelectorAll('.sim-key').forEach(k => k.classList.remove('sim-active-mode'));
+      simlog('STOP — modes, efectes, base i notes aturats', 'ok');
+      _renderSimAssignLabels();
+    }
+
+    // Encén un mode a la tecla idx. Diversos modes conviuen alhora (fins al límit
+    // del pool de canals), cadascun pel SEU canal/so, mentre el teclat es toca per
+    // sobre. Port del _mixModeOn de v2.
+    async function _mixModeOn(idx) {
+      const file = buttonModes[idx]?.file;
+      if (!file || !simulator?.isReady) { simlog('El motor de modes encara no està llest', 'warn'); return false; }
+      if (simulator.isMixActive(idx)) return true;
+      if (!_mixChannelPool.hasFree) {
+        // RELLEU: el mode més antic deixa pas al nou — prémer sempre ha de sonar.
+        const oldest = _mixChannelPool.entries()[0]?.[0];
+        if (oldest !== undefined) {
+          simlog(`↻ Relleu: tecla ${oldest + 1} deixa pas a la ${idx + 1} (màxim ${_mixChannelPool.capacity} alhora)`, 'info');
+          _mixModeOff(oldest);
+        }
+        if (!_mixChannelPool.hasFree) {
+          simlog(`Màxim ${_mixChannelPool.capacity} modes alhora. Atura'n un.`, 'warn');
+          return false;
+        }
+      }
+      const ch = _mixChannelPool.acquire(idx);
       try {
-        const code = await _fetchModeCode(modeInfo.file);
-        webMidi.allNotesOff();
-        await simulator.loadMode(code, modeInfo.file);
+        const code = await _fetchModeCode(file);
+        await simulator.loadMixMode(code, idx, ch);
+        // So propi del mode al seu canal (motor d'àudio intern).
+        const preset = _MIX_MODE_PRESETS[(_mixChannelPool.size - 1) % _MIX_MODE_PRESETS.length];
+        try { if (synth.enabled) synth.setChannelPreset(ch, preset); } catch (e) { }
         if (!simulator.isRunning) {
           simulator.startLoop();
-          simStatusDot.className = 'sim-dot running'; simStatusText.textContent = 'en marxa';
+          simStatusDot.className = 'sim-dot running'; simStatusText.textContent = 'híbrid';
           btnSimStart.disabled = true; btnSimStop.disabled = false;
         }
-        simlog(`▶ ${modeInfo.name} (botó ${idx + 1})`, 'ok');
-        document.querySelectorAll('.sim-key').forEach(k => k.classList.remove('sim-active-mode'));
         document.querySelector(`.sim-key[data-idx="${idx}"]`)?.classList.add('sim-active-mode');
-      } catch (e) { simlog(`Error carregant mode: ${e.message}`, 'err'); }
+        const nm = file.replace(/^mode_/i, '').replace(/\.(py|mpy)$/, '');
+        simlog(`▶ ${nm} (tecla ${idx + 1} · canal ${ch + 1} · so ${preset})`, 'ok');
+      } catch (e) {
+        simlog(`Error mode: ${e.message}`, 'err');
+        _mixChannelPool.release(idx);
+        return false;
+      }
+      _mixPots.setModeActive(simulator.mixCount > 0);
+      simulator.mixEditTarget = _mixPots.editTarget();
+      return true;
+    }
+
+    // Atura el mode de la tecla idx i allibera el seu canal.
+    function _mixModeOff(idx) {
+      if (!simulator?.isMixActive(idx)) return;
+      simulator.unloadMixMode(idx);
+      _mixChannelPool.release(idx);
+      document.querySelector(`.sim-key[data-idx="${idx}"]`)?.classList.remove('sim-active-mode');
+      simlog(`■ Mode tecla ${idx + 1} aturat`, 'info');
+      _mixPots.setModeActive(simulator.mixCount > 0);
+      simulator.mixEditTarget = _mixPots.editTarget();
+    }
+
+    // Etiquetes de les tecles amb assignació del simulador (modes/efectes/T13);
+    // les tecles sense assignació les pinta el HUD del teclat quan és actiu.
+    function _renderSimAssignLabels() {
+      for (let i = 0; i < 16; i++) {
+        const label = document.getElementById(`key-ml-${i}`);
+        const key = document.querySelector(`.sim-key[data-idx="${i}"]`);
+        if (!label || !key) continue;
+        if (i === 12) { label.textContent = isKbMode ? '⌨ Teclat ON' : '⌨ Teclat OFF'; continue; }
+        if (i < 12 && buttonModes[i]) { updateButtonLabel(i, buttonModes[i]); continue; }
+        if (buttonEffects[i]) {
+          label.textContent = `⚡ ${buttonEffects[i]}`;
+          key.classList.add('key-fx');
+          key.classList.toggle('sim-active-mode', !!_fxActive[i]);
+          continue;
+        }
+        key.classList.remove('has-mode');
+        if (!isKbMode) {
+          label.textContent = i === 15 ? 'STOP' : '—';
+          key.classList.remove('key-fn', 'key-arp-active', 'key-chord-active');
+        }
+      }
+      kbMode?._updateHUD();
     }
 
     function activateKeyboardMode() {
-      if (simulator?.isRunning) { simulator.stopLoop(); webMidi.allNotesOff(); }
+      // Híbrid: NO s'atura res — el teclat s'afegeix als modes que ja sonen.
       isKbMode = true;
       kbMode = new KeyboardMode(webMidi, (msg, type) => simlog(msg, type));
       kbMode.start();
       simStatusDot.className = 'sim-dot running';
       btnSimStart.disabled = true; btnSimStop.disabled = false;
-      document.querySelectorAll('.sim-mode-item').forEach(i => i.classList.remove('selected'));
       document.getElementById('sim-kb-item')?.classList.add('selected');
-      simlog('T13 → Capa Teclat activada', 'ok');
+      _renderSimAssignLabels();
+      simlog('⌨ Teclat ON (conviu amb els modes/efectes actius)', 'ok');
     }
 
     function deactivateKeyboardMode() {
       if (!isKbMode) return;
       kbMode?.stop(); isKbMode = false; kbMode = null;
-      simStatusDot.className = 'sim-dot ready'; simStatusText.textContent = 'llest';
-      btnSimStart.disabled = false; btnSimStop.disabled = true;
-      for (let i = 0; i < 16; i++) {
-        const el = document.getElementById(`key-ml-${i}`); if (el) el.textContent = '—';
-        document.querySelector(`.sim-key[data-idx="${i}"]`)?.classList.remove('has-mode', 'sim-active-mode', 'key-fn', 'key-arp-active', 'key-chord-active');
+      document.getElementById('sim-kb-item')?.classList.remove('selected');
+      if (simulator?.isRunning || (simulator && simulator.mixCount > 0)) {
+        simStatusDot.className = 'sim-dot running'; simStatusText.textContent = 'híbrid (teclat OFF)';
+      } else {
+        simStatusDot.className = 'sim-dot ready'; simStatusText.textContent = 'llest';
+        btnSimStart.disabled = false; btnSimStop.disabled = true;
       }
       ['X', 'Y', 'Z'].forEach((l, i) => { const el = document.getElementById(`pot-lbl-${i}`); if (el) el.textContent = l; });
+      _renderSimAssignLabels();
+      simlog('⌨ Teclat OFF (els modes i efectes continuen)', 'info');
     }
 
-    function _switchToModesLayer() {
-      // Canvia de la capa teclat a la capa modes (sense activar cap mode específic)
-      if (!isKbMode) return;
-      kbMode?.stop(); isKbMode = false; kbMode = null;
-      webMidi.allNotesOff();
-      // Actualitzar etiquetes dels botons per la capa modes
-      for (let i = 0; i < 12; i++) {
-        const el = document.getElementById(`key-ml-${i}`);
-        if (el) el.textContent = buttonModes[i] ? buttonModes[i].name.replace(/^mode_/i, '').substring(0, 10) : '—';
-        document.querySelector(`.sim-key[data-idx="${i}"]`)?.classList.toggle('has-mode', !!buttonModes[i]);
-        document.querySelector(`.sim-key[data-idx="${i}"]`)?.classList.remove('key-fn', 'key-arp-active', 'key-chord-active');
-      }
-      // Etiquetes botons especials capa modes
-      _initFxEffects();
-      const modesLabels = [['key-ml-12', '← Teclat'], ['key-ml-15', 'STOP']];
-      for (const [id_, txt] of modesLabels) { const el = document.getElementById(id_); if (el) el.textContent = txt; }
-      _updateFxLabels();
-      // Actualitzar llista lateral: desseleccionar Mode Teclat
-      document.getElementById('sim-kb-item')?.classList.remove('selected');
-      // Actualitzar estat
-      if (simulator?.isRunning) {
-        simStatusDot.className = 'sim-dot running'; simStatusText.textContent = 'capa modes';
-        btnSimStart.disabled = true; btnSimStop.disabled = false;
-      } else {
-        simStatusDot.className = 'sim-dot ready'; simStatusText.textContent = 'capa modes';
-        btnSimStart.disabled = !(simulator?.pyodide?.globals?.has('_active_mode')); btnSimStop.disabled = true;
-      }
-      ['X', 'Y', 'Z'].forEach((l, i) => { const el = document.getElementById(`pot-lbl-${i}`); if (el) el.textContent = l; });
-      simlog('T13 → Capa Modes activada', 'ok');
+    // ── Configuració completa del simulador (columna dreta plegable) ────────
+    // Potes del teclat per context, mescla de modes (capacitat + presa de potes),
+    // paràmetres dels efectes d'àudio i veus del motor sonor. Tot escriu a les
+    // MATEIXES claus que els configuradors de la pestanya Dispositiu.
+    let _simCfgCtx = 'kbd';
+    let _simCfgPreset = 'Àudio 1';
+    function _loadSimChPresets() {
+      try { return { kb: null, acc: null, ...(JSON.parse(localStorage.getItem('tecla-sim-voices') || '{}')) }; }
+      catch { return { kb: null, acc: null }; }
+    }
+    function _setSimChPreset(which, name) {
+      const v = _loadSimChPresets(); v[which] = name;
+      localStorage.setItem('tecla-sim-voices', JSON.stringify(v));
+      try { synth.setChannelPreset(which === 'kb' ? 0 : ACCOMP_CHANNEL, name); } catch (e) { }
+      simlog(`Veu ${which === 'kb' ? 'del teclat' : 'de la base'}: ${name}`, 'ok');
+    }
+    function _applySimChPresets() {
+      const v = _loadSimChPresets();
+      try {
+        if (v.kb) synth.setChannelPreset(0, v.kb);
+        if (v.acc) synth.setChannelPreset(ACCOMP_CHANNEL, v.acc);
+      } catch (e) { }
+    }
+    function _renderSimConfig() {
+      const cont = document.getElementById('sim-config-inner');
+      if (!cont) return;
+      const opt = (list, cur) => list.map(f => `<option${f === cur ? ' selected' : ''}>${f}</option>`).join('');
+      const ctxMap = {
+        kbd:   { lbl: 'Teclat',      fns: _potFunctions,      list: KB_POT_FNS,    prefix: 'pot' },
+        arp:   { lbl: 'Arpegiador',  fns: _arpPotFunctions,   list: ARP_POT_FNS,   prefix: 'arp_pot' },
+      };
+      const ctx = ctxMap[_simCfgCtx] || ctxMap.kbd;
+      const fns = ctx.fns || {};
+      const audioMap = _modesAudioMapFor(_simCfgPreset);
+      const mixCfg = _loadSimMixCfg();
+      const chPresets = _loadSimChPresets();
+      const presetOpts = cur => Object.keys(PRESETS).map(n => `<option${n === cur ? ' selected' : ''}>${n}</option>`).join('');
+      cont.innerHTML = `
+        <div>
+          <div class="sim-cfg-title">Potes del teclat</div>
+          <div class="sim-cfg-row"><label>Ctx</label><select id="scfg-ctx">${Object.entries(ctxMap).map(([k, v]) => `<option value="${k}"${k === _simCfgCtx ? ' selected' : ''}>${v.lbl}</option>`).join('')}</select></div>
+          ${['x', 'y', 'z'].map(ax => `<div class="sim-cfg-row"><label>${ax.toUpperCase()}</label><select id="scfg-pot-${ax}" data-id="${ctx.prefix}_${ax}">${opt(ctx.list, fns[`${ctx.prefix}_${ax}`])}</select></div>`).join('')}
+        </div>
+        <div>
+          <div class="sim-cfg-title">Modes (mescla)</div>
+          <div class="sim-cfg-row"><label style="min-width:82px">Modes alhora</label><select id="scfg-mix-cap">${[1, 2, 3, 4].map(n => `<option${n === _mixChannelPool.capacity ? ' selected' : ''}>${n}</option>`).join('')}</select></div>
+          <div class="sim-cfg-row"><label style="min-width:82px">Potes del mode</label><select id="scfg-mix-take"><option value="hold"${mixCfg.takeover !== 'latch' ? ' selected' : ''}>Mantenint (hold)</option><option value="latch"${mixCfg.takeover === 'latch' ? ' selected' : ''}>Fixat (latch)</option></select></div>
+          <p style="font-size:10px;color:var(--text3);line-height:1.4;margin-top:4px">Manté (o fixa) una tecla-mode i els potes editen aquell mode; en deixar-la tornen al teclat.</p>
+        </div>
+        <div>
+          <div class="sim-cfg-title">Efectes d'àudio (potes)</div>
+          <div class="sim-cfg-row"><label>Fx</label><select id="scfg-fx-preset">${AUDIO_FX_PRESETS.map(p => `<option${p === _simCfgPreset ? ' selected' : ''}>${p}</option>`).join('')}</select></div>
+          ${['x', 'y', 'z'].map(ax => `<div class="sim-cfg-row"><label>${ax.toUpperCase()}</label><select id="scfg-fx-${ax}">${opt(AUDIO_CFG_POT_FNS, audioMap[ax])}</select></div>`).join('')}
+        </div>
+        <div>
+          <div class="sim-cfg-title">Motor sonor</div>
+          <div class="sim-cfg-row"><label style="min-width:82px">Teclat (c. 1)</label><select id="scfg-voice-kb">${presetOpts(chPresets.kb)}</select></div>
+          <div class="sim-cfg-row"><label style="min-width:82px">Base (c. 2)</label><select id="scfg-voice-acc">${presetOpts(chPresets.acc)}</select></div>
+          <p style="font-size:10px;color:var(--text3);line-height:1.4;margin-top:4px">Activa el botó "So" per sentir el motor intern sense DAW. Cada mode rep un so propi automàticament.</p>
+        </div>`;
+      cont.querySelector('#scfg-ctx').addEventListener('change', e => { _simCfgCtx = e.target.value; _renderSimConfig(); });
+      ['x', 'y', 'z'].forEach(ax => {
+        cont.querySelector(`#scfg-pot-${ax}`).addEventListener('change', e => {
+          const id = e.target.dataset.id;
+          if (ctxMap[_simCfgCtx].fns) ctxMap[_simCfgCtx].fns[id] = e.target.value;
+          _savePotFunctions(); _updatePotDiagram();
+          simlog(`Pot ${ax.toUpperCase()} (${ctxMap[_simCfgCtx].lbl}) → ${e.target.value}`, 'ok');
+        });
+        cont.querySelector(`#scfg-fx-${ax}`).addEventListener('change', e => {
+          _modesAudioMapFor(_simCfgPreset)[ax] = e.target.value;
+          _saveModesAudioPots(); _renderModesAudioKnobs();
+          simlog(`${_simCfgPreset} · pot ${ax.toUpperCase()} → ${e.target.value}`, 'ok');
+        });
+      });
+      cont.querySelector('#scfg-fx-preset').addEventListener('change', e => { _simCfgPreset = e.target.value; _renderSimConfig(); });
+      cont.querySelector('#scfg-mix-cap').addEventListener('change', e => {
+        const n = +e.target.value;
+        _mixChannelPool.setCapacity(n);
+        _saveSimMixCfg({ ..._loadSimMixCfg(), cap: n });
+        simlog(`Màxim de modes alhora: ${n}`, 'ok');
+      });
+      cont.querySelector('#scfg-mix-take').addEventListener('change', e => {
+        _mixPots.setTakeover(e.target.value);
+        _saveSimMixCfg({ ..._loadSimMixCfg(), takeover: e.target.value });
+        simlog(`Presa de potes del mode: ${e.target.value === 'latch' ? 'fixat (latch)' : 'mantenint (hold)'}`, 'ok');
+      });
+      cont.querySelector('#scfg-voice-kb').addEventListener('change', e => _setSimChPreset('kb', e.target.value));
+      cont.querySelector('#scfg-voice-acc').addEventListener('change', e => _setSimChPreset('acc', e.target.value));
     }
 
     function simlog(msg, type = 'info') {
@@ -6282,6 +7251,11 @@
     async function initSimulator() {
       buildButtonGrid();
       await loadBuiltinModes();
+      // Efectes per defecte a les tecles 14/15 (com al dispositiu); es poden
+      // buidar amb clic dret o reassignar des de la barra lateral.
+      _initFxEffects();
+      buttonEffects[13] = _fxSelected[13];
+      buttonEffects[14] = _fxSelected[14];
       activateKeyboardMode();  // activate immediately, Pyodide not needed for keyboard layer
 
       const midiResult = await webMidi.init();
@@ -6341,6 +7315,19 @@
           item.addEventListener('click', () => onSidebarModeClick(name, file, item));
           sidebarList.appendChild(item);
         }
+        // Efectes temporals: assignables a qualsevol tecla del simulador híbrid
+        const fxTitle = document.createElement('div');
+        fxTitle.className = 'sim-sidebar-title';
+        fxTitle.style.marginTop = '12px';
+        fxTitle.textContent = 'Efectes';
+        sidebarList.appendChild(fxTitle);
+        for (const eff of AVAILABLE_EFFECTS) {
+          const item = document.createElement('div');
+          item.className = 'sim-mode-item sim-fx-item';
+          item.textContent = `⚡ ${eff}`; item.title = eff;
+          item.addEventListener('click', () => onSidebarEffectClick(eff, item));
+          sidebarList.appendChild(item);
+        }
         simModeSelect.appendChild(grp);
         simlog(`${enabledModes.length} modes disponibles`, 'ok');
         if (isKbMode) document.getElementById('sim-kb-item')?.classList.add('selected');
@@ -6348,21 +7335,19 @@
     }
 
     function onSidebarModeClick(name, file, el) {
-      if (isKbMode) deactivateKeyboardMode();
-      selectedSidebarMode = { name, file };
+      // Híbrid: seleccionar un mode NO atura res — es queda "a la mà" per
+      // assignar-lo a una tecla 1-12 (tap = engega/atura, com al device).
+      selectedSidebarMode = { kind: 'mode', name, file };
       document.querySelectorAll('.sim-mode-item').forEach(i => i.classList.remove('selected'));
       el.classList.add('selected');
-      if (simulator?.isRunning) {
-        (async () => {
-          try {
-            const code = await _fetchModeCode(file);
-            webMidi.allNotesOff();
-            await simulator.loadMode(code, file);
-            simlog(`▶ ${name}`, 'ok');
-            document.querySelectorAll('.sim-key').forEach(k => k.classList.remove('sim-active-mode'));
-          } catch (e) { simlog(`Error: ${e.message}`, 'err'); }
-        })();
-      } else { simlog(`'${name}' seleccionat — clica un botó 1–12 per assignar-lo`, 'info'); }
+      simlog(`'${name}' seleccionat — clica una tecla 1–12 per assignar-lo`, 'info');
+    }
+
+    function onSidebarEffectClick(name, el) {
+      selectedSidebarMode = { kind: 'effect', name };
+      document.querySelectorAll('.sim-mode-item').forEach(i => i.classList.remove('selected'));
+      el.classList.add('selected');
+      simlog(`⚡ '${name}' seleccionat — clica una tecla per assignar-l'hi`, 'info');
     }
 
     function updateSimModeSelect(modesObj) {
@@ -6412,13 +7397,12 @@
       btnSimStart.disabled = true; btnSimStop.disabled = false;
     });
     btnSimStop.addEventListener('click', () => {
-      if (isKbMode) { deactivateKeyboardMode(); simlog('Mode Teclat aturat. All Notes Off.', 'ok'); return; }
-      if (!simulator) return;
-      simulator.stopLoop(); webMidi.allNotesOff();
+      // Aturar = STOP total de l'entorn híbrid + bucle del motor de modes.
+      _simStopAll();
+      if (isKbMode) deactivateKeyboardMode();
+      if (simulator?.isRunning) simulator.stopLoop();
       simStatusDot.className = 'sim-dot ready'; simStatusText.textContent = 'aturat';
       btnSimStart.disabled = false; btnSimStop.disabled = true;
-      document.querySelectorAll('.sim-key').forEach(k => k.classList.remove('sim-active-mode'));
-      simlog('Aturat. All Notes Off.', 'ok');
     });
 
     simMidiSelect.addEventListener('change', () => {
@@ -6551,9 +7535,9 @@
       const _includeDisplay = !!document.getElementById('fw-include-display')?.checked;
 
       if (!confirm(`Instal·lar/actualitzar el firmware TECLA al dispositiu?\n\n` +
-        `• Es copiaran TOTS els fitxers del firmware (core, effects, lib, modes…)\n` +
-        `• La configuració del dispositiu s'actualitzarà amb la de l'app web\n` +
-        `• Els modes no seleccionats a "Modes i Escales" no es copiaran\n` +
+        `• Actualització INCREMENTAL: només es copien els fitxers que han canviat.\n` +
+        `• La configuració del dispositiu s'actualitzarà amb la de l'app web.\n` +
+        `• Els modes no assignats a cap tecla no es copiaran.\n` +
         (_includeDisplay
           ? `• S'inclourà el mòdul de pantalla OLED\n\n`
           : `• NO s'inclourà el mòdul de pantalla OLED (casella desactivada)\n\n`) +
@@ -6563,10 +7547,20 @@
       _fwProgress(0); _fwMsg('');
 
       try {
-        // 1. Load manifest
+        // 1. Load manifest (amb sha256 per fitxer i versió)
         const manifestRes = await fetch('./device_files_manifest.json');
         if (!manifestRes.ok) throw new Error('No s\'ha trobat device_files_manifest.json al servidor');
         const manifest = await manifestRes.json();
+        const appVersion = manifest.version || '';
+        const appSha = manifest.sha || {};
+
+        // Manifest de l'ÚLTIMA instal·lació, llegit del dispositiu: permet saltar
+        // els fitxers idèntics (hash sha256) → actualitzar passa de minuts a segons.
+        let devSha = {}, devVersion = '';
+        try {
+          const dm = JSON.parse(await device.readFile('tecla_manifest.json'));
+          if (dm && typeof dm.sha === 'object') { devSha = dm.sha; devVersion = dm.version || ''; }
+        } catch { /* primera instal·lació (o manifest antic) → còpia completa */ }
 
         // 2. Determine enabled modes (those assigned to keys)
         //    Es normalitza pel nom base (sense .py/.mpy) per suportar modes precompilats.
@@ -6584,6 +7578,18 @@
           }
           return true;
         });
+
+        // Pla de còpia amb hash esperat. main.py va SEMPRE l'últim i NOMÉS si la
+        // resta ha anat bé: fins que no s'escriu, el firmware ANTIC continua
+        // arrencant sencer (instal·lació quasi-atòmica). Es copia sempre i es
+        // VERIFICA rellegint-lo: un main.py marcat de nou sense ser-ho deixaria
+        // el dispositiu bloquejat amb firmware vell per sempre.
+        const plan = filesToCopy
+          .filter(rel => rel !== 'main.py')
+          .map(rel => ({ src: `./device_files/${rel}`, dest: rel, sha: appSha[rel] }));
+        const mainEntry = { src: './device_files/main.py', dest: 'main.py', sha: appSha['main.py'] };
+        const toCopy = plan.filter(e => !e.sha || devSha[e.dest] !== e.sha);
+        const skipped = plan.length - toCopy.length;
 
         _fwProgress(3);
 
@@ -6622,52 +7628,104 @@
 
         // 5. (Config always overwritten by web app config)
 
-        // 6. Copy files
-        let done = 0; const errors = [];
-        for (const relPath of filesToCopy) {
-          try {
-            const isBinary = relPath.endsWith('.mpy');
-            const res = await fetch(`./device_files/${relPath}`);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const content = isBinary ? await res.arrayBuffer() : await res.text();
-            await device.writeFile(relPath, content);
-            // Eliminar el germà de l'extensió oposada per evitar duplicats .py/.mpy
-            // (p.ex. instal·lar mode_x.mpy sobre un mode_x.py antic).
-            if (/\.(py|mpy)$/.test(relPath)) {
-              const sibling = relPath.endsWith('.mpy')
-                ? relPath.slice(0, -4) + '.py'
-                : relPath.slice(0, -3) + '.mpy';
-              try { await device.deleteFile(sibling); } catch { /* no existeix, ok */ }
-            }
-          } catch (e) { errors.push(`${relPath}: ${e.message}`); console.warn('Skipping', relPath, e.message); }
+        // 6. Copy files (NOMÉS els canviats; amb reintent — la còpia USB/FAT
+        //    falla puntualment i un reintent sol resoldre-ho sol)
+        let done = 0; const errors = []; const okSha = {};
+        const total = toCopy.length + 1;   // +1 = main.py
+        const _copy = async (url, dest, isBinary) => {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const content = isBinary ? await res.arrayBuffer() : await res.text();
+          await device.writeFile(dest, content);
+          // Eliminar el germà de l'extensió oposada per evitar duplicats .py/.mpy
+          if (/\.(py|mpy)$/.test(dest)) {
+            const sib = dest.endsWith('.mpy') ? dest.slice(0, -4) + '.py' : dest.slice(0, -3) + '.mpy';
+            try { await device.deleteFile(sib); } catch { /* ok */ }
+          }
+        };
+        const _copyChecked = async (entry) => {
+          const bin = entry.dest.endsWith('.mpy');
+          try { await _copy(entry.src, entry.dest, bin); }
+          catch (e1) {
+            await new Promise(r => setTimeout(r, 350));
+            try { await _copy(entry.src, entry.dest, bin); }
+            catch (e2) { errors.push(`${entry.dest}: ${e2.message}`); console.warn('Falla', entry.dest, e2.message); return false; }
+          }
+          if (entry.sha) okSha[entry.dest] = entry.sha;
+          return true;
+        };
+        for (const entry of toCopy) {
+          await _copyChecked(entry);
           done++;
-          _fwProgress(Math.round(5 + (done / filesToCopy.length) * 83));
+          _fwProgress(Math.round(5 + (done / total) * 81));
         }
 
-        // 6. Write local config (from buildDeviceConfig) → config/tecla_config.json
-        _fwProgress(90);
+        // 6b. Config de l'app + còpia .bak: si una escriptura queda tallada
+        //     (cable, desendollada), el firmware recupera la .bak.
+        _fwProgress(88);
         try {
           const cfgData = JSON.stringify(buildDeviceConfig(), null, 2);
           await device.writeFile('config/tecla_config.json', cfgData);
+          await device.writeFile('config/tecla_config.json.bak', cfgData);
         } catch (e) {
-          /* config write failed, no backup available */
           errors.push(`config/tecla_config.json: ${e.message}`);
         }
 
         // 7. Delete code.py if it exists (conflicts with main.py)
         try { await device.deleteFile('code.py'); } catch { /* ok if missing */ }
+        _fwProgress(92);
 
-        // 8. Write version marker
-        try { await device.writeFile('tecla_version.txt', 'TECLA v3.0 (web install)'); }
-        catch (e) { errors.push(`tecla_version.txt: ${e.message}`); }
+        // 8. main.py, NOMÉS si tota la resta ha anat bé (quasi-atòmic), i
+        //    VERIFICAT rellegint-lo del dispositiu.
+        if (errors.length === 0) {
+          const okMain = await _copyChecked(mainEntry);
+          done++;
+          if (okMain) {
+            try {
+              const srcTxt = await (await fetch(mainEntry.src)).text();
+              const backTxt = await device.readFile('main.py');
+              if (backTxt !== srcTxt) {
+                delete okSha['main.py'];
+                errors.push('main.py: la verificació de contingut ha fallat');
+              }
+            } catch (e) {
+              delete okSha['main.py'];
+              errors.push(`main.py: no s'ha pogut verificar (${e.message})`);
+            }
+          }
+        }
+        const complete = errors.length === 0;
+
+        // 9. Manifest al dispositiu: fotografia del que HI HA de veritat
+        //    (copiat ara + saltat per idèntic). Si la instal·lació queda
+        //    incompleta, la versió es manté l'antiga i reexecutar Instal·lar
+        //    només recopia el que falta.
+        const newSha = {};
+        for (const entry of plan.concat([mainEntry])) {
+          if (okSha[entry.dest]) newSha[entry.dest] = okSha[entry.dest];
+          else if (entry.sha && devSha[entry.dest] === entry.sha) newSha[entry.dest] = entry.sha;
+        }
+        try {
+          await device.writeFile('tecla_manifest.json', JSON.stringify({
+            version: complete ? appVersion : (devVersion || ''),
+            updated: new Date().toISOString(),
+            sha: newSha,
+          }, null, 1));
+        } catch (e) { console.warn('tecla_manifest.json:', e.message); }
+        if (complete) {
+          try { await device.writeFile('tecla_version.txt', `TECLA v${appVersion || '3'} (web install)`); }
+          catch { /* informatiu, no bloqueja */ }
+        }
 
         _fwProgress(100);
-        if (errors.length === 0) {
-          _fwMsg(`✓ ${done} fitxers instal·lats correctament. Reinicia el dispositiu.`);
-          log(`✓ Firmware TECLA instal·lat: ${done} fitxers copiats.`, 'ok');
+        if (complete) {
+          const verStr = devVersion && appVersion && devVersion !== appVersion
+            ? ` v${devVersion} → v${appVersion}` : (appVersion ? ` v${appVersion}` : '');
+          _fwMsg(`✓ Firmware TECLA${verStr}: ${done} fitxers copiats, ${skipped} ja al dia. NO desendollis el dispositiu: es reinicia sol en uns segons.`);
+          log(`✓ Firmware TECLA instal·lat${verStr}: ${done} copiats, ${skipped} saltats (idèntics).`, 'ok');
         } else {
-          _fwMsg(`⚠ Instal·lació completada amb ${errors.length} advertiments. Veure consola.`);
-          log(`Firmware instal·lat amb ${errors.length} errors: ${errors.slice(0, 3).join('; ')}`, 'warn');
+          _fwMsg(`⚠ Instal·lació INCOMPLETA (${errors.length} fitxers). El firmware anterior es manté actiu: torna a clicar Instal·lar — només es recopiarà el que falta.`);
+          log(`Instal·lació incompleta (${errors.length}): ${errors.slice(0, 3).join('; ')}`, 'err');
         }
         try { await _fwRefresh(); } catch { /* refresh errors don't affect install result */ }
 

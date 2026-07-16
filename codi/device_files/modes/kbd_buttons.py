@@ -37,6 +37,7 @@ def build_fn_mappings(kbd):
     kbd._fn_looper_dub_btn = -1
     kbd._fn_voice_lead_btn = -1
     kbd._fn_synth_wave_btn = -1
+    kbd._fn_accomp_btn = -1
     kbd._note_buttons = []
     kbd._note_btn_to_slot = {}
     slot = 0
@@ -74,6 +75,8 @@ def build_fn_mappings(kbd):
             kbd._fn_voice_lead_btn = i
         elif f == 'synth_wave' and kbd._fn_synth_wave_btn < 0:
             kbd._fn_synth_wave_btn = i
+        elif f == 'accomp' and kbd._fn_accomp_btn < 0:
+            kbd._fn_accomp_btn = i
 
 
 def process_keyboard_buttons(kbd, button_states):
@@ -120,6 +123,9 @@ def process_keyboard_buttons(kbd, button_states):
             elif btn_idx == kbd._fn_voice_lead_btn:
                 # Gest al deixar anar: tap = activa/cicla forma · llarga = desactiva
                 kbd._voice_lead_press_time = current_time
+            elif btn_idx == kbd._fn_accomp_btn:
+                # Gest al deixar anar: tap = activa/cicla patró · llarga = desactiva
+                kbd._accomp_btn_press_time = current_time
             elif btn_idx == kbd._fn_synth_wave_btn:
                 # Cada clic cicla la forma d'ona del sinte (CC70 → motor d'àudio)
                 idx = (getattr(kbd, '_synth_wave_idx', 0) + 1) % 4
@@ -160,6 +166,9 @@ def process_keyboard_buttons(kbd, button_states):
                     else:
                         sname = _SCALE_NAMES[actual_scale_id] if actual_scale_id < len(_SCALE_NAMES) else f'#{actual_scale_id}'
                         print(f"🎼{d} {sname} ({kbd.scale_mode_index + 1}/{len(kbd.available_scales)})")
+                    if getattr(kbd, '_accomp_active', False):
+                        from modes.accompaniment import sync_context
+                        sync_context(kbd)
 
             elif btn_idx == kbd._fn_ton_btn:
                 elapsed = current_time - kbd._key_btn_press_time
@@ -169,6 +178,9 @@ def process_keyboard_buttons(kbd, button_states):
                     kbd.key_index = (kbd.key_index + (-1 if backward else 1)) % nk
                     d = '◀' if backward else '▶'
                     print(f"🎵{d} Tonalitat: {kbd.available_keys[kbd.key_index]}")
+                    if getattr(kbd, '_accomp_active', False):
+                        from modes.accompaniment import sync_context
+                        sync_context(kbd)
 
             elif btn_idx == kbd._fn_arp_btn:
                 elapsed = current_time - kbd.arp_btn_press_time
@@ -254,6 +266,12 @@ def process_keyboard_buttons(kbd, button_states):
                     kbd._vl_type_idx = (getattr(kbd, '_vl_type_idx', 0) + 1) % len(vl_ids)
                     kbd._vl_type = vl_ids[kbd._vl_type_idx]
                     print("Conduccio: %s" % kbd._vl_type)
+
+            elif btn_idx == kbd._fn_accomp_btn:
+                # Base d'acompanyament (mòdul lazy: només s'importa si s'usa)
+                from modes.accompaniment import handle_button as _accomp_gesture
+                held = current_time - getattr(kbd, '_accomp_btn_press_time', current_time)
+                _accomp_gesture(kbd, held, current_time)
 
             elif btn_idx == kbd._fn_looper_btn or btn_idx == kbd._fn_looper_q_btn:
                 from modes.kbd_looper import handle_button

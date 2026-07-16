@@ -1,21 +1,19 @@
 """
 EffectSustain - Manté les notes actives (CC64)
 """
-from adafruit_midi.control_change import ControlChange
 from effects.base_effect import BaseEffect
 
 class EffectSustain(BaseEffect):
     def on_activate(self):
-        for ch in range(16):
-            self.midi.send(ControlChange(64, 127, channel=ch))
+        self._cc_all(64, 127, force=True)
 
     def on_deactivate(self):
-        for ch in range(16):
-            self.midi.send(ControlChange(64, 0, channel=ch))
-            self.midi.send(ControlChange(1, 0, channel=ch))  # mod off
-            self.midi.send(ControlChange(11, 127, channel=ch))  # expr reset
+        # CRÍTIC: si això no s'executa (p. ex. STOP que no desactivava
+        # l'efecte), el synth queda amb el pedal premut i TOTES les notes
+        # posteriors queden enganxades — vegeu mm_emergency_stop.
+        self._cc_all(64, 0, force=True)
+        self._cc_all(1, 0, force=True)     # mod off
+        self._cc_all(11, 127, force=True)  # expr reset
 
     def update_params(self, x=0, y=0, z=0):
-        expr = max(0, min(127, int(x)))
-        for ch in range(16):
-            self.midi.send(ControlChange(11, expr, channel=ch))
+        self._cc_all(11, x)

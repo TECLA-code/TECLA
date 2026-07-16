@@ -1,5 +1,166 @@
 # Canvis pendents al dispositiu TECLA
 
+## 0. v3.1.3 — STOP a prova de DAW + Config Modes només-MIDI — 2026-07-16
+
+✅ JA INSTAL·LAT AL DISPOSITIU (falta DESENDOLLAR i tornar a endollar: el
+dispositiu va quedar penjat durant les proves per sèrie i necessita el reinici
+físic; el disc ja porta la v3.1.3 i arrencarà net).
+
+- **STOP a prova de DAW**: a més de CC64/120/123 + pitch bend per canal, ara
+  envia NoteOff EXPLÍCIT per a les 128 notes al canal de sortida — molts
+  instruments dins un DAW (AUs de tercers) ignoren All Notes Off i eren
+  la via per la qual "el botó 16 no aturava el so".
+- **Config Modes = NOMÉS efectes MIDI estàndard** (funciona amb qualsevol
+  DAW): catàleg del configurador i capes per defecte amb la mateixa família
+  de funcions que els potes del teclat — Volum, Expressió, Modulació,
+  Brillantor (CC74), Timbre (CC71), Pan, Reverb, Chorus, Atac, Release,
+  Portamento i CC lliures. Res del sinte intern.
+- **Opció de pantalla OLED oculta** a la pestanya Firmware (reservada per a la
+  revisió Pico 2, com el motor d'àudio).
+- **Bug "acords diatònics + octava 4 + notes enganxades"**: el motor s'ha
+  EXONERAT amb un test exhaustiu (octaves 3/4/5 × 7 funcions harmòniques ×
+  toc simple i legato: zero desbalanç NoteOn/NoteOff, zero notes actives
+  residuals). Sospita principal: l'instrument del DAW (vegeu el pla de prova
+  al resum de sessió). El STOP nou amb 128 NoteOff l'hauria de tallar sempre.
+
+---
+
+## 1. v3.1.2 — Efectes temporals sanejats, STOP total, boot a capa 1 — 2026-07-16
+
+✅ JA INSTAL·LAT AL DISPOSITIU (instal·lació directa per USB, arrencada
+verificada per sèrie: "Capa actual: Teclat"). Només cal GUARDAR la config des
+de l'app si configures les noves capes de pots de Config Modes.
+
+- **Nota enganxada (botó 1) que STOP no aturava**: l'efecte Sustain de la capa
+  de modes envia CC64=127 (pedal) a tots els canals; l'emergency stop marcava
+  els efectes com a inactius SENSE cridar el seu on_deactivate → el pedal
+  quedava premut al synth i qualsevol nota posterior s'enganxava. Ara STOP
+  desactiva TOTS els efectes de veritat (CC64=0) + effect_manager.deactivate().
+- **STOP total**: també apaga Config Modes i Loop, el PWM intern i els efectes
+  encara que estiguin desincronitzats.
+- **Efectes temporals NO persistents**: canviar de MODE desactiva l'efecte
+  actiu (Sustain, Pausa, Gate…). Únics supervivents: 'Config Modes' i 'Loop'.
+  Passar a una capa de TECLAT també els desactiva (si no, el pedal CC64
+  enganxava les notes del teclat).
+- **Boot SEMPRE a la capa 1**: la config porta el current_bank seleccionat a
+  l'app (útil per al hot-reload), però l'arrencada freda força el banc 0.
+- **Efectes sense inundar l'USB**: update_params enviava 16 CCs per cicle
+  (~8000 msg/s amb el bucle nou de 2ms); ara només envien quan el valor canvia
+  (cache per CC + missatge reutilitzat).
+- **EffectPitchBend**: en desactivar enviava PitchBend(0) = bend a fons AVALL
+  (desafinava el synth); el centre és 8192. Corregit + throttle.
+- **App: configurador de 'Config Modes'** (pestanya Dispositiu, capa de modes):
+  fins a 4 capes de pots amb nom i funcions X/Y/Z (Volum, Expressió, Filtre,
+  Reverb, Pan, Portamento, Trèmol, Phaser, CC lliures…). S'exporta com a
+  'mode_pot_layers'; buit = defaults del firmware (Mescla/Timbre/Expressió).
+- Tests nous: `tests/test_effects_lifecycle.py` (5).
+
+---
+
+## 1. v3.1.1 — MIDI "com la seda": latència, capes duplicades, sustain i STOP — 2026-07-15
+
+REINSTAL·LA el firmware (Firmware → Instal·lar; incremental → segons) i DESPRÉS
+guarda la configuració: el fix de capes és a l'app, així que cal re-exportar-la.
+
+- **"Només em carrega una capa de teclat"**: el bug era a l'APP, no al firmware.
+  El snapshot d'una capa de teclat nova/no editada quedava buit per sempre i
+  `buildDeviceConfig` exportava la config de la capa SELECCIONADA per a TOTES
+  les capes de teclat (al dispositiu: 2 bancs idèntics, verificat al JSON).
+  Ara `_captureKb` fotografia TOTES les claus (null = default explícit).
+  ⚠ Revisa la capa "Acords" a l'app (pot haver quedat amb defaults) i
+  torna a GUARDAR la configuració al dispositiu.
+- **Latència ("no va al toque")**: bucle principal de 20ms → 2ms (la pulsació
+  podia esperar 20ms només per ser detectada); NoteOn/NoteOff POOLED a tot el
+  camí calent del teclat (cada al·locació podia disparar un gc de 10-40ms);
+  el PWM viu a `core/tone.py` (abans `import main` recompilava main.py sencer
+  AL PRIMER TOC: centenars de ms de lag i pic de RAM).
+- **Sustain**: amb acords o h.negativa actius el pot Z (Sustain) no feia res
+  (restricció del disseny antic de capes de pots, retirades a v3.1). Ara el
+  sustain funciona a tot arreu MENYS a l'arpegiador. Re-tocar una nota que
+  ressonava cancel·la el seu note-off ajornat (abans la tallava al cap d'uns
+  segons — el so "estrany").
+- **Botó 16 (STOP)**: el pànic enviava >500 missatges MIDI (128 NoteOff + tots
+  els CC × 16 canals × 2 passades, i CC11=127) i es repetia 3 cops — més d'un
+  segon de bloqueig i salts de volum. Ara: UNA passada (CC64/120/123 + pitch
+  bend per canal, 64 missatges, pooled).
+- Tests nous: `tests/test_midi_fluid.py` (7) — sustain normal/acords/arp,
+  re-articulació, pressupost del pànic, pool de missatges i core/tone.
+
+---
+
+## 1. v3.1.0 TANCAMENT — MIDI + PWM simple, acords sòlids, límit de capes — 2026-07-13
+
+Reinstal·la el firmware (Firmware → Instal·lar). Canvis de tancament:
+
+- **Acords que sonaven esglaonats**: dues causes mortes al camí calent de
+  `_send_chord` — (1) missatge NoteOn POOLED (zero al·locacions dins l'acord:
+  amb RAM justa, cada `NoteOn(...)` nou podia disparar un gc.collect de
+  10-40ms entre notes) i (2) el càlcul/reconfiguració del PWM ara es fa DESPRÉS
+  d'enviar tot l'acord per MIDI, no entre la 1a i la 2a nota.
+- **Firmware tancat a MIDI + PWM monofònic simple** (com les primeres versions:
+  `midi_to_frequency` + PWMOut GP22, fonamental de l'acord). `core/audio_engine`
+  eliminat del firmware (queda al git per a la revisió Pico 2).
+- **Capes de potes d'acords i d'harmonia negativa RETIRADES** (a tot arreu:
+  firmware, app, simulador). Només queden teclat i arpegiador (+ Config Modes
+  a la capa de modes).
+- **Límit de capes = 6** (app i firmware; el firmware retalla amb avís si la
+  config en porta més — protecció de RAM).
+- **Diagnòstic per capa**: en activar una capa de teclat, la consola diu
+  `config: pròpia` o `config: global`. Si una capa que has configurat surt
+  "global", torna a guardar la configuració des de l'app amb aquella capa
+  visitada (el snapshot es captura en seleccionar-la) i reinstal·la.
+
+---
+
+## 1. v3.1.0 — Fluïdesa, Config Modes, Loop i actualització ràpida — 2026-07-13
+
+Reinstal·la el firmware des de la pestanya Firmware. La PRIMERA reinstal·lació
+serà completa (estableix el manifest de hashos al dispositiu); a partir de la
+següent, l'actualització és INCREMENTAL (només fitxers canviats → segons).
+
+- **RAM/fluïdesa**: el motor d'àudio synthio ja NO s'engega (reservat per a la
+  revisió Pico 2; es pot forçar amb `"internal_audio": true` a la config) —
+  allibera diversos KB que causaven els MemoryError en carregar modes. El canvi
+  de capa ja no llegeix el registre de modes si no hi ha modes custom, i s'han
+  eliminat collects i logs redundants del camí calent.
+- **'Config Modes'** (efecte per a tecles 14/15): tap = capa de potes següent
+  (Mescla → Timbre → Expressió → OFF) per modificar el mode mentre sona, amb
+  pickup. `modes/potlayers.py` (lazy).
+- **'Loop'** (efecte per a tecles 14/15): grava el MIDI del mode (màx ~8s /
+  96 esdeveniments) i el repeteix en bucle per tocar-hi a sobre; sobreviu el
+  canvi de mode i de capa; STOP (tecla 16) l'esborra. `modes/modeloop.py` (lazy).
+- Efectes disponibles per defecte: sense 'Àudio 1-6' (configuració d'àudio
+  només al simulador en aquesta versió).
+
+---
+
+## 1. Tecla 13 = CICLAR CAPES + config de teclat PER-CAPA — 2026-07-13
+
+Requereix REINSTAL·LAR el firmware (pestanya Firmware). Canvis:
+- `main.py`: toc curt de T13 = capa següent (cicla TOTES les capes creades,
+  teclat i modes, d'esquerra a dreta amb volta) · premuda llarga = capa
+  anterior. Cada capa activa el motor del seu tipus; el KeyboardMode es RECREA
+  a cada canvi perquè cada capa de teclat soni amb la SEVA config (abans la
+  segona capa de teclat repetia la primera). L'arrencada i el hot-reload de
+  config també respecten el tipus de la capa actual.
+- `core/config_manager.py`: getters de teclat per-capa amb fallback global
+  (`keyboard_button_functions`, harmonia negativa, diatòniques, conducció de
+  veus, pots d'acords/negativa/àudio, arps i progressions custom) + migració
+  de configs antigues (bancs sense `type` → 'modes' + capa de teclat garantida).
+- `modes/mm_lifecycle.py`: 'Silenci'/'Teclat' són marcadors de tecla buida —
+  ja no generen l'avís "Mode 'Silenci' no al registre".
+
+---
+
+## 1. Base d'acompanyament (nova funció de teclat 'accomp') — 2026-07-13
+
+Requereix REINSTAL·LAR el firmware des de la pestanya Firmware (el manifest ja
+inclou `modes/accompaniment.mpy` i els hooks a `kbd_buttons`, `mode_keyboard` i
+`main.py`). Sense reinstal·lar, la tecla assignada a "Base (acomp.)" no farà res
+al dispositiu (cap crash: els hooks són defensius i el mòdul és lazy).
+
+---
+
 Quan `/Volumes/TECLA` estigui muntat, aplica aquests canvis manualment
 (o copia `modes/kbd_pots.py` via dev.sh, que ja és l'única que s'actualitzarà automàticament).
 

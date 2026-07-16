@@ -29,18 +29,37 @@ class ModeManager:
         self.button_mappings = {}
         self.loaded_modes_history = []
 
-        self.effect_buttons = [13, 14]
-        default_effects = {13: 'Sustain', 14: 'Sustain'}
+        # Tecles d'efecte FLEXIBLES: qualsevol tecla (idx 0-14, excepte 12=canvi de
+        # capa) pot tenir una funció/efecte. Es deriven de la config (efectos_temporales,
+        # claus = índex de tecla). Fallback a [13, 14] per compatibilitat.
+        _efectos = {}
+        try:
+            if config_manager:
+                _efectos = config_manager.config.get('efectos_temporales', {}) or {}
+        except Exception:
+            _efectos = {}
+        self.effect_buttons = []
+        for _k in _efectos:
+            try:
+                _i = int(_k)
+            except Exception:
+                continue
+            if 0 <= _i <= 14 and _i != 12 and _i not in self.effect_buttons:
+                self.effect_buttons.append(_i)
+        self.effect_buttons.sort()
+        if not self.effect_buttons:
+            self.effect_buttons = [13, 14]
         self.efectes_temporals = {}
         for btn in self.effect_buttons:
             self.efectes_temporals[btn] = {
                 'active': False, 'last_state': False, 'press_time': 0,
                 'last_release_time': 0, 'mode_instance': None,
                 'pre_mode': None, 'pre_mode_instance': None,
-                'tipus': default_effects.get(btn, 'Sustain')
+                'tipus': _efectos.get(str(btn), 'Sustain')
             }
         self.effect_hold_threshold = 0.35
         self.double_click_threshold = 0.3
+        self.effect_long_press = 0.5   # botons 14/15: >= => cicla l'efecte; tap => latch
         self.available_effects = []
         self.mode_octave = 0
         self.sustain_active = False

@@ -22,8 +22,11 @@ def manager(config_path):
 def test_crea_config_per_defecte_si_no_existeix(config_path):
     cm = ConfigManager(config_path=config_path)
     assert os.path.exists(config_path)
-    assert len(cm.config['banks']) == 4
-    for bank in cm.config['banks']:
+    banks = cm.config['banks']
+    assert len(banks) == 5
+    assert banks[0]['type'] == 'teclat'          # arrenca al teclat
+    assert all(b['type'] == 'modes' for b in banks[1:])
+    for bank in banks:
         assert len(bank['modes']) == 16
 
 
@@ -38,7 +41,7 @@ def test_config_sense_banks_cau_a_defecte(config_path):
     with open(config_path, 'w') as f:
         json.dump({'una_altra_cosa': 1}, f)
     cm = ConfigManager(config_path=config_path)
-    assert len(cm.config['banks']) == 4
+    assert len(cm.config['banks']) == 5
 
 
 def test_mode_teclat_es_substitueix_per_silenci(config_path):
@@ -158,3 +161,73 @@ def test_midi_channel_validacio(manager):
     assert not manager.set_midi_channel(17)
     assert manager.set_midi_channel(10)
     assert manager.get_midi_channel() == 10
+
+
+# ── Capes tipades (v3): tipus per banc i config de teclat PER-CAPA ───────────
+
+def test_migracio_tipa_les_capes_i_garanteix_teclat(config_path):
+    """Configs antigues sense 'type': tots els bancs passen a 'modes' i
+    s'afegeix una capa de teclat al final (la tecla 13 cicla les capes i el
+    teclat ha de ser sempre accessible)."""
+    cfg = {'banks': [{'name': 'A', 'modes': ['Silenci'] * 16},
+                     {'name': 'B', 'modes': ['Silenci'] * 16}], 'current_bank': 0}
+    with open(config_path, 'w') as f:
+        json.dump(cfg, f)
+    cm = ConfigManager(config_path=config_path)
+    banks = cm.config['banks']
+    assert [b['type'] for b in banks[:2]] == ['modes', 'modes']
+    assert banks[-1]['type'] == 'teclat'
+
+
+def test_config_teclat_es_llegeix_per_capa(config_path):
+    """Dues capes de teclat amb configs diferents: els getters han de retornar
+    la config de la capa ACTIVA (el bug del dispositiu: la segona capa de
+    teclat repetia la primera)."""
+    cfg = {
+        'banks': [
+            {'name': 'Teclat A', 'type': 'teclat', 'modes': ['Silenci'] * 16,
+             'keyboard_button_functions': ['note'] * 8 + ['scale', 'tonality', 'chord', 'arp',
+                                                          'modes_layer', 'octave_down', 'octave_up', 'stop'],
+             'voice_lead_types': ['proximitat'],
+             'neg_harmony_type': 0,
+             'keyboard_scales': [0]},
+            {'name': 'Acords', 'type': 'teclat', 'modes': ['Silenci'] * 16,
+             'keyboard_button_functions': ['note'] * 8 + ['chord', 'voice_lead', 'diatonic', 'latch',
+                                                          'modes_layer', 'octave_down', 'octave_up', 'stop'],
+             'voice_lead_types': ['obert', 'baix'],
+             'neg_harmony_type': 4,
+             'keyboard_scales': [5, 7]},
+        ],
+        'current_bank': 0,
+    }
+    with open(config_path, 'w') as f:
+        json.dump(cfg, f)
+    cm = ConfigManager(config_path=config_path)
+
+    assert cm.get_keyboard_button_functions()[8] == 'scale'
+    assert cm.get_voice_lead_types() == ['proximitat']
+    assert cm.get_neg_harmony_type() == 0
+    assert cm.get_keyboard_scales() == [0]
+
+    cm.set_current_bank(1)   # la tecla 13 cicla cap a la segona capa de teclat
+    assert cm.get_keyboard_button_functions()[8] == 'chord'
+    assert cm.get_keyboard_button_functions()[9] == 'voice_lead'
+    assert cm.get_voice_lead_types() == ['obert', 'baix']
+    assert cm.get_neg_harmony_type() == 4
+    assert cm.get_keyboard_scales() == [5, 7]
+
+
+def test_config_teclat_cau_a_global_si_la_capa_no_en_te(config_path):
+    """Capa de teclat sense config pròpia: fallback a la config global."""
+    cfg = {
+        'banks': [{'name': 'T', 'type': 'teclat', 'modes': ['Silenci'] * 16}],
+        'current_bank': 0,
+        'keyboard_button_functions': ['note'] * 8 + ['latch', 'looper', 'chord', 'arp',
+                                                     'modes_layer', 'octave_down', 'octave_up', 'stop'],
+        'voice_lead_types': ['comu'],
+    }
+    with open(config_path, 'w') as f:
+        json.dump(cfg, f)
+    cm = ConfigManager(config_path=config_path)
+    assert cm.get_keyboard_button_functions()[8] == 'latch'
+    assert cm.get_voice_lead_types() == ['comu']

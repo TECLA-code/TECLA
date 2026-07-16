@@ -68,11 +68,20 @@ def test_progressio_completa_es_mante_compacta(kbd):
 
 # ── Funció de botó i integració ──────────────────────────────────────────────
 
-def test_toggle_amb_el_boto(kbd):
+def test_tap_activa_i_cicla_llarga_desactiva(kbd):
+    """Gest del botó: tap = activa / cicla la forma · premuda llarga = desactiva."""
+    kbd.available_vl_types = ['proximitat', 'comu']
     assert not kbd.voice_lead_active
-    _press_release(kbd, 9)
+    _press_release(kbd, 9)                    # tap → activa (primera forma)
     assert kbd.voice_lead_active
-    _press_release(kbd, 9)
+    assert kbd._vl_type == 'proximitat'
+    _press_release(kbd, 9)                    # tap → cicla forma, segueix activa
+    assert kbd.voice_lead_active
+    assert kbd._vl_type == 'comu'
+    s = list(OFF); s[9] = True                # premuda llarga → desactiva
+    process_keyboard_buttons(kbd, s)
+    kbd._voice_lead_press_time -= 1.0
+    process_keyboard_buttons(kbd, OFF)
     assert not kbd.voice_lead_active
 
 

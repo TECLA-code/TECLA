@@ -99,53 +99,49 @@ def mm_stop_notes(mgr, notes_info):
 
 
 def mm_stop_all_sound(mgr):
-    """PANIC: atura tot el so MIDI immediatament."""
+    """PANIC: atura tot el so MIDI immediatament.
+
+    UNA SOLA passada, mínima i sense al·locacions per missatge: CC64=0
+    (sustain off), CC120 (All Sound Off) i CC123 (All Notes Off) per canal +
+    pitch bend al centre. L'antiga versió enviava >500 missatges (2 passades,
+    128 NoteOff individuals, i CC11=127 a tots els canals): més d'un segon de
+    bloqueig i salts de volum — les "coses rares" del botó STOP."""
     if not mgr.midi_out:
         return
-    from adafruit_midi.control_change import ControlChange
-    from adafruit_midi.note_off import NoteOff
-
-    for iteration in range(2):
-        try:
-            for channel in range(3):
-                mgr.midi_out.send(ControlChange(64, 0, channel=channel))
-                mgr.midi_out.send(ControlChange(120, 0, channel=channel))
-                mgr.midi_out.send(ControlChange(123, 0, channel=channel))
-            for note in range(128):
-                try:
-                    mgr.midi_out.send(NoteOff(note, 0, channel=0))
-                except Exception:
-                    pass
-            for channel in range(16):
-                mgr.midi_out.send(ControlChange(64, 0, channel=channel))
-                mgr.midi_out.send(ControlChange(120, 0, channel=channel))
-                mgr.midi_out.send(ControlChange(123, 0, channel=channel))
-                try:
-                    from adafruit_midi.pitch_bend import PitchBend
-                    mgr.midi_out.send(PitchBend(8192, channel=channel))
-                except Exception:
-                    pass
-                mgr.midi_out.send(ControlChange(1, 0, channel=channel))
-                mgr.midi_out.send(ControlChange(11, 127, channel=channel))
-                mgr.midi_out.send(ControlChange(91, 0, channel=channel))
-                mgr.midi_out.send(ControlChange(93, 0, channel=channel))
-        except Exception as e:
-            print(f"Error panic iter {iteration}: {e}")
-        if iteration == 0:
-            try:
-                import time; time.sleep(0.01)
-            except Exception:
-                pass
-
-    # Apagar el brunzidor PWM si existeix. Es consulta sys.modules en lloc de
-    # fer `import main`: si 'main' encara no s'ha importat com a mòdul, el pwm
-    # no pot existir, i l'import re-executaria tot main.py (pic de RAM en ple
-    # pànic, el pitjor moment possible).
     try:
-        import sys
-        _main = sys.modules.get('main')
-        if _main is not None and getattr(_main, 'pwm', None) is not None:
-            _main.pwm.duty_cycle = 0
+        from adafruit_midi.control_change import ControlChange
+        from adafruit_midi.pitch_bend import PitchBend
+        cc = ControlChange(64, 0, channel=0)
+        pb = PitchBend(8192, channel=0)
+        for channel in range(16):
+            for ctrl in (64, 120, 123):
+                cc.control = ctrl
+                cc.value = 0
+                cc.channel = channel
+                mgr.midi_out.send(cc)
+            pb.channel = channel
+            mgr.midi_out.send(pb)
+        # A més del CC120/123: NoteOff EXPLÍCIT per a les 128 notes al canal
+        # de sortida configurat (on toquen el teclat i els modes). Molts
+        # instruments de tercers (AUs dins un DAW) IGNOREN All Notes Off — amb
+        # això STOP talla el so passi el que passi. Missatge únic reutilitzat;
+        # ~120ms un sol cop en prémer STOP, mai al camí calent.
+        from modes.base_mode import _note_off_msg
+        off = _note_off_msg()
+        off.velocity = 0
+        off.channel = None   # None → out_channel
+        for note in range(128):
+            off.note = note
+            off.channel = None
+            mgr.midi_out.send(off)
+    except Exception as e:
+        print(f"Error panic: {e}")
+
+    # Apagar el brunzidor PWM intern (mòdul mínim core/tone; abans es feia
+    # via el mòdul-ombra 'main', vegeu mode_keyboard._update_pwm_for_note)
+    try:
+        from core import tone
+        tone.off()
     except Exception:
         pass
 
@@ -154,6 +150,25 @@ def mm_emergency_stop(mgr):
     """Atura COMPLETAMENT el so i descarrega tots els modes de la memòria."""
     import gc
     import sys
+
+    # 1. DESACTIVAR els efectes temporals DE VERITAT (amb el seu on_deactivate),
+    # inclosos 'Config Modes' i 'Loop': STOP ho atura tot. L'antiga versió
+    # només posava active=False sense cridar effect_manager.deactivate() — el
+    # Sustain deixava el pedal CC64=127 latched al synth i TOTES les notes
+    # posteriors quedaven enganxades (i el mateix STOP "no feia res").
+    try:
+        from modes.mm_update import mm_deactivate_efecte_temporal
+        for _btn in list(mgr.efectes_temporals.keys()):
+            try:
+                mm_deactivate_efecte_temporal(mgr, _btn)
+            except Exception:
+                pass
+    except Exception:
+        pass
+    try:
+        mgr.effect_manager.deactivate()   # per si l'estat s'havia desincronitzat
+    except Exception:
+        pass
 
     mm_stop_all_sound(mgr)
 
@@ -203,8 +218,6 @@ def mm_emergency_stop(mgr):
         except Exception:
             pass
 
-    gc.collect()
-    gc.collect()
     gc.collect()
     return True
 

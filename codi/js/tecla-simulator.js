@@ -24,7 +24,19 @@ export class TECLASimulator {
         this.buttons = new Array(16).fill(false);
         this.pots = [0, 0, 0];        // 0-127
         this._modeName = null;
+
+        // ── Multi-mode (capa MIX): fins a N modes reals corrent alhora ──────────
+        // Cada mode actiu té el SEU canal MIDI (so propi); el pont MIDI hi força el
+        // canal mentre s'actualitza aquell mode. mixEditTarget = la tecla-mode els
+        // potes de la qual s'editen en directe (la resta conserven els seus congelats).
+        this._mixModes = new Map();      // slot(keyIdx) → { channel }
+        this._mixFrozenPots = new Map(); // slot → [p0,p1,p2] congelats
+        this._forceChannel = null;       // canal forçat per a l'update en curs
+        this.mixEditTarget = null;       // slot que rep els potes en directe
     }
+
+    get mixCount() { return this._mixModes.size; }
+    isMixActive(slot) { return this._mixModes.has(slot); }
 
     // ── Inicialitzar Pyodide ─────────────────────────────────────────────────
 
@@ -39,9 +51,12 @@ export class TECLASimulator {
 
         onProgress?.('Instal·lant mocks de CircuitPython…');
 
-        // Exposa la funció MIDI bridge a Python
+        // Exposa la funció MIDI bridge a Python. Si s'està actualitzant un mode MIX,
+        // _forceChannel reescriu el canal perquè cada mode soni pel seu (sense haver de
+        // tocar base_mode al simulador; al device es farà amb out_channel a base_mode).
         this.pyodide.globals.set('_js_midi_send', (type, a, b, ch) => {
-            this.webMidi.send(type, a | 0, b | 0, ch | 0);
+            const outCh = (this._forceChannel != null) ? this._forceChannel : (ch | 0);
+            this.webMidi.send(type, a | 0, b | 0, outCh);
         });
 
         // Carrega i executa els mocks
@@ -137,11 +152,75 @@ _active_mode.__class__.__name__
         return result;
     }
 
+    // ── Multi-mode (capa MIX) ────────────────────────────────────────────────
+
+    /**
+     * Carrega un mode addicional que correrà ALHORA que els altres, al seu canal.
+     * @param {string} pyCode  codi font .py del mode
+     * @param {number} slot     identificador (índex de tecla) del mode
+     * @param {number} channel  canal MIDI propi (so distint)
+     */
+    async loadMixMode(pyCode, slot, channel) {
+        if (!this.isReady) throw new Error('Pyodide no inicialitzat');
+        const mod = `mode_mix_${slot}`;
+        this.pyodide.FS.writeFile(`/tecla/modes/${mod}.py`, pyCode);
+        await this.pyodide.runPythonAsync(`
+import sys, importlib
+for _k in list(sys.modules.keys()):
+    if '${mod}' in _k: del sys.modules[_k]
+import modes.${mod} as _m
+importlib.reload(_m)
+from modes.base_mode import BaseMode
+from adafruit_midi import MIDI
+import usb_midi
+_cls = None
+for _v in vars(_m).values():
+    if isinstance(_v, type) and _v is not BaseMode and issubclass(_v, BaseMode):
+        _cls = _v; break
+if _cls is None:
+    raise ValueError("Cap classe BaseMode a ${mod}")
+if '_mix_modes' not in globals():
+    _mix_modes = {}
+_inst = _cls(MIDI(midi_out=usb_midi.ports[1]))
+_inst.setup()
+_mix_modes[${slot}] = _inst
+`);
+        this._mixModes.set(slot, { channel });
+        this._mixFrozenPots.set(slot, [...this.pots]);
+    }
+
+    /** Atura i descarrega un mode MIX (cleanup + All Notes Off del seu canal). */
+    unloadMixMode(slot) {
+        if (!this._mixModes.has(slot)) return;
+        const info = this._mixModes.get(slot);
+        try {
+            this._forceChannel = info.channel;
+            this.pyodide.runPython(`
+if '_mix_modes' in globals() and ${slot} in _mix_modes:
+    try: _mix_modes[${slot}].cleanup()
+    except: pass
+    del _mix_modes[${slot}]
+`);
+        } catch (e) { /* el cleanup mai no trenca */ }
+        this._forceChannel = null;
+        try { this.webMidi.send('control_change', 123, 0, info.channel); } catch (e) { } // All Notes Off del canal
+        this._mixModes.delete(slot);
+        this._mixFrozenPots.delete(slot);
+        if (this.mixEditTarget === slot) this.mixEditTarget = null;
+    }
+
+    /** Atura i descarrega TOTS els modes MIX. */
+    clearMixModes() {
+        for (const slot of [...this._mixModes.keys()]) this.unloadMixMode(slot);
+        this.mixEditTarget = null;
+    }
+
     // ── Bucle d'actualització (20 Hz) ────────────────────────────────────────
 
     startLoop() {
         if (this.isRunning || !this.isReady) return;
-        if (!this.pyodide.globals.has('_active_mode')) {
+        // Pot arrencar amb el mode únic (capa modes) O amb modes MIX (capa híbrida).
+        if (!this.pyodide.globals.has('_active_mode') && this._mixModes.size === 0) {
             this._log('Cap mode carregat. Carrega un mode .py primer.', 'warn');
             return;
         }
@@ -155,7 +234,7 @@ _active_mode.__class__.__name__
         this.isRunning = false;
         if (this._loopId) { clearInterval(this._loopId); this._loopId = null; }
 
-        // Crida cleanup + All Notes Off
+        // Crida cleanup + All Notes Off (mode únic + tots els modes MIX)
         try {
             this.pyodide.runPython(`
 if '_active_mode' in globals() and hasattr(_active_mode, 'cleanup'):
@@ -163,26 +242,45 @@ if '_active_mode' in globals() and hasattr(_active_mode, 'cleanup'):
     except: pass
 `);
         } catch { }
+        try { this.clearMixModes(); } catch { }
         this.webMidi.allNotesOff();
         this._log('Simulador aturat', 'info');
     }
 
     _tick() {
-        try {
-            // Sincronitza estat JS → Python
-            for (let i = 0; i < 16; i++) this.state.set_button(i, this.buttons[i]);
-            for (let i = 0; i < 3; i++)  this.state.set_pot(i, this.pots[i]);
-
-            // Crida update del mode
-            this.pyodide.runPython(`
+        // Mode únic (capa modes): rep botons i potes en directe, com sempre.
+        if (this._mixModes.size === 0 && this.pyodide.globals.has('_active_mode')) {
+            try {
+                for (let i = 0; i < 16; i++) this.state.set_button(i, this.buttons[i]);
+                for (let i = 0; i < 3; i++) this.state.set_pot(i, this.pots[i]);
+                this.pyodide.runPython(`
 _active_mode.update(
     [_state.pots[0], _state.pots[1], _state.pots[2]],
     list(_state.buttons)
 )
 `);
-        } catch (e) {
-            // Errors de mode (ex: codi invàlid) — no atura el simulador
-            console.warn('[Simulator tick]', e.message);
+            } catch (e) {
+                console.warn('[Simulator tick]', e.message);
+            }
+            return;
+        }
+
+        // Modes MIX: cada mode corre AUTÒNOM (botons neutres: el teclat es toca a part)
+        // i pel SEU canal. Els potes només editen en directe el mode "objectiu"; la
+        // resta conserven els seus potes congelats.
+        for (let i = 0; i < 16; i++) this.state.set_button(i, false);
+        for (const [slot, info] of this._mixModes) {
+            let pots = this._mixFrozenPots.get(slot) || [0, 0, 0];
+            if (slot === this.mixEditTarget) { pots = [...this.pots]; this._mixFrozenPots.set(slot, pots); }
+            try {
+                for (let i = 0; i < 3; i++) this.state.set_pot(i, pots[i]);
+                this._forceChannel = info.channel;
+                this.pyodide.runPython(`_mix_modes[${slot}].update([_state.pots[0], _state.pots[1], _state.pots[2]], list(_state.buttons))`);
+            } catch (e) {
+                console.warn(`[Simulator mix ${slot}]`, e.message);
+            } finally {
+                this._forceChannel = null;
+            }
         }
     }
 
