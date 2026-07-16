@@ -35,6 +35,7 @@
       --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
       --mono: "SF Mono", Menlo, Monaco, Consolas, monospace;
       --sidebar: 420px;
+      --toolbox-w: 230px;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: var(--font); background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
@@ -186,8 +187,15 @@
     .modal p { font-size: 12.5px; color: var(--text2); line-height: 1.65; margin-bottom: 16px; }
     .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
 
-    /* ── 7 tabs ──────────────────────────────────────────────── */
-    .tab-btn { font-size: 9.5px; }
+    /* ── 8 tabs ──────────────────────────────────────────────── */
+    .tab-btn { font-size: 8.5px; padding: 10px 2px; letter-spacing: -.2px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* ── Config / Settings panel ─────────────────────────────── */
+    .cfg-desc { font-size: 11.5px; color: var(--text2); line-height: 1.6; margin-bottom: 10px; }
+    .cfg-row { display: flex; align-items: center; gap: 10px; }
+    .cfg-label { font-size: 11.5px; color: var(--text2); min-width: 58px; }
+    .cfg-val { font-size: 11px; color: var(--accent); font-family: var(--mono); min-width: 44px; text-align: right; }
+    input[type=range] { accent-color: var(--accent); cursor: pointer; }
 
     /* ── Guide styles ────────────────────────────────────────── */
     .guide-h1 { font-size: 12.5px; font-weight: 700; color: var(--text); margin: 0 0 8px; }
@@ -217,7 +225,13 @@
     #midi-status-text { font-size: 11px; color: var(--text3); white-space: nowrap; }
 
     /* ── Blockly override ────────────────────────────────────── */
-    .blocklyToolboxDiv { border-right: 1px solid var(--border) !important; width: 190px !important; }
+    .blocklyToolboxDiv {
+      border-right: 1px solid var(--border) !important;
+      width: var(--toolbox-w) !important;
+      /* Barra de scroll invisible per estalviar espai */
+      scrollbar-width: none !important; -ms-overflow-style: none !important;
+    }
+    .blocklyToolboxDiv::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none !important; }
     .blocklyTreeLabel { font-family: var(--font) !important; font-size: 15px !important; font-weight: 600 !important; letter-spacing: .01em !important; }
     .blocklyScrollbarHandle { opacity: .5 !important; }
     .blocklyTreeRow { display: flex !important; align-items: stretch !important; padding: 4px 6px !important; cursor: pointer !important; min-height: 38px !important; }
@@ -432,12 +446,13 @@
     <div class="side-panel">
       <div class="panel-tabs">
         <button class="tab-btn active" data-tab="code" data-i18n="tab.code">Codi</button>
-        <button class="tab-btn" data-tab="device" data-i18n="tab.device">Tecles</button>
+        <button class="tab-btn" data-tab="device" data-i18n="tab.device">Dispositiu</button>
         <button class="tab-btn" data-tab="projects" data-i18n="tab.proj">Projectes</button>
         <button class="tab-btn" data-tab="simulator" data-i18n="tab.sim">Simulador</button>
         <button class="tab-btn" data-tab="firmware" data-i18n="tab.fw">Firmware</button>
         <button class="tab-btn" data-tab="theme" data-i18n="tab.theme">Aparença</button>
         <button class="tab-btn" data-tab="guide" data-i18n="tab.guide">Guia</button>
+        <button class="tab-btn" data-tab="config" data-i18n="tab.config">Configuració</button>
       </div>
       <div class="panel-body">
 
@@ -632,6 +647,50 @@
           <div class="dev-export-bar">
             <button class="btn btn-primary" id="btn-gen-device-code" style="flex:1;justify-content:center" data-i18n="dev.gencode">⬇ Generar codi.py</button>
             <button class="btn btn-success" id="btn-upload-device-code" style="flex:1;justify-content:center" disabled data-i18n="dev.pushbtn">📤 Pujar</button>
+          </div>
+        </div>
+
+        <!-- Settings / Configuració panel -->
+        <div id="panel-config" class="panel-content">
+          <div class="card">
+            <div class="card-title" data-i18n="cfg.menu.title">Menú de blocs</div>
+            <p class="cfg-desc" data-i18n="cfg.menu.desc">Amplada del menú lateral de categories de blocs.</p>
+            <div class="cfg-row">
+              <label class="cfg-label" data-i18n="cfg.menu.width">Amplada</label>
+              <input type="range" id="cfg-toolbox-width" min="170" max="360" step="10" value="230" style="flex:1">
+              <span id="cfg-toolbox-width-val" class="cfg-val">230px</span>
+            </div>
+            <div class="dev-cfg-btns" style="margin-top:10px">
+              <button class="btn btn-sm" id="btn-toolbox-reset" data-i18n="cfg.menu.reset">↺ Restablir amplada</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title" data-i18n="cfg.lang.title">Idioma</div>
+            <p class="cfg-desc" data-i18n="cfg.lang.desc">Idioma de la interfície i dels blocs.</p>
+            <div class="cfg-row">
+              <select id="cfg-lang" class="btn" style="flex:1;cursor:pointer">
+                <option value="ca">Català</option>
+                <option value="es">Español</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title" data-i18n="cfg.data.title">Dades i restabliment</div>
+            <p class="cfg-desc" data-i18n="cfg.data.desc">Esborra dades guardades al navegador. Aquesta acció no es pot desfer.</p>
+            <div class="dev-cfg-btns" style="flex-direction:column;align-items:stretch;gap:6px">
+              <button class="btn btn-danger" id="btn-cfg-clear-projects" data-i18n="cfg.data.projects">Esborrar biblioteca de projectes</button>
+              <button class="btn btn-danger" id="btn-cfg-clear-device" data-i18n="cfg.data.device">Restablir configuració del dispositiu</button>
+              <button class="btn btn-danger" id="btn-cfg-clear-autosave" data-i18n="cfg.data.autosave">Esborrar workspace desat automàticament</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title" data-i18n="cfg.about.title">Sobre</div>
+            <div class="status-row"><span data-i18n="cfg.about.app">Aplicació</span><span class="status-val">TECLA Blocks</span></div>
+            <div class="status-row"><span data-i18n="cfg.about.version">Versió</span><span class="status-val" id="cfg-version">—</span></div>
           </div>
         </div>
 

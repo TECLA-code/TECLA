@@ -11,7 +11,15 @@
 const _I18N = {
   ca: {
     'btn.back':'Inici','tab.code':'Codi','tab.sim':'Simulador','tab.guide':'Guia','tab.fw':'Firmware',
-    'tab.theme':'Aparença','tab.proj':'Projectes','tab.device':'Tecles',
+    'tab.theme':'Aparença','tab.proj':'Projectes','tab.device':'Dispositiu','tab.config':'Configuració',
+    'cfg.menu.title':'Menú de blocs','cfg.menu.desc':'Amplada del menú lateral de categories de blocs.',
+    'cfg.menu.width':'Amplada','cfg.menu.reset':'↺ Restablir amplada',
+    'cfg.lang.title':'Idioma','cfg.lang.desc':'Idioma de la interfície i dels blocs.',
+    'cfg.data.title':'Dades i restabliment','cfg.data.desc':'Esborra dades guardades al navegador. Aquesta acció no es pot desfer.',
+    'cfg.data.projects':'Esborrar biblioteca de projectes','cfg.data.device':'Restablir configuració del dispositiu','cfg.data.autosave':'Esborrar workspace desat automàticament',
+    'cfg.about.title':'Sobre','cfg.about.app':'Aplicació','cfg.about.version':'Versió',
+    'cfg.confirm.projects':'Segur que vols esborrar tota la biblioteca de projectes?','cfg.confirm.device':'Segur que vols restablir la configuració del dispositiu?','cfg.confirm.autosave':'Segur que vols esborrar el workspace desat automàticament?',
+    'cfg.toast.cleared':'Dades esborrades',
     'btn.new':'Nou','btn.open':'Obrir','btn.save':'Guardar','btn.export':'Exportar .py',
     'btn.connect':'Connectar','btn.upload':'Pujar','btn.copy':'Copiar',
     'btn.simulate':'Executar','btn.stop':'Aturar',
@@ -81,7 +89,15 @@ const _I18N = {
   },
   es: {
     'btn.back':'Inicio','tab.code':'Código','tab.sim':'Simulador','tab.guide':'Guía','tab.fw':'Firmware',
-    'tab.theme':'Apariencia','tab.proj':'Proyectos','tab.device':'Teclas',
+    'tab.theme':'Apariencia','tab.proj':'Proyectos','tab.device':'Dispositivo','tab.config':'Configuración',
+    'cfg.menu.title':'Menú de bloques','cfg.menu.desc':'Ancho del menú lateral de categorías de bloques.',
+    'cfg.menu.width':'Ancho','cfg.menu.reset':'↺ Restablecer ancho',
+    'cfg.lang.title':'Idioma','cfg.lang.desc':'Idioma de la interfaz y de los bloques.',
+    'cfg.data.title':'Datos y restablecimiento','cfg.data.desc':'Borra datos guardados en el navegador. Esta acción no se puede deshacer.',
+    'cfg.data.projects':'Borrar biblioteca de proyectos','cfg.data.device':'Restablecer configuración del dispositivo','cfg.data.autosave':'Borrar workspace guardado automáticamente',
+    'cfg.about.title':'Acerca de','cfg.about.app':'Aplicación','cfg.about.version':'Versión',
+    'cfg.confirm.projects':'¿Seguro que quieres borrar toda la biblioteca de proyectos?','cfg.confirm.device':'¿Seguro que quieres restablecer la configuración del dispositivo?','cfg.confirm.autosave':'¿Seguro que quieres borrar el workspace guardado automáticamente?',
+    'cfg.toast.cleared':'Datos borrados',
     'btn.new':'Nuevo','btn.open':'Abrir','btn.save':'Guardar','btn.export':'Exportar .py',
     'btn.connect':'Conectar','btn.upload':'Subir','btn.copy':'Copiar',
     'btn.simulate':'Ejecutar','btn.stop':'Detener',
@@ -151,7 +167,15 @@ const _I18N = {
   },
   en: {
     'btn.back':'Home','tab.code':'Code','tab.sim':'Simulator','tab.guide':'Guide','tab.fw':'Firmware',
-    'tab.theme':'Appearance','tab.proj':'Projects','tab.device':'Keys',
+    'tab.theme':'Appearance','tab.proj':'Projects','tab.device':'Device','tab.config':'Settings',
+    'cfg.menu.title':'Blocks menu','cfg.menu.desc':'Width of the side block-categories menu.',
+    'cfg.menu.width':'Width','cfg.menu.reset':'↺ Reset width',
+    'cfg.lang.title':'Language','cfg.lang.desc':'Interface and blocks language.',
+    'cfg.data.title':'Data & reset','cfg.data.desc':'Delete data saved in the browser. This action cannot be undone.',
+    'cfg.data.projects':'Delete projects library','cfg.data.device':'Reset device configuration','cfg.data.autosave':'Delete auto-saved workspace',
+    'cfg.about.title':'About','cfg.about.app':'Application','cfg.about.version':'Version',
+    'cfg.confirm.projects':'Delete the entire projects library?','cfg.confirm.device':'Reset the device configuration?','cfg.confirm.autosave':'Delete the auto-saved workspace?',
+    'cfg.toast.cleared':'Data deleted',
     'btn.new':'New','btn.open':'Open','btn.save':'Save','btn.export':'Export .py',
     'btn.connect':'Connect','btn.upload':'Upload','btn.copy':'Copy',
     'btn.simulate':'Run','btn.stop':'Stop',
@@ -243,6 +267,7 @@ function applyI18n(lang) {
   if (sm && (sm.textContent === '' || Object.values(_I18N).some(d => Object.values(d).includes(sm.textContent))))
     sm.textContent = dict['status.ready'] || sm.textContent;
   const sel = document.getElementById('sel-lang'); if (sel) sel.value = _curLang;
+  const cfgSel = document.getElementById('cfg-lang'); if (cfgSel) cfgSel.value = _curLang;
   document.documentElement.lang = _curLang === 'en' ? 'en' : _curLang === 'es' ? 'es' : 'ca';
   localStorage.setItem('tecla-blk-lang', _curLang);
   renderProjectsPanel();
@@ -308,6 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initThemeSystem();
   initDeviceConfig();
   initProjectsLib();
+  initConfigPanel();
   restoreAutosave();
   updateStatusBar();
 });
@@ -337,6 +363,81 @@ function fixToolboxAlignment() {
       label.style.setProperty('font-size', '15px', 'important');
       label.style.setProperty('font-weight', '600', 'important');
     });
+  });
+}
+
+// ── Config / Settings panel ───────────────────────────────────
+const _APP_VERSION = '1.1.0';
+const _TOOLBOX_W_KEY = 'tecla-blk-toolbox-w';
+const _TOOLBOX_W_DEFAULT = 230;
+const _TOOLBOX_W_MIN = 170;
+const _TOOLBOX_W_MAX = 360;
+
+function _getToolboxWidth() {
+  const v = parseInt(localStorage.getItem(_TOOLBOX_W_KEY), 10);
+  if (!v || isNaN(v)) return _TOOLBOX_W_DEFAULT;
+  return Math.min(_TOOLBOX_W_MAX, Math.max(_TOOLBOX_W_MIN, v));
+}
+
+function applyToolboxWidth(px, save = true) {
+  const w = Math.min(_TOOLBOX_W_MAX, Math.max(_TOOLBOX_W_MIN, parseInt(px, 10) || _TOOLBOX_W_DEFAULT));
+  document.documentElement.style.setProperty('--toolbox-w', w + 'px');
+  if (save) localStorage.setItem(_TOOLBOX_W_KEY, String(w));
+  const slider = document.getElementById('cfg-toolbox-width');
+  const val = document.getElementById('cfg-toolbox-width-val');
+  if (slider && parseInt(slider.value, 10) !== w) slider.value = w;
+  if (val) val.textContent = w + 'px';
+  // Reposiciona el workspace i el flyout de Blockly amb la nova amplada
+  try {
+    if (workspace) {
+      Blockly.svgResize(workspace);
+      workspace.getToolbox()?.position?.();
+      fixToolboxAlignment();
+    }
+  } catch (_) {}
+  return w;
+}
+
+function initConfigPanel() {
+  applyToolboxWidth(_getToolboxWidth(), false);
+
+  const slider = document.getElementById('cfg-toolbox-width');
+  if (slider) {
+    slider.value = _getToolboxWidth();
+    slider.addEventListener('input', e => applyToolboxWidth(e.target.value));
+  }
+  document.getElementById('btn-toolbox-reset')?.addEventListener('click', () => {
+    applyToolboxWidth(_TOOLBOX_W_DEFAULT);
+  });
+
+  const langSel = document.getElementById('cfg-lang');
+  if (langSel) {
+    langSel.value = _curLang;
+    langSel.addEventListener('change', e => applyI18n(e.target.value));
+  }
+
+  const ver = document.getElementById('cfg-version');
+  if (ver) ver.textContent = _APP_VERSION;
+
+  document.getElementById('btn-cfg-clear-projects')?.addEventListener('click', () => {
+    if (!confirm(t('cfg.confirm.projects'))) return;
+    projectsLib = [];
+    _saveProjectsLib();
+    renderProjectsPanel();
+    toast(t('cfg.toast.cleared'), 'ok');
+  });
+  document.getElementById('btn-cfg-clear-device')?.addEventListener('click', () => {
+    if (!confirm(t('cfg.confirm.device'))) return;
+    deviceConfig = _defaultDeviceCfg();
+    _dcSel = null;
+    _saveDC();
+    renderDevicePanel();
+    toast(t('cfg.toast.cleared'), 'ok');
+  });
+  document.getElementById('btn-cfg-clear-autosave')?.addEventListener('click', () => {
+    if (!confirm(t('cfg.confirm.autosave'))) return;
+    localStorage.removeItem(_AUTOSAVE_KEY);
+    toast(t('cfg.toast.cleared'), 'ok');
   });
 }
 
