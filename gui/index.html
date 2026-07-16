@@ -35,17 +35,35 @@
     .btn-primary { background: rgba(74, 128, 240, 0.15); border-color: var(--accent); color: var(--accent); }
     .btn-primary:hover { background: rgba(74, 128, 240, 0.25); }
 
-    /* Layout */
-    .device-wrap { flex: 1; display: flex; flex-direction: row-reverse; align-items: center; justify-content: center; gap: 20px; padding: 20px 20px 140px; overflow-y: auto; }
-
-    /* Config Drawer */
-    .config-drawer { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 2px solid var(--border-h); transform: translateY(100%); transition: transform 0.25s cubic-bezier(.4,0,.2,1); z-index: 100; max-height: 75vh; overflow-y: auto; }
-    .config-drawer.open { transform: translateY(0); }
-    .drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px 12px; border-bottom: 1px solid var(--border); }
+    /* Layout — config tab: device left, inspector right */
+    .config-main { flex: 1; display: flex; min-height: 0; }
+    .device-pane { flex: 1; display: flex; flex-direction: row-reverse; align-items: center; justify-content: center; gap: 28px; padding: 20px; overflow-y: auto; min-width: 0; }
+    .inspector { width: 340px; flex-shrink: 0; border-left: 1px solid var(--border); background: var(--surface); overflow-y: auto; display: flex; flex-direction: column; }
+    .insp-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); z-index: 5; }
     .drawer-title { font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: .08em; }
-    .drawer-body { padding: 20px 24px 32px; max-width: 600px; }
-    .btn-close { background: none; border: none; color: var(--text2); font-size: 18px; cursor: pointer; line-height: 1; padding: 2px 6px; border-radius: var(--radius); }
-    .btn-close:hover { color: var(--text); background: var(--surface2); }
+    .insp-body { padding: 16px 16px 8px; }
+    .insp-autosave { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--text3); padding: 10px 16px 14px; }
+    .insp-autosave::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+    .insp-tools { border-top: 1px solid var(--border); padding: 14px 16px 20px; margin-top: auto; }
+    .insp-tools-desc { font-size: 11px; color: var(--text3); line-height: 1.6; margin-bottom: 10px; }
+    .midi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+    .midi-grid .form-group { margin-bottom: 0; }
+    @media (max-width: 860px) {
+      .config-main { flex-direction: column; overflow-y: auto; }
+      #tab-config.active { overflow-y: auto; }
+      .device-pane { overflow: visible; flex: none; }
+      .inspector { width: 100%; border-left: none; border-top: 1px solid var(--border); overflow: visible; }
+    }
+    @media (max-width: 560px) { .logo { display: none; } }
+    /* Back to hub */
+    .btn-hub { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface2); color: var(--text2); text-decoration: none; transition: all .15s; flex-shrink: 0; }
+    .btn-hub:hover { color: var(--text); border-color: var(--border-h); background: var(--surface3); }
+    /* Layer chips */
+    .layer-chips { display: flex; gap: 6px; overflow-x: auto; flex: 1; min-width: 0; padding: 2px 0; }
+    .layer-chip { padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); font-size: 11.5px; cursor: pointer; white-space: nowrap; user-select: none; transition: all .15s; flex-shrink: 0; }
+    .layer-chip:hover { border-color: var(--border-h); color: var(--text); }
+    .layer-chip.active { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); font-weight: 600; }
+    .bank-actions { display: flex; gap: 5px; flex-shrink: 0; }
     
     /* Pots */
     .pots-row { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
@@ -57,7 +75,7 @@
     .pot-label { font-size: 11px; font-weight: 600; color: var(--text); }
     
     /* Tecles */
-    .keys-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 380px; }
+    .keys-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 440px; }
     .key-btn { aspect-ratio: 1; background: #dde1eb; border: 1px solid rgba(0,0,0,0.18); border-radius: 7px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.1s; position: relative; box-shadow: 0 3px 0 rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.55); }
     .key-btn:hover { border-color: rgba(0,0,0,0.28); background: #eaecf5; }
     .key-btn:active, .key-btn.pressed { transform: scale(.95); box-shadow: 0 1px 0 rgba(0,0,0,0.3), inset 0 1px 2px rgba(0,0,0,0.15); }
@@ -128,10 +146,17 @@
     .tab-panel.active { display: flex; flex-direction: column; }
     #tab-config.active { overflow: hidden; }
     #tab-profiles.active { overflow-y: auto; }
+    #tab-settings.active { overflow-y: auto; }
     #tab-firmware.active, #tab-guide.active, #tab-theme.active { overflow-y: auto; }
     /* Card */
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r2); padding: 18px; }
     .card-title { font-size: 11px; font-weight: 600; color: var(--text2); margin-bottom: 12px; letter-spacing: .06em; text-transform: uppercase; }
+    /* Toast */
+    .toast-wrap { position: fixed; top: 54px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+    .toast { background: var(--surface2); border: 1px solid var(--border-h); border-left: 3px solid var(--accent); color: var(--text); font-size: 12.5px; line-height: 1.45; padding: 10px 14px; border-radius: var(--r2); box-shadow: 0 6px 22px rgba(0,0,0,0.4); max-width: 320px; opacity: 0; transform: translateX(14px); transition: opacity .2s ease, transform .2s ease; pointer-events: auto; }
+    .toast.show { opacity: 1; transform: translateX(0); }
+    .toast-ok { border-left-color: var(--green); }
+    .toast-err { border-left-color: #ef4444; }
     /* Firmware */
     .fw-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; padding: 20px; }
     .fw-status-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); }
@@ -202,7 +227,10 @@
 </head>
 <body>
   <header>
-    <div style="display: flex; align-items: center; gap: 15px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <a class="btn-hub" href="../index.html" id="btn-hub" title="Tornar al hub d'aplicacions" aria-label="Tornar al hub">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H3M7 4L3 8l4 4"/></svg>
+      </a>
       <div class="logo">T E C L A</div>
       <div class="device-badge" id="device-badge"><span class="dot"></span><span id="device-name">desconnectat</span></div>
     </div>
@@ -217,42 +245,66 @@
   </header>
 
   <nav>
-    <span class="nav-tab active" data-tab="config">Configuraci&oacute;</span>
+    <span class="nav-tab active" data-tab="config">Dispositiu</span>
     <span class="nav-tab" data-tab="profiles">Capes</span>
     <span class="nav-tab" data-tab="firmware">Firmware</span>
-    <span class="nav-tab" data-tab="guide">Guia d'&uacute;s</span>
     <span class="nav-tab" data-tab="theme">Aparen&ccedil;a</span>
+    <span class="nav-tab" data-tab="guide">Guia</span>
+    <span class="nav-tab" data-tab="settings">Configuraci&oacute;</span>
   </nav>
 
   <div class="tab-panel active" id="tab-config">
   <div class="bank-bar">
-    <span>Capa:</span>
-    <select id="layer-select"></select>
-    <button class="btn btn-sm" id="btn-prev-layer">&larr;</button>
-    <button class="btn btn-sm" id="btn-next-layer">&rarr;</button>
-    <button class="btn btn-sm" id="btn-new-layer">+ Nova</button>
-    <button class="btn btn-sm" id="btn-rename-layer">Reanomenar</button>
-    <button class="btn btn-sm btn-danger" id="btn-del-layer">Eliminar</button>
+    <span data-t="layer_lbl">Capes:</span>
+    <div class="layer-chips" id="layer-chips"></div>
+    <div class="bank-actions">
+      <button class="btn btn-sm" id="btn-new-layer" data-t="btn_new_layer">+ Nova</button>
+      <button class="btn btn-sm" id="btn-dup-layer" title="Duplicar la capa activa">&#x2398;</button>
+      <button class="btn btn-sm" id="btn-rename-layer" title="Reanomenar la capa activa">&#x270E;</button>
+      <button class="btn btn-sm btn-danger" id="btn-del-layer" title="Eliminar la capa activa">&#x2715;</button>
+      <div style="width:1px;background:var(--border);margin:0 3px"></div>
+      <button class="btn btn-sm" id="btn-export-layer" title="Exportar la capa activa (JSON)">&darr;</button>
+      <button class="btn btn-sm" id="btn-import-layer" title="Importar capes (JSON)">&uarr;</button>
+    </div>
   </div>
-  <div class="device-wrap">
-    <div class="pots-row" id="device-pots"></div>
-    <div class="keys-grid" id="device-keys"></div>
+  <div class="config-main">
+    <div class="device-pane">
+      <div class="pots-row" id="device-pots"></div>
+      <div class="keys-grid" id="device-keys"></div>
+    </div>
+    <aside class="inspector" id="inspector">
+      <div class="insp-header">
+        <span class="drawer-title" id="form-element-title">&#8212;</span>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-sm" id="btn-copy-elem" data-t="btn_copy" title="Copiar la configuraci&oacute; d'aquesta tecla">Copiar</button>
+          <button class="btn btn-sm" id="btn-paste-elem" data-t="btn_paste" disabled title="Enganxar la configuraci&oacute; copiada">Enganxar</button>
+        </div>
+      </div>
+      <div class="insp-body" id="insp-body"></div>
+      <div class="insp-autosave" data-t="autosave_note">Els canvis es desen autom&agrave;ticament</div>
+      <div class="insp-tools">
+        <div class="card-title" data-t="midi_tools_title">&#9836; MIDI r&agrave;pid</div>
+        <p class="insp-tools-desc" data-th="midi_tools_desc">Omple capes senceres amb notes MIDI consecutives (16 per capa). Ideal per a TouchDesigner, Ableton o qualsevol programa que escolti MIDI.</p>
+        <div class="midi-grid">
+          <div class="form-group"><label data-t="midi_base_lbl">Nota inicial</label><input type="number" id="midi-fill-base" min="0" max="127" value="36"></div>
+          <div class="form-group"><label data-t="midi_ch_lbl">Canal</label><input type="number" id="midi-fill-ch" min="1" max="16" value="1"></div>
+          <div class="form-group"><label data-t="midi_vel_lbl">Velocitat</label><input type="number" id="midi-fill-vel" min="1" max="127" value="100"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <button class="btn btn-primary" id="btn-midi-fill" data-t="btn_midi_fill">Omplir aquesta capa (16 notes)</button>
+          <div style="display:flex;gap:6px;align-items:center">
+            <button class="btn" id="btn-midi-layers" style="flex:1" data-t="btn_midi_layers">Generar capes noves</button>
+            <input type="number" id="midi-fill-nlayers" min="1" max="8" value="4" style="width:52px" title="Nombre de capes a generar">
+          </div>
+        </div>
+      </div>
+    </aside>
   </div>
   </div><!-- #tab-config -->
 
   <!-- CAPES -->
   <div class="tab-panel" id="tab-profiles">
     <div style="max-width:720px;padding:20px;display:flex;flex-direction:column;gap:16px">
-      <div class="card">
-        <div class="card-title">Configuracions</div>
-        <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.65" data-th="profiles_config_desc">Marca les que vols usar i prem <strong>Afegir al dispositiu</strong> per incloure-les com a capes.</p>
-        <div class="checklist" id="preset-grid" style="margin-bottom:14px"></div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button class="btn btn-sm btn-primary" id="btn-add-presets" data-t="profiles_add">+ Afegir al dispositiu</button>
-          <button class="btn btn-sm" id="btn-presets-all" data-t="profiles_all">Totes</button>
-          <button class="btn btn-sm" id="btn-presets-none" data-t="profiles_none">Cap</button>
-        </div>
-      </div>
       <div class="card">
         <div class="card-title">Les meves capes</div>
         <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.65" data-th="profiles_my_desc">Totes les capes del dispositiu en ordre. La tecla <em>Canviar de capa</em> les recorre seq&uuml;encialment. La capa activa apareix ressaltada.</p>
@@ -263,6 +315,50 @@
           <input type="file" id="import-profile-file" accept=".json" style="display:none">
         </div>
         <div id="profiles-list" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIGURACIÓ -->
+  <div class="tab-panel" id="tab-settings">
+    <div style="max-width:460px;padding:20px;display:flex;flex-direction:column;gap:14px">
+      <div class="card">
+        <div class="card-title" data-t="cfg_midi_title">Canal MIDI</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.65" data-th="cfg_midi_desc">Canal MIDI per defecte que s'aplicar&agrave; a les tecles i potenci&ograve;metres MIDI nous.</p>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+          <label style="font-size:12px;font-weight:500;min-width:80px" data-t="cfg_midi_ch">Canal:</label>
+          <select id="cfg-midi-channel" style="width:70px">
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+            <option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
+            <option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
+            <option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option>
+          </select>
+          <button class="btn btn-sm btn-primary" id="btn-save-midi-channel" data-t="cfg_save">Guardar</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" data-t="cfg_usb_title">Identitat USB</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <label style="font-size:12px;font-weight:500;min-width:90px" data-t="cfg_port_name">Nom del port:</label>
+            <input type="text" id="cfg-device-name" maxlength="32" placeholder="Ex: TECLA-1" style="width:140px">
+            <button class="btn btn-sm btn-primary" id="btn-save-device-name" data-t="cfg_save">Guardar</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <label style="font-size:12px;font-weight:500;min-width:90px" data-t="cfg_disk_name">Nom del disc:</label>
+            <div style="display:flex;align-items:center;gap:4px">
+              <span style="font-size:12px;font-weight:600;padding:5px 7px;background:var(--surface2);border:1px solid var(--border);border-radius:5px">TECLA</span>
+              <input type="text" id="cfg-disk-suffix" maxlength="6" placeholder="-1" style="width:64px;text-transform:uppercase">
+            </div>
+            <button class="btn btn-sm btn-primary" id="btn-save-disk-label" data-t="cfg_save">Guardar</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" data-t="cfg_device_title">Dispositiu</div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-sm" id="btn-cfg-disconnect" data-t="cfg_disconnect">Desconnectar</button>
+        </div>
       </div>
     </div>
   </div>
@@ -306,61 +402,7 @@
   <!-- GUIA -->
   <div class="tab-panel" id="tab-guide">
     <div class="guide-wrap">
-      <div class="card" id="guide-card">
-        <div class="guide-toc">
-          <a href="#g1">1. Primers passos</a>
-          <a href="#g2">2. Configuraci&oacute; de tecles</a>
-          <a href="#g3">3. Configuraci&oacute; de potenci&ograve;metres</a>
-          <a href="#g4">4. Exportar al dispositiu</a>
-          <a href="#g5">5. Capes</a>
-        </div>
-        <div id="g1">
-          <div class="guide-h1">1. Primers passos</div>
-          <p class="guide-li">Connecta el TECLA a l'ordinador via USB-C.</p>
-          <p class="guide-li">Si &eacute;s la primera vegada, instal&middot;la CircuitPython (pestanya <em>Firmware</em> &rarr; Pas 1).</p>
-          <p class="guide-li">Instal&middot;la la carpeta <strong>adafruit_hid</strong> a <strong>CIRCUITPY/lib/</strong> (Pas 2).</p>
-          <p class="guide-li">Configura les tecles i potenci&ograve;metres a la pestanya <em>Configuraci&oacute;</em> i exporta (Pas 3).</p>
-          <div class="guide-note">El TECLA funciona com un dispositiu HID: teclat, ratol&iacute; i control multim&egrave;dia. No cal cap driver addicional.</div>
-        </div>
-        <div id="g2">
-          <div class="guide-h1">2. Configuraci&oacute; de tecles</div>
-          <p class="guide-li">Clica qualsevol de les <strong>16 tecles</strong> per obrir el panell de configuraci&oacute;.</p>
-          <div class="guide-h2">Tipus de funci&oacute; disponibles</div>
-          <p class="guide-li"><strong>Tecla / Drecera</strong>: envia una combinaci&oacute; de tecles (Ctrl+C, Cmd+S, F5…).</p>
-          <p class="guide-li"><strong>Escriure text</strong>: escriu una cadena de text autom&agrave;ticament.</p>
-          <p class="guide-li"><strong>Control multim&egrave;dia</strong>: reproduir, pausa, volum, brillantor, etc.</p>
-          <p class="guide-li"><strong>Ratol&iacute;</strong>: clic esquerre, dret o central.</p>
-          <p class="guide-li"><strong>Cap</strong>: tecla desactivada.</p>
-          <div class="guide-h2">Colors de les tecles</div>
-          <p class="guide-li">Les tecles configurades mostren un color indicant el tipus de funci&oacute; assignada.</p>
-          <p class="guide-li"><span style="color:rgba(110,85,220,.9)">&#9632;</span> Lila = Tecla/Drecera &nbsp; <span style="color:rgba(61,201,108,.9)">&#9632;</span> Verd = Text &nbsp; <span style="color:rgba(255,180,0,.9)">&#9632;</span> Groc = Multim&egrave;dia &nbsp; <span style="color:rgba(0,200,200,.9)">&#9632;</span> Cian = Ratol&iacute;</p>
-        </div>
-        <div id="g3">
-          <div class="guide-h1">3. Configuraci&oacute; de potenci&ograve;metres</div>
-          <p class="guide-li">El TECLA t&eacute; <strong>3 potenci&ograve;metres</strong> (X, Y, Z). Clica'ls per configurar la seva funci&oacute;.</p>
-          <p class="guide-li"><strong>Volum</strong>: controla el volum de l'ordinador.</p>
-          <p class="guide-li"><strong>Brillantor</strong>: controla la brillantor de la pantalla.</p>
-          <p class="guide-li"><strong>Scroll vertical/horitzontal</strong>: fa scroll amb el ratol&iacute;.</p>
-          <p class="guide-li"><strong>Ratol&iacute; X/Y</strong>: mou el cursor del ratol&iacute;.</p>
-          <div class="guide-note">A l'app pots girar el knob (arrossega amunt/avall) o fer scroll per simular el valor del potenci&ograve;metre.</div>
-        </div>
-        <div id="g4">
-          <div class="guide-h1">4. Exportar al dispositiu</div>
-          <p class="guide-li">Clica <strong>Exportar al Dispositiu</strong> a la cap&ccedil;alera o a la pestanya <em>Firmware</em>.</p>
-          <p class="guide-li">Selecciona el volum <strong>CIRCUITPY</strong> al di&agrave;leg del Finder.</p>
-          <p class="guide-li">El fitxer <strong>code.py</strong> es copia autom&agrave;ticament al dispositiu.</p>
-          <p class="guide-li">El TECLA es reinicia i aplica la nova configuraci&oacute; immediatament.</p>
-          <div class="guide-note">Cal Chrome o Edge per a l'acc&eacute;s directe al sistema de fitxers (File System Access API). A Safari, es descarrega <strong>code.py</strong> manualment i cal copiar-lo a CIRCUITPY.</div>
-        </div>
-        <div id="g5">
-          <div class="guide-h1">5. Capes</div>
-          <p class="guide-li">Prem <strong>Desar capa</strong> a la pestanya <em>Configuraci&oacute;</em> per guardar la capa activa a la biblioteca amb un nom.</p>
-          <p class="guide-li">A la pestanya <em>Capes</em>, clica <strong>+ Capa</strong> per afegir una capa desada al dispositiu. Pots tenir fins a 8 capes actives.</p>
-          <p class="guide-li">La secci&oacute; <em>Capes del dispositiu</em> mostra l&rsquo;ordre que tindr&agrave; el firmware. Reordena-les amb ↑↓ i elimina-les amb ✕.</p>
-          <p class="guide-li">Afegeix una tecla de tipus <em>Canviar de capa</em> per alternar entre capes des del dispositiu.</p>
-          <div class="guide-note">Les capes es guarden al localStorage del navegador. No es perdran en tancar l'app, per&ograve; s'esborraran si s'esborra la mem&ograve;ria del navegador.</div>
-        </div>
-      </div>
+      <div class="card" id="guide-card"><!-- contingut generat per setLang() des de _GUIDE --></div>
     </div>
   </div>
 
@@ -413,22 +455,17 @@
     </div>
   </div>
 
-  <div class="config-drawer" id="config-drawer">
-    <div class="drawer-header">
-      <span class="drawer-title" id="form-element-title">&#8212;</span>
-      <button class="btn-close" id="btn-close-drawer">&#x2715;</button>
-    </div>
-    <div class="drawer-body">
-      <div class="form-group">
-        <label data-t="drawer_label">Nom de l'acci&oacute; (Etiqueta opcional)</label>
-        <input type="text" id="elem-label" placeholder="Ex: Guardar, Copiar...">
-      </div>
+  <!-- Formulari de configuració: es munta dins l'inspector en inicialitzar -->
+  <div id="elem-form" style="display:none">
       <div class="form-group">
         <label data-t="drawer_type">Funci&oacute; Principal</label>
         <select id="elem-type"><!-- Opcions per JS --></select>
       </div>
       <!-- Drecera (Keys) -->
       <div id="settings-key" style="display: none; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px;">
+        <div class="form-group">
+          <button class="btn btn-primary" id="btn-rec-shortcut" style="width:100%" data-t="rec_shortcut">&#9000; Capturar drecera del teclat</button>
+        </div>
         <div class="form-group">
           <label data-t="drawer_key_label">Tecla Principal</label>
           <select id="key-keycode">
@@ -572,11 +609,7 @@
           </select>
         </div>
       </div>
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
-        <button class="btn btn-primary" id="btn-save-element" data-t="btn_save_elem">Aplicar Canvis</button>
-      </div>
-    </div>
-  </div>
+  </div><!-- #elem-form -->
 
   <script>
     // Constants
@@ -607,12 +640,11 @@
     let currentSelection = { type: null, id: null }; // type: 'key' | 'pot'
     let _deviceDir = null;
 
+    // (nom llegat) Refresca l'inspector mantenint la selecció — es crida en canviar de capa
     function closeDrawer() {
-      document.getElementById('config-drawer').classList.remove('open');
-      currentSelection = { type: null, id: null };
+      if (currentSelection.type) loadConfigForm();
       renderDevice();
     }
-    document.getElementById('btn-close-drawer').addEventListener('click', closeDrawer);
 
     // Funcions Auxiliars
     function formatTime() {
@@ -628,6 +660,18 @@
       div.innerHTML = `<span class="timestamp">[${formatTime()}]</span> <span class="source" style="color: ${source==='SYS'?'var(--yellow)':'var(--green)'}">[${source}]</span> ${msg}`;
       term.appendChild(div);
       term.scrollTop = term.scrollHeight;
+    }
+
+    // Notificació temporal no bloquejant. type: 'info' | 'ok' | 'err'
+    function showToast(msg, type = 'info', duration = 3200) {
+      let wrap = document.getElementById('toast-wrap');
+      if (!wrap) { wrap = document.createElement('div'); wrap.id = 'toast-wrap'; wrap.className = 'toast-wrap'; document.body.appendChild(wrap); }
+      const el = document.createElement('div');
+      el.className = 'toast' + (type === 'ok' ? ' toast-ok' : type === 'err' ? ' toast-err' : '');
+      el.textContent = msg;
+      wrap.appendChild(el);
+      requestAnimationFrame(() => el.classList.add('show'));
+      setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 220); }, duration);
     }
 
     // Pot drag state
@@ -721,7 +765,7 @@
     function handleElementClick(type, id) {
       currentSelection = { type, id };
       loadConfigForm();
-      document.getElementById('config-drawer').classList.add('open');
+      _syncPasteBtn();
       renderDevice();
     }
 
@@ -743,10 +787,11 @@
       if (val === 'midi_note') document.getElementById('settings-midi_note').style.display = 'block';
     });
 
+    let _formLoading = false;
     function loadConfigForm() {
+      _formLoading = true;
       const { type, id } = currentSelection;
       const title = document.getElementById('form-element-title');
-      const labelInput = document.getElementById('elem-label');
       
       // Neteja general opcions
       typeSelect.innerHTML = '';
@@ -754,7 +799,6 @@
       if (type === 'key') {
         const k = config.keys[id];
         title.innerText = `Configurant Tecla ${id + 1}`;
-        labelInput.value = k.label;
         
         typeSelect.innerHTML = `
           <option value="none" data-t="type_none">${_i('type_none')}</option>
@@ -795,13 +839,12 @@
           document.getElementById('key-hold-mod').value = k.modifier || 'Keycode.COMMAND';
         } else if (k.type === 'midi_note') {
           document.getElementById('key-midi-note').value = k.midi_note ?? 60;
-          document.getElementById('key-midi-channel').value = k.midi_channel ?? 1;
+          document.getElementById('key-midi-channel').value = k.midi_channel ?? _loadMidiChannel();
           document.getElementById('key-midi-velocity').value = k.midi_velocity ?? 100;
         }
       } else if (type === 'pot') {
         const p = config.pots[id];
         title.innerText = `Configurant Potenciòmetre ${POT_NAMES[id]}`;
-        labelInput.value = p.label;
         
         typeSelect.innerHTML = `
           <option value="none">Cap (Desactivat)</option>
@@ -827,16 +870,17 @@
       }
       
       typeSelect.dispatchEvent(new Event('change'));
+      _formLoading = false;
     }
 
-    // Guardar configuració del panell
-    document.getElementById('btn-save-element').addEventListener('click', () => {
+    // Aplicar els canvis del panell (desat automàtic a cada edició)
+    function applyElement() {
+      if (!currentSelection.type) return;
       const { type, id } = currentSelection;
-      const label = document.getElementById('elem-label').value;
       const fType = document.getElementById('elem-type').value;
       
       if (type === 'key') {
-        const k = { type: fType, label: label || `${id + 1}`, id };
+        const k = { type: fType, label: `${id + 1}`, id };
         if (fType === 'key') {
           k.keycode = document.getElementById('key-keycode').value;
           k.mods = [];
@@ -861,7 +905,7 @@
         }
         config.keys[id] = k;
       } else if (type === 'pot') {
-        const potData = { function: fType, label: label || `Pot ${POT_NAMES[id]}`, id, value: config.pots[id]?.value || 0 };
+        const potData = { function: fType, label: `Pot ${POT_NAMES[id]}`, id, value: config.pots[id]?.value || 0 };
         if (fType === 'click_step') potData.step_size = parseInt(document.getElementById('pot-step-size').value) || 10;
         if (fType === 'midi_cc') {
           potData.midi_cc_num = Math.min(127, Math.max(0, parseInt(document.getElementById('pot-midi-cc-num').value) || 7));
@@ -870,13 +914,147 @@
         config.pots[id] = potData;
       }
       
-      logSim(`Configuració guardada per a ${type} ${id}`, 'SYS');
       saveLayers();
       renderDevice();
+    }
+    // Desat automàtic: qualsevol edició del formulari s'aplica a l'instant
+    ['input','change'].forEach(ev => document.getElementById('insp-body').addEventListener(ev, () => {
+      if (!_formLoading) applyElement();
+    }));
+
+    // ── Copiar / Enganxar configuració d'elements ──────────────────
+    let _elemClip = null; // { kind:'key'|'pot', data:{...} }
+    function _syncPasteBtn() {
+      const b = document.getElementById('btn-paste-elem');
+      if (b) b.disabled = !_elemClip || !currentSelection.type || _elemClip.kind !== currentSelection.type;
+    }
+    document.getElementById('btn-copy-elem')?.addEventListener('click', () => {
+      const { type, id } = currentSelection;
+      if (!type) return;
+      const src = type === 'key' ? config.keys[id] : config.pots[id];
+      _elemClip = { kind: type, data: JSON.parse(JSON.stringify(src)) };
+      _syncPasteBtn();
+      logSim(_i('log_copied'), 'SYS');
+    });
+    document.getElementById('btn-paste-elem')?.addEventListener('click', () => {
+      const { type, id } = currentSelection;
+      if (!type || !_elemClip || _elemClip.kind !== type) return;
+      const cp = JSON.parse(JSON.stringify(_elemClip.data));
+      cp.id = id;
+      if (type === 'key') config.keys[id] = cp;
+      else { cp.value = config.pots[id]?.value || 0; config.pots[id] = cp; }
+      saveLayers(); loadConfigForm(); renderDevice();
+    });
+
+    // ── Captura de dreceres reals del teclat ───────────────────────
+    const _CODE2KC = { Space:'Keycode.SPACE', Enter:'Keycode.ENTER', Escape:'Keycode.ESCAPE', Backspace:'Keycode.BACKSPACE', Tab:'Keycode.TAB', ArrowUp:'Keycode.UP_ARROW', ArrowDown:'Keycode.DOWN_ARROW', ArrowLeft:'Keycode.LEFT_ARROW', ArrowRight:'Keycode.RIGHT_ARROW' };
+    const _DIGIT2KC = { '1':'ONE','2':'TWO','3':'THREE','4':'FOUR','5':'FIVE','6':'SIX','7':'SEVEN','8':'EIGHT','9':'NINE','0':'ZERO' };
+    function _codeToKeycode(code) {
+      if (_CODE2KC[code]) return _CODE2KC[code];
+      let m = code.match(/^Key([A-Z])$/); if (m) return 'Keycode.' + m[1];
+      m = code.match(/^Digit(\d)$/); if (m) return 'Keycode.' + _DIGIT2KC[m[1]];
+      m = code.match(/^F(\d+)$/); if (m && +m[1] >= 1 && +m[1] <= 12) return 'Keycode.F' + m[1];
+      return null;
+    }
+    let _recActive = false;
+    const _recBtn = document.getElementById('btn-rec-shortcut');
+    _recBtn?.addEventListener('click', () => {
+      if (_recActive) return;
+      _recActive = true;
+      _recBtn.textContent = _i('rec_waiting');
+      const onKey = (e) => {
+        e.preventDefault(); e.stopPropagation();
+        const kc = _codeToKeycode(e.code);
+        if (!kc) return; // modificador sol o tecla no suportada: seguim esperant
+        document.getElementById('key-keycode').value = kc;
+        document.getElementById('mod-ctrl').checked = e.ctrlKey;
+        document.getElementById('mod-shift').checked = e.shiftKey;
+        document.getElementById('mod-alt').checked = e.altKey;
+        document.getElementById('mod-cmd').checked = e.metaKey;
+        window.removeEventListener('keydown', onKey, true);
+        _recActive = false;
+        _recBtn.textContent = _i('rec_shortcut');
+        applyElement();
+      };
+      window.addEventListener('keydown', onKey, true);
+    });
+
+    // ── MIDI ràpid: omplir capes amb notes consecutives ────────────
+    const _NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+    function _noteName(n) { return _NOTE_NAMES[n % 12] + (Math.floor(n / 12) - 1); }
+    function _midiFillLayer(layer, base, ch, vel) {
+      for (let i = 0; i < 16; i++) {
+        const n = Math.min(127, base + i);
+        layer.keys[i] = { type:'midi_note', label:_noteName(n), id:i, midi_note:n, midi_channel:ch, midi_velocity:vel };
+      }
+    }
+    function _midiToolVals() {
+      return {
+        base: Math.min(127, Math.max(0, parseInt(document.getElementById('midi-fill-base').value) || 0)),
+        ch: Math.min(16, Math.max(1, parseInt(document.getElementById('midi-fill-ch').value) || 1)),
+        vel: Math.min(127, Math.max(1, parseInt(document.getElementById('midi-fill-vel').value) || 100)),
+      };
+    }
+    document.getElementById('btn-midi-fill')?.addEventListener('click', () => {
+      const { base, ch, vel } = _midiToolVals();
+      const used = config.keys.some(k => k.type !== 'none');
+      if (used && !confirm(_i('midi_fill_confirm'))) return;
+      _midiFillLayer(config, base, ch, vel);
+      saveLayers(); renderDevice(); if (currentSelection.type) loadConfigForm();
+      logSim(`MIDI ${_noteName(base)}–${_noteName(Math.min(127, base + 15))} (ch ${ch})`, 'SYS');
+    });
+    document.getElementById('btn-midi-layers')?.addEventListener('click', () => {
+      const { base, ch, vel } = _midiToolVals();
+      const n = Math.min(8, Math.max(1, parseInt(document.getElementById('midi-fill-nlayers').value) || 1));
+      const firstIdx = layers.length;
+      for (let j = 0; j < n; j++) {
+        const b = base + j * 16;
+        if (b > 127) break;
+        const l = _defaultLayer(`MIDI ${_noteName(b)}–${_noteName(Math.min(127, b + 15))}`);
+        _midiFillLayer(l, b, ch, vel);
+        layers.push(l);
+      }
+      if (layers.length === firstIdx) return;
+      currentLayerIdx = firstIdx;
+      config = layers[currentLayerIdx];
+      saveLayers(); _syncLayerBar(); renderDevice(); if (currentSelection.type) loadConfigForm();
+      logSim(`${layers.length - firstIdx} ${_i('log_midi_layers')}`, 'SYS');
     });
 
     // Generador Codi CircuitPython (multi-capa)
     const ADAFRUIT_HID_PY = {"__init__.py": "# SPDX-FileCopyrightText: 2017 Scott Shawcroft for Adafruit Industries\n#\n# SPDX-License-Identifier: MIT\n\n\"\"\"\n`adafruit_hid`\n====================================================\n\nThis driver simulates USB HID devices.\n\n* Author(s): Scott Shawcroft, Dan Halbert\n\"\"\"\n\n# imports\nfrom __future__ import annotations\n\nimport time\n\ntry:\n    import supervisor\nexcept ImportError:\n    supervisor = None\n\ntry:\n    from typing import Sequence\nexcept ImportError:\n    pass\n\n# usb_hid may not exist on some boards that still provide BLE or other HID devices.\ntry:\n    from usb_hid import Device\nexcept ImportError:\n    Device = None\n\n__version__ = \"0.0.0+auto.0\"\n__repo__ = \"https://github.com/adafruit/Adafruit_CircuitPython_HID.git\"\n\n\ndef find_device(\n    devices: Sequence[object],\n    *,\n    usage_page: int,\n    usage: int,\n    timeout: int = None,\n) -> object:\n    \"\"\"\n    Search through the provided sequence of devices to find the one with the matching\n    usage_page and usage.\n\n    :param timeout: Time in seconds to wait for USB to become ready before timing out.\n      Defaults to None to wait indefinitely.\n      Ignored if device is not a `usb_hid.Device`; it might be BLE, for instance.\n    \"\"\"\n\n    if hasattr(devices, \"send_report\"):\n        devices = [devices]  # type: ignore\n    device = None\n    for dev in devices:\n        if dev.usage_page == usage_page and dev.usage == usage and hasattr(dev, \"send_report\"):\n            device = dev\n            break\n    if device is None:\n        raise ValueError(\"Could not find matching HID device.\")\n\n    # Wait for USB to be connected only if this is a usb_hid.Device.\n    if Device and isinstance(device, Device):\n        if supervisor is None:\n            # Blinka doesn't have supervisor (see issue Adafruit_Blinka#711), so wait\n            # one second for USB to become ready\n            time.sleep(1.0)\n        elif timeout is None:\n            # default behavior: wait indefinitely for USB to become ready\n            while not supervisor.runtime.usb_connected:\n                time.sleep(1.0)\n        else:\n            # wait up to timeout seconds for USB to become ready\n            for _ in range(timeout):\n                if supervisor.runtime.usb_connected:\n                    return device\n                time.sleep(1.0)\n            raise OSError(\"Failed to initialize HID device. Is USB connected?\")\n\n    return device\n", "consumer_control.py": "# SPDX-FileCopyrightText: 2018 Dan Halbert for Adafruit Industries\n#\n# SPDX-License-Identifier: MIT\n\n\"\"\"\n`adafruit_hid.consumer_control.ConsumerControl`\n====================================================\n\n* Author(s): Dan Halbert\n\"\"\"\n\nimport sys\n\nif sys.implementation.version[0] < 3:\n    raise ImportError(f\"{__name__} is not supported in CircuitPython 2.x or lower\")\n\nimport struct\n\nfrom . import find_device\n\ntry:\n    from typing import Sequence\n\n    import usb_hid\nexcept ImportError:\n    pass\n\n\nclass ConsumerControl:\n    \"\"\"Send ConsumerControl code reports, used by multimedia keyboards, remote controls, etc.\"\"\"\n\n    def __init__(self, devices: Sequence[usb_hid.Device], timeout: int = None) -> None:\n        \"\"\"Create a ConsumerControl object that will send Consumer Control Device HID reports.\n\n        :param timeout: Time in seconds to wait for USB to become ready before timing out.\n          Defaults to None to wait indefinitely.\n\n        Devices can be a sequence of devices that includes a Consumer Control device or a CC device\n        itself. A device is any object that implements ``send_report()``, ``usage_page`` and\n        ``usage``.\n        \"\"\"\n        self._consumer_device = find_device(devices, usage_page=0x0C, usage=0x01, timeout=timeout)\n\n        # Reuse this bytearray to send consumer reports.\n        self._report = bytearray(2)\n\n    def send(self, consumer_code: int) -> None:\n        \"\"\"Send a report to do the specified consumer control action,\n        and then stop the action (so it will not repeat).\n\n        :param consumer_code: a 16-bit consumer control code.\n\n        Examples::\n\n            from adafruit_hid.consumer_control_code import ConsumerControlCode\n\n            # Raise volume.\n            consumer_control.send(ConsumerControlCode.VOLUME_INCREMENT)\n\n            # Advance to next track (song).\n            consumer_control.send(ConsumerControlCode.SCAN_NEXT_TRACK)\n        \"\"\"\n        self.press(consumer_code)\n        self.release()\n\n    def press(self, consumer_code: int) -> None:\n        \"\"\"Send a report to indicate that the given key has been pressed.\n        Only one consumer control action can be pressed at a time, so any one\n        that was previously pressed will be released.\n\n        :param consumer_code: a 16-bit consumer control code.\n\n        Examples::\n\n            from adafruit_hid.consumer_control_code import ConsumerControlCode\n\n            # Raise volume for 0.5 seconds\n            consumer_control.press(ConsumerControlCode.VOLUME_INCREMENT)\n            time.sleep(0.5)\n            consumer_control.release()\n        \"\"\"\n        struct.pack_into(\"<H\", self._report, 0, consumer_code)\n        self._consumer_device.send_report(self._report)\n\n    def release(self) -> None:\n        \"\"\"Send a report indicating that the consumer control key has been\n        released. Only one consumer control key can be pressed at a time.\n\n        Examples::\n\n            from adafruit_hid.consumer_control_code import ConsumerControlCode\n\n            # Raise volume for 0.5 seconds\n            consumer_control.press(ConsumerControlCode.VOLUME_INCREMENT)\n            time.sleep(0.5)\n            consumer_control.release()\n        \"\"\"\n        self._report[0] = self._report[1] = 0x0\n        self._consumer_device.send_report(self._report)\n", "consumer_control_code.py": "# SPDX-FileCopyrightText: 2018 Dan Halbert for Adafruit Industries\n#\n# SPDX-License-Identifier: MIT\n\n\"\"\"\n`adafruit_hid.consumer_control_code.ConsumerControlCode`\n========================================================\n\n* Author(s): Dan Halbert\n\"\"\"\n\n\nclass ConsumerControlCode:\n    \"\"\"USB HID Consumer Control Device constants.\n\n    This list includes a few common consumer control codes from\n    https://www.usb.org/sites/default/files/hut1_21_0.pdf#page=118.\n    \"\"\"\n\n    RECORD = 0xB2\n    \"\"\"Record\"\"\"\n    FAST_FORWARD = 0xB3\n    \"\"\"Fast Forward\"\"\"\n    REWIND = 0xB4\n    \"\"\"Rewind\"\"\"\n    SCAN_NEXT_TRACK = 0xB5\n    \"\"\"Skip to next track\"\"\"\n    SCAN_PREVIOUS_TRACK = 0xB6\n    \"\"\"Go back to previous track\"\"\"\n    STOP = 0xB7\n    \"\"\"Stop\"\"\"\n    EJECT = 0xB8\n    \"\"\"Eject\"\"\"\n    PLAY_PAUSE = 0xCD\n    \"\"\"Play/Pause toggle\"\"\"\n    MUTE = 0xE2\n    \"\"\"Mute\"\"\"\n    VOLUME_DECREMENT = 0xEA\n    \"\"\"Decrease volume\"\"\"\n    VOLUME_INCREMENT = 0xE9\n    \"\"\"Increase volume\"\"\"\n    BRIGHTNESS_DECREMENT = 0x70\n    \"\"\"Decrease Brightness\"\"\"\n    BRIGHTNESS_INCREMENT = 0x6F\n    \"\"\"Increase Brightness\"\"\"\n", "keyboard.py": "# SPDX-FileCopyrightText: 2017 Dan Halbert for Adafruit Industries\n#\n# SPDX-License-Identifier: MIT\n\n\"\"\"\n`adafruit_hid.keyboard.Keyboard`\n====================================================\n\n* Author(s): Scott Shawcroft, Dan Halbert\n\"\"\"\n\nfrom micropython import const\n\nfrom . import find_device\nfrom .keycode import Keycode\n\ntry:\n    from typing import Sequence\n\n    import usb_hid\nexcept ImportError:\n    pass\n\n_MAX_KEYPRESSES = const(6)\n\n\nclass Keyboard:\n    \"\"\"Send HID keyboard reports.\"\"\"\n\n    LED_NUM_LOCK = 0x01\n    \"\"\"LED Usage ID for Num Lock\"\"\"\n    LED_CAPS_LOCK = 0x02\n    \"\"\"LED Usage ID for Caps Lock\"\"\"\n    LED_SCROLL_LOCK = 0x04\n    \"\"\"LED Usage ID for Scroll Lock\"\"\"\n    LED_COMPOSE = 0x08\n    \"\"\"LED Usage ID for Compose\"\"\"\n\n    # No more than _MAX_KEYPRESSES regular keys may be pressed at once.\n\n    def __init__(self, devices: Sequence[usb_hid.Device], timeout: int = None) -> None:\n        \"\"\"Create a Keyboard object that will send keyboard HID reports.\n\n        :param timeout: Time in seconds to wait for USB to become ready before timing out.\n          Defaults to None to wait indefinitely.\n\n        Devices can be a sequence of devices that includes a keyboard device or a keyboard device\n        itself. A device is any object that implements ``send_report()``, ``usage_page`` and\n        ``usage``.\n        \"\"\"\n        self._keyboard_device = find_device(devices, usage_page=0x1, usage=0x06, timeout=timeout)\n\n        # Reuse this bytearray to send keyboard reports.\n        self.report = bytearray(8)\n\n        # report[0] modifiers\n        # report[1] unused\n        # report[2:8] regular key presses\n\n        # View onto byte 0 in report.\n        self.report_modifier = memoryview(self.report)[0:1]\n\n        # List of regular keys currently pressed.\n        # View onto bytes 2-7 in report.\n        self.report_keys = memoryview(self.report)[2:]\n\n        # No keyboard LEDs on.\n        self._led_status = b\"\\x00\"\n\n    def press(self, *keycodes: int) -> None:\n        \"\"\"Send a report indicating that the given keys have been pressed.\n\n        :param keycodes: Press these keycodes all at once.\n        :raises ValueError: if more than six regular keys are pressed.\n\n        Keycodes may be modifiers or regular keys.\n        No more than six regular keys may be pressed simultaneously.\n\n        Examples::\n\n            from adafruit_hid.keycode import Keycode\n\n            # Press ctrl-x.\n            kbd.press(Keycode.LEFT_CONTROL, Keycode.X)\n\n            # Or, more conveniently, use the CONTROL alias for LEFT_CONTROL:\n            kbd.press(Keycode.CONTROL, Keycode.X)\n\n            # Press a, b, c keys all at once.\n            kbd.press(Keycode.A, Keycode.B, Keycode.C)\n        \"\"\"\n        for keycode in keycodes:\n            self._add_keycode_to_report(keycode)\n        self._keyboard_device.send_report(self.report)\n\n    def release(self, *keycodes: int) -> None:\n        \"\"\"Send a USB HID report indicating that the given keys have been released.\n\n        :param keycodes: Release these keycodes all at once.\n\n        If a keycode to be released was not pressed, it is ignored.\n\n        Example::\n\n            # release SHIFT key\n            kbd.release(Keycode.SHIFT)\n        \"\"\"\n        for keycode in keycodes:\n            self._remove_keycode_from_report(keycode)\n        self._keyboard_device.send_report(self.report)\n\n    def release_all(self) -> None:\n        \"\"\"Release all pressed keys.\"\"\"\n        for i in range(8):\n            self.report[i] = 0\n        self._keyboard_device.send_report(self.report)\n\n    def send(self, *keycodes: int) -> None:\n        \"\"\"Press the given keycodes and then release all pressed keys.\n\n        :param keycodes: keycodes to send together\n        \"\"\"\n        self.press(*keycodes)\n        self.release_all()\n\n    def _add_keycode_to_report(self, keycode: int) -> None:\n        \"\"\"Add a single keycode to the USB HID report.\"\"\"\n        modifier = Keycode.modifier_bit(keycode)\n        if modifier:\n            # Set bit for this modifier.\n            self.report_modifier[0] |= modifier\n        else:\n            report_keys = self.report_keys\n            # Don't press twice.\n            for i in range(_MAX_KEYPRESSES):\n                report_key = report_keys[i]\n                if report_key == 0:\n                    # Put keycode in first empty slot. Since the report_keys\n                    # are compact and unique, this is not a repeated key\n                    report_keys[i] = keycode\n                    return\n                if report_key == keycode:\n                    # Already pressed.\n                    return\n            # All slots are filled. Shuffle down and reuse last slot\n            for i in range(_MAX_KEYPRESSES - 1):\n                report_keys[i] = report_keys[i + 1]\n            report_keys[-1] = keycode\n\n    def _remove_keycode_from_report(self, keycode: int) -> None:\n        \"\"\"Remove a single keycode from the report.\"\"\"\n        modifier = Keycode.modifier_bit(keycode)\n        if modifier:\n            # Turn off the bit for this modifier.\n            self.report_modifier[0] &= ~modifier\n        else:\n            report_keys = self.report_keys\n            # Clear the at most one matching slot and move remaining keys down\n            j = 0\n            for i in range(_MAX_KEYPRESSES):\n                pressed = report_keys[i]\n                if not pressed:\n                    break  # Handled all used report slots\n                if pressed == keycode:\n                    continue  # Remove this entry\n                if i != j:\n                    report_keys[j] = report_keys[i]\n                j += 1\n            # Clear any remaining slots\n            while j < _MAX_KEYPRESSES and report_keys[j]:\n                report_keys[j] = 0\n                j += 1\n\n    @property\n    def led_status(self) -> bytes:\n        \"\"\"Returns the last received report\"\"\"\n        # get_last_received_report() returns None when nothing was received\n        led_report = self._keyboard_device.get_last_received_report()\n        if led_report is not None:\n            self._led_status = led_report\n        return self._led_status\n\n    def led_on(self, led_code: int) -> bool:\n        \"\"\"Returns whether an LED is on based on the led code\n\n        Examples::\n\n            import usb_hid\n            from adafruit_hid.keyboard import Keyboard\n            from adafruit_hid.keycode import Keycode\n            import time\n\n            # Initialize Keyboard\n            kbd = Keyboard(usb_hid.devices)\n\n            # Press and release CapsLock.\n            kbd.press(Keycode.CAPS_LOCK)\n            time.sleep(.09)\n            kbd.release(Keycode.CAPS_LOCK)\n\n            # Check status of the LED_CAPS_LOCK\n            print(kbd.led_on(Keyboard.LED_CAPS_LOCK))\n\n        \"\"\"\n        return bool(self.led_status[0] & led_code)\n", "keyboard_layout_base.py": "# SPDX-FileCopyrightText: 2017 Dan Halbert for Adafruit Industries\n#\n# SPDX-License-Identifier: MIT\n\n\"\"\"\n`adafruit_hid.keyboard_layout_base.KeyboardLayoutBase`\n=======================================================\n\n* Author(s): Dan Halbert, AngainorDev, Neradoc\n\"\"\"\n\ntry:\n    from typing import Tuple\n\n    from .keyboard import Keyboard\nexcept ImportError:\n    pass\n\nfrom time import sleep\n\n__version__ = \"0.0.0+auto.0\"\n__repo__ = \"https://github.com/adafruit/Adafruit_CircuitPython_HID.git\"\n\n\nclass KeyboardLayoutBase:\n    \"\"\"Base class for keyboard layouts. Uses the tables defined in the subclass\n    to map UTF-8 characters to appropriate keypresses.\n\n    Non-supported characters and most control characters will raise an exception.\n    \"\"\"\n\n    SHIFT_FLAG = 0x80\n    \"\"\"Bit set in any keycode byte if the shift key is required for the character.\"\"\"\n    ALTGR_FLAG = 0x80\n    \"\"\"Bit set in the combined keys table if altgr is required for the first key.\"\"\"\n    SHIFT_CODE = 0xE1\n    \"\"\"The SHIFT keycode, to avoid dependency to the Keycode class.\"\"\"\n    RIGHT_ALT_CODE = 0xE6\n    \"\"\"The ALTGR keycode, to avoid dependency to the Keycode class.\"\"\"\n    ASCII_TO_KEYCODE = ()\n    \"\"\"Bytes string of keycodes for low ASCII characters, indexed by the ASCII value.\n    Keycodes use the `SHIFT_FLAG` if needed.\n    Dead keys are excluded by assigning the keycode 0.\"\"\"\n    HIGHER_ASCII = {}\n    \"\"\"Dictionary that associates the ord() int value of high ascii and utf8 characters\n    to their keycode. Keycodes use the `SHIFT_FLAG` if needed.\"\"\"\n    NEED_ALTGR = \"\"\n    \"\"\"Characters in `ASCII_TO_KEYCODE` and `HIGHER_ASCII` that need\n    the ALTGR key pressed to type.\"\"\"\n    COMBINED_KEYS = {}\n    \"\"\"\n    Dictionary of characters (indexed by ord() value) that can be accessed by typing first\n    a dead key followed by a regular key, like ``\u00f1`` as ``~ + n``. The value is a 2-bytes int:\n    the high byte is the dead-key keycode (including SHIFT_FLAG), the low byte is the ascii code\n    of the second character, with ALTGR_FLAG set if the dead key (the first key) needs ALTGR.\n\n    The combined-key codes bits are: ``0b SDDD DDDD AKKK KKKK``:\n    ``S`` is the shift flag for the **first** key,\n    ``DDD DDDD`` is the keycode for the **first** key,\n    ``A`` is the altgr flag for the **first** key,\n    ``KKK KKKK`` is the (low) ASCII code for the second character.\n    \"\"\"\n\n    def __init__(self, keyboard: Keyboard) -> None:\n        \"\"\"Specify the layout for the given keyboard.\n\n        :param keyboard: a Keyboard object. Write characters to this keyboard when requested.\n\n        Example::\n\n            kbd = Keyboard(usb_hid.devices)\n            layout = KeyboardLayout(kbd)\n        \"\"\"\n        self.keyboard = keyboard\n\n    def _write(self, keycode: int, altgr: bool = False) -> None:\n        \"\"\"Type a key combination based on shift bit and altgr bool\n\n        :param keycode: int value of the keycode, with the shift bit.\n        :param altgr: bool indicating if the altgr key should be pressed too.\n        \"\"\"\n        # Add altgr modifier if needed\n        if altgr:\n            self.keyboard.press(self.RIGHT_ALT_CODE)\n        # If this is a shifted char, clear the SHIFT flag and press the SHIFT key.\n        if keycode & self.SHIFT_FLAG:\n            keycode &= ~self.SHIFT_FLAG\n            self.keyboard.press(self.SHIFT_CODE)\n        self.keyboard.press(keycode)\n        self.keyboard.release_all()\n\n    def write(self, string: str, delay: float = None) -> None:\n        \"\"\"Type the string by pressing and releasing keys on my keyboard.\n\n        :param string: A string of UTF-8 characters to convert to key presses and send.\n        :param float delay: Optional delay in seconds between key presses.\n        :raises ValueError: if any of the characters has no keycode\n            (such as some control characters).\n\n        Example::\n\n            # Write abc followed by Enter to the keyboard\n            layout.write('abc\\\\n')\n        \"\"\"\n        for char in string:\n            # find easy ones first\n            keycode = self._char_to_keycode(char)\n            if keycode > 0:\n                self._write(keycode, char in self.NEED_ALTGR)\n            # find combined keys\n            elif ord(char) in self.COMBINED_KEYS:\n                # first key (including shift bit)\n                cchar = self.COMBINED_KEYS[ord(char)]\n                self._write(cchar >> 8, cchar & self.ALTGR_FLAG)\n                # second key (removing the altgr bit)\n                char = chr(cchar & 0xFF & (~self.ALTGR_FLAG))\n                keycode = self._char_to_keycode(char)\n                # assume no altgr needed for second key\n                self._write(keycode, False)\n            else:\n                raise ValueError(\n                    \"No keycode available for character {letter} ({num}/0x{num:02x}).\".format(\n                        letter=repr(char), num=ord(char)\n                    )\n                )\n\n            if delay is not None:\n                sleep(delay)\n\n    def keycodes(self, char: str) -> Tuple[int, ...]:\n        \"\"\"Return a tuple of keycodes needed to type the given character.\n\n        :param char: A single UTF8 character in a string.\n        :type char: str of length one.\n        :returns: tuple of Keycode keycodes.\n        :raises ValueError: if there is no keycode for ``char``.\n\n        Examples::\n\n            # Returns (Keycode.TAB,)\n            keycodes('\\t')\n            # Returns (Keycode.A,)\n            keycode('a')\n            # Returns (Keycode.SHIFT, Keycode.A)\n            keycode('A')\n            # Raises ValueError with a US layout because it's an unknown character\n            keycode('\u00e9')\n        \"\"\"\n        keycode = self._char_to_keycode(char)\n        if keycode == 0:\n            raise ValueError(\n                \"No keycode available for character {letter} ({num}/0x{num:02x}).\".format(\n                    letter=repr(char), num=ord(char)\n                )\n            )\n\n        codes = []\n        if char in self.NEED_ALTGR:\n            codes.append(self.RIGHT_ALT_CODE)\n        if keycode & self.SHIFT_FLAG:\n            codes.extend((self.SHIFT_CODE, keycode & ~self.SHIFT_FLAG))\n        else:\n            codes.append(keycode)\n\n        return codes\n\n    def _above128char_to_keycode(self, char: str) -> int:\n        \"\"\"Return keycode for above 128 utf8 codes.\n\n        A character can be indexed by the char itself or its int ord() value.\n\n        :param char_val: char value\n        :return: keycode, with modifiers if needed\n        \"\"\"\n        if ord(char) in self.HIGHER_ASCII:\n            return self.HIGHER_ASCII[ord(char)]\n        if char in self.HIGHER_ASCII:\n            return self.HIGHER_ASCII[char]\n        return 0\n\n    def _char_to_keycode(self, char: str) -> int:\n        \"\"\"Return the HID keycode for the given character, with the SHIFT_FLAG possibly set.\n\n        If the character requires pressing the Shift key, the SHIFT_FLAG bit is set.\n        You must clear this bit before passing the keycode in a USB report.\n        \"\"\"\n        char_val = ord(char)\n        if char_val > len(self.ASCII_TO_KEYCODE):\n            return self._above128char_to_keycode(char)\n        keycode = self.ASCII_TO_KEYCODE[char_val]\n        return keycode\n", "keyboard_layout_us.py": "# SPDX-FileCopyrightText: 2017 Dan Halbert for Adafruit Industries\n#\n# SPDX-License-Identifier: MIT\n\n\"\"\"\n`adafruit_hid.keyboard_layout_us.KeyboardLayoutUS`\n=======================================================\n\n* Author(s): Dan Halbert\n\"\"\"\n\nfrom .keyboard_layout_base import KeyboardLayoutBase\n\n\nclass KeyboardLayoutUS(KeyboardLayoutBase):\n    \"\"\"Map ASCII characters to appropriate keypresses on a standard US PC keyboard.\n\n    Non-ASCII characters and most control characters will raise an exception.\n    \"\"\"\n\n    # The ASCII_TO_KEYCODE bytes object is used as a table to maps ASCII 0-127\n    # to the corresponding # keycode on a US 104-key keyboard.\n    # The user should not normally need to use this table,\n    # but it is not marked as private.\n    #\n    # Because the table only goes to 127, we use the top bit of each byte (ox80) to indicate\n    # that the shift key should be pressed. So any values 0x{8,9,a,b}* are shifted characters.\n    #\n    # The Python compiler will concatenate all these bytes literals into a single bytes object.\n    # Micropython/CircuitPython will store the resulting bytes constant in flash memory\n    # if it's in a .mpy file, so it doesn't use up valuable RAM.\n    #\n    # \\x00 entries have no keyboard key and so won't be sent.\n    ASCII_TO_KEYCODE = (\n        b\"\\x00\"  # NUL\n        b\"\\x00\"  # SOH\n        b\"\\x00\"  # STX\n        b\"\\x00\"  # ETX\n        b\"\\x00\"  # EOT\n        b\"\\x00\"  # ENQ\n        b\"\\x00\"  # ACK\n        b\"\\x00\"  # BEL \\a\n        b\"\\x2a\"  # BS BACKSPACE \\b (called DELETE in the usb.org document)\n        b\"\\x2b\"  # TAB \\t\n        b\"\\x28\"  # LF \\n (called Return or ENTER in the usb.org document)\n        b\"\\x00\"  # VT \\v\n        b\"\\x00\"  # FF \\f\n        b\"\\x00\"  # CR \\r\n        b\"\\x00\"  # SO\n        b\"\\x00\"  # SI\n        b\"\\x00\"  # DLE\n        b\"\\x00\"  # DC1\n        b\"\\x00\"  # DC2\n        b\"\\x00\"  # DC3\n        b\"\\x00\"  # DC4\n        b\"\\x00\"  # NAK\n        b\"\\x00\"  # SYN\n        b\"\\x00\"  # ETB\n        b\"\\x00\"  # CAN\n        b\"\\x00\"  # EM\n        b\"\\x00\"  # SUB\n        b\"\\x29\"  # ESC\n        b\"\\x00\"  # FS\n        b\"\\x00\"  # GS\n        b\"\\x00\"  # RS\n        b\"\\x00\"  # US\n        b\"\\x2c\"  # SPACE\n        b\"\\x9e\"  # ! x1e|SHIFT_FLAG (shift 1)\n        b\"\\xb4\"  # \" x34|SHIFT_FLAG (shift ')\n        b\"\\xa0\"  # # x20|SHIFT_FLAG (shift 3)\n        b\"\\xa1\"  # $ x21|SHIFT_FLAG (shift 4)\n        b\"\\xa2\"  # % x22|SHIFT_FLAG (shift 5)\n        b\"\\xa4\"  # & x24|SHIFT_FLAG (shift 7)\n        b\"\\x34\"  # '\n        b\"\\xa6\"  # ( x26|SHIFT_FLAG (shift 9)\n        b\"\\xa7\"  # ) x27|SHIFT_FLAG (shift 0)\n        b\"\\xa5\"  # * x25|SHIFT_FLAG (shift 8)\n        b\"\\xae\"  # + x2e|SHIFT_FLAG (shift =)\n        b\"\\x36\"  # ,\n        b\"\\x2d\"  # -\n        b\"\\x37\"  # .\n        b\"\\x38\"  # /\n        b\"\\x27\"  # 0\n        b\"\\x1e\"  # 1\n        b\"\\x1f\"  # 2\n        b\"\\x20\"  # 3\n        b\"\\x21\"  # 4\n        b\"\\x22\"  # 5\n        b\"\\x23\"  # 6\n        b\"\\x24\"  # 7\n        b\"\\x25\"  # 8\n        b\"\\x26\"  # 9\n        b\"\\xb3\"  # : x33|SHIFT_FLAG (shift ;)\n        b\"\\x33\"  # ;\n        b\"\\xb6\"  # < x36|SHIFT_FLAG (shift ,)\n        b\"\\x2e\"  # =\n        b\"\\xb7\"  # > x37|SHIFT_FLAG (shift .)\n        b\"\\xb8\"  # ? x38|SHIFT_FLAG (shift /)\n        b\"\\x9f\"  # @ x1f|SHIFT_FLAG (shift 2)\n        b\"\\x84\"  # A x04|SHIFT_FLAG (shift a)\n        b\"\\x85\"  # B x05|SHIFT_FLAG (etc.)\n        b\"\\x86\"  # C x06|SHIFT_FLAG\n        b\"\\x87\"  # D x07|SHIFT_FLAG\n        b\"\\x88\"  # E x08|SHIFT_FLAG\n        b\"\\x89\"  # F x09|SHIFT_FLAG\n        b\"\\x8a\"  # G x0a|SHIFT_FLAG\n        b\"\\x8b\"  # H x0b|SHIFT_FLAG\n        b\"\\x8c\"  # I x0c|SHIFT_FLAG\n        b\"\\x8d\"  # J x0d|SHIFT_FLAG\n        b\"\\x8e\"  # K x0e|SHIFT_FLAG\n        b\"\\x8f\"  # L x0f|SHIFT_FLAG\n        b\"\\x90\"  # M x10|SHIFT_FLAG\n        b\"\\x91\"  # N x11|SHIFT_FLAG\n        b\"\\x92\"  # O x12|SHIFT_FLAG\n        b\"\\x93\"  # P x13|SHIFT_FLAG\n        b\"\\x94\"  # Q x14|SHIFT_FLAG\n        b\"\\x95\"  # R x15|SHIFT_FLAG\n        b\"\\x96\"  # S x16|SHIFT_FLAG\n        b\"\\x97\"  # T x17|SHIFT_FLAG\n        b\"\\x98\"  # U x18|SHIFT_FLAG\n        b\"\\x99\"  # V x19|SHIFT_FLAG\n        b\"\\x9a\"  # W x1a|SHIFT_FLAG\n        b\"\\x9b\"  # X x1b|SHIFT_FLAG\n        b\"\\x9c\"  # Y x1c|SHIFT_FLAG\n        b\"\\x9d\"  # Z x1d|SHIFT_FLAG\n        b\"\\x2f\"  # [\n        b\"\\x31\"  # \\ backslash\n        b\"\\x30\"  # ]\n        b\"\\xa3\"  # ^ x23|SHIFT_FLAG (shift 6)\n        b\"\\xad\"  # _ x2d|SHIFT_FLAG (shift -)\n        b\"\\x35\"  # `\n        b\"\\x04\"  # a\n        b\"\\x05\"  # b\n        b\"\\x06\"  # c\n        b\"\\x07\"  # d\n        b\"\\x08\"  # e\n        b\"\\x09\"  # f\n        b\"\\x0a\"  # g\n        b\"\\x0b\"  # h\n        b\"\\x0c\"  # i\n        b\"\\x0d\"  # j\n        b\"\\x0e\"  # k\n        b\"\\x0f\"  # l\n        b\"\\x10\"  # m\n        b\"\\x11\"  # n\n        b\"\\x12\"  # o\n        b\"\\x13\"  # p\n        b\"\\x14\"  # q\n        b\"\\x15\"  # r\n        b\"\\x16\"  # s\n        b\"\\x17\"  # t\n        b\"\\x18\"  # u\n        b\"\\x19\"  # v\n        b\"\\x1a\"  # w\n        b\"\\x1b\"  # x\n        b\"\\x1c\"  # y\n        b\"\\x1d\"  # z\n        b\"\\xaf\"  # { x2f|SHIFT_FLAG (shift [)\n        b\"\\xb1\"  # | x31|SHIFT_FLAG (shift \\)\n        b\"\\xb0\"  # } x30|SHIFT_FLAG (shift ])\n        b\"\\xb5\"  # ~ x35|SHIFT_FLAG (shift `)\n        b\"\\x4c\"  # DEL DELETE (called Forward Delete in usb.org document)\n    )\n\n\nKeyboardLayout = KeyboardLayoutUS\n", "keycode.py": "# SPDX-FileCopyrightText: 2017 Scott Shawcroft for Adafruit Industries\n#\n# SPDX-License-Identifier: MIT\n\n\"\"\"\n`adafruit_hid.keycode.Keycode`\n====================================================\n\n* Author(s): Scott Shawcroft, Dan Halbert\n\"\"\"\n\n\nclass Keycode:\n    \"\"\"USB HID Keycode constants.\n\n    This list is modeled after the names for USB keycodes defined in\n    https://usb.org/sites/default/files/hut1_21_0.pdf#page=83.\n    This list does not include every single code, but does include all the keys on\n    a regular PC or Mac keyboard.\n\n    Remember that keycodes are the names for key *positions* on a US keyboard, and may\n    not correspond to the character that you mean to send if you want to emulate non-US keyboard.\n    For instance, on a French keyboard (AZERTY instead of QWERTY),\n    the keycode for 'q' is used to indicate an 'a'. Likewise, 'y' represents 'z' on\n    a German keyboard. This is historical: the idea was that the keycaps could be changed\n    without changing the keycodes sent, so that different firmware was not needed for\n    different variations of a keyboard.\n    \"\"\"\n\n    A = 0x04\n    \"\"\"``a`` and ``A``\"\"\"\n    B = 0x05\n    \"\"\"``b`` and ``B``\"\"\"\n    C = 0x06\n    \"\"\"``c`` and ``C``\"\"\"\n    D = 0x07\n    \"\"\"``d`` and ``D``\"\"\"\n    E = 0x08\n    \"\"\"``e`` and ``E``\"\"\"\n    F = 0x09\n    \"\"\"``f`` and ``F``\"\"\"\n    G = 0x0A\n    \"\"\"``g`` and ``G``\"\"\"\n    H = 0x0B\n    \"\"\"``h`` and ``H``\"\"\"\n    I = 0x0C\n    \"\"\"``i`` and ``I``\"\"\"\n    J = 0x0D\n    \"\"\"``j`` and ``J``\"\"\"\n    K = 0x0E\n    \"\"\"``k`` and ``K``\"\"\"\n    L = 0x0F\n    \"\"\"``l`` and ``L``\"\"\"\n    M = 0x10\n    \"\"\"``m`` and ``M``\"\"\"\n    N = 0x11\n    \"\"\"``n`` and ``N``\"\"\"\n    O = 0x12\n    \"\"\"``o`` and ``O``\"\"\"\n    P = 0x13\n    \"\"\"``p`` and ``P``\"\"\"\n    Q = 0x14\n    \"\"\"``q`` and ``Q``\"\"\"\n    R = 0x15\n    \"\"\"``r`` and ``R``\"\"\"\n    S = 0x16\n    \"\"\"``s`` and ``S``\"\"\"\n    T = 0x17\n    \"\"\"``t`` and ``T``\"\"\"\n    U = 0x18\n    \"\"\"``u`` and ``U``\"\"\"\n    V = 0x19\n    \"\"\"``v`` and ``V``\"\"\"\n    W = 0x1A\n    \"\"\"``w`` and ``W``\"\"\"\n    X = 0x1B\n    \"\"\"``x`` and ``X``\"\"\"\n    Y = 0x1C\n    \"\"\"``y`` and ``Y``\"\"\"\n    Z = 0x1D\n    \"\"\"``z`` and ``Z``\"\"\"\n\n    ONE = 0x1E\n    \"\"\"``1`` and ``!``\"\"\"\n    TWO = 0x1F\n    \"\"\"``2`` and ``@``\"\"\"\n    THREE = 0x20\n    \"\"\"``3`` and ``#``\"\"\"\n    FOUR = 0x21\n    \"\"\"``4`` and ``$``\"\"\"\n    FIVE = 0x22\n    \"\"\"``5`` and ``%``\"\"\"\n    SIX = 0x23\n    \"\"\"``6`` and ``^``\"\"\"\n    SEVEN = 0x24\n    \"\"\"``7`` and ``&``\"\"\"\n    EIGHT = 0x25\n    \"\"\"``8`` and ``*``\"\"\"\n    NINE = 0x26\n    \"\"\"``9`` and ``(``\"\"\"\n    ZERO = 0x27\n    \"\"\"``0`` and ``)``\"\"\"\n    ENTER = 0x28\n    \"\"\"Enter (Return)\"\"\"\n    RETURN = ENTER\n    \"\"\"Alias for ``ENTER``\"\"\"\n    ESCAPE = 0x29\n    \"\"\"Escape\"\"\"\n    BACKSPACE = 0x2A\n    \"\"\"Delete backward (Backspace)\"\"\"\n    TAB = 0x2B\n    \"\"\"Tab and Backtab\"\"\"\n    SPACEBAR = 0x2C\n    \"\"\"Spacebar\"\"\"\n    SPACE = SPACEBAR\n    \"\"\"Alias for SPACEBAR\"\"\"\n    MINUS = 0x2D\n    \"\"\"``-` and ``_``\"\"\"\n    EQUALS = 0x2E\n    \"\"\"``=` and ``+``\"\"\"\n    LEFT_BRACKET = 0x2F\n    \"\"\"``[`` and ``{``\"\"\"\n    RIGHT_BRACKET = 0x30\n    \"\"\"``]`` and ``}``\"\"\"\n    BACKSLASH = 0x31\n    r\"\"\"``\\`` and ``|``\"\"\"\n    POUND = 0x32\n    \"\"\"``#`` and ``~`` (Non-US keyboard)\"\"\"\n    SEMICOLON = 0x33\n    \"\"\"``;`` and ``:``\"\"\"\n    QUOTE = 0x34\n    \"\"\"``'`` and ``\"``\"\"\"\n    GRAVE_ACCENT = 0x35\n    r\"\"\":literal:`\\`` and ``~``\"\"\"\n    COMMA = 0x36\n    \"\"\"``,`` and ``<``\"\"\"\n    PERIOD = 0x37\n    \"\"\"``.`` and ``>``\"\"\"\n    FORWARD_SLASH = 0x38\n    \"\"\"``/`` and ``?``\"\"\"\n\n    CAPS_LOCK = 0x39\n    \"\"\"Caps Lock\"\"\"\n\n    F1 = 0x3A\n    \"\"\"Function key F1\"\"\"\n    F2 = 0x3B\n    \"\"\"Function key F2\"\"\"\n    F3 = 0x3C\n    \"\"\"Function key F3\"\"\"\n    F4 = 0x3D\n    \"\"\"Function key F4\"\"\"\n    F5 = 0x3E\n    \"\"\"Function key F5\"\"\"\n    F6 = 0x3F\n    \"\"\"Function key F6\"\"\"\n    F7 = 0x40\n    \"\"\"Function key F7\"\"\"\n    F8 = 0x41\n    \"\"\"Function key F8\"\"\"\n    F9 = 0x42\n    \"\"\"Function key F9\"\"\"\n    F10 = 0x43\n    \"\"\"Function key F10\"\"\"\n    F11 = 0x44\n    \"\"\"Function key F11\"\"\"\n    F12 = 0x45\n    \"\"\"Function key F12\"\"\"\n\n    PRINT_SCREEN = 0x46\n    \"\"\"Print Screen (SysRq)\"\"\"\n    SCROLL_LOCK = 0x47\n    \"\"\"Scroll Lock\"\"\"\n    PAUSE = 0x48\n    \"\"\"Pause (Break)\"\"\"\n\n    INSERT = 0x49\n    \"\"\"Insert\"\"\"\n    HOME = 0x4A\n    \"\"\"Home (often moves to beginning of line)\"\"\"\n    PAGE_UP = 0x4B\n    \"\"\"Go back one page\"\"\"\n    DELETE = 0x4C\n    \"\"\"Delete forward\"\"\"\n    END = 0x4D\n    \"\"\"End (often moves to end of line)\"\"\"\n    PAGE_DOWN = 0x4E\n    \"\"\"Go forward one page\"\"\"\n\n    RIGHT_ARROW = 0x4F\n    \"\"\"Move the cursor right\"\"\"\n    LEFT_ARROW = 0x50\n    \"\"\"Move the cursor left\"\"\"\n    DOWN_ARROW = 0x51\n    \"\"\"Move the cursor down\"\"\"\n    UP_ARROW = 0x52\n    \"\"\"Move the cursor up\"\"\"\n\n    KEYPAD_NUMLOCK = 0x53\n    \"\"\"Num Lock (Clear on Mac)\"\"\"\n    KEYPAD_FORWARD_SLASH = 0x54\n    \"\"\"Keypad ``/``\"\"\"\n    KEYPAD_ASTERISK = 0x55\n    \"\"\"Keypad ``*``\"\"\"\n    KEYPAD_MINUS = 0x56\n    \"\"\"Keyapd ``-``\"\"\"\n    KEYPAD_PLUS = 0x57\n    \"\"\"Keypad ``+``\"\"\"\n    KEYPAD_ENTER = 0x58\n    \"\"\"Keypad Enter\"\"\"\n    KEYPAD_ONE = 0x59\n    \"\"\"Keypad ``1`` and End\"\"\"\n    KEYPAD_TWO = 0x5A\n    \"\"\"Keypad ``2`` and Down Arrow\"\"\"\n    KEYPAD_THREE = 0x5B\n    \"\"\"Keypad ``3`` and PgDn\"\"\"\n    KEYPAD_FOUR = 0x5C\n    \"\"\"Keypad ``4`` and Left Arrow\"\"\"\n    KEYPAD_FIVE = 0x5D\n    \"\"\"Keypad ``5``\"\"\"\n    KEYPAD_SIX = 0x5E\n    \"\"\"Keypad ``6`` and Right Arrow\"\"\"\n    KEYPAD_SEVEN = 0x5F\n    \"\"\"Keypad ``7`` and Home\"\"\"\n    KEYPAD_EIGHT = 0x60\n    \"\"\"Keypad ``8`` and Up Arrow\"\"\"\n    KEYPAD_NINE = 0x61\n    \"\"\"Keypad ``9`` and PgUp\"\"\"\n    KEYPAD_ZERO = 0x62\n    \"\"\"Keypad ``0`` and Ins\"\"\"\n    KEYPAD_PERIOD = 0x63\n    \"\"\"Keypad ``.`` and Del\"\"\"\n    KEYPAD_BACKSLASH = 0x64\n    \"\"\"Keypad ``\\\\`` and ``|`` (Non-US)\"\"\"\n\n    APPLICATION = 0x65\n    \"\"\"Application: also known as the Menu key (Windows)\"\"\"\n    POWER = 0x66\n    \"\"\"Power (Mac)\"\"\"\n    KEYPAD_EQUALS = 0x67\n    \"\"\"Keypad ``=`` (Mac)\"\"\"\n    F13 = 0x68\n    \"\"\"Function key F13 (Mac)\"\"\"\n    F14 = 0x69\n    \"\"\"Function key F14 (Mac)\"\"\"\n    F15 = 0x6A\n    \"\"\"Function key F15 (Mac)\"\"\"\n    F16 = 0x6B\n    \"\"\"Function key F16 (Mac)\"\"\"\n    F17 = 0x6C\n    \"\"\"Function key F17 (Mac)\"\"\"\n    F18 = 0x6D\n    \"\"\"Function key F18 (Mac)\"\"\"\n    F19 = 0x6E\n    \"\"\"Function key F19 (Mac)\"\"\"\n\n    F20 = 0x6F\n    \"\"\"Function key F20\"\"\"\n    F21 = 0x70\n    \"\"\"Function key F21\"\"\"\n    F22 = 0x71\n    \"\"\"Function key F22\"\"\"\n    F23 = 0x72\n    \"\"\"Function key F23\"\"\"\n    F24 = 0x73\n    \"\"\"Function key F24\"\"\"\n\n    LEFT_CONTROL = 0xE0\n    \"\"\"Control modifier left of the spacebar\"\"\"\n    CONTROL = LEFT_CONTROL\n    \"\"\"Alias for LEFT_CONTROL\"\"\"\n    LEFT_SHIFT = 0xE1\n    \"\"\"Shift modifier left of the spacebar\"\"\"\n    SHIFT = LEFT_SHIFT\n    \"\"\"Alias for LEFT_SHIFT\"\"\"\n    LEFT_ALT = 0xE2\n    \"\"\"Alt modifier left of the spacebar\"\"\"\n    ALT = LEFT_ALT\n    \"\"\"Alias for LEFT_ALT; Alt is also known as Option (Mac)\"\"\"\n    OPTION = ALT\n    \"\"\"Labeled as Option on some Mac keyboards\"\"\"\n    LEFT_GUI = 0xE3\n    \"\"\"GUI modifier left of the spacebar\"\"\"\n    GUI = LEFT_GUI\n    \"\"\"Alias for LEFT_GUI; GUI is also known as the Windows key, Command (Mac), or Meta\"\"\"\n    WINDOWS = GUI\n    \"\"\"Labeled with a Windows logo on Windows keyboards\"\"\"\n    COMMAND = GUI\n    \"\"\"Labeled as Command on Mac keyboards, with a clover glyph\"\"\"\n    RIGHT_CONTROL = 0xE4\n    \"\"\"Control modifier right of the spacebar\"\"\"\n    RIGHT_SHIFT = 0xE5\n    \"\"\"Shift modifier right of the spacebar\"\"\"\n    RIGHT_ALT = 0xE6\n    \"\"\"Alt modifier right of the spacebar\"\"\"\n    RIGHT_GUI = 0xE7\n    \"\"\"GUI modifier right of the spacebar\"\"\"\n\n    @classmethod\n    def modifier_bit(cls, keycode: int) -> int:\n        \"\"\"Return the modifer bit to be set in an HID keycode report if this is a\n        modifier key; otherwise return 0.\"\"\"\n        return 1 << (keycode - 0xE0) if cls.LEFT_CONTROL <= keycode <= cls.RIGHT_GUI else 0\n", "mouse.py": "# SPDX-FileCopyrightText: 2017 Dan Halbert for Adafruit Industries\n#\n# SPDX-License-Identifier: MIT\n\n\"\"\"\n`adafruit_hid.mouse.Mouse`\n====================================================\n\n* Author(s): Dan Halbert\n\"\"\"\n\nfrom . import find_device\n\ntry:\n    from typing import Sequence\n\n    import usb_hid\nexcept ImportError:\n    pass\n\n\nclass Mouse:\n    \"\"\"Send USB HID mouse reports.\"\"\"\n\n    LEFT_BUTTON = 1\n    \"\"\"Left mouse button.\"\"\"\n    RIGHT_BUTTON = 2\n    \"\"\"Right mouse button.\"\"\"\n    MIDDLE_BUTTON = 4\n    \"\"\"Middle mouse button.\"\"\"\n    BACK_BUTTON = 8\n    \"\"\"Back mouse button.\"\"\"\n    FORWARD_BUTTON = 16\n    \"\"\"Forward mouse button.\"\"\"\n\n    def __init__(self, devices: Sequence[usb_hid.Device], timeout: int = None) -> None:\n        \"\"\"Create a Mouse object that will send USB mouse HID reports.\n\n        :param timeout: Time in seconds to wait for USB to become ready before timing out.\n          Defaults to None to wait indefinitely.\n\n        Devices can be a sequence of devices that includes a keyboard device or a keyboard device\n        itself. A device is any object that implements ``send_report()``, ``usage_page`` and\n        ``usage``.\n        \"\"\"\n        self._mouse_device = find_device(devices, usage_page=0x1, usage=0x02, timeout=timeout)\n\n        # Reuse this bytearray to send mouse reports.\n        # report[0] buttons pressed (LEFT, MIDDLE, RIGHT)\n        # report[1] x movement\n        # report[2] y movement\n        # report[3] wheel movement\n        self.report = bytearray(4)\n\n    def press(self, buttons: int) -> None:\n        \"\"\"Press the given mouse buttons.\n\n        :param buttons: a bitwise-or'd combination of ``LEFT_BUTTON``,\n            ``MIDDLE_BUTTON``, and ``RIGHT_BUTTON``.\n\n        Examples::\n\n            # Press the left button.\n            m.press(Mouse.LEFT_BUTTON)\n\n            # Press the left and right buttons simultaneously.\n            m.press(Mouse.LEFT_BUTTON | Mouse.RIGHT_BUTTON)\n        \"\"\"\n        self.report[0] |= buttons\n        self._send_no_move()\n\n    def release(self, buttons: int) -> None:\n        \"\"\"Release the given mouse buttons.\n\n        :param buttons: a bitwise-or'd combination of ``LEFT_BUTTON``,\n            ``MIDDLE_BUTTON``, and ``RIGHT_BUTTON``.\n        \"\"\"\n        self.report[0] &= ~buttons\n        self._send_no_move()\n\n    def release_all(self) -> None:\n        \"\"\"Release all the mouse buttons.\"\"\"\n        self.report[0] = 0\n        self._send_no_move()\n\n    def click(self, buttons: int) -> None:\n        \"\"\"Press and release the given mouse buttons.\n\n        :param buttons: a bitwise-or'd combination of ``LEFT_BUTTON``,\n            ``MIDDLE_BUTTON``, and ``RIGHT_BUTTON``.\n\n        Examples::\n\n            # Click the left button.\n            m.click(Mouse.LEFT_BUTTON)\n\n            # Double-click the left button.\n            m.click(Mouse.LEFT_BUTTON)\n            m.click(Mouse.LEFT_BUTTON)\n        \"\"\"\n        self.press(buttons)\n        self.release(buttons)\n\n    def move(self, x: int = 0, y: int = 0, wheel: int = 0) -> None:\n        \"\"\"Move the mouse and turn the wheel as directed.\n\n        :param x: Move the mouse along the x axis. Negative is to the left, positive\n            is to the right.\n        :param y: Move the mouse along the y axis. Negative is upwards on the display,\n            positive is downwards.\n        :param wheel: Rotate the wheel this amount. Negative is toward the user, positive\n            is away from the user. The scrolling effect depends on the host.\n\n        Examples::\n\n            # Move 100 to the left. Do not move up and down. Do not roll the scroll wheel.\n            m.move(-100, 0, 0)\n            # Same, with keyword arguments.\n            m.move(x=-100)\n\n            # Move diagonally to the upper right.\n            m.move(50, 20)\n            # Same.\n            m.move(x=50, y=-20)\n\n            # Roll the mouse wheel away from the user.\n            m.move(wheel=1)\n        \"\"\"\n        # Send multiple reports if necessary to move or scroll requested amounts.\n        while x != 0 or y != 0 or wheel != 0:\n            partial_x = self._limit(x)\n            partial_y = self._limit(y)\n            partial_wheel = self._limit(wheel)\n            self.report[1] = partial_x & 0xFF\n            self.report[2] = partial_y & 0xFF\n            self.report[3] = partial_wheel & 0xFF\n            self._mouse_device.send_report(self.report)\n            x -= partial_x\n            y -= partial_y\n            wheel -= partial_wheel\n\n    def _send_no_move(self) -> None:\n        \"\"\"Send a button-only report.\"\"\"\n        self.report[1] = 0\n        self.report[2] = 0\n        self.report[3] = 0\n        self._mouse_device.send_report(self.report)\n\n    @staticmethod\n    def _limit(dist: int) -> int:\n        return min(127, max(-127, dist))\n"};
+
+    // Sistema de boot unificat amb la resta d'apps TECLA: llegeix el nom del
+    // disc i el nom del port USB des de /config i els aplica en arrencar.
+    const BOOT_PY = `import storage
+
+# Canal de dades USB (usb_cdc.data): el fa servir el mode CONTROLADOR del firmware
+# (l'app web pren el control del dispositiu per WebSerial des del Simulador).
+# Innocu per a la resta: la consola REPL continua al primer port CDC.
+try:
+    import usb_cdc
+    usb_cdc.enable(console=True, data=True)
+except Exception:
+    pass
+
+try:
+    with open('/config/disk_label.txt', 'r') as f:
+        label = f.read().strip()[:11].upper()
+    if label:
+        m = storage.getmount("/")
+        m.label = label
+except Exception:
+    pass
+
+try:
+    with open('/config/device_name.txt', 'r') as f:
+        name = f.read().strip()
+    if name:
+        import supervisor
+        supervisor.set_usb_identification(product=name)
+except Exception:
+    pass
+`;
 
     function generateCode() {
       const hasLayerChange = layers.some(l => l.keys.some(k => k.type === 'layer_change'));
@@ -1052,9 +1230,9 @@
           const w = await fh.createWritable();
           await w.write(code);
           await w.close();
-          alert('code.py exportat correctament al dispositiu!');
+          showToast('code.py exportat correctament al dispositiu!', 'ok');
         } catch (e) {
-          if (e.name !== 'AbortError') alert('Error exportant: ' + e.message);
+          if (e.name !== 'AbortError') showToast('Error exportant: ' + e.message, 'err');
         }
       } else {
         const blob = new Blob([code], { type: 'text/x-python' });
@@ -1065,97 +1243,6 @@
       }
     });
 
-    // ── Presets integrats ─────────────────────────────────────────
-    function _k(type, label, extra={}) { return Object.assign({type, label, id:0}, extra); }
-    const _PRESETS = [
-      { id:'calc', name:'Calculadora', desc:'Teclat numèric 4×4 amb operadors aritmètics, Backspace i Enter.',
-        layers:[{ name:'Calculadora',
-          keys:[
-            _k('string','7',{string:'7'}),_k('string','8',{string:'8'}),_k('string','9',{string:'9'}),_k('string','/',{string:'/'}),
-            _k('string','4',{string:'4'}),_k('string','5',{string:'5'}),_k('string','6',{string:'6'}),_k('string','*',{string:'*'}),
-            _k('string','1',{string:'1'}),_k('string','2',{string:'2'}),_k('string','3',{string:'3'}),_k('string','-',{string:'-'}),
-            _k('string','0',{string:'0'}),_k('key','⌫',{keycode:'Keycode.BACKSPACE',mods:[]}),_k('key','↵',{keycode:'Keycode.ENTER',mods:[]}),_k('string','+',{string:'+'})
-          ].map((k,i)=>Object.assign(k,{id:i})),
-          pots:[{function:'none',label:'Pot X',id:0,value:0},{function:'none',label:'Pot Y',id:1,value:0},{function:'none',label:'Pot Z',id:2,value:0}]
-        }]
-      },
-      { id:'mouse', name:'Ratolí + Shortcuts', desc:'Clics de ratolí, navegació per pestanyes i dreceres del navegador.',
-        layers:[{ name:'Ratolí',
-          keys:[
-            _k('mouse','L-CLK',{mouse:'Mouse.LEFT_BUTTON'}),_k('mouse','R-CLK',{mouse:'Mouse.RIGHT_BUTTON'}),_k('mouse','M-CLK',{mouse:'Mouse.MIDDLE_BUTTON'}),_k('consumer','Mute',{consumer:'ConsumerControlCode.MUTE'}),
-            _k('key','⌃Tab',{keycode:'Keycode.TAB',mods:['Ctrl']}),_k('key','⌃⇧Tab',{keycode:'Keycode.TAB',mods:['Ctrl','Shift']}),_k('key','⌃W',{keycode:'Keycode.W',mods:['Ctrl']}),_k('key','⌃T',{keycode:'Keycode.T',mods:['Ctrl']}),
-            _k('key','Enrere',{keycode:'Keycode.LEFT_ARROW',mods:['Alt']}),_k('key','Endavant',{keycode:'Keycode.RIGHT_ARROW',mods:['Alt']}),_k('key','⌃R',{keycode:'Keycode.R',mods:['Ctrl']}),_k('key','⌃S',{keycode:'Keycode.S',mods:['Ctrl']}),
-            _k('key','↑',{keycode:'Keycode.UP_ARROW',mods:[]}),_k('key','↓',{keycode:'Keycode.DOWN_ARROW',mods:[]}),_k('key','←',{keycode:'Keycode.LEFT_ARROW',mods:[]}),_k('key','→',{keycode:'Keycode.RIGHT_ARROW',mods:[]})
-          ].map((k,i)=>Object.assign(k,{id:i})),
-          pots:[{function:'mouse_x',label:'Ratolí X',id:0,value:0},{function:'mouse_y',label:'Ratolí Y',id:1,value:0},{function:'scroll_y',label:'Scroll',id:2,value:0}]
-        }]
-      },
-      { id:'video', name:'Edició de Vídeo', desc:'Dreceres per a Premiere, DaVinci Resolve i similars. JKL jog, tall, punts de tall.',
-        layers:[{ name:'Vídeo',
-          keys:[
-            _k('key','▶/⏸',{keycode:'Keycode.SPACE',mods:[]}),_k('key','In',{keycode:'Keycode.I',mods:[]}),_k('key','Out',{keycode:'Keycode.O',mods:[]}),_k('key','Desa',{keycode:'Keycode.S',mods:['Ctrl']}),
-            _k('key','J ◀◀',{keycode:'Keycode.J',mods:[]}),_k('key','K ⏸',{keycode:'Keycode.K',mods:[]}),_k('key','L ▶▶',{keycode:'Keycode.L',mods:[]}),_k('key','Tallar',{keycode:'Keycode.C',mods:[]}),
-            _k('key','Desfer',{keycode:'Keycode.Z',mods:['Ctrl']}),_k('key','Refer',{keycode:'Keycode.Z',mods:['Ctrl','Shift']}),_k('key','↑Tall',{keycode:'Keycode.UP_ARROW',mods:[]}),_k('key','↓Tall',{keycode:'Keycode.DOWN_ARROW',mods:[]}),
-            _k('key','Sel.',{keycode:'Keycode.V',mods:[]}),_k('key','Full',{keycode:'Keycode.F',mods:[]}),_k('key','Esc',{keycode:'Keycode.ESCAPE',mods:[]}),_k('consumer','▶⏸',{consumer:'ConsumerControlCode.PLAY_PAUSE'})
-          ].map((k,i)=>Object.assign(k,{id:i})),
-          pots:[{function:'none',label:'Pot X',id:0,value:0},{function:'none',label:'Pot Y',id:1,value:0},{function:'volume',label:'Volum',id:2,value:0}]
-        }]
-      },
-      { id:'audio', name:'Edició d\'Audio', desc:'Dreceres per a DAWs com Ableton, Logic o Reaper. Record, mute, loop, navegació.',
-        layers:[{ name:'Àudio',
-          keys:[
-            _k('key','▶/⏸',{keycode:'Keycode.SPACE',mods:[]}),_k('key','● REC',{keycode:'Keycode.R',mods:[]}),_k('key','Desa',{keycode:'Keycode.S',mods:['Ctrl']}),_k('key','Desfer',{keycode:'Keycode.Z',mods:['Ctrl']}),
-            _k('key','Refer',{keycode:'Keycode.Z',mods:['Ctrl','Shift']}),_k('key','Mute',{keycode:'Keycode.M',mods:[]}),_k('key','Solo',{keycode:'Keycode.S',mods:[]}),_k('key','Loop',{keycode:'Keycode.L',mods:[]}),
-            _k('consumer','Mut',{consumer:'ConsumerControlCode.MUTE'}),_k('consumer','Vol+',{consumer:'ConsumerControlCode.VOLUME_INCREMENT'}),_k('consumer','Vol-',{consumer:'ConsumerControlCode.VOLUME_DECREMENT'}),_k('key','Tempo',{keycode:'Keycode.T',mods:[]}),
-            _k('key','↑Pista',{keycode:'Keycode.UP_ARROW',mods:[]}),_k('key','↓Pista',{keycode:'Keycode.DOWN_ARROW',mods:[]}),_k('key','← Pos',{keycode:'Keycode.LEFT_ARROW',mods:[]}),_k('key','→ Pos',{keycode:'Keycode.RIGHT_ARROW',mods:[]})
-          ].map((k,i)=>Object.assign(k,{id:i})),
-          pots:[{function:'volume',label:'Volum Master',id:0,value:0},{function:'scroll_y',label:'Scroll Pistes',id:1,value:0},{function:'none',label:'Pot Z',id:2,value:0}]
-        }]
-      },
-      { id:'produc', name:'Productivitat', desc:'Les dreceres més usades en ofimàtica i navegació: copiar, enganxar, cercar, canviar app.',
-        layers:[{ name:'Productivitat',
-          keys:[
-            _k('key','Desfer',{keycode:'Keycode.Z',mods:['Ctrl']}),_k('key','Refer',{keycode:'Keycode.Y',mods:['Ctrl']}),_k('key','Copiar',{keycode:'Keycode.C',mods:['Ctrl']}),_k('key','Enganxar',{keycode:'Keycode.V',mods:['Ctrl']}),
-            _k('key','Tallar',{keycode:'Keycode.X',mods:['Ctrl']}),_k('key','Desa',{keycode:'Keycode.S',mods:['Ctrl']}),_k('key','Tot',{keycode:'Keycode.A',mods:['Ctrl']}),_k('key','Cercar',{keycode:'Keycode.F',mods:['Ctrl']}),
-            _k('key','Nou',{keycode:'Keycode.N',mods:['Ctrl']}),_k('key','Impr.',{keycode:'Keycode.P',mods:['Ctrl']}),_k('key','Tancar',{keycode:'Keycode.W',mods:['Ctrl']}),_k('key','⌃Tab',{keycode:'Keycode.TAB',mods:['Ctrl']}),
-            _k('key','⌥Tab',{keycode:'Keycode.TAB',mods:['Alt']}),_k('key','F5',{keycode:'Keycode.F5',mods:[]}),_k('key','Esc',{keycode:'Keycode.ESCAPE',mods:[]}),_k('key','Entra',{keycode:'Keycode.ENTER',mods:[]})
-          ].map((k,i)=>Object.assign(k,{id:i})),
-          pots:[{function:'volume',label:'Volum',id:0,value:0},{function:'brightness',label:'Brillantor',id:1,value:0},{function:'scroll_y',label:'Scroll',id:2,value:0}]
-        }]
-      },
-    ];
-
-    function _renderPresetsGrid() {
-      const grid = document.getElementById('preset-grid'); if (!grid) return;
-      grid.innerHTML = _PRESETS.map((p, i) =>
-        `<label class="cb"><input type="checkbox" class="preset-chk" value="${i}"><span title="${p.desc}">${p.name}</span></label>`
-      ).join('');
-    }
-
-    document.getElementById('btn-add-presets')?.addEventListener('click', () => {
-      const checked = [...document.querySelectorAll('.preset-chk:checked')];
-      if (!checked.length) { alert('Selecciona almenys una configuració.'); return; }
-      checked.forEach(chk => {
-        const p = _PRESETS[+chk.value]; if (!p) return;
-        const newLayer = _defaultLayer(p.name);
-        const src = p.layers[0];
-        if (src?.keys) newLayer.keys = JSON.parse(JSON.stringify(src.keys));
-        if (src?.pots) { newLayer.pots = JSON.parse(JSON.stringify(src.pots)); }
-        _normalizeLayer(newLayer);
-        layers.push(newLayer);
-      });
-      currentLayerIdx = layers.length - 1;
-      config = layers[currentLayerIdx];
-      saveLayers(); _syncLayerBar(); renderDevice(); _renderDeviceLayers();
-      logSim(`${checked.length} capa${checked.length!==1?'es':''} afegida${checked.length!==1?'es':''} al dispositiu`, 'SYS');
-      document.querySelectorAll('.preset-chk').forEach(c => c.checked = false);
-      document.querySelector('[data-tab="config"]')?.click();
-    });
-    document.getElementById('btn-presets-all')?.addEventListener('click', () =>
-      document.querySelectorAll('.preset-chk').forEach(c => c.checked = true));
-    document.getElementById('btn-presets-none')?.addEventListener('click', () =>
-      document.querySelectorAll('.preset-chk').forEach(c => c.checked = false));
-
     // ── Capes de la biblioteca ─────────────────────────────────
     function loadProfiles() { return JSON.parse(localStorage.getItem('tecla_profiles_v2') || '{}'); }
     function _saveProfiles(profs) { localStorage.setItem('tecla_profiles_v2', JSON.stringify(profs)); }
@@ -1164,7 +1251,7 @@
       const list = document.getElementById('profiles-list'); if (!list) return;
       list.innerHTML = '';
       if (!layers.length) {
-        list.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0">Cap capa. Prem <strong>+ Nova capa</strong> o afegeix-ne des de Configuracions.</div>';
+        list.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0">Cap capa. Prem <strong>+ Nova capa</strong> per afegir-ne una.</div>';
         return;
       }
       layers.forEach((layer, idx) => {
@@ -1242,12 +1329,22 @@
     }
 
     function _removeDeviceLayer(idx) {
-      if (layers.length <= 1) { alert('Cal tenir almenys una capa al dispositiu.'); return; }
-      if (!confirm(`Eliminar "${layers[idx].name}" del dispositiu?`)) return;
-      layers.splice(idx, 1);
-      if (currentLayerIdx >= layers.length) currentLayerIdx = layers.length - 1;
+      const name = layers[idx]?.name || `Capa ${idx + 1}`;
+      const isLast = layers.length <= 1;
+      const msg = isLast
+        ? `Eliminar "${name}"? Es crearà una capa buida nova (el dispositiu necessita com a mínim una capa).`
+        : `Eliminar "${name}" del dispositiu?`;
+      if (!confirm(msg)) return;
+      if (isLast) {
+        layers = [_defaultLayer('Capa 1')];
+        currentLayerIdx = 0;
+      } else {
+        layers.splice(idx, 1);
+        if (currentLayerIdx >= layers.length) currentLayerIdx = layers.length - 1;
+      }
       config = layers[currentLayerIdx];
       saveLayers(); _syncLayerBar(); renderDevice(); renderProfiles();
+      showToast(isLast ? `Capa reiniciada.` : `Capa "${name}" eliminada.`, 'ok');
     }
 
     function _exportProfileJSON() {
@@ -1295,8 +1392,8 @@
             layers.push(nl); count++;
           }
           if (count) { currentLayerIdx = layers.length-1; config = layers[currentLayerIdx]; saveLayers(); _syncLayerBar(); renderDevice(); renderProfiles(); }
-          alert(`${count} capa${count!==1?'es':''} importada${count!==1?'es':''} correctament.`);
-        } catch { alert('Error: fitxer JSON inv\u00e0lid.'); }
+          showToast(`${count} capa${count!==1?'es':''} importada${count!==1?'es':''} correctament.`, 'ok');
+        } catch { showToast('Error: fitxer JSON inv\u00e0lid.'); }
         e.target.value = '';
       };
       reader.readAsText(file);
@@ -1309,9 +1406,8 @@
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
         tab.classList.add('active');
         document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
-        document.getElementById('config-drawer').classList.remove('open');
-        currentSelection = { type: null, id: null };
-        if (tab.dataset.tab === 'profiles') { _renderPresetsGrid(); renderProfiles(); _renderDeviceLayers(); }
+        if (tab.dataset.tab === 'profiles') { renderProfiles(); _renderDeviceLayers(); }
+        if (tab.dataset.tab === 'settings') _buildSettingsTab();
       });
     });
 
@@ -1342,6 +1438,21 @@
             }
           } catch(err) {
             console.error('Error writing libs', err);
+          }
+
+          progEl.value = 90; msgEl.textContent = 'Instal·lant sistema de boot...';
+          try {
+            const bfh = await dir.getFileHandle('boot.py', { create: true });
+            const bw = await bfh.createWritable(); await bw.write(BOOT_PY); await bw.close();
+            const savedName = localStorage.getItem('tecla_device_name');
+            const savedSuffix = localStorage.getItem('tecla_disk_suffix');
+            if (savedName || savedSuffix != null) {
+              const cfgDir = await dir.getDirectoryHandle('config', { create: true });
+              if (savedName) { const nf = await cfgDir.getFileHandle('device_name.txt', { create: true }); const nw = await nf.createWritable(); await nw.write(savedName); await nw.close(); }
+              if (savedSuffix != null) { const df = await cfgDir.getFileHandle('disk_label.txt', { create: true }); const dw = await df.createWritable(); await dw.write('TECLA' + savedSuffix); await dw.close(); }
+            }
+          } catch(err) {
+            console.error('Error writing boot system', err);
           }
 
           progEl.value = 100; msgEl.textContent = '✓ code.py exportat correctament!';
@@ -1410,41 +1521,130 @@
       document.getElementById('btn-disconnect').style.display = 'none';
     }
     document.getElementById('btn-connect')?.addEventListener('click', async () => {
-      if (!('showDirectoryPicker' in window)) { alert('Cal Chrome o Edge per connectar el dispositiu.'); return; }
+      if (!('showDirectoryPicker' in window)) { showToast('Cal Chrome o Edge per connectar el dispositiu.', 'err'); return; }
       try {
         const dir = await window.showDirectoryPicker({ mode: 'readwrite', startIn: 'desktop' });
         _deviceDir = dir; setConnected(dir.name);
-      } catch(e) { if (e.name !== 'AbortError') alert('Error: ' + e.message); }
+      } catch(e) { if (e.name !== 'AbortError') showToast('Error: ' + e.message, 'err'); }
     });
     document.getElementById('btn-disconnect')?.addEventListener('click', setDisconnected);
 
+    // ══ CONFIGURACIÓ (SETTINGS) ═════════════════════════════════════
+    const _MIDI_CH_KEY = 'tecla_midi_channel';
+    function _loadMidiChannel() { return Math.min(16, Math.max(1, parseInt(localStorage.getItem(_MIDI_CH_KEY) || '1', 10) || 1)); }
+    function _saveMidiChannel(ch) { localStorage.setItem(_MIDI_CH_KEY, String(ch)); }
+
+    // Escriu un fitxer al dispositiu (CIRCUITPY) creant els directoris intermedis.
+    async function _writeDeviceFile(path, content) {
+      if (!_deviceDir) throw new Error('Dispositiu no connectat');
+      const parts = path.split('/');
+      let dir = _deviceDir;
+      for (let i = 0; i < parts.length - 1; i++) dir = await dir.getDirectoryHandle(parts[i], { create: true });
+      const fh = await dir.getFileHandle(parts[parts.length - 1], { create: true });
+      const w = await fh.createWritable(); await w.write(content); await w.close();
+    }
+
+    // Instal·la el boot.py unificat que llegeix el nom del disc/port des de /config.
+    async function _deployBootPy() { await _writeDeviceFile('boot.py', BOOT_PY); }
+
+    function _buildSettingsTab() {
+      const chSel = document.getElementById('cfg-midi-channel');
+      if (chSel) chSel.value = String(_loadMidiChannel());
+      const nameInp = document.getElementById('cfg-device-name');
+      if (nameInp) nameInp.value = localStorage.getItem('tecla_device_name') || '';
+      const suffixInp = document.getElementById('cfg-disk-suffix');
+      if (suffixInp) suffixInp.value = localStorage.getItem('tecla_disk_suffix') || '';
+    }
+
+    document.getElementById('btn-save-midi-channel')?.addEventListener('click', () => {
+      const ch = Math.min(16, Math.max(1, parseInt(document.getElementById('cfg-midi-channel')?.value || '1', 10) || 1));
+      _saveMidiChannel(ch);
+      const fillCh = document.getElementById('midi-fill-ch'); if (fillCh) fillCh.value = String(ch);
+      logSim(`Canal MIDI per defecte: ${ch}`, 'SYS');
+      showToast(`Canal MIDI per defecte desat: ${ch}`, 'ok');
+    });
+
+    document.getElementById('cfg-disk-suffix')?.addEventListener('input', function () {
+      this.value = this.value.toUpperCase().replace(/[^A-Z0-9_\- ]/g, '').slice(0, 6);
+    });
+
+    document.getElementById('btn-save-device-name')?.addEventListener('click', async () => {
+      const name = (document.getElementById('cfg-device-name')?.value || '').trim();
+      if (!name) { showToast('Escriu un nom per al dispositiu (ex: TECLA-1).', 'err'); return; }
+      localStorage.setItem('tecla_device_name', name);
+      if (!_deviceDir) { showToast('Nom desat. Connecta el dispositiu per aplicar-lo al maquinari.'); return; }
+      try {
+        await _writeDeviceFile('config/device_name.txt', name);
+        await _deployBootPy();
+        showToast(`Nom del port "${name}" desat. Desconnecta i reconnecta el dispositiu per aplicar-lo.`, 'ok');
+      } catch (e) { showToast('Error desant el nom: ' + e.message, 'err'); }
+    });
+
+    document.getElementById('btn-save-disk-label')?.addEventListener('click', async () => {
+      const suffix = (document.getElementById('cfg-disk-suffix')?.value || '').trim().toUpperCase().replace(/[^A-Z0-9_\- ]/g, '').slice(0, 6);
+      const label = 'TECLA' + suffix;
+      localStorage.setItem('tecla_disk_suffix', suffix);
+      if (!_deviceDir) { showToast('Etiqueta desada. Connecta el dispositiu per aplicar-la al maquinari.'); return; }
+      try {
+        await _writeDeviceFile('config/disk_label.txt', label);
+        await _deployBootPy();
+        showToast(`Nom del disc "${label}" desat. Desconnecta i reconnecta el dispositiu per aplicar-lo.`, 'ok');
+      } catch (e) { showToast('Error desant l\'etiqueta: ' + e.message, 'err'); }
+    });
+
+    document.getElementById('btn-cfg-disconnect')?.addEventListener('click', setDisconnected);
+
+    // Aplica el canal MIDI per defecte a l'eina de farciment ràpid en iniciar.
+    { const _fc = document.getElementById('midi-fill-ch'); if (_fc) _fc.value = String(_loadMidiChannel()); }
+
     // ══ CAPES (LAYERS) ══════════════════════════════════════════════
+    function switchLayer(i) {
+      if (i < 0 || i >= layers.length) return;
+      currentLayerIdx = i; config = layers[i];
+      config.pots.forEach(p => { if (p.value === undefined) p.value = 0; });
+      closeDrawer(); _syncLayerBar();
+    }
     function _syncLayerBar() {
-      const sel = document.getElementById('layer-select'); if (!sel) return;
-      sel.innerHTML = layers.map((l,i) => `<option value="${i}">${l.name}</option>`).join('');
-      sel.value = currentLayerIdx;
+      const wrap = document.getElementById('layer-chips'); if (!wrap) return;
+      wrap.innerHTML = '';
+      layers.forEach((l, i) => {
+        const chip = document.createElement('div');
+        chip.className = 'layer-chip' + (i === currentLayerIdx ? ' active' : '');
+        chip.textContent = l.name || `Capa ${i + 1}`;
+        chip.title = _i('chip_hint');
+        chip.addEventListener('click', () => switchLayer(i));
+        chip.addEventListener('dblclick', () => {
+          const name = prompt(_i('prompt_rename'), l.name || ''); if (!name || !name.trim()) return;
+          l.name = name.trim(); saveLayers(); _syncLayerBar(); renderProfiles();
+        });
+        wrap.appendChild(chip);
+      });
+      const active = wrap.querySelector('.layer-chip.active');
+      if (active) active.scrollIntoView({ block: 'nearest', inline: 'nearest' });
       const d = document.getElementById('btn-del-layer'); if (d) d.disabled = layers.length <= 1;
     }
-    document.getElementById('layer-select')?.addEventListener('change', e => {
-      currentLayerIdx = +e.target.value; config = layers[currentLayerIdx];
-      config.pots.forEach(p => { if (p.value === undefined) p.value = 0; });
-      closeDrawer(); renderDevice();
-    });
-    document.getElementById('btn-prev-layer')?.addEventListener('click', () => {
-      currentLayerIdx = (currentLayerIdx - 1 + layers.length) % layers.length;
-      config = layers[currentLayerIdx]; config.pots.forEach(p => { if (p.value === undefined) p.value = 0; });
-      closeDrawer(); renderDevice(); _syncLayerBar();
-    });
-    document.getElementById('btn-next-layer')?.addEventListener('click', () => {
-      currentLayerIdx = (currentLayerIdx + 1) % layers.length;
-      config = layers[currentLayerIdx]; config.pots.forEach(p => { if (p.value === undefined) p.value = 0; });
-      closeDrawer(); renderDevice(); _syncLayerBar();
-    });
     document.getElementById('btn-new-layer')?.addEventListener('click', () => {
-      const name = prompt('Nom de la nova capa:', `Capa ${layers.length + 1}`); if (!name) return;
-      layers.push(_defaultLayer(name)); currentLayerIdx = layers.length - 1;
-      config = layers[currentLayerIdx]; closeDrawer(); renderDevice(); _syncLayerBar(); saveLayers();
+      const name = prompt(_i('prompt_new_layer'), `Capa ${layers.length + 1}`); if (!name) return;
+      layers.push(_defaultLayer(name)); saveLayers();
+      switchLayer(layers.length - 1);
     });
+    document.getElementById('btn-dup-layer')?.addEventListener('click', () => {
+      const cp = JSON.parse(JSON.stringify(layers[currentLayerIdx]));
+      cp.name = (cp.name || 'Capa') + ' 2';
+      layers.splice(currentLayerIdx + 1, 0, cp); saveLayers();
+      switchLayer(currentLayerIdx + 1);
+      logSim(_i('log_layer_dup'), 'SYS');
+    });
+    document.getElementById('btn-export-layer')?.addEventListener('click', () => {
+      const l = layers[currentLayerIdx];
+      const blob = new Blob([JSON.stringify({ [l.name || 'Capa']: { keys: l.keys, pots: l.pots } }, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `tecla-capa-${(l.name || 'capa').toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    });
+    document.getElementById('btn-import-layer')?.addEventListener('click', () =>
+      document.getElementById('import-profile-file')?.click());
     document.getElementById('btn-rename-layer')?.addEventListener('click', () => {
       const name = prompt('Nou nom de la capa:', layers[currentLayerIdx].name); if (!name) return;
       layers[currentLayerIdx].name = name; _syncLayerBar(); saveLayers(); renderProfiles();
@@ -1562,16 +1762,27 @@
 
     // ══ I18N ══════════════════════════════════════════════════════════
     const _GUIDE = {
-      ca: `<div class="guide-toc"><a href="#g1">1. Primers passos</a><a href="#g2">2. Configuració de tecles</a><a href="#g3">3. Potenciòmetres</a><a href="#g4">4. Actualitzar el firmware</a><a href="#g5">5. Capes</a></div><div id="g1"><div class="guide-h1">1. Primers passos</div><p class="guide-li">Connecta el TECLA a l'ordinador via USB-C.</p><p class="guide-li">Si és la primera vegada, instal·la CircuitPython (pestanya <em>Firmware</em> &rarr; Pas 1).</p><p class="guide-li">Instal·la la carpeta <strong>adafruit_hid</strong> a <strong>CIRCUITPY/lib/</strong> (Pas 2).</p><p class="guide-li">Configura les tecles i potenciòmetres a la pestanya <em>Configuració</em> i actualitza el firmware (Pas 3).</p><div class="guide-note">El TECLA funciona com un dispositiu HID: teclat, ratolí i control multimèdia. No cal cap driver addicional.</div></div><div id="g2"><div class="guide-h1">2. Configuració de tecles</div><p class="guide-li">Clica qualsevol de les <strong>16 tecles</strong> per obrir el panell de configuració.</p><div class="guide-h2">Tipus de funció disponibles</div><p class="guide-li"><strong>Tecla / Drecera</strong>: envia una combinació de tecles (Ctrl+C, Cmd+S, F5…).</p><p class="guide-li"><strong>Escriure text</strong>: escriu una cadena de text automàticament.</p><p class="guide-li"><strong>Control multimèdia</strong>: reproduir, pausa, volum, brillantor, etc.</p><p class="guide-li"><strong>Ratolí</strong>: clic esquerre, dret o central.</p><p class="guide-li"><strong>Cap</strong>: tecla desactivada.</p><div class="guide-h2">Colors de les tecles</div><p class="guide-li">Les tecles configurades mostren un color indicant el tipus de funció assignada.</p><p class="guide-li"><span style="color:rgba(110,85,220,.9)">■</span> Lila = Tecla/Drecera &nbsp; <span style="color:rgba(61,201,108,.9)">■</span> Verd = Text &nbsp; <span style="color:rgba(255,180,0,.9)">■</span> Groc = Multimèdia &nbsp; <span style="color:rgba(0,200,200,.9)">■</span> Cian = Ratolí</p></div><div id="g3"><div class="guide-h1">3. Potenciòmetres</div><p class="guide-li">El TECLA té <strong>3 potenciòmetres</strong> (X, Y, Z). Clica'ls per configurar la seva funció.</p><p class="guide-li"><strong>Volum</strong>: controla el volum de l'ordinador.</p><p class="guide-li"><strong>Brillantor</strong>: controla la brillantor de la pantalla.</p><p class="guide-li"><strong>Scroll vertical/horitzontal</strong>: fa scroll amb el ratolí.</p><p class="guide-li"><strong>Ratolí X/Y</strong>: mou el cursor del ratolí.</p><div class="guide-note">A l'app pots girar el knob (arrossega amunt/avall) o fer scroll per simular el valor del potenciòmetre.</div></div><div id="g4"><div class="guide-h1">4. Actualitzar el firmware</div><p class="guide-li">Ves a la pestanya <em>Firmware</em> i clica <strong>Actualitzar firmware</strong>.</p><p class="guide-li">Selecciona el volum <strong>CIRCUITPY</strong> al diàleg del Finder.</p><p class="guide-li">El fitxer <strong>code.py</strong> es copia automàticament al dispositiu.</p><p class="guide-li">El TECLA es reinicia i aplica la nova configuració immediatament.</p><div class="guide-note">Cal Chrome o Edge per a l'accés directe al sistema de fitxers. A Safari, es descarrega <strong>code.py</strong> manualment i cal copiar-lo a CIRCUITPY.</div></div><div id="g5"><div class="guide-h1">5. Capes</div><p class="guide-li">Usa <strong>+ Nova</strong> a la barra de capes per crear una nova capa de configuració.</p><p class="guide-li">A la pestanya <em>Capes</em>, gestiona totes les capes: edita, reordena (↑↓) i elimina (✕).</p><p class="guide-li">Des de <em>Configuracions</em>, afegeix presets directament com a noves capes.</p><p class="guide-li">Afegeix una tecla de tipus <em>Canviar de capa</em> per alternar entre capes des del dispositiu.</p><div class="guide-note">Les capes es guarden al localStorage del navegador. No es perdran en tancar l'app, però s'esborraran si s'esborra la memòria del navegador.</div></div>`,
-      es: `<div class="guide-toc"><a href="#g1">1. Primeros pasos</a><a href="#g2">2. Configuración de teclas</a><a href="#g3">3. Potenciómetros</a><a href="#g4">4. Actualizar firmware</a><a href="#g5">5. Capas</a></div><div id="g1"><div class="guide-h1">1. Primeros pasos</div><p class="guide-li">Conecta el TECLA al ordenador vía USB-C.</p><p class="guide-li">Si es la primera vez, instala CircuitPython (pestaña <em>Firmware</em> &rarr; Paso 1).</p><p class="guide-li">Instala la carpeta <strong>adafruit_hid</strong> en <strong>CIRCUITPY/lib/</strong> (Paso 2).</p><p class="guide-li">Configura las teclas y potenciómetros en la pestaña <em>Configuración</em> y actualiza el firmware (Paso 3).</p><div class="guide-note">El TECLA funciona como dispositivo HID: teclado, ratón y control multimedia. No se necesita ningún driver adicional.</div></div><div id="g2"><div class="guide-h1">2. Configuración de teclas</div><p class="guide-li">Haz clic en cualquiera de las <strong>16 teclas</strong> para abrir el panel de configuración.</p><div class="guide-h2">Tipos de función disponibles</div><p class="guide-li"><strong>Tecla / Atajo</strong>: envía una combinación de teclas (Ctrl+C, Cmd+S, F5…).</p><p class="guide-li"><strong>Escribir texto</strong>: escribe una cadena de texto automáticamente.</p><p class="guide-li"><strong>Control multimedia</strong>: reproducir, pausa, volumen, brillo, etc.</p><p class="guide-li"><strong>Ratón</strong>: clic izquierdo, derecho o central.</p><p class="guide-li"><strong>Ninguna</strong>: tecla desactivada.</p><div class="guide-h2">Colores de las teclas</div><p class="guide-li">Las teclas configuradas muestran un color que indica el tipo de función asignada.</p><p class="guide-li"><span style="color:rgba(110,85,220,.9)">■</span> Lila = Tecla/Atajo &nbsp; <span style="color:rgba(61,201,108,.9)">■</span> Verde = Texto &nbsp; <span style="color:rgba(255,180,0,.9)">■</span> Amarillo = Multimedia &nbsp; <span style="color:rgba(0,200,200,.9)">■</span> Cian = Ratón</p></div><div id="g3"><div class="guide-h1">3. Potenciómetros</div><p class="guide-li">El TECLA tiene <strong>3 potenciómetros</strong> (X, Y, Z). Haz clic para configurar su función.</p><p class="guide-li"><strong>Volumen</strong>: controla el volumen del ordenador.</p><p class="guide-li"><strong>Brillo</strong>: controla el brillo de la pantalla.</p><p class="guide-li"><strong>Scroll vertical/horizontal</strong>: hace scroll con el ratón.</p><p class="guide-li"><strong>Ratón X/Y</strong>: mueve el cursor del ratón.</p><div class="guide-note">En la app puedes girar el knob (arrastra arriba/abajo) o hacer scroll para simular el valor del potenciómetro.</div></div><div id="g4"><div class="guide-h1">4. Actualizar el firmware</div><p class="guide-li">Ve a la pestaña <em>Firmware</em> y haz clic en <strong>Actualizar firmware</strong>.</p><p class="guide-li">Selecciona el volumen <strong>CIRCUITPY</strong> en el diálogo del sistema.</p><p class="guide-li">El archivo <strong>code.py</strong> se copia automáticamente al dispositivo.</p><p class="guide-li">El TECLA se reinicia y aplica la nueva configuración de inmediato.</p><div class="guide-note">Se requiere Chrome o Edge para el acceso directo al sistema de archivos. En Safari, se descarga <strong>code.py</strong> manualmente y hay que copiarlo a CIRCUITPY.</div></div><div id="g5"><div class="guide-h1">5. Capas</div><p class="guide-li">Usa <strong>+ Nueva</strong> en la barra de capas para crear una nueva capa de configuración.</p><p class="guide-li">En la pestaña <em>Capas</em>, gestiona todas las capas: edita, reordena (↑↓) y elimina (✕).</p><p class="guide-li">Desde <em>Configuraciones</em>, añade presets directamente como nuevas capas.</p><p class="guide-li">Añade una tecla de tipo <em>Cambiar de capa</em> para alternar entre capas desde el dispositivo.</p><div class="guide-note">Las capas se guardan en el localStorage del navegador. No se perderán al cerrar la app, pero se borrarán si se borra la memoria del navegador.</div></div>`,
-      en: `<div class="guide-toc"><a href="#g1">1. Getting started</a><a href="#g2">2. Key configuration</a><a href="#g3">3. Potentiometers</a><a href="#g4">4. Update firmware</a><a href="#g5">5. Layers</a></div><div id="g1"><div class="guide-h1">1. Getting started</div><p class="guide-li">Connect TECLA to your computer via USB-C.</p><p class="guide-li">First time? Install CircuitPython (<em>Firmware</em> tab &rarr; Step 1).</p><p class="guide-li">Copy the <strong>adafruit_hid</strong> folder to <strong>CIRCUITPY/lib/</strong> (Step 2).</p><p class="guide-li">Configure keys and potentiometers in the <em>Configuration</em> tab and update the firmware (Step 3).</p><div class="guide-note">TECLA works as an HID device: keyboard, mouse and media control. No additional drivers needed.</div></div><div id="g2"><div class="guide-h1">2. Key configuration</div><p class="guide-li">Click any of the <strong>16 keys</strong> to open the configuration panel.</p><div class="guide-h2">Available function types</div><p class="guide-li"><strong>Key / Shortcut</strong>: sends a key combination (Ctrl+C, Cmd+S, F5…).</p><p class="guide-li"><strong>Type text</strong>: automatically types a text string.</p><p class="guide-li"><strong>Media control</strong>: play, pause, volume, brightness, etc.</p><p class="guide-li"><strong>Mouse</strong>: left, right or middle click.</p><p class="guide-li"><strong>None</strong>: key disabled.</p><div class="guide-h2">Key colours</div><p class="guide-li">Configured keys show a colour indicating the assigned function type.</p><p class="guide-li"><span style="color:rgba(110,85,220,.9)">■</span> Purple = Key/Shortcut &nbsp; <span style="color:rgba(61,201,108,.9)">■</span> Green = Text &nbsp; <span style="color:rgba(255,180,0,.9)">■</span> Yellow = Media &nbsp; <span style="color:rgba(0,200,200,.9)">■</span> Cyan = Mouse</p></div><div id="g3"><div class="guide-h1">3. Potentiometers</div><p class="guide-li">TECLA has <strong>3 potentiometers</strong> (X, Y, Z). Click them to configure their function.</p><p class="guide-li"><strong>Volume</strong>: controls the computer's volume.</p><p class="guide-li"><strong>Brightness</strong>: controls the screen brightness.</p><p class="guide-li"><strong>Vertical / horizontal scroll</strong>: scrolls with the mouse.</p><p class="guide-li"><strong>Mouse X/Y</strong>: moves the mouse cursor.</p><div class="guide-note">In the app you can turn the knob (drag up/down) or scroll to simulate the potentiometer value.</div></div><div id="g4"><div class="guide-h1">4. Update firmware</div><p class="guide-li">Go to the <em>Firmware</em> tab and click <strong>Update firmware</strong>.</p><p class="guide-li">Select the <strong>CIRCUITPY</strong> volume in the system dialog.</p><p class="guide-li">The <strong>code.py</strong> file is copied automatically to the device.</p><p class="guide-li">TECLA restarts and applies the new configuration immediately.</p><div class="guide-note">Chrome or Edge is required for direct file system access. In Safari, <strong>code.py</strong> is downloaded manually and must be copied to CIRCUITPY.</div></div><div id="g5"><div class="guide-h1">5. Layers</div><p class="guide-li">Use <strong>+ New</strong> in the layer bar to create a new configuration layer.</p><p class="guide-li">In the <em>Layers</em> tab, manage all layers: edit, reorder (↑↓) and delete (✕).</p><p class="guide-li">From <em>Configurations</em>, add presets directly as new layers.</p><p class="guide-li">Add a <em>Switch layer</em> key to cycle through layers from the device.</p><div class="guide-note">Layers are saved in the browser's localStorage. They won't be lost on closing the app, but will be deleted if the browser storage is cleared.</div></div>`,
+      ca: `<div class="guide-toc"><a href="#g1">1. Començar en 3 passos</a><a href="#g2">2. Assignar funcions</a><a href="#g3">3. Potenciòmetres</a><a href="#g4">4. Capes</a><a href="#g5">5. MIDI ràpid (visuals, TouchDesigner…)</a><a href="#g6">6. Enviar-ho al dispositiu</a></div><div id="g1"><div class="guide-h1">1. Començar en 3 passos</div><p class="guide-li"><strong>1.</strong> Clica una tecla del dispositiu virtual: el panell de la dreta mostra la seva configuració.</p><p class="guide-li"><strong>2.</strong> Tria la funció i els seus detalls. <strong>Tot es desa automàticament</strong>, no cal aplicar res.</p><p class="guide-li"><strong>3.</strong> Connecta el TECLA per USB-C i prem <strong>Actualitzar firmware</strong> (pestanya <em>Firmware</em>).</p><div class="guide-note">Primera vegada amb el dispositiu? Mira l'apartat 6: cal instal·lar CircuitPython un sol cop.</div></div><div id="g2"><div class="guide-h1">2. Assignar funcions</div><p class="guide-li">Clica qualsevol de les <strong>16 tecles</strong> i edita-la al panell lateral. Els canvis s'apliquen a l'instant.</p><div class="guide-h2">Tipus de funció</div><p class="guide-li"><strong>Tecla / Drecera</strong>: combinació de tecles (Ctrl+C, Cmd+S, F5…). Amb el botó <strong>⌨ Capturar drecera</strong> només cal prémer-la al teu teclat i queda assignada.</p><p class="guide-li"><strong>Escriure text</strong>: escriu una frase sencera automàticament.</p><p class="guide-li"><strong>Control multimèdia</strong>: reproduir, pausa, volum, brillantor…</p><p class="guide-li"><strong>Ratolí</strong>: clic esquerre, dret o central.</p><p class="guide-li"><strong>Canviar de capa</strong>: salta a la capa següent o anterior des del dispositiu.</p><p class="guide-li"><strong>Modificador mantingut</strong>: manté Cmd/Ctrl/Alt/Shift mentre la tecla està premuda.</p><p class="guide-li"><strong>Nota MIDI</strong>: envia una nota MIDI (nota, canal i velocitat configurables).</p><div class="guide-h2">Trucs</div><p class="guide-li"><strong>Copiar / Enganxar</strong> (a dalt del panell): duplica la configuració d'una tecla a una altra, fins i tot entre capes.</p><p class="guide-li">Cada color de tecla indica el tipus de funció assignada: lila = drecera, verd = text, groc = multimèdia, cian = ratolí, rosa = MIDI, taronja = capa.</p></div><div id="g3"><div class="guide-h1">3. Potenciòmetres</div><p class="guide-li">El TECLA té <strong>3 potenciòmetres</strong> (X, Y, Z). Clica'ls per configurar-los al mateix panell lateral.</p><p class="guide-li">Funcions: volum, brillantor, scroll vertical/horitzontal, moviment del ratolí X/Y, clic per pas i <strong>MIDI CC</strong> (per controlar paràmetres de sintetitzadors o visuals).</p><div class="guide-note">Pots girar el knob virtual (arrossega amunt/avall o fes scroll) per simular-ne el valor.</div></div><div id="g4"><div class="guide-h1">4. Capes</div><p class="guide-li">Les capes són configuracions completes de les 16 tecles + 3 potenciòmetres. El dispositiu les recorre amb una tecla <em>Canviar de capa</em>.</p><p class="guide-li">La barra superior mostra totes les capes com a <strong>xips</strong>: clic per activar-ne una, doble clic per reanomenar-la.</p><p class="guide-li">Botons de la barra: <strong>+ Nova</strong>, <strong>⎘ duplicar</strong>, <strong>✎ reanomenar</strong>, <strong>✕ eliminar</strong>, <strong>↓ exportar</strong> la capa activa a un fitxer JSON i <strong>↑ importar</strong> capes des d'un JSON.</p><p class="guide-li">A la pestanya <em>Capes</em> pots reordenar-les i afegir configuracions ja fetes (calculadora, edició de vídeo…).</p><div class="guide-note">Comparteix les teves capes exportant el JSON; qualsevol altre TECLA les pot importar tal qual.</div></div><div id="g5"><div class="guide-h1">5. MIDI ràpid (visuals, TouchDesigner…)</div><p class="guide-li">Per fer visuals o música sovint cal <strong>moltes tecles amb notes MIDI</strong>. L'eina <strong>♬ MIDI ràpid</strong> (a sota del panell lateral) ho fa en un clic:</p><p class="guide-li"><strong>Omplir aquesta capa</strong>: assigna 16 notes consecutives a partir de la nota inicial.</p><p class="guide-li"><strong>Generar capes noves</strong>: crea N capes seguides, cadascuna amb les 16 notes següents. Amb 4 capes tens 64 notes MIDI llestes en dos clics.</p><div class="guide-note">Exemple TouchDesigner: genera 4 capes des de la nota 36, canal 1, i mapeja cada nota a un efecte. Afegeix una tecla <em>Canviar de capa</em> si vols saltar entre bancs des del dispositiu.</div></div><div id="g6"><div class="guide-h1">6. Enviar-ho al dispositiu</div><div class="guide-h2">Només la primera vegada</div><p class="guide-li"><strong>1.</strong> Mantén premut <strong>BOOTSEL</strong> mentre connectes l'USB-C: apareixerà el volum <strong>RPI-RP2</strong>.</p><p class="guide-li"><strong>2.</strong> Descarrega CircuitPython (pestanya <em>Firmware</em>, Pas 1) i arrossega el fitxer <strong>.uf2</strong> a RPI-RP2. Es reiniciarà com a <strong>CIRCUITPY</strong>.</p><div class="guide-h2">Cada vegada que canviïs la configuració</div><p class="guide-li"><strong>1.</strong> Pestanya <em>Firmware</em> → <strong>Actualitzar firmware</strong>.</p><p class="guide-li"><strong>2.</strong> Selecciona el volum <strong>CIRCUITPY</strong> al diàleg. L'app hi copia <strong>code.py</strong> i les llibreries automàticament.</p><p class="guide-li"><strong>3.</strong> El TECLA es reinicia sol i ja funciona amb la nova configuració.</p><div class="guide-note">Cal Chrome o Edge per escriure directament al dispositiu. Amb Safari es descarrega <strong>code.py</strong> i cal copiar-lo a mà a CIRCUITPY. Les capes es desen al navegador (localStorage): exporta-les a JSON si vols una còpia de seguretat.</div></div>`,
+      es: `<div class="guide-toc"><a href="#g1">1. Empezar en 3 pasos</a><a href="#g2">2. Asignar funciones</a><a href="#g3">3. Potenciómetros</a><a href="#g4">4. Capas</a><a href="#g5">5. MIDI rápido (visuales, TouchDesigner…)</a><a href="#g6">6. Enviarlo al dispositivo</a></div><div id="g1"><div class="guide-h1">1. Empezar en 3 pasos</div><p class="guide-li"><strong>1.</strong> Haz clic en una tecla del dispositivo virtual: el panel de la derecha muestra su configuración.</p><p class="guide-li"><strong>2.</strong> Elige la función y sus detalles. <strong>Todo se guarda automáticamente</strong>, no hay que aplicar nada.</p><p class="guide-li"><strong>3.</strong> Conecta el TECLA por USB-C y pulsa <strong>Actualizar firmware</strong> (pestaña <em>Firmware</em>).</p><div class="guide-note">¿Primera vez con el dispositivo? Mira el apartado 6: hay que instalar CircuitPython una sola vez.</div></div><div id="g2"><div class="guide-h1">2. Asignar funciones</div><p class="guide-li">Haz clic en cualquiera de las <strong>16 teclas</strong> y edítala en el panel lateral. Los cambios se aplican al instante.</p><div class="guide-h2">Tipos de función</div><p class="guide-li"><strong>Tecla / Atajo</strong>: combinación de teclas (Ctrl+C, Cmd+S, F5…). Con el botón <strong>⌨ Capturar atajo</strong> basta con pulsarlo en tu teclado y queda asignado.</p><p class="guide-li"><strong>Escribir texto</strong>: escribe una frase entera automáticamente.</p><p class="guide-li"><strong>Control multimedia</strong>: reproducir, pausa, volumen, brillo…</p><p class="guide-li"><strong>Ratón</strong>: clic izquierdo, derecho o central.</p><p class="guide-li"><strong>Cambiar de capa</strong>: salta a la capa siguiente o anterior desde el dispositivo.</p><p class="guide-li"><strong>Modificador mantenido</strong>: mantiene Cmd/Ctrl/Alt/Shift mientras la tecla está pulsada.</p><p class="guide-li"><strong>Nota MIDI</strong>: envía una nota MIDI (nota, canal y velocidad configurables).</p><div class="guide-h2">Trucos</div><p class="guide-li"><strong>Copiar / Pegar</strong> (arriba del panel): duplica la configuración de una tecla en otra, incluso entre capas.</p><p class="guide-li">Cada color de tecla indica el tipo de función asignada: lila = atajo, verde = texto, amarillo = multimedia, cian = ratón, rosa = MIDI, naranja = capa.</p></div><div id="g3"><div class="guide-h1">3. Potenciómetros</div><p class="guide-li">El TECLA tiene <strong>3 potenciómetros</strong> (X, Y, Z). Haz clic en ellos para configurarlos en el mismo panel lateral.</p><p class="guide-li">Funciones: volumen, brillo, scroll vertical/horizontal, movimiento del ratón X/Y, clic por paso y <strong>MIDI CC</strong> (para controlar parámetros de sintetizadores o visuales).</p><div class="guide-note">Puedes girar el knob virtual (arrastra arriba/abajo o haz scroll) para simular su valor.</div></div><div id="g4"><div class="guide-h1">4. Capas</div><p class="guide-li">Las capas son configuraciones completas de las 16 teclas + 3 potenciómetros. El dispositivo las recorre con una tecla <em>Cambiar de capa</em>.</p><p class="guide-li">La barra superior muestra todas las capas como <strong>chips</strong>: clic para activar una, doble clic para renombrarla.</p><p class="guide-li">Botones de la barra: <strong>+ Nueva</strong>, <strong>⎘ duplicar</strong>, <strong>✎ renombrar</strong>, <strong>✕ eliminar</strong>, <strong>↓ exportar</strong> la capa activa a un archivo JSON e <strong>↑ importar</strong> capas desde un JSON.</p><p class="guide-li">En la pestaña <em>Capas</em> puedes reordenarlas y añadir configuraciones ya hechas (calculadora, edición de vídeo…).</p><div class="guide-note">Comparte tus capas exportando el JSON; cualquier otro TECLA puede importarlas tal cual.</div></div><div id="g5"><div class="guide-h1">5. MIDI rápido (visuales, TouchDesigner…)</div><p class="guide-li">Para visuales o música a menudo hacen falta <strong>muchas teclas con notas MIDI</strong>. La herramienta <strong>♬ MIDI rápido</strong> (debajo del panel lateral) lo hace en un clic:</p><p class="guide-li"><strong>Rellenar esta capa</strong>: asigna 16 notas consecutivas a partir de la nota inicial.</p><p class="guide-li"><strong>Generar capas nuevas</strong>: crea N capas seguidas, cada una con las 16 notas siguientes. Con 4 capas tienes 64 notas MIDI listas en dos clics.</p><div class="guide-note">Ejemplo TouchDesigner: genera 4 capas desde la nota 36, canal 1, y mapea cada nota a un efecto. Añade una tecla <em>Cambiar de capa</em> si quieres saltar entre bancos desde el dispositivo.</div></div><div id="g6"><div class="guide-h1">6. Enviarlo al dispositivo</div><div class="guide-h2">Solo la primera vez</div><p class="guide-li"><strong>1.</strong> Mantén pulsado <strong>BOOTSEL</strong> mientras conectas el USB-C: aparecerá el volumen <strong>RPI-RP2</strong>.</p><p class="guide-li"><strong>2.</strong> Descarga CircuitPython (pestaña <em>Firmware</em>, Paso 1) y arrastra el archivo <strong>.uf2</strong> a RPI-RP2. Se reiniciará como <strong>CIRCUITPY</strong>.</p><div class="guide-h2">Cada vez que cambies la configuración</div><p class="guide-li"><strong>1.</strong> Pestaña <em>Firmware</em> → <strong>Actualizar firmware</strong>.</p><p class="guide-li"><strong>2.</strong> Selecciona el volumen <strong>CIRCUITPY</strong> en el diálogo. La app copia <strong>code.py</strong> y las librerías automáticamente.</p><p class="guide-li"><strong>3.</strong> El TECLA se reinicia solo y ya funciona con la nueva configuración.</p><div class="guide-note">Se necesita Chrome o Edge para escribir directamente en el dispositivo. Con Safari se descarga <strong>code.py</strong> y hay que copiarlo a mano a CIRCUITPY. Las capas se guardan en el navegador (localStorage): expórtalas a JSON si quieres una copia de seguridad.</div></div>`,
+      en: `<div class="guide-toc"><a href="#g1">1. Start in 3 steps</a><a href="#g2">2. Assign functions</a><a href="#g3">3. Potentiometers</a><a href="#g4">4. Layers</a><a href="#g5">5. Quick MIDI (visuals, TouchDesigner…)</a><a href="#g6">6. Send it to the device</a></div><div id="g1"><div class="guide-h1">1. Start in 3 steps</div><p class="guide-li"><strong>1.</strong> Click a key on the virtual device: the panel on the right shows its configuration.</p><p class="guide-li"><strong>2.</strong> Pick the function and its details. <strong>Everything saves automatically</strong> — nothing to apply.</p><p class="guide-li"><strong>3.</strong> Connect TECLA via USB-C and press <strong>Update firmware</strong> (<em>Firmware</em> tab).</p><div class="guide-note">First time with the device? See section 6: CircuitPython must be installed once.</div></div><div id="g2"><div class="guide-h1">2. Assign functions</div><p class="guide-li">Click any of the <strong>16 keys</strong> and edit it in the side panel. Changes apply instantly.</p><div class="guide-h2">Function types</div><p class="guide-li"><strong>Key / Shortcut</strong>: a key combination (Ctrl+C, Cmd+S, F5…). With the <strong>⌨ Capture shortcut</strong> button, just press it on your keyboard and it's assigned.</p><p class="guide-li"><strong>Type text</strong>: types a whole phrase automatically.</p><p class="guide-li"><strong>Media control</strong>: play, pause, volume, brightness…</p><p class="guide-li"><strong>Mouse</strong>: left, right or middle click.</p><p class="guide-li"><strong>Switch layer</strong>: jumps to the next or previous layer from the device.</p><p class="guide-li"><strong>Held modifier</strong>: holds Cmd/Ctrl/Alt/Shift while the key is pressed.</p><p class="guide-li"><strong>MIDI note</strong>: sends a MIDI note (note, channel and velocity configurable).</p><div class="guide-h2">Tips</div><p class="guide-li"><strong>Copy / Paste</strong> (top of the panel): duplicates one key's configuration onto another, even across layers.</p><p class="guide-li">Each key colour shows the assigned function type: purple = shortcut, green = text, yellow = media, cyan = mouse, pink = MIDI, orange = layer.</p></div><div id="g3"><div class="guide-h1">3. Potentiometers</div><p class="guide-li">TECLA has <strong>3 potentiometers</strong> (X, Y, Z). Click them to configure them in the same side panel.</p><p class="guide-li">Functions: volume, brightness, vertical/horizontal scroll, mouse X/Y movement, click-per-step and <strong>MIDI CC</strong> (to control synth or visual parameters).</p><div class="guide-note">You can turn the virtual knob (drag up/down or scroll) to simulate its value.</div></div><div id="g4"><div class="guide-h1">4. Layers</div><p class="guide-li">Layers are full configurations of the 16 keys + 3 potentiometers. The device cycles through them with a <em>Switch layer</em> key.</p><p class="guide-li">The top bar shows all layers as <strong>chips</strong>: click to activate one, double-click to rename it.</p><p class="guide-li">Bar buttons: <strong>+ New</strong>, <strong>⎘ duplicate</strong>, <strong>✎ rename</strong>, <strong>✕ delete</strong>, <strong>↓ export</strong> the active layer to a JSON file and <strong>↑ import</strong> layers from JSON.</p><p class="guide-li">In the <em>Layers</em> tab you can reorder them and add ready-made setups (calculator, video editing…).</p><div class="guide-note">Share your layers by exporting the JSON; any other TECLA can import them as-is.</div></div><div id="g5"><div class="guide-h1">5. Quick MIDI (visuals, TouchDesigner…)</div><p class="guide-li">Visuals and music often need <strong>lots of keys with MIDI notes</strong>. The <strong>♬ Quick MIDI</strong> tool (below the side panel) does it in one click:</p><p class="guide-li"><strong>Fill this layer</strong>: assigns 16 consecutive notes starting from the first note.</p><p class="guide-li"><strong>Generate new layers</strong>: creates N layers in a row, each with the next 16 notes. With 4 layers you get 64 MIDI notes ready in two clicks.</p><div class="guide-note">TouchDesigner example: generate 4 layers from note 36, channel 1, and map each note to an effect. Add a <em>Switch layer</em> key to jump between banks from the device.</div></div><div id="g6"><div class="guide-h1">6. Send it to the device</div><div class="guide-h2">First time only</div><p class="guide-li"><strong>1.</strong> Hold <strong>BOOTSEL</strong> while plugging in the USB-C: the <strong>RPI-RP2</strong> volume appears.</p><p class="guide-li"><strong>2.</strong> Download CircuitPython (<em>Firmware</em> tab, Step 1) and drag the <strong>.uf2</strong> file onto RPI-RP2. It restarts as <strong>CIRCUITPY</strong>.</p><div class="guide-h2">Every time you change the configuration</div><p class="guide-li"><strong>1.</strong> <em>Firmware</em> tab → <strong>Update firmware</strong>.</p><p class="guide-li"><strong>2.</strong> Select the <strong>CIRCUITPY</strong> volume in the dialog. The app copies <strong>code.py</strong> and the libraries automatically.</p><p class="guide-li"><strong>3.</strong> TECLA restarts on its own and runs the new configuration.</p><div class="guide-note">Chrome or Edge is required to write directly to the device. On Safari, <strong>code.py</strong> is downloaded and must be copied to CIRCUITPY manually. Layers are stored in the browser (localStorage): export them to JSON for a backup.</div></div>`,
     };
     const _DICT = {
       ca: {
-        nav_config:'Configuració', nav_profiles:'Capes', nav_fw:'Firmware', nav_guide:"Guia d'ús", nav_theme:'Aparença',
+        nav_config:'Dispositiu', nav_profiles:'Capes', nav_settings:'Configuració', nav_fw:'Firmware', nav_guide:'Guia', nav_theme:'Aparença',
+        cfg_midi_title:'Canal MIDI', cfg_midi_desc:"Canal MIDI per defecte que s'aplicarà a les tecles i potenciòmetres MIDI nous.", cfg_midi_ch:'Canal:', cfg_save:'Guardar',
+        cfg_usb_title:'Identitat USB', cfg_port_name:'Nom del port:', cfg_disk_name:'Nom del disc:', cfg_device_title:'Dispositiu', cfg_disconnect:'Desconnectar',
         btn_connect:'Connecta', btn_disconnect:'Desconnectar',
         device_off:'desconnectat',
-        layer_lbl:'Capa:', btn_new_layer:'+ Nova', btn_rename:'Reanomenar', btn_del:'Eliminar',
+        layer_lbl:'Capes:', btn_new_layer:'+ Nova', btn_rename:'Reanomenar la capa activa', btn_del:'Eliminar la capa activa',
+        tt_dup:'Duplicar la capa activa', tt_export_layer:'Exportar la capa activa (JSON)', tt_import_layer:'Importar capes (JSON)', tt_hub:"Tornar al hub d'aplicacions",
+        chip_hint:'Clic: activar · Doble clic: reanomenar', prompt_rename:'Nou nom de la capa:', prompt_new_layer:'Nom de la nova capa:',
+        btn_copy:'Copiar', btn_paste:'Enganxar', autosave_note:'Els canvis es desen automàticament',
+        rec_shortcut:'⌨ Capturar drecera del teclat', rec_waiting:'Prem la drecera ara…',
+        midi_tools_title:'♬ MIDI ràpid', midi_tools_desc:'Omple capes senceres amb notes MIDI consecutives (16 per capa). Ideal per a TouchDesigner, Ableton o qualsevol programa que escolti MIDI.',
+        midi_base_lbl:'Nota inicial', midi_ch_lbl:'Canal', midi_vel_lbl:'Velocitat',
+        btn_midi_fill:'Omplir aquesta capa (16 notes)', btn_midi_layers:'Generar capes noves',
+        midi_fill_confirm:'Aquesta capa ja té tecles configurades. Vols sobreescriure-les amb notes MIDI?',
+        log_copied:'Configuració copiada', log_layer_dup:'Capa duplicada', log_midi_layers:'capes MIDI generades',
         btn_fw_update:'Actualitzar firmware',
         fw_status_title:'Estat del sistema', fw_status_vol:'Volum CIRCUITPY', fw_refresh:'↺ Refrescar estat',
         fw_step1_title:'Pas 1 — Instal·lar CircuitPython',
@@ -1583,11 +1794,9 @@
         fw_step3_title:'Pas 3 — Actualitzar el firmware',
         fw_step3_desc:'Un cop el CIRCUITPY és visible, genera i exporta el fitxer <strong>code.py</strong> amb la teva configuració al dispositiu.',
         profiles_new:'+ Nova capa', profiles_export:'↓ Exportar', profiles_import:'↑ Importar',
-        profiles_add:'+ Afegir al dispositiu', profiles_all:'Totes', profiles_none:'Cap',
         profiles_edit:'Editar',
-        profiles_config_desc:'Marca les que vols usar i prem <strong>Afegir al dispositiu</strong> per incloure-les com a capes.',
         profiles_my_desc:'Totes les capes del dispositiu en ordre. La tecla <em>Canviar de capa</em> les recorre seqüencialment. La capa activa apareix ressaltada.',
-        drawer_label:"Nom de l'acció (Etiqueta opcional)", drawer_type:'Funció Principal', btn_save_elem:'Aplicar Canvis',
+        drawer_type:'Funció Principal', btn_save_elem:'Aplicar Canvis',
         drawer_key_label:'Tecla Principal', drawer_mods_label:'Modificadors (Drecera)',
         drawer_text_label:'Escriu el text exacte', drawer_consumer_label:'Acció Multimèdia',
         drawer_mouse_label:'Acció Ratolí', drawer_hold_mod_label:'Modificador a mantenir',
@@ -1606,10 +1815,21 @@
         lang_title:'Idioma',
       },
       es: {
-        nav_config:'Configuración', nav_profiles:'Capas', nav_fw:'Firmware', nav_guide:'Guía de uso', nav_theme:'Apariencia',
+        nav_config:'Dispositivo', nav_profiles:'Capas', nav_settings:'Configuración', nav_fw:'Firmware', nav_guide:'Guía', nav_theme:'Apariencia',
+        cfg_midi_title:'Canal MIDI', cfg_midi_desc:'Canal MIDI por defecto que se aplicará a las teclas y potenciómetros MIDI nuevos.', cfg_midi_ch:'Canal:', cfg_save:'Guardar',
+        cfg_usb_title:'Identidad USB', cfg_port_name:'Nombre del puerto:', cfg_disk_name:'Nombre del disco:', cfg_device_title:'Dispositivo', cfg_disconnect:'Desconectar',
         btn_connect:'Conectar', btn_disconnect:'Desconectar',
         device_off:'desconectado',
-        layer_lbl:'Capa:', btn_new_layer:'+ Nueva', btn_rename:'Renombrar', btn_del:'Eliminar',
+        layer_lbl:'Capas:', btn_new_layer:'+ Nueva', btn_rename:'Renombrar la capa activa', btn_del:'Eliminar la capa activa',
+        tt_dup:'Duplicar la capa activa', tt_export_layer:'Exportar la capa activa (JSON)', tt_import_layer:'Importar capas (JSON)', tt_hub:'Volver al hub de aplicaciones',
+        chip_hint:'Clic: activar · Doble clic: renombrar', prompt_rename:'Nuevo nombre de la capa:', prompt_new_layer:'Nombre de la nueva capa:',
+        btn_copy:'Copiar', btn_paste:'Pegar', autosave_note:'Los cambios se guardan automáticamente',
+        rec_shortcut:'⌨ Capturar atajo del teclado', rec_waiting:'Pulsa el atajo ahora…',
+        midi_tools_title:'♬ MIDI rápido', midi_tools_desc:'Rellena capas enteras con notas MIDI consecutivas (16 por capa). Ideal para TouchDesigner, Ableton o cualquier programa que escuche MIDI.',
+        midi_base_lbl:'Nota inicial', midi_ch_lbl:'Canal', midi_vel_lbl:'Velocidad',
+        btn_midi_fill:'Rellenar esta capa (16 notas)', btn_midi_layers:'Generar capas nuevas',
+        midi_fill_confirm:'Esta capa ya tiene teclas configuradas. ¿Quieres sobrescribirlas con notas MIDI?',
+        log_copied:'Configuración copiada', log_layer_dup:'Capa duplicada', log_midi_layers:'capas MIDI generadas',
         btn_fw_update:'Actualizar firmware',
         fw_status_title:'Estado del sistema', fw_status_vol:'Volumen CIRCUITPY', fw_refresh:'↺ Actualizar estado',
         fw_step1_title:'Paso 1 — Instalar CircuitPython',
@@ -1621,11 +1841,9 @@
         fw_step3_title:'Paso 3 — Actualizar el firmware',
         fw_step3_desc:'Una vez CIRCUITPY está visible, genera y exporta el archivo <strong>code.py</strong> con tu configuración al dispositivo.',
         profiles_new:'+ Nueva capa', profiles_export:'↓ Exportar', profiles_import:'↑ Importar',
-        profiles_add:'+ Añadir al dispositivo', profiles_all:'Todas', profiles_none:'Ninguna',
         profiles_edit:'Editar',
-        profiles_config_desc:'Marca las que quieras usar y pulsa <strong>Añadir al dispositivo</strong> para incluirlas como capas.',
         profiles_my_desc:'Todas las capas del dispositivo en orden. La tecla <em>Cambiar de capa</em> las recorre secuencialmente. La capa activa aparece resaltada.',
-        drawer_label:'Nombre de la acción (Etiqueta opcional)', drawer_type:'Función Principal', btn_save_elem:'Aplicar Cambios',
+        drawer_type:'Función Principal', btn_save_elem:'Aplicar Cambios',
         drawer_key_label:'Tecla Principal', drawer_mods_label:'Modificadores (Atajo)',
         drawer_text_label:'Escribe el texto exacto', drawer_consumer_label:'Acción Multimedia',
         drawer_mouse_label:'Acción Ratón', drawer_hold_mod_label:'Modificador a mantener',
@@ -1644,10 +1862,21 @@
         lang_title:'Idioma',
       },
       en: {
-        nav_config:'Configuration', nav_profiles:'Layers', nav_fw:'Firmware', nav_guide:'User Guide', nav_theme:'Appearance',
+        nav_config:'Device', nav_profiles:'Layers', nav_settings:'Configuration', nav_fw:'Firmware', nav_guide:'Guide', nav_theme:'Appearance',
+        cfg_midi_title:'MIDI Channel', cfg_midi_desc:'Default MIDI channel applied to new MIDI keys and potentiometers.', cfg_midi_ch:'Channel:', cfg_save:'Save',
+        cfg_usb_title:'USB Identity', cfg_port_name:'Port name:', cfg_disk_name:'Disk name:', cfg_device_title:'Device', cfg_disconnect:'Disconnect',
         btn_connect:'Connect', btn_disconnect:'Disconnect',
         device_off:'disconnected',
-        layer_lbl:'Layer:', btn_new_layer:'+ New', btn_rename:'Rename', btn_del:'Delete',
+        layer_lbl:'Layers:', btn_new_layer:'+ New', btn_rename:'Rename active layer', btn_del:'Delete active layer',
+        tt_dup:'Duplicate active layer', tt_export_layer:'Export active layer (JSON)', tt_import_layer:'Import layers (JSON)', tt_hub:'Back to app hub',
+        chip_hint:'Click: activate · Double click: rename', prompt_rename:'New layer name:', prompt_new_layer:'New layer name:',
+        btn_copy:'Copy', btn_paste:'Paste', autosave_note:'Changes are saved automatically',
+        rec_shortcut:'⌨ Capture keyboard shortcut', rec_waiting:'Press the shortcut now…',
+        midi_tools_title:'♬ Quick MIDI', midi_tools_desc:'Fill entire layers with consecutive MIDI notes (16 per layer). Perfect for TouchDesigner, Ableton or any MIDI-listening software.',
+        midi_base_lbl:'First note', midi_ch_lbl:'Channel', midi_vel_lbl:'Velocity',
+        btn_midi_fill:'Fill this layer (16 notes)', btn_midi_layers:'Generate new layers',
+        midi_fill_confirm:'This layer already has configured keys. Overwrite them with MIDI notes?',
+        log_copied:'Configuration copied', log_layer_dup:'Layer duplicated', log_midi_layers:'MIDI layers generated',
         btn_fw_update:'Update firmware',
         fw_status_title:'System status', fw_status_vol:'CIRCUITPY volume', fw_refresh:'↺ Refresh status',
         fw_step1_title:'Step 1 — Install CircuitPython',
@@ -1659,11 +1888,9 @@
         fw_step3_title:'Step 3 — Update firmware',
         fw_step3_desc:'Once CIRCUITPY is visible, generate and export the <strong>code.py</strong> file with your configuration to the device.',
         profiles_new:'+ New layer', profiles_export:'↓ Export', profiles_import:'↑ Import',
-        profiles_add:'+ Add to device', profiles_all:'All', profiles_none:'None',
         profiles_edit:'Edit',
-        profiles_config_desc:'Check the ones you want and press <strong>Add to device</strong> to include them as layers.',
         profiles_my_desc:'All device layers in order. The <em>Switch layer</em> key cycles through them sequentially. The active layer is highlighted.',
-        drawer_label:'Action name (optional label)', drawer_type:'Main function', btn_save_elem:'Apply Changes',
+        drawer_type:'Main function', btn_save_elem:'Apply Changes',
         drawer_key_label:'Main key', drawer_mods_label:'Modifiers (Shortcut)',
         drawer_text_label:'Type exact text', drawer_consumer_label:'Media action',
         drawer_mouse_label:'Mouse action', drawer_hold_mod_label:'Modifier to hold',
@@ -1689,7 +1916,7 @@
       const t = _DICT[lang] || _DICT.ca;
       // Nav
       document.querySelectorAll('.nav-tab').forEach(el => {
-        const map = {config:'nav_config', profiles:'nav_profiles', firmware:'nav_fw', guide:'nav_guide', theme:'nav_theme'};
+        const map = {config:'nav_config', profiles:'nav_profiles', settings:'nav_settings', firmware:'nav_fw', guide:'nav_guide', theme:'nav_theme'};
         if (map[el.dataset.tab]) el.innerHTML = t[map[el.dataset.tab]];
       });
       // Header
@@ -1699,7 +1926,11 @@
       if (dn && ['desconnectat','desconectado','disconnected'].includes(dn.textContent)) dn.textContent = t.device_off;
       // Layer bar
       const lbl = document.querySelector('.bank-bar span'); if(lbl) lbl.textContent = t.layer_lbl;
-      _setText('btn-new-layer','btn_new_layer'); _setText('btn-rename-layer','btn_rename'); _setText('btn-del-layer','btn_del');
+      _setText('btn-new-layer','btn_new_layer');
+      const _setTitle = (id, key) => { const el=document.getElementById(id); if(el && t[key]) el.title=t[key]; };
+      _setTitle('btn-dup-layer','tt_dup'); _setTitle('btn-rename-layer','btn_rename'); _setTitle('btn-del-layer','btn_del');
+      _setTitle('btn-export-layer','tt_export_layer'); _setTitle('btn-import-layer','tt_import_layer'); _setTitle('btn-hub','tt_hub');
+      _syncLayerBar();
       // data-t elements (textContent)
       document.querySelectorAll('[data-t]').forEach(el => { if (t[el.dataset.t]) el.textContent = t[el.dataset.t]; });
       document.querySelectorAll('label').forEach(el => { if (el.dataset.t && t[el.dataset.t]) el.textContent = t[el.dataset.t]; });
@@ -1709,8 +1940,9 @@
       const _gc = document.getElementById('guide-card'); if (_gc) _gc.innerHTML = _GUIDE[lang] || _GUIDE.ca;
       // Re-render dynamic lists so their buttons use current lang
       renderProfiles();
-      // Re-render type select if drawer open
-      if (document.getElementById('config-drawer').classList.contains('open')) loadConfigForm();
+      // Re-render el formulari de l'inspector amb l'idioma nou
+      if (currentSelection.type) loadConfigForm();
+      const rb = document.getElementById('btn-rec-shortcut'); if (rb && !_recActive) rb.textContent = t.rec_shortcut;
       // Lang buttons
       document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
     }
@@ -1730,12 +1962,17 @@
     })();
 
     // Inici
-    if (_currentLang !== 'ca') setLang(_currentLang);
-    else document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === 'ca'));
+    (function() {
+      // Munta el formulari de configuració dins l'inspector
+      const form = document.getElementById('elem-form');
+      form.style.display = '';
+      document.getElementById('insp-body').appendChild(form);
+    })();
+    setLang(_currentLang);
     _syncLayerBar();
     renderDevice();
     renderProfiles();
-    _renderPresetsGrid();
+    handleElementClick('key', 0); // l'inspector sempre mostra alguna cosa
   </script>
 </body>
 </html>
