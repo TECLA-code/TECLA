@@ -281,21 +281,21 @@ def test_loop_sense_sustain_conserva_durades(kbd):
 # ── Sustain progressiu (el pot fixa el temps de release; sense CC64) ─────────
 
 def test_sustain_progressiu(kbd):
-    """El pot de sustain fixa el release TECLA-side: zona morta baixa (release
-    immediat), corba creixent fins a SUSTAIN_MAX_S, i hold indefinit només prop
-    del màxim (>=125)."""
+    """El pot de sustain fixa el release TECLA-side per TRAMS discrets (v3.2):
+    OFF, 0.5s, 1.2s, 2.5s, 5s, 8s i hold indefinit al tram final (>=118 —
+    l'antic llindar 125 era inabastable amb l'escalat real de l'ADC)."""
     kbd.pot_z_function = 'Sustain (CC64)'
     apply_pot_function(kbd, 'pot_z', 4, force_update=True)
     assert kbd.sustain_release_time == 0.0
     assert kbd.sustain_hold_enabled is False
     prev = 0.0
-    for v in (40, 70, 100, 124):
+    for v, esperat in ((20, 0.5), (45, 1.2), (70, 2.5), (90, 5.0), (110, 8.0)):
         apply_pot_function(kbd, 'pot_z', v, force_update=True)
-        assert 0 < kbd.sustain_release_time <= kbd.SUSTAIN_MAX_S, f"pot={v}"
-        assert kbd.sustain_release_time > prev, f"pot={v}: corba creixent"
+        assert kbd.sustain_release_time == esperat, f"pot={v}"
+        assert kbd.sustain_release_time > prev, f"pot={v}: trams creixents"
         assert kbd.sustain_hold_enabled is False
         prev = kbd.sustain_release_time
-    for v in (125, 127):
+    for v in (118, 127):
         apply_pot_function(kbd, 'pot_z', v, force_update=True)
         assert kbd.sustain_release_time == -1.0, f"pot={v}: hold indefinit"
         assert kbd.sustain_hold_enabled is True

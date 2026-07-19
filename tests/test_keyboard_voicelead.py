@@ -110,3 +110,70 @@ def test_desactivat_no_toca_res(kbd):
     process_keyboard_buttons(kbd, s)
     assert kbd.button_notes[4] == {55, 59, 62}  # posició fonamental intacta
     process_keyboard_buttons(kbd, OFF)
+
+# ── Formes NOVES (v3.2): inversions integrades + patrons addicionals ─────────
+
+def _vl(kbd, tipus, seq):
+    """Aplica la forma `tipus` a una seqüència d'acords; retorna els voicings."""
+    kbd.voice_lead_active = True
+    kbd._vl_type = tipus
+    kbd._vl_prev_chord = None
+    if hasattr(kbd, '_vl_pendol_up'):
+        del kbd._vl_pendol_up
+    return [apply_voice_leading(kbd, list(ch)) for ch in seq]
+
+
+def test_fonamental_posa_el_baix_a_la_fonamental(kbd):
+    # C M → F M (notes en ordre d'intervals: fonamental primer)
+    out = _vl(kbd, 'fonamental', [[48, 52, 55], [53, 57, 60]])
+    assert min(out[1]) % 12 == 5, f"el baix hauria de ser F: {out[1]}"
+
+
+def test_inv1_posa_el_baix_a_la_tercera(kbd):
+    # F M després de C M: 1a inversió → baix = A (la 3a de F)
+    out = _vl(kbd, 'inv1', [[48, 52, 55], [53, 57, 60]])
+    assert min(out[1]) % 12 == 9, f"el baix hauria de ser A (3a de F): {out[1]}"
+
+
+def test_inv2_posa_el_baix_a_la_quinta(kbd):
+    # F M després de C M: 2a inversió → baix = C (la 5a de F)
+    out = _vl(kbd, 'inv2', [[48, 52, 55], [53, 57, 60]])
+    assert min(out[1]) % 12 == 0, f"el baix hauria de ser C (5a de F): {out[1]}"
+
+
+def test_descendent_les_veus_baixen(kbd):
+    out = _vl(kbd, 'descendent', [[60, 64, 67], [62, 66, 69]])
+    assert min(out[1]) < min(out[0]), f"el baix hauria de baixar: {out}"
+
+
+def test_tancat_es_mes_compacte_que_obert(kbd):
+    seq = [[48, 52, 55], [53, 57, 60]]
+    tancat = _vl(kbd, 'tancat', seq)[1]
+    obert = _vl(kbd, 'obert', seq)[1]
+    assert (max(tancat) - min(tancat)) <= (max(obert) - min(obert))
+
+
+def test_drop2_baixa_una_veu_una_octava(kbd):
+    # Amb 4 veus el drop2 té un span > que el voicing tancat de les mateixes pc
+    out = _vl(kbd, 'drop2', [[48, 52, 55, 59], [53, 57, 60, 64]])
+    span = max(out[1]) - min(out[1])
+    assert span >= 12, f"un drop2 de 4 veus ha de superar l'octava: {out[1]}"
+    # les classes d'altura es conserven
+    assert sorted(n % 12 for n in out[1]) == sorted(n % 12 for n in [53, 57, 60, 64])
+
+
+def test_pendol_alterna_pujar_i_baixar(kbd):
+    seq = [[60, 64, 67]] + [[60, 64, 67], [62, 65, 69], [60, 64, 67], [62, 65, 69]]
+    out = _vl(kbd, 'pendol', seq)
+    baixos = [min(v) for v in out]
+    dirs = [1 if baixos[i+1] >= baixos[i] else -1 for i in range(len(baixos)-1)]
+    assert 1 in dirs and -1 in dirs, f"el pèndol ha d'alternar direccions: {baixos}"
+
+
+def test_totes_les_formes_conserven_les_classes_daltura(kbd):
+    from modes.kbd_voicelead import VL_TYPE_IDS
+    for tipus in VL_TYPE_IDS:
+        out = _vl(kbd, tipus, [[48, 52, 55], [50, 53, 57], [55, 59, 62]])
+        for orig, veu in zip([[48, 52, 55], [50, 53, 57], [55, 59, 62]], out):
+            assert sorted(n % 12 for n in veu) == sorted(n % 12 for n in orig), \
+                f"{tipus}: classes d'altura canviades ({orig} → {veu})"

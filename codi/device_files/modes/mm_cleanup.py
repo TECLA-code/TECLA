@@ -83,20 +83,6 @@ def mm_stop_current_mode(mgr):
         print(f"Error aturant mode: {e}")
 
 
-def mm_stop_notes(mgr, notes_info):
-    """Atura les notes especificades."""
-    from adafruit_midi.note_off import NoteOff
-    for note_info in notes_info:
-        try:
-            if len(note_info) >= 2:
-                note, velocity = note_info[0], note_info[1]
-                channel = note_info[2] if len(note_info) > 2 else 0
-                note_off_msg = NoteOff(note & 0x7F, velocity & 0x7F)
-                note_off_msg.channel = channel
-                mgr.midi_out.send(note_off_msg)
-        except Exception as e:
-            print(f"Error aturant nota {note_info}: {e}")
-
 
 def mm_stop_all_sound(mgr):
     """PANIC: atura tot el so MIDI immediatament.
@@ -274,12 +260,3 @@ def mm_deactivate_pausa(mgr):
     mgr.pre_pausa_mode = None
 
 
-def mm_silent_controls(mgr):
-    """Silencia controls MIDI del mode actual."""
-    try:
-        from adafruit_midi.control_change import ControlChange
-        for channel in range(16):
-            mgr.midi_out.send(ControlChange(11, 127, channel=channel))
-            mgr.midi_out.send(ControlChange(1, 0, channel=channel))
-    except Exception as e:
-        print(f"Error silenciant controls: {e}")

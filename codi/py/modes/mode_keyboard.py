@@ -5,10 +5,10 @@ Activat pel botó 13, amb controls de potenciòmetres per personalitzar
 """
 
 import time
-from adafruit_midi.note_on import NoteOn
-from adafruit_midi.note_off import NoteOff
 from adafruit_midi.control_change import ControlChange
 from adafruit_midi.pitch_bend import PitchBend
+# (NoteOn/NoteOff ja no s'importen: tot el camí calent usa els missatges
+#  POOLED de modes.base_mode — zero al·locacions per nota.)
 
 # Importar constants des de mòdul compartit per estalviar RAM
 try:
@@ -79,7 +79,8 @@ class KeyboardMode:
         self._accomp_btn_press_time = 0.0
         self._vl_type = 'proximitat'
         self._vl_type_idx = 0
-        self.available_vl_types = ['proximitat', 'comu', 'baix', 'ascendent', 'obert']
+        self.available_vl_types = ['proximitat', 'comu', 'baix', 'ascendent', 'descendent',
+                                   'obert', 'tancat', 'fonamental', 'inv1', 'inv2', 'drop2', 'pendol']
         # Config àudio: tecla synth_cfg activa (-1 = cap) i mapatge de potes per tecla
         self._audio_cfg_key = -1
         self.audio_pot_functions = {}
@@ -90,9 +91,8 @@ class KeyboardMode:
         self._neg_harm_btn_press_time = 0.0
         self._neg_harm_last_release = 0.0
         self._neg_harm_just_activated = False
-        # Inversió d'acord
-        self.available_chord_inv_ids = [0, 1, 2, 3]
-        self.chord_inversion_index = 0
+        # (Inversions d'acord: ara són FORMES de la conducció de veus —
+        #  fonamental/inv1/inv2 a kbd_voicelead. L'antic índex propi s'ha retirat.)
         # Acords diatònics — funcions harmòniques
         self.diatonic_fn_idx = -1  # -1 = inactiu
         self.available_diatonic_fns = ['diatonic']
@@ -186,7 +186,6 @@ class KeyboardMode:
         self.sustain_level = 0  # Nivell de sustain (0-127); >=64 => "actiu" (HUD, baking)
         self.sustain_release_time = 0.0
         self._sustain_pending = {}
-        self.SUSTAIN_MAX_S = 4.0     # release màxim abans del hold indefinit
         self.filter_cutoff = 64  # Tracking del filtre (0-127, valor neutral)
         
         # Flag per primer update (sincronitzar potenciòmetres)
@@ -509,6 +508,17 @@ class KeyboardMode:
             
             # Actualitzar PWM amb aquesta nota
             self._update_pwm_for_note(note)
+
+            # Testimoni per a la consola virtual de l'app: només amb consola
+            # connectada (cost zero en directe) i mai per als passos de
+            # l'arpegiador (button_index -1), que inundarien el monitor.
+            if button_index >= 0:
+                from modes.kbd_notes import _console_on, note_name
+                if _console_on():
+                    try:
+                        print("♪ " + note_name(note))
+                    except Exception:
+                        pass
             
             # Gate funciona amb CC11 Expression, no necessita tracking de notes
             
@@ -524,23 +534,43 @@ class KeyboardMode:
         except Exception as e:
             print(f"Error enviant NoteOn: {e}")
             
+    # Sustain SEGMENTAT: trams discrets i clarament perceptibles en girar el
+    # pot (l'antiga corba quadràtica contínua feia difícil "trobar" un temps i
+    # el tram d'infinit començava a 125 — molts pots físics no hi arriben amb
+    # l'escalat de l'ADC, i l'infinit quedava inabastable). El tram es mostra
+    # per consola quan canvia. (llindar_inferior, release_s, nom) — l'últim
+    # tram (>=118) és hold INDEFINIT.
+    SUSTAIN_ZONES = (
+        (118, -1.0, 'Infinit'),
+        (103, 8.0, 'Maxim (8s)'),
+        (83, 5.0, 'Molt llarg (5s)'),
+        (60, 2.5, 'Llarg (2.5s)'),
+        (34, 1.2, 'Mig (1.2s)'),
+        (8, 0.5, 'Curt (0.5s)'),
+        (0, 0.0, 'OFF'),
+    )
+
     def _set_sustain(self, pot_value):
-        """Sustain PROGRESSIU (TECLA-side, sense CC64): el pot fixa el temps de release.
-        Zona morta baixa (release immediat), corba quadràtica fins a SUSTAIN_MAX_S, i hold
-        indefinit prop del màxim. Re-ajusta els note-offs ja pendents perquè el pot respongui
-        en directe (abaixar-lo escurça/atura les notes que ressonen)."""
+        """Sustain per TRAMS (TECLA-side, sense CC64): el pot tria un tram de
+        temps de release — OFF, 0.5s, 1.2s, 2.5s, 5s, 8s o INFINIT (hold).
+        Re-ajusta els note-offs ja pendents perquè el pot respongui en directe
+        (abaixar-lo escurça/atura les notes que ressonen)."""
         self.sustain_hold_value = pot_value
         self.sustain_level = pot_value
-        if pot_value < 8:
-            self.sustain_release_time = 0.0
-            self.sustain_hold_enabled = False
-        elif pot_value >= 125:
-            self.sustain_release_time = -1.0      # indefinit (hold total)
-            self.sustain_hold_enabled = True
+        # Histèresi de 2 passos: el soroll de l'ADC a la frontera d'un tram no
+        # ha de fer parpellejar el tram (ni omplir la consola de prints).
+        prev = getattr(self, '_sustain_pot_prev', None)
+        if prev is not None and -2 < (pot_value - prev) < 2:
+            pot_value = prev
         else:
-            frac = (pot_value - 8) / 117.0
-            self.sustain_release_time = frac * frac * self.SUSTAIN_MAX_S
-            self.sustain_hold_enabled = False
+            self._sustain_pot_prev = pot_value
+        for llindar, rt, nom in self.SUSTAIN_ZONES:
+            if pot_value >= llindar:
+                if rt != self.sustain_release_time:
+                    self.sustain_release_time = rt
+                    self.sustain_hold_enabled = rt < 0
+                    print("Sustain: %s" % nom)
+                break
         if self._sustain_pending:
             rt = self.sustain_release_time
             if rt == 0.0:

@@ -408,7 +408,6 @@
     .pot-indicator { position: absolute; top: 4px; left: 50%; transform: translateX(-50%); width: 2px; height: 10px; background: rgba(0,0,0,0.45); border-radius: 2px; }
     .pot-label-vis { font-size: 11px; font-weight: 600; color: var(--text); }
     
-    .sim-content .pot-knob { width: 42px; height: 42px; border-width: 1.5px; }
     .sim-content .pot-indicator { height: 8px; }
     .sim-content .pot-label-vis { font-size: 10px; }
     .sim-content .pots-row-visual { gap: 14px; }
@@ -838,22 +837,20 @@
       max-width: none
     }
 
+    /* Pestanya Simulador SENSE marcs: només el menú lateral queda emmarcat;
+       el diagrama flota sobre el fons com a la pestanya Dispositiu. */
     .sim-layout {
       display: grid;
       grid-template-columns: 200px 1fr auto;
       min-height: 520px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--r2);
-      overflow: hidden;
+      gap: 18px;
       position: relative
     }
 
     .sim-sidebar {
-      border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
-      background: var(--sim-sb)
+      background: transparent
     }
 
     .sim-sidebar-title {
@@ -991,17 +988,16 @@
     .sim-main {
       display: flex;
       flex-direction: column;
-      background: var(--sim-bg)
+      background: transparent
     }
 
     .sim-toolbar {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 9px 14px;
-      border-bottom: 1px solid var(--border);
+      padding: 9px 0;
       flex-wrap: wrap;
-      background: var(--sim-tb)
+      background: transparent
     }
 
     .sim-toolbar>label {
@@ -1028,7 +1024,7 @@
     }
 
     .sim-dot.ready {
-      background: var(--yellow)
+      background: var(--green)
     }
 
     .sim-dot.running {
@@ -1051,9 +1047,11 @@
     .sim-content {
       flex: 1;
       display: flex;
-      flex-direction: row;
-      align-items: stretch
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
+    .sim-content > .device-wrap { width: 100%; }
 
     .sim-device {
       display: flex;
@@ -1062,14 +1060,17 @@
       padding: 20px 28px 10px
     }
 
+    /* Mateixa mètrica que .keys-grid de la pestanya Dispositiu (paritat exacta) */
     .sim-buttons-grid {
       display: grid;
-      grid-template-columns: repeat(4, 72px);
-      grid-template-rows: repeat(4, 72px);
-      gap: 6px
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      width: 100%;
+      max-width: 380px;
     }
 
     .sim-key {
+      aspect-ratio: 1;
       background: var(--sim-key);
       border: 1px solid var(--sim-key-bd);
       border-radius: 7px;
@@ -1201,12 +1202,12 @@
     }
 
     .sim-log-wrap {
-      border-top: 1px solid var(--border);
-      background: var(--sim-log);
+      background: transparent;
       height: 110px;
       overflow: hidden;
       display: flex;
-      flex-direction: column
+      flex-direction: column;
+      opacity: .85
     }
 
     #sim-log {
@@ -2012,7 +2013,80 @@
     .layer-type-bar { display: inline-flex; gap: 4px; background: var(--surface2); padding: 3px; border-radius: var(--radius); }
     .layer-type-bar button { font-size: 11.5px; }
     .layer-type-bar button.active { background: var(--accent); color: #fff; }
-  </style>
+  
+    /* ── PANTALLA del dispositiu: virtual, translúcida, arrossegable ────── */
+    .devmon {
+      position: fixed; right: 24px; bottom: 24px; z-index: 350;
+      width: 400px; display: flex; flex-direction: column;
+      background: color-mix(in srgb, var(--bg2) 82%, transparent);
+      backdrop-filter: blur(18px) saturate(1.15); -webkit-backdrop-filter: blur(18px) saturate(1.15);
+      border: 1px solid var(--line); border-radius: 16px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.5); overflow: hidden;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      resize: both; min-width: 320px; min-height: 260px; max-width: 92vw; max-height: 88vh;
+    }
+    .devmon.hidden { display: none }
+    .devmon-head {
+      display: flex; align-items: center; gap: 8px; padding: 9px 12px;
+      border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
+      font-size: 11px; color: var(--text2); cursor: grab; user-select: none;
+    }
+    .devmon-head:active { cursor: grabbing }
+    .devmon-head .btn { padding: 2px 8px; font-size: 10.5px; cursor: pointer }
+    .devmon-head .btn.hidden { display: none }
+    .devmon-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); flex-shrink: 0 }
+    .devmon.live .devmon-dot { background: var(--green); box-shadow: 0 0 8px var(--green) }
+    .devmon-title { font-weight: 600; letter-spacing: .05em; flex: 1 }
+    .devmon-body { position: relative; min-height: 280px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; padding: 18px 16px 14px; overflow: hidden }
+    /* Logo: protagonista a l'inici; marca d'aigua «que s'intueix» quan la pantalla treballa */
+    /* Logo SEMPRE de fons (color del tema): brillant mentre no s'usa,
+       marca d'aigua que s'intueix quan la pantalla treballa */
+    .devmon-logo-bg {
+      position: absolute; inset: 0; margin: auto; width: 200px; height: 200px;
+      background-color: var(--text); opacity: .9; pointer-events: none;
+      -webkit-mask: url('./logo_tecla.svg') no-repeat center / contain;
+      mask: url('./logo_tecla.svg') no-repeat center / contain;
+      transition: opacity .8s ease;
+    }
+    .devmon.inuse .devmon-logo-bg { opacity: .07 }
+    .devmon-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none }
+    .devmon-hero { position: absolute; left: 0; right: 0; bottom: 12px; display: flex; justify-content: center }
+    .devmon-hero .hint { color: var(--text3); font-size: 10.5px; text-align: center; line-height: 1.6; max-width: 280px }
+    /* L'esdeveniment ACTUAL, en gran — modernitat digital sense manies */
+    .devmon-now {
+      position: relative; text-align: center; display: none;
+      animation: devmonPop .18s ease;
+    }
+    .devmon.inuse .devmon-now { display: block }
+    @keyframes devmonPop { from { transform: scale(.94); opacity: .4 } to { transform: scale(1); opacity: 1 } }
+    .devmon-now .tag {
+      font-size: 10px; letter-spacing: .35em; text-transform: uppercase;
+      color: var(--text3); margin-bottom: 10px;
+    }
+    .devmon-now .main {
+      font-size: 34px; font-weight: 700; letter-spacing: .04em; line-height: 1.2;
+      color: var(--text); word-break: break-word;
+    }
+    .devmon-now.nota .main, .devmon-now.acord .main { color: var(--accent); text-shadow: 0 0 26px color-mix(in srgb, var(--accent) 55%, transparent) }
+    .devmon-now.capa .main { color: var(--green); text-shadow: 0 0 26px color-mix(in srgb, var(--green) 45%, transparent) }
+    .devmon-now.err .main { color: var(--red); text-shadow: 0 0 26px color-mix(in srgb, var(--red) 45%, transparent) }
+    /* Desancorada (finestra PiP fora de l'app): SUPER clean — sense vores i
+       amb la capçalera amagada (apareix en passar-hi el ratolí) */
+    .devmon.pip { position: static; width: 100%; height: 100%; border: 0; border-radius: 0;
+      box-shadow: none; resize: none;
+      background: radial-gradient(130% 100% at 50% 0%,
+        color-mix(in srgb, var(--bg2) 90%, var(--accent) 10%) 0%,
+        var(--bg2) 48%,
+        color-mix(in srgb, var(--bg2) 85%, black) 100%) }
+    .devmon.pip .devmon-body { flex: 1; padding: 0 }
+    .devmon.pip .devmon-head {
+      position: absolute; top: 0; left: 0; right: 0; z-index: 2; opacity: 0;
+      transition: opacity .25s ease; background: color-mix(in srgb, var(--bg2) 80%, transparent);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    }
+    .devmon.pip:hover .devmon-head { opacity: 1 }
+</style>
 </head>
 
 <body>
@@ -2028,6 +2102,7 @@
       <button class="lang-btn" data-lang="es">ES</button>
       <button class="lang-btn" data-lang="en">EN</button>
       <div class="lang-sep"></div>
+      <button class="btn btn-sm" id="btn-monitor" title="Pantalla del dispositiu: veu en directe què fa el TECLA (notes, acords, funcions) pel port sèrie">Pantalla</button>
       <button class="btn btn-sm btn-primary" id="btn-connect" data-i18n="btn_connect">connecta dispositiu</button>
       <button class="btn btn-sm" id="btn-disconnect" style="display:none" data-i18n="btn_disconnect">desconnectar</button>
     </div>
@@ -2073,7 +2148,7 @@
            tecles, potes de config d'àudio a la DRETA, efectes temporals A SOTA. -->
       <div class="keys-tab-layout">
         <div class="modes-panel">
-          <div class="modes-panel-title" data-i18n="modes_disponibles">Modes disponibles</div>
+          <div class="modes-panel-title" data-i18n="modes_disponibles">Modes</div>
           <div id="modes-panel-list"><div class="empty" style="font-size:11px" data-i18n="carregant_2">Carregant...</div></div>
           <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
             <button class="btn btn-sm" id="btn-import-modes" data-i18n="afegir">+ Afegir</button>
@@ -2108,7 +2183,6 @@
       <!-- Efectes temporals (tecles 14/15): franja inferior compacta -->
       <div class="card" style="margin-top:14px" id="card-effects">
         <div class="card-title" data-i18n="efectes_temporals_tecles_14_i_15_c">Efectes temporals</div>
-        <p style="font-size:10.5px;color:var(--text3);margin:0 0 8px" data-i18n="cicla_amb_doble_clic_a_les_tecles">Tecles 14 i 15 — cicla amb doble clic</p>
         <div class="effects-row" id="effects-list"></div>
         <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
           <button class="btn btn-sm btn-primary" id="btn-save-effects" data-i18n="guardar">Guardar</button>
@@ -2120,11 +2194,7 @@
       <!-- Config Modes: capes de funcions dels potes per modificar el MODE en viu.
            Cada TAP a la tecla amb l'efecte 'Config Modes' cicla OFF → capa 1 → … → OFF. -->
       <div class="card" style="margin-top:14px" id="card-potlayers">
-        <div class="card-title">Config Modes — capes de pots</div>
-        <p style="font-size:10.5px;color:var(--text3);margin:0 0 8px">
-          Amb l'efecte <strong>Config Modes</strong> actiu (tecla 14/15), cada tap cicla aquestes capes:
-          els 3 potes modifiquen el mode que sona (volum, filtre, expressió…) sense aturar-lo. Màxim 4 capes.
-        </p>
+        <div class="card-title">Configuració de Modes — Capes de Potenciòmetres</div>
         <div id="potlayers-list" style="display:flex;flex-direction:column;gap:6px"></div>
         <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
           <button class="btn btn-sm" id="btn-potlayer-add">+ Afegir capa</button>
@@ -2214,10 +2284,9 @@
     <div class="tab-panel" id="tab-modes">
 
       <div style="margin-bottom:14px">
-        <div style="font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:12px;letter-spacing:.04em;text-transform:uppercase" data-i18n="assignacio_de_funcions_del_mode_te">Assignació de funcions del mode teclat</div>
         <div class="kb-assign-layout">
           <div class="kb-fn-panel">
-            <div class="modes-panel-title" data-i18n="funcions_disponibles">Funcions disponibles</div>
+            <div class="modes-panel-title" data-i18n="funcions_disponibles">Funcions</div>
             <div class="kb-fn-chips-panel" id="kb-fn-chips"></div>
           </div>
           <div class="kb-device-area">
@@ -2231,7 +2300,6 @@
               <button class="btn btn-sm" id="kb-pot-mode-arp" data-i18n="arp">Arp</button>
             </div>
             <div id="kb-pots-col-knobs"></div>
-            <p style="font-size:9.5px;color:var(--text3);max-width:130px;line-height:1.45;margin-top:6px" data-i18n="pots_llegenda">Els 3 potes canvien de funció segons el context actiu (teclat, arpegiador, acords, h. negativa o config àudio). Clica un knob per canviar-ne la funció.</p>
           </div>
         </div>
         <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;justify-content:center">
@@ -2246,6 +2314,7 @@
       <div class="kb-cfg-menu" id="kb-cfg-menu">
         <span style="font-size:11.5px;font-weight:600;color:var(--text2);letter-spacing:.04em;text-transform:uppercase" data-i18n="configuracio_del_teclat">Configuració del teclat</span>
         <button class="btn btn-sm kb-sec-btn" data-sec="escales" data-i18n="sec_escales">Escales i arpegiador</button>
+        <button class="btn btn-sm kb-sec-btn" data-sec="acomp" data-i18n="sec_acomp">Acompanyaments</button>
         <button class="btn btn-sm kb-sec-btn" data-sec="harmonia" data-i18n="sec_harmonia">Harmonia</button>
         <button class="btn btn-sm kb-sec-btn" data-sec="acords" data-i18n="sec_acords">Tipologies d'acords</button>
         <button class="btn btn-sm kb-sec-btn" data-sec="progressions" data-i18n="sec_progressions">Progressions i escales pròpies</button>
@@ -2296,16 +2365,33 @@
       </div>
       </div>
 
+      <div class="kb-sec" data-sec="acomp">
+      <div class="card" style="margin-top:14px">
+        <div class="card-title">𝄆 Acompanyaments</div>
+        <div class="pill-toggles" style="margin-bottom:12px">
+          <label class="cb"><input type="checkbox" checked disabled><span>Pols</span></label>
+          <label class="cb"><input type="checkbox" checked disabled><span>Baix</span></label>
+          <label class="cb"><input type="checkbox" checked disabled><span>Arpegi</span></label>
+          <label class="cb"><input type="checkbox" checked disabled><span>Seqüència</span></label>
+        </div>
+        <div class="card-title" style="font-size:11px" data-i18n="acomp_personalitzats">Acompanyaments Personalitzats</div>
+        <div class="crud-toolbar" style="margin:6px 0">
+          <button class="btn btn-sm btn-primary" id="btn-new-accomp">+ Nou Acompanyament</button>
+          <button class="btn btn-sm" id="btn-edit-accomp" disabled data-i18n="editar_acc">Editar</button>
+          <button class="btn btn-sm btn-danger" id="btn-del-accomp" disabled data-i18n="eliminar_acc">Eliminar</button>
+        </div>
+        <div class="crud-list" id="custom-accomp-items" style="max-height:160px"></div>
+      </div>
+      </div>
+
       <div class="kb-sec" data-sec="harmonia">
       <div class="card" style="margin-top:14px">
         <div class="card-title" data-i18n="eix_d_rsquo_harmonia_negativa">Eix d&rsquo;Harmonia Negativa</div>
         <div class="pill-toggles" id="neg-harmony-types"></div>
       </div>
 
-      <div class="card" style="margin-top:14px">
-        <div class="card-title" data-i18n="inversions_harmoniques">Inversions Harmòniques</div>
-        <div class="pill-toggles" id="chord-inversions"></div>
-      </div>
+      <!-- (Les "Inversions Harmòniques" ara són FORMES de la Conducció de Veus:
+           Fonamental / 1a Inversió / 2a Inversió — vegeu el card de sota.) -->
 
       <div class="card" style="margin-top:14px">
         <div class="card-title" data-i18n="funcions_harmoniques_diatoniques">Δ Funcions Harmòniques Diatòniques</div>
@@ -2495,6 +2581,52 @@
     </div>
 
     <!-- ══ EDITOR OVERLAY: ARPEGIADOR ════════════════════════════ -->
+    <!-- Editor d'ACOMPANYAMENTS personalitzats (capa teclat → Acompanyaments) -->
+    <div class="editor-overlay" id="accomp-editor-overlay">
+      <div class="editor-panel" style="max-width: 680px; width: 95%;">
+        <div class="editor-panel-title">Nou Acompanyament</div>
+        <div class="editor-name-row">
+          <label data-i18n="nom_acc">Nom</label>
+          <input type="text" id="accomp-edit-name" placeholder="ex: Base balada">
+        </div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 14px;align-items:center">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px">Passos
+            <select id="accomp-edit-steps" style="width:64px">
+              <option value="4">4</option><option value="8" selected>8</option>
+              <option value="12">12</option><option value="16">16</option>
+            </select>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px">Octava
+            <select id="accomp-edit-octave" style="width:64px">
+              <option value="-2">−2</option><option value="-1">−1</option>
+              <option value="0" selected>0</option><option value="1">+1</option><option value="2">+2</option>
+            </select>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px">Brillantor
+            <input type="number" id="accomp-edit-vel" min="30" max="127" value="90" style="width:64px">
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px">Velocitat (BPM)
+            <input type="number" id="accomp-edit-bpm" min="60" max="200" value="110" style="width:64px">
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px">Durada de nota
+            <select id="accomp-edit-gate" style="width:96px">
+              <option value="25">Picada (25%)</option>
+              <option value="50">Curta (50%)</option>
+              <option value="90" selected>Normal (90%)</option>
+              <option value="100">Lligada (100%)</option>
+            </select>
+          </label>
+        </div>
+        <div class="arp-matrix-container" style="overflow-x: auto; margin-bottom: 20px; padding-bottom: 8px;">
+          <div class="arp-matrix" id="accomp-matrix" style="display: grid; gap: 4px;"></div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn btn-sm" id="btn-accomp-editor-cancel" data-i18n="cancellar_acc">Cancel·lar</button>
+          <button class="btn btn-sm btn-primary" id="btn-accomp-editor-save" data-i18n="guardar_acc">Guardar</button>
+        </div>
+      </div>
+    </div>
+
     <div class="editor-overlay" id="arp-editor-overlay">
       <div class="editor-panel" style="max-width: 640px; width: 95%;">
         <div class="editor-panel-title" data-i18n="nou_patro_d_arpegiador">Nou Patró d'Arpegiador</div>
@@ -2534,7 +2666,7 @@
         </div>
         <!-- Sidebar -->
         <div class="sim-sidebar">
-          <div class="sim-sidebar-title" data-i18n="modes_disponibles_2">Modes disponibles</div>
+          <div class="sim-sidebar-title" data-i18n="modes_disponibles_2">Modes i funcions</div>
           <div class="sim-modes-list" id="sim-modes-list"></div>
           <div class="sim-sidebar-bottom">
             <select id="sim-mode-select" style="width:100%">
@@ -2555,15 +2687,18 @@
             <button class="btn btn-sm" id="btn-sim-sound" data-i18n="so" title="Motor de so intern (sense DAW)">So</button>
             <select id="sim-voice-select" title="Veu del motor de so" style="display:none"></select>
             <button class="btn btn-sm" id="btn-sim-config" title="Configuració del simulador (potes, modes, efectes, so)" data-i18n="config_sim">Config</button>
-            <button class="btn btn-sm" id="btn-sim-float" title="Obrir simulador en finestra independent" data-i18n="finestra_independent">Finestra
-              independent</button>
+            <button class="btn btn-sm" id="btn-thin-connect" title="El TECLA físic (per USB) controla aquest simulador; tria el port de DADES (el 2n) al diàleg">🔌 Sync dispositiu</button>
+            <span class="fw-msg" id="thin-status" style="margin:0"></span>
             <div class="sim-status">
               <div class="sim-dot" id="sim-status-dot"></div>
               <span id="sim-status-text" data-i18n="no_inicialitzat">no inicialitzat</span>
             </div>
           </div>
           <div class="sim-content">
-            <div style="flex: 1; display: flex; flex-direction: row-reverse; align-items: center; justify-content: center; gap: 32px; padding: 50px 0 30px;">
+            <!-- Capes del simulador: les mateixes que Dispositiu, però amb
+                 selecció INDEPENDENT (la tecla 13 les cicla com al dispositiu) -->
+            <div id="sim-layer-chips" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;padding:14px 0 0"></div>
+            <div class="device-wrap" style="flex-direction: row-reverse; gap: 32px; padding: 26px 0 30px;">
               <div class="pots-row-visual" id="sim-pots-visual">
                 <!-- JS renders sim pots here -->
               </div>
@@ -2806,13 +2941,14 @@
 <a href="#gca-8">8. Llegenda de controls</a>
 </div>
 <div id="gca-1">
-<div class="guide-h1">1. Què és TECLA</div><p class="guide-li">TECLA és un <strong>instrument MIDI</strong> de 16 tecles i 3 potenciòmetres. No fa so per si sol: envia notes MIDI per USB a qualsevol sintetitzador, DAW (Ableton, Logic, GarageBand…) o app de música.</p><p class="guide-li">Té dues grans capes: la <strong>capa Teclat</strong> (un instrument harmònic amb escales, acords, arpegiador, looper…) i la <strong>capa Modes</strong> (generadors musicals algorítmics: ones, clàssics, ritmes…).</p><p class="guide-li">Tot es configura des d’aquesta app web, sense instal·lar res: connecta el dispositiu per USB i prem <strong>connecta dispositiu</strong>.</p><div class="guide-note">Fes servir Chrome o Edge: l’app necessita l’accés a fitxers (File System Access) per escriure al dispositiu.</div>
+<div class="guide-h1">1. Què és TECLA</div><p class="guide-li">TECLA és un <strong>projecte artístic, tecnològic i educatiu</strong> que busca, a través de la creació de dispositius electrònics, promoure la filosofia del <strong>DIY</strong> i del <strong>codi obert</strong> per investigar, experimentar i aprendre de diferents àrees del coneixement.</p><p class="guide-li">TECLA entén l’aprenentatge com quelcom transversal i interdisciplinari intricant la programació, el disseny, les arts plàstiques, el modelatge 3D, la música, la física, l’electrònica, la robòtica i les matemàtiques.</p>
+<div class="guide-h1">2. TECLA_edu</div><p class="guide-li">Aquesta app-web serveix principalment per configurar el dispositiu <strong>TECLA_edu</strong> com un instrument MIDI. A continuació es mostra pas a pas com funciona i quines són les seves característiques.</p><p class="guide-li">El TECLA_edu disposa de <strong>16 tecles i 3 potenciòmetres</strong>. Envia notes MIDI per USB a qualsevol sintetitzador, DAW (Ableton, Logic, GarageBand…) o app de música. La sortida d’àudio emet una <strong>ona PWM</strong>.</p><p class="guide-li">Té dues grans capes: la <strong>capa Teclat</strong> (un instrument harmònic amb escales, acords, arpegiador, looper…) i la <strong>capa Modes</strong> (generadors musicals algorítmics: ones, clàssics, ritmes…).</p><p class="guide-li">Tot es configura des d’aquesta app web, sense instal·lar res: connecta el dispositiu per USB i prem <strong>connecta dispositiu</strong>.</p><div class="guide-note">Fes servir Chrome o Edge: l’app necessita l’accés a fitxers (File System Access) per escriure al dispositiu.</div>
 </div>
 <div id="gca-2">
-<div class="guide-h1">2. Posada en marxa</div><p class="guide-li">Connecta el TECLA a l’ordinador amb un cable USB de dades.</p><p class="guide-li">Si el disc que apareix es diu <strong>CIRCUITPY</strong>: ves a la pestanya <em>Firmware</em> → <strong>Instal·lar / Actualitzar firmware</strong>, espera el 100% i fes un reset al dispositiu. Llest.</p><p class="guide-li">Si el disc es diu <strong>RPI-RP2</strong> (Pico nou de fàbrica): primer cal el CircuitPython. A <em>Firmware</em>, segueix el <strong>Pas 1</strong>; quan reaparegui com a CIRCUITPY, fes el <strong>Pas 2</strong>.</p><p class="guide-li">Per sentir-lo: obre el teu DAW o sintetitzador i selecciona el port MIDI <strong>TECLA</strong> com a entrada.</p><div class="guide-note">El nom del port USB i del disc es poden personalitzar a <em>Modes</em> → Identitat USB.</div>
+<div class="guide-h1">3. Posada en marxa</div><p class="guide-li">Connecta el TECLA a l’ordinador amb un cable USB de dades.</p><p class="guide-li">Si el disc que apareix es diu <strong>CIRCUITPY</strong>: ves a la pestanya <em>Firmware</em> → <strong>Instal·lar / Actualitzar firmware</strong>, espera el 100% i fes un reset al dispositiu. Llest.</p><p class="guide-li">Si el disc es diu <strong>RPI-RP2</strong> (Pico nou de fàbrica): primer cal el CircuitPython. A <em>Firmware</em>, segueix el <strong>Pas 1</strong>; quan reaparegui com a CIRCUITPY, fes el <strong>Pas 2</strong>.</p><p class="guide-li">Per sentir-lo: obre el teu DAW o sintetitzador i selecciona el port MIDI <strong>TECLA</strong> com a entrada.</p><div class="guide-note">El nom del port USB i del disc es poden personalitzar a <em>Modes</em> → Identitat USB.</div>
 </div>
 <div id="gca-3">
-<div class="guide-h1">3. La capa Teclat (per defecte en engegar)</div><div class="keys-grid" style="pointer-events:none;margin:24px 0;max-width:280px;gap:8px;">
+<div class="guide-h1">4. La capa Teclat (per defecte en engegar)</div><div class="keys-grid" style="pointer-events:none;margin:24px 0;max-width:280px;gap:8px;">
 <div class="key-btn"><div class="key-num">1</div></div>
 <div class="key-btn"><div class="key-num">2</div></div>
 <div class="key-btn"><div class="key-num">3</div></div>
@@ -2832,19 +2968,20 @@
 </div><p class="guide-li"><strong>Tecles 1–8</strong>: notes de l’escala activa (o acords, si el mode acords està actiu).</p><p class="guide-li"><strong>Tecles 9–12, 14, 15</strong>: funcions <em>reassignables</em> des de la pestanya <em>Teclat</em>. Per defecte: escala, tonalitat, acords, arpegiador i octava ±.</p><p class="guide-li"><strong>Tecla 13</strong> (fixa): toc curt → capa següent (cicla totes les capes creades, teclat i modes, d’esquerra a dreta) · mantinguda ≈1 s → capa anterior.</p><p class="guide-li"><strong>Tecla 16</strong> (fixa): STOP — atura tot el so.</p><div class="guide-h2">Funcions assignables</div><p class="guide-li"><strong>𝄞 Escala</strong>: toc → següent escala · toc llarg → anterior. <strong>♭ Tonalitat</strong>: cicla el cercle de quintes.</p><p class="guide-li"><strong>♪ Acords</strong>: toc → activar / ciclar tipus d’acord · toc llarg → desactivar. <strong>≈ Arpegiador</strong>: toc → activar / ciclar patró · toc llarg → desactivar.</p><p class="guide-li"><strong>↕ Harmonia Negativa</strong>: reflecteix les notes sobre un eix harmònic. <strong>Δ Funcions Diatòniques</strong>: dominants secundàries, acords prestats, napolitans…</p><p class="guide-li"><strong>∞ Latch</strong>: les notes/acords continuen sonant en deixar anar; re-prémer un botó l’apaga; útil per drones.</p><p class="guide-li"><strong>𝆔 Conducció de veus</strong>: cada acord nou tria la inversió més propera a l’anterior — les progressions sonen lligades, com un pianista.</p><div class="guide-h2">Potenciòmetres</div><p class="guide-li">3 pots amb dues capes de funcions (teclat i arpegiador), configurables des de l’app: velocity, modulació, sustain, gate, BPM de l’arp, <strong>CC Lliure</strong> (envia el CC MIDI que triïs, per controlar el teu synth)…</p>
 </div>
 <div id="gca-4">
-<div class="guide-h1">4. Looper i Overdub</div><p class="guide-li">Dues funcions assignables que converteixen TECLA en una màquina de directe: <strong>⟳ Looper</strong> (timing lliure) i <strong>➕ Overdub</strong> (capes).</p><div class="guide-h2">⟳ Gestos del looper</div><p class="guide-li"><strong>1r toc</strong>: armar (la gravació comença amb la primera nota) · <strong>2n toc</strong>: el loop arrenca a l’instant.</p><p class="guide-li"><strong>Toc curt</strong> mentre sona: pausa / represa des del principi · <strong>Toc llarg</strong> (0,8 s): esborrar el loop.</p><p class="guide-li">El looper <strong>capta bé l’arpegiador</strong>: activa l’arp, arma el looper i el patró es grava sol. Si l’arp ha sonat durant la presa, el loop s’<strong>auto-quantitza</strong> a la graella de l’arp (captura fina, sense desfasament); si només graves acords/notes manuals, conserva el timing lliure exacte. Per canviar el tempo d’un loop d’arp: pausa → mou el pot de BPM → represa.</p><p class="guide-li">Si graves amb el <strong>sustain</strong> del pot actiu, el loop <strong>fixa el sustain</strong> a la gravació (les notes queden lligades): sona sostingut per si mateix i és <strong>independent</strong> del sustain en directe — pots abaixar el sustain per tocar notes seques a sobre sense que el loop s’alteri.</p><div class="guide-h2">➕ Overdub (capes)</div><p class="guide-li"><strong>Toc curt</strong> amb el loop sonant: entrar/sortir del mode overdub — tot el que toquis s’afegeix al loop com una capa nova.</p><p class="guide-li"><strong>Toc llarg</strong> (0,8 s): desfer l’última capa (repeteix per anar pelant capes).</p><p class="guide-li"><strong>Toc molt llarg</strong> (1,6 s): esborrar TOTES les capes de cop — el loop base es manté.</p><div class="guide-note">Flux típic: grava una progressió d’acords → overdub d’una melodia → overdub de l’arp → toca en directe per sobre. La tecla 16 pausa el loop sense esborrar-lo.</div>
+<div class="guide-h2">𝄆 Acompanyaments (Base)</div><p class="guide-li">La tecla amb la funció <strong>Base (acomp.)</strong> cicla els acompanyaments a cada toc (premuda llarga = aturar). Tots segueixen la tonalitat i l’escala del teclat en directe: primer els 4 integrats (Pols, Baix, Arpegi, Seqüència) i després els teus.</p><p class="guide-li">Crea’n de propis a <em>Dispositiu → capa teclat → Acompanyaments</em>: seqüències per graus de l’escala amb passos (4–16), octava (−2..+2), brillantor, velocitat (BPM propi) i durada de nota (picada → lligada).</p>
+<div class="guide-h1">5. Looper i Overdub</div><p class="guide-li">Dues funcions assignables que converteixen TECLA en una màquina de directe: <strong>⟳ Looper</strong> (timing lliure) i <strong>➕ Overdub</strong> (capes).</p><div class="guide-h2">⟳ Gestos del looper</div><p class="guide-li"><strong>1r toc</strong>: armar (la gravació comença amb la primera nota) · <strong>2n toc</strong>: el loop arrenca a l’instant.</p><p class="guide-li"><strong>Toc curt</strong> mentre sona: pausa / represa des del principi · <strong>Toc llarg</strong> (0,8 s): esborrar el loop.</p><p class="guide-li">El looper <strong>capta bé l’arpegiador</strong>: activa l’arp, arma el looper i el patró es grava sol. Si l’arp ha sonat durant la presa, el loop s’<strong>auto-quantitza</strong> a la graella de l’arp (captura fina, sense desfasament); si només graves acords/notes manuals, conserva el timing lliure exacte. Per canviar el tempo d’un loop d’arp: pausa → mou el pot de BPM → represa.</p><p class="guide-li">Si graves amb el <strong>sustain</strong> del pot actiu, el loop <strong>fixa el sustain</strong> a la gravació (les notes queden lligades): sona sostingut per si mateix i és <strong>independent</strong> del sustain en directe — pots abaixar el sustain per tocar notes seques a sobre sense que el loop s’alteri.</p><div class="guide-h2">➕ Overdub (capes)</div><p class="guide-li"><strong>Toc curt</strong> amb el loop sonant: entrar/sortir del mode overdub — tot el que toquis s’afegeix al loop com una capa nova.</p><p class="guide-li"><strong>Toc llarg</strong> (0,8 s): desfer l’última capa (repeteix per anar pelant capes).</p><p class="guide-li"><strong>Toc molt llarg</strong> (1,6 s): esborrar TOTES les capes de cop — el loop base es manté.</p><div class="guide-note">Flux típic: grava una progressió d’acords → overdub d’una melodia → overdub de l’arp → toca en directe per sobre. La tecla 16 pausa el loop sense esborrar-lo.</div>
 </div>
 <div id="gca-5">
-<div class="guide-h1">5. La capa Modes</div><p class="guide-li">S’hi arriba ciclant amb la <strong>tecla 13</strong>. Les tecles <strong>1–12</strong> activen els modes generatius assignats a la capa actual.</p><p class="guide-li"><strong>Tecla 13</strong>: toc curt → capa següent · mantinguda ≈1 s → capa anterior.</p><p class="guide-li"><strong>Tecles 14 i 15</strong>: efectes temporals (mantenir premuda: sustain, pausa, gate…) · doble clic → canviar l’efecte assignat.</p><p class="guide-li"><strong>Tecla 16</strong>: STOP total + neteja de memòria.</p><p class="guide-li">Els modes es trien i s’assignen a la pestanya <em>Modes</em>; els potenciòmetres modulen paràmetres propis de cada mode.</p>
+<div class="guide-h1">6. La capa Modes</div><p class="guide-li">S’hi arriba ciclant amb la <strong>tecla 13</strong>. Les tecles <strong>1–12</strong> activen els modes generatius assignats a la capa actual.</p><p class="guide-li"><strong>Tecla 13</strong>: toc curt → capa següent · mantinguda ≈1 s → capa anterior.</p><p class="guide-li"><strong>Tecles 14 i 15</strong>: efectes temporals (mantenir premuda: sustain, pausa, gate…) · doble clic → canviar l’efecte assignat.</p><p class="guide-li"><strong>Tecla 16</strong>: STOP total + neteja de memòria.</p><p class="guide-li">Els modes es trien i s’assignen a la pestanya <em>Modes</em>; els potenciòmetres modulen paràmetres propis de cada mode.</p>
 </div>
 <div id="gca-6">
-<div class="guide-h1">6. Configurar des de l’app</div><div class="guide-h2">Pestanya Teclat</div><p class="guide-li">Arrossega funcions a les tecles, tria escales, tonalitats, tipus d’acord, patrons d’arpegiador, progressions i funcions dels potenciòmetres.</p><div class="guide-h2">Pestanya Modes</div><p class="guide-li">Crea bancs (capes) de modes i assigna un mode a cada tecla 1–12. Tria els efectes temporals de les tecles 14–15.</p><div class="guide-h2">Pestanya Simulador</div><p class="guide-li">Prova-ho tot <em>sense dispositiu</em>: el teclat i els modes corren al navegador i envien MIDI via WebMIDI al teu DAW.</p><div class="guide-h2">Pestanya Firmware</div><p class="guide-li">Instal·la CircuitPython (Pas 1) i el firmware TECLA (Pas 2). Cal repetir el Pas 2 després de canviar els modes assignats.</p><div class="guide-h2">Pestanya Aparença</div><p class="guide-li">Temes de color de l’app i editor de temes personalitzats.</p><div class="guide-note">Flux de treball: edita → <strong>Guardar configuració</strong> → si has canviat modes, <em>Firmware</em> → <strong>Instal·lar / Actualitzar</strong> → reset del dispositiu.</div>
+<div class="guide-h1">7. Configurar des de l’app</div><div class="guide-h2">Pestanya Teclat</div><p class="guide-li">Arrossega funcions a les tecles, tria escales, tonalitats, tipus d’acord, patrons d’arpegiador, progressions i funcions dels potenciòmetres.</p><div class="guide-h2">Pestanya Modes</div><p class="guide-li">Crea bancs (capes) de modes i assigna un mode a cada tecla 1–12. Tria els efectes temporals de les tecles 14–15.</p><div class="guide-h2">Pestanya Simulador</div><p class="guide-li">Prova-ho tot <em>sense dispositiu</em>: el teclat i els modes corren al navegador i envien MIDI via WebMIDI al teu DAW.</p><p class="guide-li">Amb el dispositiu endollat, prem <strong>🔌 Sync dispositiu</strong>: les tecles i potes físics controlen el simulador (el port es detecta sol; el so local del TECLA es pausa mentre dura).</p><div class="guide-h2">La Pantalla</div><p class="guide-li">El botó <strong>Pantalla</strong> (capçalera) obre la pantalla virtual del dispositiu: mostra en gran i en directe què toques — <strong>acords amb nomenclatura professional</strong> (C, Am7, F/A…), notes, funcions amb el seu color, canvis de capa — amb una <strong>animació reactiva als potes</strong> pròpia de cada família de modes.</p><p class="guide-li">Es connecta sola al port sèrie correcte, es pot <strong>arrossegar i redimensionar</strong>, i amb <strong>⇱</strong> es desancora en una finestra flotant fora de l'app (Chrome 116+).</p><div class="guide-h2">Pestanya Firmware</div><p class="guide-li">Instal·la CircuitPython (Pas 1) i el firmware TECLA (Pas 2). Cal repetir el Pas 2 després de canviar els modes assignats.</p><div class="guide-h2">Pestanya Aparença</div><p class="guide-li">Temes de color de l’app i editor de temes personalitzats.</p><div class="guide-note">Flux de treball: edita → <strong>Guardar configuració</strong> → si has canviat modes, <em>Firmware</em> → <strong>Instal·lar / Actualitzar</strong> → reset del dispositiu.</div>
 </div>
 <div id="gca-7">
-<div class="guide-h1">7. Recomanacions</div><p class="guide-li">Guarda sempre la configuració després de fer canvis.</p><p class="guide-li">Fins a <strong>3 bancs de modes</strong> funcionen amb total comoditat (validat amb mesures de memòria reals).</p><p class="guide-li">Prova els modes nous al simulador abans d’instal·lar-los.</p><p class="guide-li">Si una nota es queda penjada o el so descontrola: <strong>tecla 16</strong> (STOP).</p><p class="guide-li">Si el dispositiu no respon: reset físic (botó del Pico) — el watchdog també el reinicia sol si es penja durant una actuació.</p><p class="guide-li">Si l’app no veu el dispositiu: comprova que el disc CIRCUITPY/TECLA està muntat i que fas servir Chrome o Edge.</p>
+<div class="guide-h1">8. Recomanacions</div><p class="guide-li">Guarda sempre la configuració després de fer canvis.</p><p class="guide-li">Fins a <strong>3 bancs de modes</strong> funcionen amb total comoditat (validat amb mesures de memòria reals).</p><p class="guide-li">Prova els modes nous al simulador abans d’instal·lar-los.</p><p class="guide-li">Si una nota es queda penjada o el so descontrola: <strong>tecla 16</strong> (STOP).</p><p class="guide-li">Si el dispositiu no respon: reset físic (botó del Pico) — el watchdog també el reinicia sol si es penja durant una actuació.</p><p class="guide-li">Si l’app no veu el dispositiu: comprova que el disc CIRCUITPY/TECLA està muntat i que fas servir Chrome o Edge.</p>
 </div>
 <div id="gca-8">
-<div class="guide-h1">8. Llegenda de controls</div>
+<div class="guide-h1">9. Llegenda de controls</div>
 <div class="guide-legend" data-legend="ca"></div>
 </div>
 </div>
@@ -2860,7 +2997,7 @@
 <a href="#ges-8">8. Leyenda de controles</a>
 </div>
 <div id="ges-1">
-<div class="guide-h1">1. Qué es TECLA</div><p class="guide-li">TECLA es un <strong>instrumento MIDI</strong> de 16 teclas y 3 potenciómetros. No suena por sí solo: envía notas MIDI por USB a cualquier sintetizador, DAW (Ableton, Logic, GarageBand…) o app de música.</p><p class="guide-li">Tiene dos grandes capas: la <strong>capa Teclado</strong> (instrumento armónico con escalas, acordes, arpegiador, looper…) y la <strong>capa Modos</strong> (generadores musicales algorítmicos).</p><p class="guide-li">Todo se configura desde esta app web, sin instalar nada: conecta el dispositivo por USB y pulsa <strong>conectar dispositivo</strong>.</p><div class="guide-note">Usa Chrome o Edge: la app necesita File System Access para escribir en el dispositivo.</div>
+<div class="guide-h1">1. Qué es TECLA</div><p class="guide-li">TECLA es un <strong>proyecto artístico, tecnológico y educativo</strong> que busca, a través de la creación de dispositivos electrónicos, promover la filosofía del <strong>DIY</strong> y del <strong>código abierto</strong> para investigar, experimentar y aprender de diferentes áreas del conocimiento. Entiende el aprendizaje como algo transversal e interdisciplinar: programación, diseño, artes plásticas, modelado 3D, música, física, electrónica, robótica y matemáticas.</p><div class="guide-h2">TECLA_edu</div><p class="guide-li">Esta app-web sirve principalmente para configurar el dispositivo <strong>TECLA_edu</strong> como instrumento MIDI: <strong>16 teclas y 3 potenciómetros</strong>. Envía notas MIDI por USB a cualquier sintetizador, DAW (Ableton, Logic, GarageBand…) o app de música. La salida de audio emite una <strong>onda PWM</strong>.</p><p class="guide-li">Tiene dos grandes capas: la <strong>capa Teclado</strong> (instrumento armónico con escalas, acordes, arpegiador, looper…) y la <strong>capa Modos</strong> (generadores musicales algorítmicos).</p><p class="guide-li">Todo se configura desde esta app web, sin instalar nada: conecta el dispositivo por USB y pulsa <strong>conectar dispositivo</strong>.</p><div class="guide-note">Usa Chrome o Edge: la app necesita File System Access para escribir en el dispositivo.</div>
 </div>
 <div id="ges-2">
 <div class="guide-h1">2. Puesta en marcha</div><p class="guide-li">Conecta el TECLA al ordenador con un cable USB de datos.</p><p class="guide-li">Si el disco se llama <strong>CIRCUITPY</strong>: pestaña <em>Firmware</em> → <strong>Instalar / Actualizar firmware</strong>, espera el 100% y resetea el dispositivo. Listo.</p><p class="guide-li">Si el disco se llama <strong>RPI-RP2</strong> (Pico de fábrica): primero CircuitPython. En <em>Firmware</em>, sigue el <strong>Paso 1</strong>; cuando reaparezca como CIRCUITPY, haz el <strong>Paso 2</strong>.</p><p class="guide-li">Para oírlo: abre tu DAW o sintetizador y selecciona el puerto MIDI <strong>TECLA</strong> como entrada.</p><div class="guide-note">El nombre del puerto USB y del disco se personalizan en <em>Modos</em> → Identidad USB.</div>
@@ -2914,7 +3051,7 @@
 <a href="#gen-8">8. Controls legend</a>
 </div>
 <div id="gen-1">
-<div class="guide-h1">1. What is TECLA</div><p class="guide-li">TECLA is a 16-key, 3-knob <strong>MIDI instrument</strong>. It makes no sound on its own: it sends MIDI notes over USB to any synthesizer, DAW (Ableton, Logic, GarageBand…) or music app.</p><p class="guide-li">It has two main layers: the <strong>Keyboard layer</strong> (a harmonic instrument with scales, chords, arpeggiator, looper…) and the <strong>Modes layer</strong> (algorithmic music generators).</p><p class="guide-li">Everything is configured from this web app, nothing to install: plug the device in via USB and press <strong>connect device</strong>.</p><div class="guide-note">Use Chrome or Edge: the app needs File System Access to write to the device.</div>
+<div class="guide-h1">1. What is TECLA</div><p class="guide-li">TECLA is an <strong>artistic, technological and educational project</strong> that promotes the <strong>DIY</strong> and <strong>open-source</strong> philosophy through the creation of electronic devices, as a way to research, experiment and learn across fields: programming, design, visual arts, 3D modelling, music, physics, electronics, robotics and mathematics.</p><div class="guide-h2">TECLA_edu</div><p class="guide-li">This web app is mainly used to set up the <strong>TECLA_edu</strong> device as a MIDI instrument: <strong>16 keys and 3 knobs</strong>. It sends MIDI notes over USB to any synthesizer, DAW (Ableton, Logic, GarageBand…) or music app. The audio output is a <strong>PWM wave</strong>.</p><p class="guide-li">It has two main layers: the <strong>Keyboard layer</strong> (a harmonic instrument with scales, chords, arpeggiator, looper…) and the <strong>Modes layer</strong> (algorithmic music generators).</p><p class="guide-li">Everything is configured from this web app, nothing to install: plug the device in via USB and press <strong>connect device</strong>.</p><div class="guide-note">Use Chrome or Edge: the app needs File System Access to write to the device.</div>
 </div>
 <div id="gen-2">
 <div class="guide-h1">2. Getting started</div><p class="guide-li">Connect TECLA to your computer with a USB data cable.</p><p class="guide-li">If the disk is named <strong>CIRCUITPY</strong>: go to <em>Firmware</em> → <strong>Install / Update firmware</strong>, wait for 100% and reset the device. Done.</p><p class="guide-li">If the disk is named <strong>RPI-RP2</strong> (factory-fresh Pico): install CircuitPython first. In <em>Firmware</em>, follow <strong>Step 1</strong>; once it reappears as CIRCUITPY, do <strong>Step 2</strong>.</p><p class="guide-li">To hear it: open your DAW or synth and select the <strong>TECLA</strong> MIDI port as input.</p><div class="guide-note">The USB port and disk names can be customised in <em>Modes</em> → USB Identity.</div>
@@ -2968,6 +3105,7 @@
     import { TECLASimulator } from './js/tecla-simulator.js';
     import { WebMidiManager } from './js/tecla-webmidi.js';
     import { ALL_KEYS, KEYBOARD_SCALES, ARP_PATTERNS, AVAILABLE_EFFECTS, DEVICE_EFFECTS, MODE_POT_LAYERS_DEFAULT, MODE_POT_FNS, modePotFnToCC, AUDIO_FX_PRESETS, AUDIO_FX_DEFAULTS, AUDIO_CFG_POT_FNS, audioFnToCC, KB_BTN_FN_META, KB_BTN_FN_DRAGGABLE, NEG_HARMONY_TYPES, DIATONIC_FNS, VL_TYPES, ACCOMP_PATTERN_IDS, ACCOMP_PATTERN_NAMES, ACCOMP_CHANNEL, applyHarmonicFn, SCALES_JS, SCALE_NAMES_JS, KEY_CIRCLE_JS, KEY_OFFSETS_JS, NOTES_JS, ARP_NAMES_JS, CHORDS_JS, _getChordIntervals, _sysVolTimer, _setSysVol } from './js/tecla-music-data.js';
+    import { TeclaThinLink } from './js/tecla-thinlink.js';
     import { Accompaniment } from './js/tecla-accompaniment.js';
     import { TeclaSynth, PRESETS } from './js/tecla-synth.js';
     import { MixPotRouter, MixChannelPool } from './js/tecla-mix.js';
@@ -3089,6 +3227,14 @@
         if (t === 'keys' && !_builtKeys) { buildKeysGrid(); _builtKeys = true; }
         if (t === 'modes' && !_builtModes) { buildModesTab(); _builtModes = true; }
         if (t === 'config') _buildConfigTab();
+        // Aïllament de capes del SIMULADOR: fora del simulador, la config de
+        // teclat sempre és el working copy de Dispositiu; en tornar-hi, es
+        // re-aplica la capa pròpia del sim (si era de teclat).
+        if (t !== 'simulator') {
+          window._simKbOverride = null;
+        } else {
+          try { window._simReapplyLayer?.(); } catch (e) { }
+        }
       });
     });
     buildKeysGrid(); // async: populates selects, syncs bank select, restores saved values
@@ -3216,17 +3362,16 @@
         selectLayer(i);
       }
 
-      // Límit dur de capes (mateix que el firmware, ConfigManager.MAX_BANKS):
-      // tota la config viu a la RAM de la Pico i cada capa de teclat pesa 1-2KB.
-      const MAX_LAYERS = 6;
+      // Capes IL·LIMITADES a l'app i al simulador (el que mana és la RAM del
+      // PC). El límit del DISPOSITIU (ConfigManager.MAX_BANKS = 6, RAM de la
+      // Pico) s'aplica NOMÉS en exportar: buildDeviceConfig retalla i avisa.
       function addLayer() {
-        if (_keysConfig.banks.length >= MAX_LAYERS) {
-          showGlobalToast(`Màxim ${MAX_LAYERS} capes (límit de memòria del dispositiu)`, 'error');
-          return;
-        }
         _keysConfig.banks.push({ name: 'Capa ' + (_keysConfig.banks.length + 1), type: 'modes', modes: Array(12).fill(''), efectos: { '13': 'Sustain', '14': 'Pausa' }, kb: {} });
         _saveKeysConfig(_keysConfig);
         selectLayer(_keysConfig.banks.length - 1);
+        if (_keysConfig.banks.length > DEVICE_MAX_LAYERS) {
+          showGlobalToast(`Capa ${_keysConfig.banks.length} creada — el DISPOSITIU només carregarà les ${DEVICE_MAX_LAYERS} primeres (el simulador les té totes)`);
+        }
       }
 
       function deleteLayer(i) {
@@ -3524,8 +3669,8 @@
     // canviar de capa es torna a capturar. Així cada capa teclat és independent
     // sense reescriure desenes de funcions de config.
     const KB_KEYS = ['tecla-modes-config', 'tecla-diatonic-fns', 'tecla-neg-harm-type',
-      'tecla-neg-harm-axes', 'tecla-chord-inversions', 'tecla-kb-btn-functions',
-      'tecla-progressions', 'tecla-custom-scales', 'tecla-custom-arps', 'tecla-vl-types'];
+      'tecla-neg-harm-axes', 'tecla-kb-btn-functions',
+      'tecla-progressions', 'tecla-custom-scales', 'tecla-custom-arps', 'tecla-custom-accomps', 'tecla-vl-types'];
     function _captureKb() {
       // Fotografia COMPLETA: les claus absents es guarden com a null explícit
       // ("aquesta capa usa el default"). Sense això, una capa nova/no editada
@@ -3546,6 +3691,7 @@
       // Recarrega les variables en memòria que reflecteixen aquestes claus.
       try { _loadCustomScales(); } catch (e) {}
       try { _loadCustomArps(); } catch (e) {}
+      try { _loadCustomAccomps(); } catch (e) {}
       try { _loadProgressions(); } catch (e) {}
     }
 
@@ -3927,8 +4073,7 @@
         const effects = _availableEffects();
         const currentEffect = bank.efectos ? bank.efectos[index.toString()] || (index===13 ? 'Sustain' : 'Pausa') : '';
         
-        let html = '<p style="font-size:12px;color:var(--text2);margin-bottom:12px">Aquest efecte s\'activarà a la capa de modes (doble clic per alternar).</p>';
-        html += '<div class="mode-sel-list">';
+        let html = '<div class="mode-sel-list">';
         effects.forEach(eff => {
           const isActive = currentEffect === eff;
           html += `<div class="mode-sel-item ${isActive ? 'active' : ''}" data-val="${eff}"><span>${eff}</span></div>`;
@@ -4045,6 +4190,520 @@
     });
     _renderPotLayersCfg();
 
+    // ══ PANTALLA DEL DISPOSITIU (virtual, arrossegable, desancorable) ════════
+    // Llegeix la consola CircuitPython del TECLA per WebSerial i en DESTIL·LA
+    // només el que és musical (notes, acords, funcions, capes, errors) — res
+    // de volcat literal ni lectures de RAM. L'últim esdeveniment es mostra en
+    // GRAN; a sota, un històric breu que s'esvaeix. El logo queda de fons,
+    // translúcid, quan la pantalla treballa.
+    let _monPort = null, _monReader = null;
+    const _monPanel = document.getElementById('device-monitor');
+    const _monNow = document.getElementById('devmon-now');
+
+    // Neteja + classificació d'una línia de consola. Retorna null si NO s'ha
+    // de mostrar (RAM, arrencada, brossa ANSI, línies no musicals).
+    function _monParse(raw) {
+      const line = raw.replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)?/g, '')
+                      .replace(/\x1b\[[0-9;]*[A-Za-z]/g, '').trim();
+      if (!line) return null;
+      if (line.startsWith('▣')) return { tag: 'Acord', main: line.slice(1).trim(), cls: 'acord' };
+      if (line.startsWith('♪')) return { tag: 'Nota', main: line.slice(1).trim(), cls: 'nota' };
+      let m;
+      if ((m = line.match(/^🔁 Capa: .*→ (.+) \((teclat|modes)\)/))) return { tag: 'Capa · ' + m[2], main: m[1], cls: 'capa' };
+      if ((m = line.match(/^Capa actual: (.+)/))) return { tag: 'Capa', main: m[1], cls: 'capa' };
+      if ((m = line.match(/^Sustain: (.+)/))) return { tag: 'Sustain', main: m[1], cls: 'fn' };
+      if ((m = line.match(/^🎚 Pots→(?:mode: )?(.+)/))) return { tag: 'Config Modes', main: m[1], cls: 'fn' };
+      if ((m = line.match(/^Pot (.+?): (-?\d+)/))) return { tag: m[1], main: m[2], cls: 'fn', pot: true };
+      if ((m = line.match(/^🎚 (.+?): (.+)/))) return { tag: m[1], main: m[2], cls: 'fn' };
+      if ((m = line.match(/^Base: (.+)/))) return { tag: 'Acompanyament', main: m[1], cls: 'fn' };
+      if (/^Base OFF/.test(line)) return { tag: 'Acompanyament', main: 'OFF', cls: 'fn' };
+      if ((m = line.match(/^Mode: (.+)/))) return { tag: 'Mode', main: m[1], cls: 'fn' };
+      // Looper del teclat i loop de la capa modes — text ELEGANT i mínim
+      if ((m = line.match(/^🔁♩?\s*Loop(?:er)?\b:?\s*(.*)/))) {
+        const t = m[1] || '';
+        let main = 'Looper';
+        if (/ARMAT/i.test(t)) main = 'Armat';
+        else if (/cancel/i.test(t)) main = 'Cancel·lat';
+        else if (/ESBORRAT/i.test(t)) main = 'Esborrat';
+        else if (/res a gravar/i.test(t)) main = 'Buit';
+        else if (/quantitzat/i.test(t)) { const q = t.match(/(\d+) acords/); main = 'Quantitzat' + (q ? ' · ' + q[1] : ''); }
+        else if (/en marxa/i.test(t)) { const s = t.match(/([\d.]+)s/); main = 'En marxa' + (s ? ' · ' + s[1] + 's' : ''); }
+        else if (/pausa/i.test(t)) main = 'Pausa';
+        else if (/repr/i.test(t)) main = 'En marxa';
+        return { tag: 'Looper', main, cls: 'fn' };
+      }
+      if (/^🔴/.test(line)) return { tag: 'Looper', main: 'Gravant', cls: 'err' };
+      if ((m = line.match(/^➕ Capa (\d+)/))) return { tag: 'Overdub', main: 'Capa ' + m[1], cls: 'fn' };
+      if (/^➕/.test(line)) return { tag: 'Overdub', main: 'Overdub', cls: 'fn' };
+      if ((m = line.match(/^[●⟳] Loop:? ?(.*)/))) {
+        const t = m[1] || '';
+        let main = 'Loop';
+        if (/grav/i.test(t)) main = 'Gravant';
+        else if (/sonant/i.test(t)) { const s = t.match(/([\d.]+)s/); main = 'Sonant' + (s ? ' · ' + s[1] + 's' : ''); }
+        else if (/esborrat/i.test(t)) main = 'Esborrat';
+        return { tag: 'Loop', main, cls: 'fn' };
+      }
+      if (/^ATURA/.test(line)) return { tag: 'Stop', main: 'STOP', cls: 'err' };
+      if (/^(Error|❌|⚠|⛑)/.test(line) || line.includes('Traceback')) return { tag: 'Error', main: line.replace(/^(Error|❌|⚠|⛑)\s*:?\s*/, '').slice(0, 60), cls: 'err' };
+      // Funcions i gestos del teclat: tag amb NOM PROPI (es pinta del color
+      // de la funció, el mateix que fa servir l'app) i text net sense símbols.
+      {
+        const FN_TAGS = [
+          [/^🎼/, 'Escala'], [/^🎵/, 'Tonalitat'], [/^🎶/, 'Arpegiador'],
+          [/^Δ/, 'Harmòniques'], [/^↕|^Harmonia/, 'H. Negativa'], [/^∞/, 'Latch'],
+          [/^𝆔|^Conduccio/, 'C. de veus'], [/^Acord:|^Mode Acords/, 'Acords'], [/^∿/, "Forma d'ona"],
+        ];
+        for (const [re, tagName] of FN_TAGS) {
+          if (re.test(line)) {
+            const net = line.replace(/^[^A-Za-zÀ-ÿ0-9]+\s*/, '').replace(/^(Tonalitat|Harmonia Negativa|Mode Acords|Conduccio):?\s*/i, '').trim();
+            return net ? { tag: tagName, main: net.slice(0, 42), cls: 'fn' } : null;
+          }
+        }
+      }
+      if (/Simulador (connectat|desconnectat)/.test(line)) return { tag: 'Simulador', main: line.includes('des') ? 'desconnectat' : 'connectat', cls: 'fn' };
+      return null;   // RAM, arrencada, prints tècnics… NO surten a la pantalla
+    }
+
+    // Colors de funció: ELS MATEIXOS que l'app (KB_BTN_FN_META) + derivats
+    const _MON_TAG_COLORS = {
+      'Nota': KB_BTN_FN_META.note?.color, 'Acord': KB_BTN_FN_META.chord?.color,
+      'Acords': KB_BTN_FN_META.chord?.color, 'Escala': KB_BTN_FN_META.scale?.color,
+      'Tonalitat': KB_BTN_FN_META.tonality?.color, 'Arpegiador': KB_BTN_FN_META.arp?.color,
+      'H. Negativa': KB_BTN_FN_META.neg_harmony?.color, 'Harmòniques': KB_BTN_FN_META.diatonic?.color,
+      'C. de veus': KB_BTN_FN_META.voice_lead?.color, 'Latch': KB_BTN_FN_META.latch?.color,
+      'Looper': KB_BTN_FN_META.looper?.color, 'Overdub': KB_BTN_FN_META.looper_dub?.color,
+      'Loop': KB_BTN_FN_META.looper?.color, 'Acompanyament': KB_BTN_FN_META.accomp?.color,
+      'Sustain': '#38bdf8', 'Modulació': '#e09020', 'Brillantor': '#fbbf24',
+      'Volum': '#2eb87e', 'Gate': '#e74c3c', 'Pitch Bend': '#9b59b6', 'Velocitat': '#e74c3c',
+      'Config Modes': '#8e6cff', 'Mode': '#8e6cff',
+    };
+    // To de color per classe d'altura (C=0 → vermellós, cercle cromàtic complet)
+    function _monPcHue(label) {
+      const m = /^([A-G])(#|b)?/.exec(label || '');
+      if (!m) return null;
+      const base = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }[m[1]];
+      const pc = (base + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0) + 12) % 12;
+      return pc * 30;
+    }
+    // ── Notes SIMULTÀNIES (acords manuals sense la funció d'acords) ─────────
+    // Les notes que arriben en <90ms s'agrupen: una de sola es mostra com a
+    // nota; dues, com a interval; tres o més, amb la NOMENCLATURA de l'acord
+    // (mateixa lògica que el firmware: qualitat pel conjunt de classes
+    // d'altura + baix de la inversió).
+    const _MON_NOTE_PCS = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+    const _MON_PC_NAMES = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+    const _MON_QUALITIES = [
+      [[0, 4, 7], ''], [[0, 3, 7], 'm'], [[0, 3, 6], 'dim'], [[0, 4, 8], 'aug'],
+      [[0, 5, 7], 'sus4'], [[0, 2, 7], 'sus2'],
+      [[0, 4, 7, 10], '7'], [[0, 4, 7, 11], 'maj7'], [[0, 3, 7, 10], 'm7'],
+      [[0, 3, 7, 11], 'm(maj7)'], [[0, 3, 6, 10], 'm7b5'], [[0, 3, 6, 9], 'dim7'],
+      [[0, 4, 8, 10], '7#5'], [[0, 5, 7, 10], '7sus4'],
+      [[0, 4, 7, 9], '6'], [[0, 3, 7, 9], 'm6'], [[0, 2, 4, 7], 'add9'], [[0, 2, 3, 7], 'm(add9)'],
+      [[0, 2, 4, 7, 10], '9'], [[0, 2, 3, 7, 10], 'm9'], [[0, 2, 4, 7, 11], 'maj9'],
+    ].map(([ints, q]) => [JSON.stringify([...new Set(ints.map(i => i % 12))].sort((a, b) => a - b)), q]);
+    function _monNameToMidi(name) {
+      const m = /^([A-G])(#|b)?(\d+)$/.exec(name || '');
+      if (!m) return null;
+      const pc = (_MON_NOTE_PCS[m[1]] + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0) + 12) % 12;
+      return parseInt(m[3], 10) * 12 + pc;   // numeració d'octava del dispositiu
+    }
+    function _monChordLabel(midis) {
+      const pcs = [...new Set(midis.map(n => ((n % 12) + 12) % 12))].sort((a, b) => a - b);
+      for (const root of pcs) {
+        const rel = JSON.stringify([...new Set(pcs.map(pc => (pc - root + 12) % 12))].sort((a, b) => a - b));
+        for (const [ints, q] of _MON_QUALITIES) {
+          if (rel === ints) {
+            let nom = _MON_PC_NAMES[root] + q;
+            const bass = ((Math.min(...midis) % 12) + 12) % 12;
+            if (bass !== root) nom += '/' + _MON_PC_NAMES[bass];
+            return nom;
+          }
+        }
+      }
+      return null;
+    }
+    let _monNoteBuf = [], _monNoteTimer = null;
+    function _monDispatch(ev) {
+      if (ev.cls !== 'nota') { _monShow(ev); return; }
+      _monNoteBuf.push(ev.main);
+      clearTimeout(_monNoteTimer);
+      _monNoteTimer = setTimeout(() => {
+        const noms = _monNoteBuf; _monNoteBuf = [];
+        if (noms.length === 1) { _monShow({ tag: 'Nota', main: noms[0], cls: 'nota' }); return; }
+        const midis = noms.map(_monNameToMidi).filter(n => n !== null);
+        const label = midis.length >= 3 ? _monChordLabel(midis) : null;
+        if (label) _monShow({ tag: 'Acord', main: label, cls: 'acord' });
+        else _monShow({ tag: noms.length > 2 ? 'Acord' : 'Interval', main: noms.join(' '), cls: 'acord' });
+      }, 90);
+    }
+
+    function _monShow(ev) {
+      document.getElementById('devmon-hero')?.remove();
+      _monPanel.classList.add('inuse');
+      _monNow.className = 'devmon-now ' + ev.cls;
+      _monNow.querySelector('.tag').textContent = ev.tag;
+      _monNow.querySelector('.main').textContent = ev.main;
+      // Color: acords/notes pel TO de la fonamental (i l'anell l'acompanya);
+      // funcions pel color de la funció a l'app; resta, el del tema.
+      let color = '';
+      if (ev.cls === 'acord' || ev.cls === 'nota') {
+        const hue = _monPcHue(ev.main);
+        if (hue !== null) color = `hsl(${hue} 82% 66%)`;
+      } else {
+        color = _MON_TAG_COLORS[ev.tag] || '';
+      }
+      const mainEl = _monNow.querySelector('.main');
+      mainEl.style.color = color;
+      mainEl.style.textShadow = color ? `0 0 26px ${color}` : '';
+      _monNow.style.animation = 'none';
+      void _monNow.offsetHeight;
+      _monNow.style.animation = '';
+      _monAnim.on(ev, color);
+    }
+
+    // ── ANIMACIONS REACTIVES: un motor per FAMÍLIA de so ────────────────────
+    // · Teclat → ANELL d'ona que canvia de color amb cada acord (to de la
+    //   fonamental) · Ones → oscil·loscopi · Ritmes → equalitzador de barres
+    //   · Clàssics/melòdics → constel·lació d'orbes · Generatius → camp
+    //   d'estrelles. Tots reaccionen als 3 potes (X amplitud · Y velocitat ·
+    //   Z resplendor, més els potes amb nom del teclat) i a cada nota/acord.
+    const _monAnim = (() => {
+      const canvas = document.getElementById('devmon-canvas');
+      const body = document.getElementById('devmon-body');   // refs de CLOSURE:
+      const ctx = canvas.getContext('2d');                   // sobreviuen el PiP
+      const st = { amp: .35, vol: .55, bright: .5, speed: 1, energy: 0,
+                   pulses: [], t: 0, running: false, engine: 'ring',
+                   color: null, hue: null, orbs: [], seeds: [] };
+      const POT_MAP = {
+        'Modulació': v => st.amp = .12 + (v / 127) * .8,
+        'Brillantor': v => st.bright = v / 127,
+        'Volum': v => st.vol = .25 + (v / 127) * .75,
+        'Expressió': v => st.vol = .25 + (v / 127) * .75,
+        'Velocitat': v => st.speed = .4 + Math.min(1, v / 400) * 2.4,
+        'Pitch Bend': v => st.amp = .12 + (v / 127) * .8,
+        'Gate': v => st.speed = .4 + (v / 127) * 2,
+        'X': v => st.amp = .12 + (v / 127) * .8,
+        'Y': v => st.speed = .3 + (v / 127) * 2.6,
+        'Z': v => st.bright = v / 127,
+      };
+      function accent() {
+        try { return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#4a80f0'; }
+        catch { return '#4a80f0'; }
+      }
+      function engineForMode(name) {
+        const n = (name || '').toLowerCase();
+        if (/ona|wave|phase|espiral|linia|trama|sinus|serra|quadrada|triangular|respiracio|walk/.test(n)) return 'wave';
+        if (/techno|groove|makina|industrial|bit|euclid|pols|hard|dub|acid|ritme|noise|crackle/.test(n)) return 'bars';
+        if (/bach|chopin|mozart|satie|debussy|beethoven|part\b|einaudi|glass|arnalds|frahm|jazz|pedal|campan|gota|pad|basso|arpegi/.test(n)) return 'orbs';
+        return 'field';
+      }
+      function on(ev, color) {
+        st.energy = Math.min(1.6, st.energy + (ev.cls === 'acord' ? 1 : ev.cls === 'nota' ? .7 : .35));
+        if (ev.cls === 'nota' || ev.cls === 'acord') {
+          st.pulses.push({ r: 0, a: .9 });
+          if (color) st.color = color;      // l'anell segueix el color de l'acord
+        }
+        if (ev.tag === 'Mode') { st.engine = engineForMode(ev.main); st.color = null; }
+        else if (ev.tag && ev.tag.startsWith('Capa')) {
+          st.engine = / teclat/.test(ev.tag) ? 'ring' : st.engine;
+          if (/modes/.test(ev.tag)) st.engine = 'field';
+          st.color = null;
+        }
+        if (ev.pot) {
+          const v = parseInt(ev.main, 10) || 0;
+          (POT_MAP[ev.tag] || (() => st.energy = Math.min(1.6, st.energy + .25)))(v);
+        }
+        start();
+      }
+      const col = () => st.color || accent();
+      function drawRing(w, h, cx, cy) {
+        const base = Math.min(w, h) * .34 * st.vol + Math.min(w, h) * .12;
+        for (let ring = 0; ring < 2; ring++) {
+          ctx.beginPath();
+          const off = ring * Math.PI / 3, alpha = (ring ? .16 : .34) + st.energy * .3;
+          for (let i = 0; i <= 128; i++) {
+            const a = (i / 128) * Math.PI * 2;
+            const wob = Math.sin(a * (3 + ring * 2) + st.t * 2.2 + off) * st.amp
+                      + Math.sin(a * 7 - st.t * 1.4 + off) * st.amp * .4;
+            const r = base * (1 + wob * .28) * (1 + st.energy * .06);
+            const x = cx + Math.cos(a + st.t * .35) * r;
+            const y = cy + Math.sin(a + st.t * .35) * r * .92;
+            i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+          }
+          ctx.closePath();
+          ctx.globalAlpha = Math.min(1, alpha);
+          ctx.lineWidth = 1.4 + st.bright * 1.6 + st.energy * .8;
+          ctx.stroke();
+        }
+      }
+      function drawWave(w, h, cx, cy) {
+        for (let k = 0; k < 3; k++) {
+          ctx.beginPath();
+          const yBase = cy + (k - 1) * h * .16;
+          for (let i = 0; i <= 96; i++) {
+            const x = (i / 96) * w;
+            const ph = (i / 96) * Math.PI * (3 + k) + st.t * (1.6 + k * .5);
+            const y = yBase + Math.sin(ph) * h * .12 * st.amp * (1 + st.energy * .5)
+                            + Math.sin(ph * 2.7) * h * .04 * st.amp;
+            i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+          }
+          ctx.globalAlpha = (.32 - k * .08) + st.energy * .25;
+          ctx.lineWidth = 1.2 + st.bright * 1.8;
+          ctx.stroke();
+        }
+      }
+      function drawBars(w, h, cx, cy) {
+        const N = 24, bw = w / (N * 1.6);
+        for (let i = 0; i < N; i++) {
+          const x = (i + .5) * (w / N);
+          const ph = i * .8 + st.t * (3 + st.speed * 2);
+          const v = Math.abs(Math.sin(ph) * .6 + Math.sin(ph * 1.7 + i) * .4);
+          const bh = (h * .1 + v * h * .32 * st.amp) * (1 + st.energy * .4);
+          ctx.globalAlpha = .25 + st.bright * .4 + st.energy * .2;
+          ctx.fillStyle = col();
+          ctx.fillRect(x - bw / 2, cy - bh / 2, bw, bh);
+        }
+      }
+      function drawOrbs(w, h, cx, cy) {
+        if (st.orbs.length !== 14) {
+          st.orbs = Array.from({ length: 14 }, (_, i) => ({ ph: i * 1.7, r: .25 + (i % 5) * .12, sz: 2 + (i % 4) }));
+        }
+        for (const o of st.orbs) {
+          const a = o.ph + st.t * (.4 + st.speed * .25);
+          const R = Math.min(w, h) * o.r * (0.7 + st.amp * .6);
+          const x = cx + Math.cos(a) * R * 1.25;
+          const y = cy + Math.sin(a * 1.3 + o.ph) * R * .8;
+          ctx.beginPath();
+          ctx.arc(x, y, o.sz + st.energy * 2.5, 0, Math.PI * 2);
+          ctx.globalAlpha = .3 + st.bright * .5;
+          ctx.fillStyle = col();
+          ctx.fill();
+        }
+      }
+      function drawField(w, h, cx, cy) {
+        if (st.seeds.length !== 60) {
+          st.seeds = Array.from({ length: 60 }, () => ({ x: Math.random(), y: Math.random(), p: Math.random() * 6.28 }));
+        }
+        for (const s of st.seeds) {
+          const tw = (Math.sin(s.p + st.t * (2 + st.speed * 2)) + 1) / 2;
+          const dx = Math.sin(s.p * 3 + st.t) * 8 * st.amp;
+          ctx.beginPath();
+          ctx.arc(s.x * w + dx, s.y * h, .8 + tw * (1.6 + st.bright * 2) + st.energy, 0, Math.PI * 2);
+          ctx.globalAlpha = .12 + tw * (.25 + st.bright * .4) + st.energy * .15;
+          ctx.fillStyle = col();
+          ctx.fill();
+        }
+      }
+      const ENGINES = { ring: drawRing, wave: drawWave, bars: drawBars, orbs: drawOrbs, field: drawField };
+      function draw() {
+        if (!st.running) return;
+        try {
+          if (_monPanel.classList.contains('hidden')) { st.running = false; ctx.clearRect(0, 0, canvas.width, canvas.height); return; }
+          const w = body.clientWidth, h = body.clientHeight;
+          if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+          ctx.clearRect(0, 0, w, h);
+          const cx = w / 2, cy = h / 2;
+          st.t += .016 * st.speed;
+          ctx.strokeStyle = col();
+          ctx.shadowColor = col();
+          ctx.shadowBlur = 6 + st.bright * 26 + st.energy * 14;
+          (ENGINES[st.engine] || drawRing)(w, h, cx, cy);
+          // Polsos de nota/acord: cercles que s'expandeixen i s'esvaeixen
+          for (const p of st.pulses) {
+            p.r += (3 + st.speed * 2.4); p.a *= .93;
+            ctx.beginPath();
+            ctx.arc(cx, cy, Math.min(w, h) * .18 + p.r, 0, Math.PI * 2);
+            ctx.globalAlpha = p.a * .5;
+            ctx.lineWidth = 1.2;
+            ctx.strokeStyle = col();
+            ctx.stroke();
+          }
+          st.pulses = st.pulses.filter(p => p.a > .03);
+          ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+          st.energy *= .965;
+        } catch (e) { /* mai matar el bucle (p. ex. transició al PiP) */ }
+        requestAnimationFrame(draw);
+      }
+      function start() { if (!st.running) { st.running = true; requestAnimationFrame(draw); } }
+      return { on, start };
+    })();
+
+    // ── Connexió AUTOMÀTICA del port sèrie ──────────────────────────────────
+    // El TECLA exposa DOS ports (consola i dades). La pantalla necessita la
+    // CONSOLA: es proven els ports ja autoritzats i es descarta sol el de
+    // dades (que envia trames "I xxxx" de sim_link tan bon punt s'obre).
+    // Només es demana el selector si encara no hi ha cap port autoritzat.
+    async function _monProbe(port) {
+      try { await port.open({ baudRate: 115200 }); } catch { return { busy: true }; }
+      const reader = port.readable.getReader();
+      const dec = new TextDecoder();
+      let buf = '', pending = null, isData = false;
+      const t0 = Date.now();
+      while (Date.now() - t0 < 1300) {
+        if (!pending) pending = reader.read();
+        const r = await Promise.race([pending, new Promise(res => setTimeout(() => res(null), 200))]);
+        if (r === null) continue;         // timeout curt: la lectura segueix pendent
+        pending = null;
+        if (r.done) break;
+        buf += dec.decode(r.value, { stream: true });
+        if (/^I [0-9A-Fa-f]{1,4} \d+ \d+ \d+/m.test(buf)) { isData = true; break; }
+        if (buf.length > 4096) break;     // clarament consola (text abundant)
+      }
+      if (isData) {
+        try { await reader.cancel(); } catch { }
+        try { reader.releaseLock(); await port.close(); } catch { }
+        return { data: true };
+      }
+      return { ok: true, reader, carry: buf, pending };
+    }
+
+    async function _monConnect() {
+      if (!('serial' in navigator)) { showGlobalToast('La pantalla necessita Chrome o Edge (Web Serial)', 'error'); return; }
+      let candidates = [];
+      try { candidates = await navigator.serial.getPorts(); } catch { }
+      let adopted = null, sawData = false;
+      for (const p of candidates) {
+        const r = await _monProbe(p);
+        if (r.ok) { adopted = { port: p, ...r }; break; }
+        if (r.data) sawData = true;
+      }
+      if (!adopted) {
+        // Cap port autoritzat vàlid: demana'n un (únic moment amb selector)
+        let p;
+        try { p = await navigator.serial.requestPort(); } catch { return; }
+        const r = await _monProbe(p);
+        if (r.data) {
+          showGlobalToast('Aquest és el port de DADES (simulador). Prem «Connectar» de nou: l\'altre port ja quedarà memoritzat.', 'error');
+          return;
+        }
+        if (r.busy) { showGlobalToast('Port ocupat per una altra app (shell/Thonny?). Tanca-la i torna-hi.', 'error'); return; }
+        adopted = { port: p, ...r };
+      }
+      _monPort = adopted.port;
+      _monReader = adopted.reader;
+      _monPanel.classList.add('live');
+      document.getElementById('devmon-connect')?.classList.add('hidden');
+      (async () => {
+        const dec = new TextDecoder();
+        let carry = adopted.carry || '';
+        // processa el que ja ha arribat durant la prova
+        {
+          const parts = carry.split(/\r?\n/); carry = parts.pop();
+          for (const p2 of parts) { const ev = _monParse(p2); if (ev) _monDispatch(ev); }
+        }
+        let pending = adopted.pending || null;
+        try {
+          for (;;) {
+            const r = pending ? await pending : await _monReader.read();
+            pending = null;
+            if (r.done) break;
+            carry += dec.decode(r.value, { stream: true });
+            const parts = carry.split(/\r?\n/);
+            carry = parts.pop();
+            for (const p2 of parts) { const ev = _monParse(p2); if (ev) _monDispatch(ev); }
+          }
+        } catch { /* port desconnectat */ }
+        _monPanel.classList.remove('live');
+        document.getElementById('devmon-connect')?.classList.remove('hidden');
+        try { _monReader?.releaseLock(); } catch { }
+        try { await _monPort?.close(); } catch { }
+        _monPort = null; _monReader = null;
+      })();
+    }
+
+    document.getElementById('btn-monitor')?.addEventListener('click', () => {
+      _monPanel.classList.toggle('hidden');
+      if (!_monPanel.classList.contains('hidden') && !_monPort) _monConnect();
+    });
+    document.getElementById('devmon-connect')?.addEventListener('click', () => { if (!_monPort) _monConnect(); });
+    document.getElementById('devmon-close')?.addEventListener('click', () => _monPanel.classList.add('hidden'));
+    document.getElementById('devmon-clear')?.addEventListener('click', () => {
+      _monNow.querySelector('.main').textContent = '';
+      _monNow.querySelector('.tag').textContent = '';
+      _monPanel.classList.remove('inuse');
+    });
+    window.addEventListener('beforeunload', () => { try { _monReader?.cancel(); _monPort?.close(); } catch { } });
+    // Mida ajustable: recorda-la entre sessions
+    try {
+      const s = JSON.parse(localStorage.getItem('tecla-pantalla-mida') || 'null');
+      if (s?.w) { _monPanel.style.width = s.w; _monPanel.style.height = s.h; }
+      new ResizeObserver(() => {
+        if (_monPanel.classList.contains('hidden') || _monPanel.classList.contains('pip')) return;
+        localStorage.setItem('tecla-pantalla-mida',
+          JSON.stringify({ w: _monPanel.style.width || _monPanel.offsetWidth + 'px',
+                           h: _monPanel.style.height || _monPanel.offsetHeight + 'px' }));
+      }).observe(_monPanel);
+    } catch { }
+    // Prova manual des de la consola del navegador: window._pantallaTest('▣ C4 E4 G4')
+    window._pantallaTest = (line) => { const ev = _monParse(line); if (ev) _monDispatch(ev); return ev; };
+
+    // ── Arrossegar la pantalla per tota la finestra (agafant la capçalera) ──
+    (() => {
+      const head = document.getElementById('devmon-head');
+      let sx = 0, sy = 0, px = 0, py = 0, dragging = false;
+      const setPos = (x, y) => {
+        x = Math.max(0, Math.min(window.innerWidth - 120, x));
+        y = Math.max(0, Math.min(window.innerHeight - 40, y));
+        _monPanel.style.left = x + 'px';
+        _monPanel.style.top = y + 'px';
+        _monPanel.style.right = 'auto';
+        _monPanel.style.bottom = 'auto';
+      };
+      head?.addEventListener('pointerdown', e => {
+        if (e.target.closest('.btn') || _monPanel.classList.contains('pip')) return;
+        dragging = true;
+        const r = _monPanel.getBoundingClientRect();
+        sx = e.clientX; sy = e.clientY; px = r.left; py = r.top;
+        head.setPointerCapture(e.pointerId);
+      });
+      head?.addEventListener('pointermove', e => {
+        if (!dragging) return;
+        setPos(px + e.clientX - sx, py + e.clientY - sy);
+      });
+      head?.addEventListener('pointerup', () => {
+        if (!dragging) return;
+        dragging = false;
+        try { localStorage.setItem('tecla-pantalla-pos', JSON.stringify({ l: _monPanel.style.left, t: _monPanel.style.top })); } catch { }
+      });
+      try {
+        const p = JSON.parse(localStorage.getItem('tecla-pantalla-pos') || 'null');
+        if (p?.l) { _monPanel.style.left = p.l; _monPanel.style.top = p.t; _monPanel.style.right = 'auto'; _monPanel.style.bottom = 'auto'; }
+      } catch { }
+    })();
+
+    // ── Desancorar: finestra flotant FORA de l'app (Document Picture-in-Picture) ──
+    document.getElementById('devmon-pip')?.addEventListener('click', async () => {
+      if (!('documentPictureInPicture' in window)) {
+        showGlobalToast('Per desancorar la pantalla cal Chrome 116+ (Document Picture-in-Picture)', 'error');
+        return;
+      }
+      try {
+        const pip = await documentPictureInPicture.requestWindow({ width: 440, height: 400 });
+        // Copia els estils de l'app (tema inclòs) a la finestra PiP
+        pip.document.documentElement.className = document.documentElement.className;
+        for (const attr of document.documentElement.attributes) {
+          try { pip.document.documentElement.setAttribute(attr.name, attr.value); } catch { }
+        }
+        for (const el of document.querySelectorAll('style, link[rel="stylesheet"]')) {
+          pip.document.head.appendChild(el.cloneNode(true));
+        }
+        pip.document.body.style.cssText = 'margin:0;height:100%;display:flex';
+        pip.document.documentElement.style.height = '100%';
+        pip.document.title = 'TECLA · pantalla';
+        _monPanel.classList.remove('hidden');
+        _monPanel.classList.add('pip');
+        pip.document.body.appendChild(_monPanel);   // el node es MOU (la connexió sèrie continua viva aquí)
+        _monAnim.start();                           // i l'animació continua girant al PiP
+        pip.addEventListener('pagehide', () => {
+          _monPanel.classList.remove('pip');
+          document.body.appendChild(_monPanel);
+        });
+      } catch (e) {
+        showGlobalToast('No s\'ha pogut desancorar: ' + e.message, 'error');
+      }
+    });
+
+
     function _getAssignedModes() {
       const assigned = new Set();
       (_keysConfig.banks || []).forEach(bank => {
@@ -4117,7 +4776,7 @@
           <div class="kb-pot-knob-id">${lbl}</div>
           <div class="kb-pot-knob-circle"><div class="kb-pot-knob-indicator"></div></div>
           <div class="kb-pot-knob-fn">${fn}</div>
-          <div class="kb-pot-knob-range">${_potRangeFor(fn)}</div>
+          
         </div>`;
       }).join('');
       col.querySelectorAll('.kb-pot-knob').forEach(el => {
@@ -4264,7 +4923,19 @@
       }
     });
 
+    // Límit de capes del DISPOSITIU (mirall de ConfigManager.MAX_BANKS: tota la
+    // config viu a la RAM de la Pico). L'app i el simulador no tenen límit.
+    const DEVICE_MAX_LAYERS = 6;
+
     function buildDeviceConfig() {
+      // L'export al dispositiu SEMPRE llegeix el working copy de Dispositiu,
+      // encara que el simulador tingui una capa pròpia activa.
+      const _ovSave = window._simKbOverride;
+      window._simKbOverride = null;
+      try { return _buildDeviceConfigInner(); }
+      finally { window._simKbOverride = _ovSave; }
+    }
+    function _buildDeviceConfigInner() {
       const customNames = _getModeNames();
       const fileToName = Object.fromEntries(_modesIndex.map(m => [m.file, customNames[m.file] || m.name]));
       const DEFAULT_KB_SCALES = [0, 1, 4, 5, 7, 8, 13, 15, 18, 19];
@@ -4273,6 +4944,7 @@
       function _readKbConfig() {
         const mc = _loadModesConfig();
         try { _loadCustomArps(); } catch (e) {}
+        try { _loadCustomAccomps(); } catch (e) {}
         return {
           keyboard_scales: (mc.keyboard_scales && mc.keyboard_scales.length) ? mc.keyboard_scales : DEFAULT_KB_SCALES,
           keyboard_keys: mc.keyboard_keys || ALL_KEYS,
@@ -4283,9 +4955,9 @@
           keyboard_button_functions: _loadKbBtnFunctions(),
           neg_harmony_axes: _loadNegHarmAxes(),
           neg_harmony_type: _loadNegHarmType(),
-          chord_inversions: _loadChordInversions(),
           diatonic_functions: _loadDiatonicFns(),
           custom_arpeggiator_patterns: _customArps,
+          custom_accompaniments: _customAccomps,
           custom_chord_progressions: _getProgressions(),
           voice_lead_types: _loadVlTypes(),
           audio_potentiometer_functions: mc.audio_potentiometer_functions || {}
@@ -4306,7 +4978,13 @@
       // les capes teclat una a una (snapshot swap durant la construcció).
       const _savedKb = _captureKb();
 
-      const banks = _keysConfig.banks.map(b => {
+      // El dispositiu només carrega les primeres DEVICE_MAX_LAYERS capes
+      // (RAM de la Pico); la resta queden a l'app i al simulador.
+      const _bankSrc = _keysConfig.banks.slice(0, DEVICE_MAX_LAYERS);
+      if (_keysConfig.banks.length > DEVICE_MAX_LAYERS) {
+        try { showGlobalToast(`Config del dispositiu: només s'exporten les ${DEVICE_MAX_LAYERS} primeres capes (en tens ${_keysConfig.banks.length})`); } catch { }
+      }
+      const banks = _bankSrc.map(b => {
         const type = b.type || 'modes';
         const bank = { name: b.name, type: type, efectos_temporales: b.efectos || {} };
         if (type === 'teclat') {
@@ -4326,7 +5004,7 @@
       const mc = _loadModesConfig();
       return {
         banks: banks,
-        current_bank: _keysConfig.currentBank,
+        current_bank: Math.min(_keysConfig.currentBank, banks.length - 1),
         midi_channel: mc.midi_channel || 1,
         enabled_modes: _getAssignedModes(),
         available_effects: _availableEffects(),
@@ -4343,40 +5021,39 @@
     // ══════════════════════════════════════════════════════════════
     // MODES I ESCALES TAB
     // ══════════════════════════════════════════════════════════════
-    function _loadModesConfig() { try { return JSON.parse(localStorage.getItem('tecla-modes-config') || '{}'); } catch { return {}; } }
+    // Lectura de la config de teclat: working copy (localStorage) o, si el
+    // SIMULADOR té una capa de teclat pròpia activa, el snapshot d'aquella
+    // capa (window._simKbOverride) — capes del sim independents de Dispositiu.
+    function _kbRead(key) {
+      const ov = window._simKbOverride;
+      if (ov) return (key in ov) ? ov[key] : null;   // absent al snapshot = defaults
+      return localStorage.getItem(key);
+    }
+    function _loadModesConfig() { try { return JSON.parse(_kbRead('tecla-modes-config') || '{}'); } catch { return {}; } }
     function _saveModesConfig(cfg) { localStorage.setItem('tecla-modes-config', JSON.stringify(cfg)); }
 
     function _loadDiatonicFns() {
-      try { const a = JSON.parse(localStorage.getItem('tecla-diatonic-fns') || 'null'); if (Array.isArray(a) && a.length > 0) return a; } catch {}
+      try { const a = JSON.parse(_kbRead('tecla-diatonic-fns') || 'null'); if (Array.isArray(a) && a.length > 0) return a; } catch {}
       return ['diatonic'];
     }
     function _saveDiatonicFns(arr) { localStorage.setItem('tecla-diatonic-fns', JSON.stringify(arr)); }
 
     function _loadVlTypes() {
-      try { const a = JSON.parse(localStorage.getItem('tecla-vl-types') || 'null'); if (Array.isArray(a) && a.length > 0) return a; } catch {}
+      try { const a = JSON.parse(_kbRead('tecla-vl-types') || 'null'); if (Array.isArray(a) && a.length > 0) return a; } catch {}
       return VL_TYPES.map(t => t.id);
     }
     function _saveVlTypes(arr) { localStorage.setItem('tecla-vl-types', JSON.stringify(arr)); }
     function _vlTypeName(id) { return (VL_TYPES.find(t => t.id === id) || {}).name || id; }
 
-    function _loadNegHarmType() { return parseInt(localStorage.getItem('tecla-neg-harm-type') || '0', 10); }
+    function _loadNegHarmType() { return parseInt(_kbRead('tecla-neg-harm-type') || '0', 10); }
     function _saveNegHarmType(t) { localStorage.setItem('tecla-neg-harm-type', t); }
     function _loadNegHarmAxes() {
-      try { const a = JSON.parse(localStorage.getItem('tecla-neg-harm-axes') || 'null'); if (Array.isArray(a) && a.length > 0) return a; } catch {}
+      try { const a = JSON.parse(_kbRead('tecla-neg-harm-axes') || 'null'); if (Array.isArray(a) && a.length > 0) return a; } catch {}
       return NEG_HARMONY_TYPES.map(([id]) => id);
     }
     function _saveNegHarmAxes(arr) { localStorage.setItem('tecla-neg-harm-axes', JSON.stringify(arr)); }
-    const CHORD_INVERSIONS = [
-      [0, 'Fonamental'],
-      [1, '1a Inversió'],
-      [2, '2a Inversió'],
-      [3, '3a Inversió'],
-    ];
-    function _loadChordInversions() {
-      try { const a = JSON.parse(localStorage.getItem('tecla-chord-inversions') || 'null'); if (Array.isArray(a) && a.length > 0) return a; } catch {}
-      return CHORD_INVERSIONS.map(([id]) => id);
-    }
-    function _saveChordInversions(arr) { localStorage.setItem('tecla-chord-inversions', JSON.stringify(arr)); }
+    // (Inversions harmòniques: integrades com a formes de la Conducció de Veus
+    //  — fonamental/inv1/inv2 a VL_TYPES. L'antic apartat propi s'ha retirat.)
     const KB_BTN_FN_DEFAULT = [
       'note','note','note','note','note','note','note','note',
       'scale','tonality','chord','arp',
@@ -4385,7 +5062,7 @@
     const KB_BTN_LOCKED_SET = new Set([12, 15]);
     let _kbBtnFunctions = null;
     function _loadKbBtnFunctions() {
-      try { const a = JSON.parse(localStorage.getItem('tecla-kb-btn-functions') || 'null'); if (Array.isArray(a) && a.length === 16) return a; } catch {}
+      try { const a = JSON.parse(_kbRead('tecla-kb-btn-functions') || 'null'); if (Array.isArray(a) && a.length === 16) return a; } catch {}
       return [...KB_BTN_FN_DEFAULT];
     }
     function _saveKbBtnFunctions(arr) { localStorage.setItem('tecla-kb-btn-functions', JSON.stringify(arr)); }
@@ -4399,7 +5076,7 @@
     let _selectedModeName = '';
 
     function _getProgressions() {
-      try { return JSON.parse(localStorage.getItem('tecla-progressions') || '[]'); } catch { return []; }
+      try { return JSON.parse(_kbRead('tecla-progressions') || '[]'); } catch { return []; }
     }
 
     function _rebuildKeyboardScalesList() {
@@ -4484,6 +5161,9 @@
         _rebuildArpCheckboxes();
       }
 
+      // Acompanyaments personalitzats (la llista viu per-capa, com els arps)
+      _renderAccompList();
+
       // Chord types
       _rebuildChordTypesList();
 
@@ -4511,15 +5191,17 @@
     // Funcions del sinte intern (envien Sound Controllers al motor d'àudio). Es poden
     // assignar a qualsevol pot, en qualsevol sub-mode. Vegeu _applyPotFn / kbd_pots.py.
     const SYNTH_POT_FNS = ['Filtre','Ressonància','Atac','Decay','Env Sustain','Release','LFO Vel.','LFO Prof.','Env Filtre','Env Decay','LFO→Filtre','Trèmol','Trèmol vel.','Detune','Filtre tipus','Pitch env','Forma d\'ona'];
-    const KB_POT_FNS    = ['Brillantor','Modulació','Sustain','Pitch Bend','Volum','Gate','Octava', ...SYNTH_POT_FNS];
-    const ARP_POT_FNS   = ['Velocitat (BPM)','Patró De Direcció','Brillantor','Volum','Modulació','Pitch Bend','Gate','Octava', ...SYNTH_POT_FNS];
+    // NOMÉS funcions MIDI estàndard (les del sinte intern — SYNTH_POT_FNS —
+    // s'han retirat dels menús: la configuració d'àudio està abandonada).
+    const KB_POT_FNS    = ['Brillantor','Modulació','Sustain','Pitch Bend','Volum','Gate','Octava'];
+    const ARP_POT_FNS   = ['Velocitat (BPM)','Patró De Direcció','Brillantor','Volum','Modulació','Pitch Bend','Gate','Octava'];
 
     // Rang de control de cada funció de pot (Pot → Funció → Rang, llegible per
     // l'usuari sota cada knob del diagrama).
     const _POT_FN_RANGES = {
       'Brillantor': 'velocity 20–127',
       'Modulació': 'CC1 · 0–127',
-      'Sustain': 'release 0 → 4s → ∞',
+      'Sustain': 'trams: OFF·0.5·1.2·2.5·5·8s·∞',
       'Pitch Bend': '0 → +8191',
       'Volum': 'CC7 · 0–127',
       'Gate': 'OFF / període 0.05–0.5s',
@@ -4527,7 +5209,6 @@
       'Velocitat (BPM)': '30–2000 passos/min',
       'Patró De Direcció': 'cicla els patrons actius',
       "Tipologia d'Acords": 'cicla els tipus actius',
-      "Inversió d'Acord": 'cicla les inversions actives',
       "Eix d'Harmonia": 'cicla els eixos actius',
       "Forma d'ona": 'CC70 · 4 formes',
       'Filtre tipus': 'CC86 · LP/HP/BP',
@@ -4586,7 +5267,7 @@
             <div class="kb-pot-knob-id">${lbl}</div>
             <div class="kb-pot-knob-circle"><div class="kb-pot-knob-indicator"></div></div>
             <div class="kb-pot-knob-fn">${fn}</div>
-            <div class="kb-pot-knob-range">${_potRangeFor(fn)}</div>
+            
           </div>`;
         }).join('');
         col.querySelectorAll('.kb-pot-knob').forEach(el => {
@@ -4609,7 +5290,7 @@
           <div class="kb-pot-knob-id">${lbl}</div>
           <div class="kb-pot-knob-circle"><div class="kb-pot-knob-indicator"></div></div>
           <div class="kb-pot-knob-fn">${fn}</div>
-          <div class="kb-pot-knob-range">${_potRangeFor(fn)}</div>
+          
         </div>`;
       }).join('');
       col.querySelectorAll('.kb-pot-knob').forEach(el => {
@@ -4789,7 +5470,7 @@
       const current = isAudio ? (() => { const [, i, ax] = potId.split(':'); return _audioMapFor(+i)[ax]; })() : currentFns?.[potId];
       const menu = document.createElement('div');
       menu.id = 'kb-pot-menu';
-      menu.style.cssText = 'position:fixed;z-index:9999;background:var(--surface3,var(--surface2));border:1px solid var(--border-h,var(--border));border-radius:8px;padding:6px;min-width:160px;box-shadow:0 6px 20px rgba(0,0,0,.35)';
+      menu.style.cssText = 'position:fixed;z-index:9999;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:6px;min-width:160px;box-shadow:0 10px 30px rgba(0,0,0,.45)';
       const rect = anchorEl.getBoundingClientRect();
       menu.style.top = Math.min(rect.bottom + 4, window.innerHeight - 320) + 'px';
       menu.style.left = Math.min(rect.left, window.innerWidth - 180) + 'px';
@@ -4819,7 +5500,6 @@
       _renderKbFnGrid();
       _renderKbFnChips();
       _renderNegHarmTypes();
-      _renderChordInversions();
       _renderDiatonicFns();
       _renderVlTypes();
       _wirePotDiagramListeners();
@@ -4945,18 +5625,6 @@
       }));
     }
 
-    function _renderChordInversions() {
-      const cont = document.getElementById('chord-inversions');
-      if (!cont) return;
-      const enabled = new Set(_loadChordInversions());
-      cont.innerHTML = CHORD_INVERSIONS.map(([id, name]) =>
-        `<label class="cb"><input type="checkbox" class="chord-inv-chk" value="${id}" ${enabled.has(id) ? 'checked' : ''}>${name}</label>`
-      ).join('');
-      cont.querySelectorAll('.chord-inv-chk').forEach(chk => chk.addEventListener('change', () => {
-        const active = [...cont.querySelectorAll('.chord-inv-chk:checked')].map(c => parseInt(c.value, 10));
-        _saveChordInversions(active.length > 0 ? active : [0]);
-      }));
-    }
 
     function _renderKbFnChips() {
       const panel = document.getElementById('kb-fn-chips');
@@ -5361,7 +6029,7 @@
 
     let _progressions = [];
     function _loadProgressions() {
-      try { _progressions = JSON.parse(localStorage.getItem('tecla-progressions') || '[]'); } catch { _progressions = []; }
+      try { _progressions = JSON.parse(_kbRead('tecla-progressions') || '[]'); } catch { _progressions = []; }
       // Migrate old simple-string format → new object format
       _progressions = _progressions.map(p => {
         if (p.chords && p.chords.length && typeof p.chords[0] === 'string') {
@@ -5495,7 +6163,7 @@
     // ══════════════════════════════════════════════════════════════
     let _customScales = [];
     function _loadCustomScales() {
-      try { _customScales = JSON.parse(localStorage.getItem('tecla-custom-scales') || '[]'); } catch { _customScales = []; }
+      try { _customScales = JSON.parse(_kbRead('tecla-custom-scales') || '[]'); } catch { _customScales = []; }
     }
     function _saveCustomScales() { localStorage.setItem('tecla-custom-scales', JSON.stringify(_customScales)); }
     function _midiNote(noteIdx, octave) { return (octave + 1) * 12 + noteIdx; }
@@ -5629,7 +6297,7 @@
     // ══════════════════════════════════════════════════════════════
     let _customArps = [];
     function _loadCustomArps() {
-      try { _customArps = JSON.parse(localStorage.getItem('tecla-custom-arps') || '[]'); } catch { _customArps = []; }
+      try { _customArps = JSON.parse(_kbRead('tecla-custom-arps') || '[]'); } catch { _customArps = []; }
     }
     function _saveCustomArps() { localStorage.setItem('tecla-custom-arps', JSON.stringify(_customArps)); }
     
@@ -5832,6 +6500,151 @@
     _loadCustomArps();
     _renderArpList();
 
+    // ══ ACOMPANYAMENTS PERSONALITZATS (capa teclat → Acompanyaments) ══════════
+    // Sequències pròpies que la tecla 'Base (acomp.)' cicla després dels 4
+    // integrats. Model: {name, sequence[grau|-1], octave, velocity, gate, bpm}.
+    // Viatgen al dispositiu com a 'custom_accompaniments' (per-capa).
+    let _customAccomps = [];
+    function _loadCustomAccomps() {
+      try { _customAccomps = JSON.parse(_kbRead('tecla-custom-accomps') || '[]'); } catch { _customAccomps = []; }
+    }
+    function _saveCustomAccomps() { localStorage.setItem('tecla-custom-accomps', JSON.stringify(_customAccomps)); }
+    function _accompName(idx) {
+      if (idx < ACCOMP_PATTERN_NAMES.length) return ACCOMP_PATTERN_NAMES[idx];
+      return (_customAccomps[idx - ACCOMP_PATTERN_NAMES.length]?.name) || 'Custom';
+    }
+
+    let _selectedAccompIdx = -1;
+    let _editingAccomp = null;
+
+    function _buildAccompMatrix(steps = 8, sequence = []) {
+      const grid = document.getElementById('accomp-matrix');
+      if (!grid) return;
+      grid.innerHTML = '';
+      grid.style.gridTemplateColumns = `auto repeat(${steps}, 1fr)`;
+      grid.appendChild(document.createElement('div'));
+      for (let c = 0; c < steps; c++) {
+        const h = document.createElement('div');
+        h.className = 'arp-matrix-header'; h.textContent = String(c + 1);
+        grid.appendChild(h);
+      }
+      // Graus de l'ESCALA activa (7 = tònica una octava amunt) + silenci
+      const rows = ['Grau 1', 'Grau 2', 'Grau 3', 'Grau 4', 'Grau 5', 'Grau 6', 'Grau 7', 'Grau 8ª', 'Silenci'];
+      const rowValues = [0, 1, 2, 3, 4, 5, 6, 7, -1];
+      for (let r = 0; r < rows.length; r++) {
+        const label = document.createElement('div');
+        label.className = 'arp-matrix-row-label'; label.textContent = rows[r];
+        grid.appendChild(label);
+        for (let c = 0; c < steps; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'arp-matrix-cell';
+          cell.dataset.step = c; cell.dataset.val = rowValues[r];
+          const stepVal = sequence[c] !== undefined ? sequence[c] : -1;
+          if (stepVal === rowValues[r]) cell.classList.add('active');
+          cell.addEventListener('click', () => {
+            grid.querySelectorAll(`.arp-matrix-cell[data-step="${c}"]`).forEach(el => el.classList.remove('active'));
+            cell.classList.add('active');
+          });
+          grid.appendChild(cell);
+        }
+      }
+    }
+
+    function _renderAccompList() {
+      const list = document.getElementById('custom-accomp-items');
+      if (!list) return;
+      if (!_customAccomps.length) {
+        list.innerHTML = '<div class="empty" style="padding:10px;">Cap acompanyament creat encara.</div>';
+      } else {
+        list.innerHTML = '';
+        _customAccomps.forEach((p, i) => {
+          const item = document.createElement('div');
+          item.className = `crud-item ${i === _selectedAccompIdx ? 'active' : ''}`;
+          item.innerHTML = `<span class="crud-item-name">${p.name}</span>` +
+            `<span class="crud-item-meta">${p.sequence.length} passos · oct ${p.octave >= 0 ? '+' + p.octave : p.octave} · ${p.bpm} bpm</span>`;
+          item.addEventListener('click', () => { _selectedAccompIdx = i; _renderAccompList(); });
+          list.appendChild(item);
+        });
+      }
+      const has = _selectedAccompIdx >= 0 && _selectedAccompIdx < _customAccomps.length;
+      document.getElementById('btn-edit-accomp')?.toggleAttribute('disabled', !has);
+      document.getElementById('btn-del-accomp')?.toggleAttribute('disabled', !has);
+    }
+
+    function _openAccompEditor(acc = null) {
+      _editingAccomp = acc;
+      const overlay = document.getElementById('accomp-editor-overlay');
+      overlay.querySelector('.editor-panel-title').textContent = acc ? `Editar: ${acc.name}` : 'Nou Acompanyament';
+      document.getElementById('accomp-edit-name').value = acc?.name || '';
+      document.getElementById('accomp-edit-steps').value = String(acc?.sequence?.length || 8);
+      document.getElementById('accomp-edit-octave').value = String(acc?.octave ?? 0);
+      document.getElementById('accomp-edit-vel').value = String(acc?.velocity ?? 90);
+      document.getElementById('accomp-edit-bpm').value = String(acc?.bpm ?? 110);
+      document.getElementById('accomp-edit-gate').value = String(acc?.gate ?? 90);
+      _buildAccompMatrix(acc?.sequence?.length || 8, acc?.sequence || []);
+      overlay.classList.add('open');
+      document.getElementById('accomp-edit-name').focus();
+    }
+    function _closeAccompEditor() {
+      document.getElementById('accomp-editor-overlay')?.classList.remove('open');
+      _editingAccomp = null;
+    }
+    function _saveAccompEditor() {
+      const name = document.getElementById('accomp-edit-name')?.value.trim();
+      if (!name) { alert('El nom no pot estar buit.'); return; }
+      const steps = parseInt(document.getElementById('accomp-edit-steps').value, 10);
+      const sequence = [];
+      const grid = document.getElementById('accomp-matrix');
+      for (let c = 0; c < steps; c++) {
+        const cell = grid.querySelector(`.arp-matrix-cell.active[data-step="${c}"]`);
+        sequence.push(cell ? parseInt(cell.dataset.val, 10) : -1);
+      }
+      const spec = {
+        name, sequence,
+        octave: parseInt(document.getElementById('accomp-edit-octave').value, 10) || 0,
+        velocity: Math.max(30, Math.min(127, parseInt(document.getElementById('accomp-edit-vel').value, 10) || 90)),
+        bpm: Math.max(60, Math.min(200, parseInt(document.getElementById('accomp-edit-bpm').value, 10) || 110)),
+        gate: parseInt(document.getElementById('accomp-edit-gate').value, 10) || 90,
+      };
+      if (_editingAccomp) {
+        const idx = _customAccomps.indexOf(_editingAccomp);
+        if (idx >= 0) _customAccomps[idx] = spec;
+      } else {
+        _customAccomps.push(spec);
+        _selectedAccompIdx = _customAccomps.length - 1;
+      }
+      _saveCustomAccomps();
+      _renderAccompList();
+      _closeAccompEditor();
+      showGlobalToast(`Acompanyament "${name}" guardat — la tecla Base el cicla després dels integrats`);
+    }
+    document.getElementById('btn-new-accomp')?.addEventListener('click', () => _openAccompEditor(null));
+    document.getElementById('btn-edit-accomp')?.addEventListener('click', () => {
+      if (_selectedAccompIdx >= 0) _openAccompEditor(_customAccomps[_selectedAccompIdx]);
+    });
+    document.getElementById('btn-del-accomp')?.addEventListener('click', () => {
+      if (_selectedAccompIdx < 0) return;
+      if (!confirm(`Eliminar l'acompanyament "${_customAccomps[_selectedAccompIdx].name}"?`)) return;
+      _customAccomps.splice(_selectedAccompIdx, 1);
+      _selectedAccompIdx = Math.min(_selectedAccompIdx, _customAccomps.length - 1);
+      _saveCustomAccomps();
+      _renderAccompList();
+    });
+    document.getElementById('accomp-edit-steps')?.addEventListener('change', (e) => {
+      const steps = parseInt(e.target.value, 10);
+      const grid = document.getElementById('accomp-matrix');
+      const cur = [];
+      for (let c = 0; c < steps; c++) {
+        const cell = grid?.querySelector(`.arp-matrix-cell.active[data-step="${c}"]`);
+        cur.push(cell ? parseInt(cell.dataset.val, 10) : -1);
+      }
+      _buildAccompMatrix(steps, cur);
+    });
+    document.getElementById('btn-accomp-editor-cancel')?.addEventListener('click', _closeAccompEditor);
+    document.getElementById('btn-accomp-editor-save')?.addEventListener('click', _saveAccompEditor);
+    _loadCustomAccomps();
+    _renderAccompList();
+
 
     // (firmware handlers → FIRMWARE section below)
 
@@ -5901,8 +6714,6 @@
         this.availableArpModes = [0, 1, 2];
         this.availableChordTypes = ['Major'];
         this.chordTypeIndex = 0;
-        this.availableInversions = [0];
-        this.chordInversionIdx = 0;
         this.negHarmMode = false;
         this.negHarmAxisIdx = 0;
         this.negHarmBtnIdx = -1;
@@ -5911,7 +6722,6 @@
         this.availableDiatonicFns = ['diatonic'];
         this.diatonicBtnPressTime = 0;
         this.transposition = 0;
-        this.voiceSpread = 0;
         this._btnFns = null;
         this.longPressThreshold = 0.5;
         this.chordBtnPressTime = 0;
@@ -5932,9 +6742,6 @@
         const chords = mc.chord_types || [];
         this.availableChordTypes = chords.length ? chords : ['Major'];
         if (this.chordTypeIndex >= this.availableChordTypes.length) this.chordTypeIndex = 0;
-        const invs = _loadChordInversions();
-        this.availableInversions = invs.length ? invs : [0];
-        if (this.chordInversionIdx >= this.availableInversions.length) this.chordInversionIdx = 0;
         this._btnFns = _loadKbBtnFunctions();
         const dfns = _loadDiatonicFns();
         this.availableDiatonicFns = dfns.length ? dfns : ['diatonic'];
@@ -6171,12 +6978,22 @@
             this._accomp?.clear();
             this.onLog('𝄆 Base DESACTIVADA (premuda llarga)', 'info');
           } else {
+            // Cicle: integrats + acompanyaments CUSTOM (mirall de handle_button)
+            const customs = _customAccomps || [];
+            const total = ACCOMP_PATTERN_IDS.length + customs.length;
             if (!this.accompActive) { this.accompActive = true; this.accompPatIdx = 0; }
-            else this.accompPatIdx = (this.accompPatIdx + 1) % ACCOMP_PATTERN_IDS.length;
+            else this.accompPatIdx = (this.accompPatIdx + 1) % total;
             if (!this._accomp) this._accomp = new Accompaniment((t, a, b, ch) => this.webMidi.send(t, a, b, ch));
             this._accompSyncCtx();
-            this._accomp.addPattern(ACCOMP_PATTERN_IDS[this.accompPatIdx], ACCOMP_CHANNEL);
-            this.onLog(`𝄆 Base: ${ACCOMP_PATTERN_NAMES[this.accompPatIdx]} (canal ${ACCOMP_CHANNEL + 1})`, 'info');
+            if (this.accompPatIdx < ACCOMP_PATTERN_IDS.length) {
+              this._accomp.setTempo(110);
+              this._accomp.addPattern(ACCOMP_PATTERN_IDS[this.accompPatIdx], ACCOMP_CHANNEL);
+              this.onLog(`𝄆 Base: ${ACCOMP_PATTERN_NAMES[this.accompPatIdx]} (canal ${ACCOMP_CHANNEL + 1})`, 'info');
+            } else {
+              const spec = customs[this.accompPatIdx - ACCOMP_PATTERN_IDS.length];
+              this._accomp.addCustom(spec, ACCOMP_CHANNEL);
+              this.onLog(`𝄆 Base: ${spec.name || 'Custom'} (canal ${ACCOMP_CHANNEL + 1})`, 'info');
+            }
           }
           this._updateHUD();
         }
@@ -6211,14 +7028,13 @@
         if (!fn) return;
         if (['Brillantor', 'Velocity'].includes(fn)) { this.velocity = Math.max(20, v); }
         else if (['Modulació', 'Modulation', 'Modulation (CC1)'].includes(fn)) { this.webMidi.send('control_change', 1, v, 0); }
-        else if (['Sustain', 'Sustain (CC64)'].includes(fn)) { const sv = v >= 125 ? 127 : 0; this.sustainLevel = sv; this.webMidi.send('control_change', 64, sv, 0); }  // zona morta: CC64 net ON/OFF
+        else if (['Sustain', 'Sustain (CC64)'].includes(fn)) { const sv = v >= 118 ? 127 : 0; this.sustainLevel = sv; this.webMidi.send('control_change', 64, sv, 0); }  // tram final (>=118, com el firmware) = pedal; la resta OFF
         else if (['Volum', 'Volume', 'Expression (CC11)'].includes(fn)) { this.webMidi.send('control_change', 7, v, 0); _setSysVol(v); }
         else if (['Gate', 'Gate Length'].includes(fn)) { if (v < 10) { this.gateEnabled = false; this.webMidi.send('control_change', 11, 127, 0); } else { this.gateEnabled = true; this.gatePeriod = 0.5 - (v / 127) * 0.45; } }
         else if (fn === 'Pitch Bend') { this.webMidi.send('pitchwheel', v < 5 ? 0 : Math.round((v / 127) * 8191), 0, 0); }
         else if (['Velocitat (BPM)', 'Arp Speed (BPM)'].includes(fn)) { this.arpSpeed = 60.0 / (30 + (v / 127) * 1970); if (this._accomp) this._accomp.setTempo(Math.round(15 / this.arpSpeed)); }
         else if (['Patró De Direcció', 'Arp Pattern Selector'].includes(fn)) { if (this.availableArpModes.length > 0) { const mi = Math.min(Math.floor((v / 128) * this.availableArpModes.length), this.availableArpModes.length - 1); this.arpModeIndex = this.availableArpModes[mi]; } }
         else if (fn === 'Octava') { this.octave = Math.round((v / 127) * 8); this._updateHUD(); }
-        else if (["Inversió d'Acord", 'Tipus Inversió'].includes(fn)) { if (this.availableInversions.length > 0) { this.chordInversionIdx = Math.min(Math.floor((v / 128) * this.availableInversions.length), this.availableInversions.length - 1); this._updateHUD(); } }
         else if (fn === "Eix d'Harmonia") { const axes = _loadNegHarmAxes(); if (axes.length > 0) { this.negHarmAxisIdx = Math.min(Math.floor((v / 128) * axes.length), axes.length - 1); } }
         else if (fn === "Tipologia d'Acords") { if (this.availableChordTypes.length > 0) { this.chordTypeIndex = Math.min(Math.floor((v / 128) * this.availableChordTypes.length), this.availableChordTypes.length - 1); this._updateHUD(); } }
         // ── Sinte intern + CC Lliure (Sound Controllers → motor d'àudio) ──
@@ -6249,27 +7065,11 @@
         return Math.max(0, Math.min(127, (this.octave + octOff) * 12 + KEY_OFFSETS_JS[this.keyIndex] + intervals[deg] + (this.transposition || 0)));
       }
 
-      _currentInversionId() {
-        return this.availableInversions[this.chordInversionIdx] ?? 0;
-      }
-
-      _applyInversion(intervals) {
-        const inv = this._currentInversionId();
-        const spread = this.voiceSpread || 0;
-        let arr = [...intervals].sort((a, b) => a - b);
-        if (inv > 0) {
-          const n = Math.min(inv, arr.length - 1);
-          for (let i = 0; i < n; i++) arr.push(arr.shift() + 12);
-          const base = arr[0]; arr = arr.map(x => x - base);
-        }
-        if (spread > 0) arr = arr.map((x, i) => x + i * spread);
-        return arr;
-      }
 
       _chordNotesForBtn(btnIdx) {
         const root = this._noteForBtn(btnIdx); if (root === null) return [];
         const chordType = this.availableChordTypes[this.chordTypeIndex] || 'Major';
-        const intervals = this._applyInversion(_getChordIntervals(chordType));
+        const intervals = [..._getChordIntervals(chordType)].sort((a, b) => a - b);
         return intervals.map(i => Math.max(0, Math.min(127, root + i)));
       }
 
@@ -6288,7 +7088,7 @@
         this._noteOff(btnIdx);
         const root = this._noteForBtn(btnIdx); if (root === null) return;
         const chordType = this.availableChordTypes[this.chordTypeIndex] || 'Major';
-        const intervals = this._applyInversion(_getChordIntervals(chordType));
+        const intervals = [..._getChordIntervals(chordType)].sort((a, b) => a - b);
         let notes = intervals.map(i => Math.max(0, Math.min(127, root + i)));
         if (this.voiceLead) notes = this._vlApply(notes);
         for (const n of notes) {
@@ -6329,36 +7129,55 @@
 
       // ── Conducció de veus (mirall de kbd_voicelead.py) ──────────
       _vlType() { return (this.availableVlTypes && this.availableVlTypes[this.vlTypeIdx]) || 'proximitat'; }
-      _vlCandidates(notes, open) {
+      _vlCandidates(notes, open, drop2) {
         const base = [...notes].sort((a, b) => a - b), n = base.length, cands = [];
         for (let inv = 0; inv < n; inv++) {
           const v = [...base.slice(inv), ...base.slice(0, inv).map(x => x + 12)].sort((a, b) => a - b);
-          const variants = [v];
-          if (open && n >= 3) variants.push(v.map((x, i) => i % 2 === 1 ? x + 12 : x).sort((a, b) => a - b));
-          for (const vv of variants) for (const shift of [-12, 0, 12]) {
+          const variants = [[v, false]];
+          if (open && n >= 3) variants.push([v.map((x, i) => i % 2 === 1 ? x + 12 : x).sort((a, b) => a - b), false]);
+          if (drop2 && n >= 3) {
+            const d2 = [...v]; d2[d2.length - 2] -= 12;   // 2a veu des de dalt, una octava avall
+            variants.push([d2.sort((a, b) => a - b), true]);
+          }
+          for (const [vv, isd2] of variants) for (const shift of [-12, 0, 12]) {
             const cand = vv.map(x => x + shift);
-            if (!cand.some(x => x < 0 || x > 127)) cands.push(cand);
+            if (!cand.some(x => x < 0 || x > 127)) cands.push([cand, isd2]);
           }
         }
-        return cands.length ? cands : [base];
+        return cands.length ? cands : [[base, false]];
       }
-      _vlCost(cand, prev, type) {
+      _vlCost(cand, prev, type, bassPc, isDrop2, updir) {
         let total = 0; for (const n of cand) total += Math.min(...prev.map(p => Math.abs(n - p)));
-        const bass = Math.abs(Math.min(...cand) - Math.min(...prev));
+        const lo = Math.min(...cand);
+        const bass = Math.abs(lo - Math.min(...prev));
         if (type === 'comu') { const common = cand.filter(n => prev.includes(n)).length; return -4 * common + total; }
         if (type === 'baix') return 3 * bass + total;
-        if (type === 'ascendent') return (Math.min(...cand) < Math.min(...prev) ? 60 : 0) + total;
-        if (type === 'obert') return -(Math.max(...cand) - Math.min(...cand)) + total;
+        if (type === 'ascendent') return (lo < Math.min(...prev) ? 60 : 0) + total;
+        if (type === 'descendent') return (lo > Math.min(...prev) ? 60 : 0) + total;
+        if (type === 'obert') return -(Math.max(...cand) - lo) + total;
+        if (type === 'tancat') return (Math.max(...cand) - lo) * 2 + total;
+        if (['fonamental', 'inv1', 'inv2'].includes(type))
+          return (lo % 12 === bassPc ? 0 : 80) + total + Math.floor(bass / 2);
+        if (type === 'drop2') return (isDrop2 ? 0 : 80) + total;
+        if (type === 'pendol') {
+          if (updir) return (lo < Math.min(...prev) ? 60 : 0) + total;
+          return (lo > Math.min(...prev) ? 60 : 0) + total;
+        }
         return total + Math.floor(bass / 2);   // proximitat (per defecte)
       }
       _vlApply(notes) {
+        // IMPORTANT: notes arriba en ordre d'intervals (0=fonamental, 1=3a, 2=5a)
         if (!notes.length) return notes;
+        const type = this._vlType();
+        let updir = true;
+        if (type === 'pendol') { updir = !this._vlPendolUp; this._vlPendolUp = updir; }
         const prev = this._vlPrev;
         if (!prev) { this._vlPrev = [...notes].sort((a, b) => a - b); return notes; }
-        const type = this._vlType();
+        const bassPc = (type === 'inv1' && notes.length > 1) ? notes[1] % 12
+          : (type === 'inv2' && notes.length > 2) ? notes[2] % 12 : notes[0] % 12;
         let best = null, bestCost = Infinity;
-        for (const cand of this._vlCandidates(notes, type === 'obert')) {
-          const cost = this._vlCost(cand, prev, type);
+        for (const [cand, isd2] of this._vlCandidates(notes, type === 'obert', type === 'drop2')) {
+          const cost = this._vlCost(cand, prev, type, bassPc, isd2, updir);
           if (cost < bestCost) { bestCost = cost; best = cand; }
         }
         this._vlPrev = best || [...notes].sort((a, b) => a - b);
@@ -6722,7 +7541,6 @@
           document.querySelector(`.sim-key[data-idx="${i}"]`)?.classList.add('has-mode');
         }
         // Function buttons 8-15: etiquetes dinàmiques basades en funció assignada
-        const _invId   = this.availableInversions[this.chordInversionIdx] ?? 0;
         const _negAxes = _loadNegHarmAxes();
         const _axisId  = _negAxes[this.negHarmAxisIdx ?? 0] ?? 0;
         const _fnLabels = {
@@ -6732,7 +7550,7 @@
           arp:             this.arpMode ? `♪ ${_getArpName(this.arpModeIndex).substring(0, 7)}` : 'Arp.',
           neg_harmony:     this.negHarmMode ? `↕ ${(NEG_HARMONY_TYPES.find(([id]) => id === _axisId)?.[1] ?? 'H.Neg').substring(0, 6)}` : 'H.Neg',
           voice_lead:      this.voiceLead ? `𝆔 ${_vlTypeName(this._vlType()).substring(0, 7)}` : 'C.veus',
-          accomp:          this.accompActive ? `𝄆 ${ACCOMP_PATTERN_NAMES[this.accompPatIdx]}` : 'Base',
+          accomp:          this.accompActive ? `𝄆 ${_accompName(this.accompPatIdx)}` : 'Base',
           synth_wave:      `∿ ${['Sinus', 'Serra', 'Triangle', 'Quadra.'][this._synthWaveIdx ?? 0]}`,
           octave_down:     'Oct−', octave_up: 'Oct+', modes_layer: '⇄ Capa', stop: 'STOP',
         };
@@ -6751,7 +7569,7 @@
           }
         }
         // Status bar
-        const _invSufx = this.chordInversionIdx > 0 ? ` ⇅${_invId}` : '';
+        const _invSufx = '';
         const _negSufx = this.negHarmMode ? ' ↕' : '';
         const _loopSufx = [' ', ' ◦', ' ●', ' ⟳', ' ⏸'][this.loopState] || '';
         simStatusText.textContent = `${this.keyName} ${this.scaleName.substring(0, 10)}  oct${this.octave}${this.arpMode ? ' ♪' : ''}${this.chordMode ? ' ▣' : ''}${_invSufx}${_negSufx}${_loopSufx}`;
@@ -6775,6 +7593,27 @@
         const key = document.createElement('div');
         key.className = `sim-key ${specClass(i)}`; key.dataset.idx = i;
         key.innerHTML = `<span class="key-num">${i + 1}</span><span class="key-mode-label" id="key-ml-${i}">—</span>`;
+        // Drag&drop des del lateral (mateix sistema que Dispositiu):
+        // mode (fitxer) → tecla 1-12 · 'fx:Nom' → efecte · id de funció → capa teclat
+        key.addEventListener('dragover', e => { e.preventDefault(); key.classList.add('drag-over'); });
+        key.addEventListener('dragleave', () => key.classList.remove('drag-over'));
+        key.addEventListener('drop', e => {
+          e.preventDefault();
+          key.classList.remove('drag-over');
+          const payload = e.dataTransfer.getData('text/plain');
+          if (!payload || i === 12 || i === 15) return;
+          if (payload.startsWith('fx:')) {
+            const eff = payload.slice(3);
+            buttonEffects[i] = eff; _fxSelected[i] = eff;
+            simlog(`⚡ '${eff}' → tecla ${i + 1}`, 'ok');
+          } else if (KB_BTN_FN_META[payload]) {
+            _simAssignFn(i, payload);
+          } else if (i < 12) {
+            buttonModes[i] = { name: _simFileToName(payload), file: payload };
+            simlog(`▦ '${buttonModes[i].name}' → tecla ${i + 1}`, 'ok');
+          }
+          _renderSimAssignLabels();
+        });
         key.addEventListener('mousedown', e => { e.preventDefault(); onKeyDown(i, key); });
         key.addEventListener('mouseup', () => onKeyUp(i, key));
         key.addEventListener('mouseleave', () => { if (key.classList.contains('pressed')) onKeyUp(i, key); });
@@ -6928,15 +7767,29 @@
       if (active) simlog(`FX tecla ${btnIdx + 1}: ${efName} actiu`, 'info');
     }
 
+    // Funció del lateral pendent d'assignar a una tecla (clic funció → clic tecla)
+    let _pendingFnAssign = null;
+    function _simAssignFn(idx, fnId) {
+      const fns = _loadKbBtnFunctions();
+      fns[idx] = fnId;
+      _saveKbBtnFunctions(fns);
+      _kbBtnFunctions = fns;
+      try { kbMode?._reloadConfig(); kbMode?._updateHUD(); } catch (e2) { }
+      simlog(`Tecla ${idx + 1} → ${KB_BTN_FN_META[fnId]?.name || fnId} (capa teclat)`, 'ok');
+    }
     function onKeyDown(idx, el) {
-      el.classList.add('pressed');
-      // T13: el simulador és HÍBRID — la tecla commuta el teclat (on/off);
-      // els modes i efectes continuen sonant independentment.
-      if (idx === 12) {
-        if (isKbMode) deactivateKeyboardMode();
-        else activateKeyboardMode();
+      if (_pendingFnAssign) {
+        const fnId = _pendingFnAssign;
+        _pendingFnAssign = null;
+        document.querySelectorAll('.sim-fn-item.selected').forEach(e2 => e2.classList.remove('selected'));
+        if (idx === 12 || idx === 15) { simlog('Les tecles 13 i 16 estan bloquejades (capa/STOP)', 'warn'); return; }
+        _simAssignFn(idx, fnId);
         return;
       }
+      el.classList.add('pressed');
+      // T13: CICLA LES CAPES del simulador (mirall del dispositiu): tap =
+      // capa següent · premuda llarga (≥0.8s) = anterior. Es resol al keyup.
+      if (idx === 12) { _t13DownAt = Date.now(); return; }
 
       // Assignació des de la barra lateral: mode/efecte seleccionat → clic a la tecla
       if (selectedSidebarMode) {
@@ -7004,7 +7857,11 @@
     }
     function onKeyUp(idx, el) {
       el.classList.remove('pressed');
-      if (idx === 12) return;
+      if (idx === 12) {
+        const held = (Date.now() - (_t13DownAt || Date.now())) / 1000;
+        _simCycleLayer(held >= 0.8 ? -1 : 1);
+        return;
+      }
 
       if (idx < 12 && buttonModes[idx]) {
         // TAP sobre un mode ja actiu = atura'l · MANTENIR = només s'ha editat.
@@ -7042,6 +7899,148 @@
       simlog('STOP — modes, efectes, base i notes aturats', 'ok');
       _renderSimAssignLabels();
     }
+
+    // ══ CAPES DEL SIMULADOR ══════════════════════════════════════════════════
+    // Les MATEIXES capes que la pestanya Dispositiu (il·limitades), però amb
+    // selecció i estat INDEPENDENTS: la tecla 13 les cicla com al dispositiu
+    // (tap = següent · llarga = anterior) sense tocar la capa seleccionada ni
+    // el working copy de Dispositiu (les capes de teclat es llegeixen del seu
+    // snapshot via window._simKbOverride → _kbRead).
+    let _t13DownAt = 0;
+    let _simLayerIdx = 0;
+    function _simFileToName(f) {
+      try {
+        const noms = _getModeNames();
+        const m = (_modesIndex || []).find(x => x.file === f);
+        return noms[f] || m?.name || f.replace(/^mode_/, '').replace(/\.(py|mpy)$/, '');
+      } catch { return f; }
+    }
+    function _simCycleLayer(step) {
+      const banks = _keysConfig?.banks || [];
+      if (banks.length < 2) { simlog('Només hi ha una capa — crea\'n més amb «+ Capa»', 'info'); return; }
+      _simActivateLayer(_simLayerIdx + step);
+    }
+    function _simActivateLayer(idx, quiet) {
+      const banks = _keysConfig?.banks || [];
+      if (!banks.length) return;
+      _simLayerIdx = ((idx % banks.length) + banks.length) % banks.length;
+      const b = banks[_simLayerIdx];
+      try { _simStopAll(); } catch (e) { }
+      if (b.type === 'teclat') {
+        // Capa de teclat: la SEVA config (snapshot kb) — no el working copy
+        window._simKbOverride = (b.kb && Object.keys(b.kb).length) ? b.kb : {};
+        for (let i = 0; i < 12; i++) buttonModes[i] = null;
+        for (let i = 0; i < 16; i++) buttonEffects[i] = null;
+        if (!isKbMode) activateKeyboardMode();
+        else { try { kbMode._reloadConfig(); kbMode._updateHUD(); } catch (e) { } }
+      } else {
+        // Capa de modes: les seves assignacions de tecles i efectes
+        window._simKbOverride = null;
+        if (isKbMode) deactivateKeyboardMode();
+        for (let i = 0; i < 12; i++) {
+          const f = (b.modes || [])[i];
+          buttonModes[i] = f ? { name: _simFileToName(f), file: f } : null;
+        }
+        for (let i = 0; i < 16; i++) buttonEffects[i] = null;
+        const ef = b.efectos || {};
+        if (ef['13']) { buttonEffects[13] = ef['13']; _fxSelected[13] = ef['13']; }
+        if (ef['14']) { buttonEffects[14] = ef['14']; _fxSelected[14] = ef['14']; }
+      }
+      try { _renderSimAssignLabels(); } catch (e) { }
+      _renderSimLayerChips();
+      if (!quiet) simlog(`🔁 Capa: ${b.name || 'Capa ' + (_simLayerIdx + 1)} (${b.type})`, 'ok');
+    }
+    // Re-aplica la capa del sim en tornar a la pestanya (l'override es neteja
+    // en sortir per no interferir amb Dispositiu).
+    window._simReapplyLayer = () => {
+      const b = (_keysConfig?.banks || [])[_simLayerIdx];
+      if (b && b.type === 'teclat' && isKbMode) {
+        window._simKbOverride = (b.kb && Object.keys(b.kb).length) ? b.kb : {};
+        try { kbMode?._reloadConfig(); } catch (e) { }
+      }
+    };
+    function _renderSimLayerChips() {
+      const cont = document.getElementById('sim-layer-chips');
+      if (!cont) return;
+      const banks = _keysConfig?.banks || [];
+      cont.innerHTML = '';
+      banks.forEach((b, i) => {
+        const chip = document.createElement('button');
+        chip.className = 'btn btn-sm' + (i === _simLayerIdx ? ' btn-primary' : '');
+        chip.style.display = 'inline-flex'; chip.style.alignItems = 'center'; chip.style.gap = '7px';
+        chip.title = 'Activa aquesta capa al simulador (tecla 13 = ciclar)';
+        const lbl = document.createElement('span');
+        lbl.textContent = `${b.name || 'Capa ' + (i + 1)} · ${b.type === 'teclat' ? 'teclat' : 'modes'}`;
+        chip.appendChild(lbl);
+        if (banks.length > 1) {
+          const del = document.createElement('span');
+          del.textContent = '✕';
+          del.style.cssText = 'opacity:.45;font-size:10px;cursor:pointer';
+          del.title = `Elimina la capa «${b.name || 'Capa ' + (i + 1)}»`;
+          del.addEventListener('click', ev => {
+            ev.stopPropagation();
+            if (!confirm(`Eliminar la capa "${b.name || 'Capa ' + (i + 1)}"?`)) return;
+            _keysConfig.banks.splice(i, 1);
+            if (_keysConfig.currentBank >= _keysConfig.banks.length) _keysConfig.currentBank = _keysConfig.banks.length - 1;
+            _saveKeysConfig(_keysConfig);
+            _simActivateLayer(Math.min(_simLayerIdx, _keysConfig.banks.length - 1), true);
+            simlog('Capa eliminada', 'info');
+          });
+          chip.appendChild(del);
+        }
+        chip.addEventListener('click', () => _simActivateLayer(i));
+        cont.appendChild(chip);
+      });
+      // Crear capa triant la TIPOLOGIA (compartides amb Dispositiu; il·limitades)
+      for (const [tipus, lbl] of [['teclat', '+ Teclat'], ['modes', '+ Modes']]) {
+        const add = document.createElement('button');
+        add.className = 'btn btn-sm';
+        add.textContent = lbl;
+        add.title = `Crea una capa de ${tipus} nova`;
+        add.addEventListener('click', () => {
+          _keysConfig.banks.push({ name: 'Capa ' + (_keysConfig.banks.length + 1), type: tipus,
+                                   modes: Array(12).fill(''), efectos: { '13': 'Sustain', '14': 'Pausa' }, kb: {} });
+          _saveKeysConfig(_keysConfig);
+          _simActivateLayer(_keysConfig.banks.length - 1);
+        });
+        cont.appendChild(add);
+      }
+    }
+    _renderSimLayerChips();
+
+    // ══ SYNC AMB EL DISPOSITIU FÍSIC (mode controlador, port de la v2) ═══════
+    // El TECLA físic envia botons i pots pel canal de dades USB (usb_cdc.data,
+    // core/sim_link.py del firmware) i CONTROLA aquest simulador: mateixes
+    // entrades que les tecles virtuals. Mentre està connectat, el so local del
+    // dispositiu es pausa (el firmware entra en mode controlador).
+    const thinLink = new TeclaThinLink();
+    const _thinStatusEl = document.getElementById('thin-status');
+    thinLink.onButton = (idx, down) => {
+      const el = document.querySelector(`.sim-key[data-idx="${idx}"]`) || document.createElement('div');
+      try { if (down) onKeyDown(idx, el); else onKeyUp(idx, el); } catch (e) { }
+    };
+    thinLink.onPot = (i, v) => {
+      // El pote FÍSIC X és l'ADC A1 (índex 1 de la trama) i el Y és l'A0:
+      // el mateix mapatge que fa el firmware (kbd_pots: X=pots[1], Y=pots[0]).
+      const vis = i === 0 ? 1 : i === 1 ? 0 : i;
+      try { _updateVisualPot('sim', vis, v, document.getElementById(`pot-knob-sim-${vis}`)); } catch (e) { }
+    };
+    thinLink.onLog = (m, t) => { try { simlog(m, t); } catch (e) { } };
+    thinLink.onStatus = (s) => {
+      const btn = document.getElementById('btn-thin-connect');
+      if (s === 'connected') {
+        if (_thinStatusEl) _thinStatusEl.textContent = 'Dispositiu sincronitzat — les tecles físiques controlen el simulador';
+        if (btn) { btn.textContent = '🔌 Desconnectar'; btn.classList.add('btn-primary'); }
+      } else {
+        if (_thinStatusEl) _thinStatusEl.textContent = '';
+        if (btn) { btn.textContent = '🔌 Sync dispositiu'; btn.classList.remove('btn-primary'); }
+      }
+    };
+    document.getElementById('btn-thin-connect')?.addEventListener('click', async () => {
+      if (thinLink.isConnected()) { await thinLink.disconnect(); return; }
+      const r = await thinLink.connectAuto();
+      if (!r.success && !r.aborted) simlog('Sync: ' + (r.error || 'error de connexió'), 'err');
+    });
 
     // Encén un mode a la tecla idx. Diversos modes conviuen alhora (fins al límit
     // del pool de canals), cadascun pel SEU canal/so, mentre el teclat es toca per
@@ -7105,7 +8104,7 @@
         const label = document.getElementById(`key-ml-${i}`);
         const key = document.querySelector(`.sim-key[data-idx="${i}"]`);
         if (!label || !key) continue;
-        if (i === 12) { label.textContent = isKbMode ? '⌨ Teclat ON' : '⌨ Teclat OFF'; continue; }
+        if (i === 12) { label.textContent = '⇄ Capa'; continue; }
         if (i < 12 && buttonModes[i]) { updateButtonLabel(i, buttonModes[i]); continue; }
         if (buttonEffects[i]) {
           label.textContent = `⚡ ${buttonEffects[i]}`;
@@ -7182,7 +8181,6 @@
       };
       const ctx = ctxMap[_simCfgCtx] || ctxMap.kbd;
       const fns = ctx.fns || {};
-      const audioMap = _modesAudioMapFor(_simCfgPreset);
       const mixCfg = _loadSimMixCfg();
       const chPresets = _loadSimChPresets();
       const presetOpts = cur => Object.keys(PRESETS).map(n => `<option${n === cur ? ' selected' : ''}>${n}</option>`).join('');
@@ -7199,11 +8197,6 @@
           <p style="font-size:10px;color:var(--text3);line-height:1.4;margin-top:4px">Manté (o fixa) una tecla-mode i els potes editen aquell mode; en deixar-la tornen al teclat.</p>
         </div>
         <div>
-          <div class="sim-cfg-title">Efectes d'àudio (potes)</div>
-          <div class="sim-cfg-row"><label>Fx</label><select id="scfg-fx-preset">${AUDIO_FX_PRESETS.map(p => `<option${p === _simCfgPreset ? ' selected' : ''}>${p}</option>`).join('')}</select></div>
-          ${['x', 'y', 'z'].map(ax => `<div class="sim-cfg-row"><label>${ax.toUpperCase()}</label><select id="scfg-fx-${ax}">${opt(AUDIO_CFG_POT_FNS, audioMap[ax])}</select></div>`).join('')}
-        </div>
-        <div>
           <div class="sim-cfg-title">Motor sonor</div>
           <div class="sim-cfg-row"><label style="min-width:82px">Teclat (c. 1)</label><select id="scfg-voice-kb">${presetOpts(chPresets.kb)}</select></div>
           <div class="sim-cfg-row"><label style="min-width:82px">Base (c. 2)</label><select id="scfg-voice-acc">${presetOpts(chPresets.acc)}</select></div>
@@ -7217,13 +8210,7 @@
           _savePotFunctions(); _updatePotDiagram();
           simlog(`Pot ${ax.toUpperCase()} (${ctxMap[_simCfgCtx].lbl}) → ${e.target.value}`, 'ok');
         });
-        cont.querySelector(`#scfg-fx-${ax}`).addEventListener('change', e => {
-          _modesAudioMapFor(_simCfgPreset)[ax] = e.target.value;
-          _saveModesAudioPots(); _renderModesAudioKnobs();
-          simlog(`${_simCfgPreset} · pot ${ax.toUpperCase()} → ${e.target.value}`, 'ok');
-        });
       });
-      cont.querySelector('#scfg-fx-preset').addEventListener('change', e => { _simCfgPreset = e.target.value; _renderSimConfig(); });
       cont.querySelector('#scfg-mix-cap').addEventListener('change', e => {
         const n = +e.target.value;
         _mixChannelPool.setCapacity(n);
@@ -7296,11 +8283,27 @@
         while (simModeSelect.options.length > 1) simModeSelect.remove(1);
         const grp = document.createElement('optgroup'); grp.label = 'Modes habilitats';
         const sidebarList = document.getElementById('sim-modes-list'); sidebarList.innerHTML = '';
-        // Pinned: Mode Teclat (keyboard layer, always first)
+        // ── MATEIX sistema (i estètica) que la pestanya Dispositiu: elements
+        //    arrossegables a les tecles del simulador, o clic per seleccionar.
+        const _dragItem = (payload, html, title) => {
+          const item = document.createElement('div');
+          item.className = 'mode-panel-item';
+          item.draggable = true;
+          item.innerHTML = `<span class="mode-panel-grip">&#x283f;</span>${html}`;
+          item.title = title || '';
+          item.addEventListener('dragstart', e => {
+            e.dataTransfer.setData('text/plain', payload);
+            e.dataTransfer.effectAllowed = 'copy';
+            item.style.opacity = '.45';
+          });
+          item.addEventListener('dragend', () => { item.style.opacity = ''; });
+          return item;
+        };
+        // Pinned: Mode Teclat (capa teclat)
         const kbItem = document.createElement('div');
-        kbItem.className = 'sim-mode-item sim-kb-mode'; kbItem.id = 'sim-kb-item';
-        kbItem.textContent = 'Mode Teclat';
-        kbItem.title = 'Capa teclat per defecte (notes, escales, arpegiador)';
+        kbItem.className = 'mode-panel-item'; kbItem.id = 'sim-kb-item';
+        kbItem.innerHTML = '<span class="mode-panel-grip">&#x283f;</span><span>⌨ Mode Teclat</span>';
+        kbItem.title = 'Capa teclat (notes, escales, arpegiador)';
         kbItem.addEventListener('click', () => {
           if (!isKbMode) activateKeyboardMode();
           else { kbMode?._reloadConfig(); kbMode?._updateHUD(); simlog('Config recarregada', 'ok'); }
@@ -7309,23 +8312,39 @@
         for (const { name, file } of enabledModes) {
           const opt = document.createElement('option');
           opt.value = file; opt.dataset.source = 'builtin'; opt.textContent = name; grp.appendChild(opt);
-          const item = document.createElement('div');
-          item.className = 'sim-mode-item'; item.textContent = name; item.title = name;
+          const item = _dragItem(file, `<span>${name}</span>`, `Arrossega «${name}» a una tecla (o clica per seleccionar)`);
           item.dataset.file = file; item.dataset.name = name;
           item.addEventListener('click', () => onSidebarModeClick(name, file, item));
           sidebarList.appendChild(item);
         }
-        // Efectes temporals: assignables a qualsevol tecla del simulador híbrid
+        // Efectes temporals (sense presets d'àudio, abandonats en aquesta versió)
         const fxTitle = document.createElement('div');
         fxTitle.className = 'sim-sidebar-title';
         fxTitle.style.marginTop = '12px';
         fxTitle.textContent = 'Efectes';
         sidebarList.appendChild(fxTitle);
-        for (const eff of AVAILABLE_EFFECTS) {
-          const item = document.createElement('div');
-          item.className = 'sim-mode-item sim-fx-item';
-          item.textContent = `⚡ ${eff}`; item.title = eff;
+        for (const eff of AVAILABLE_EFFECTS.filter(e => !AUDIO_FX_PRESETS.includes(e))) {
+          const item = _dragItem('fx:' + eff, `<span>⚡ ${eff}</span>`, `Arrossega «${eff}» a una tecla`);
           item.addEventListener('click', () => onSidebarEffectClick(eff, item));
+          sidebarList.appendChild(item);
+        }
+        // Funcions del teclat (mateixos ids/estètica que la palette de Dispositiu)
+        const fnTitle = document.createElement('div');
+        fnTitle.className = 'sim-sidebar-title';
+        fnTitle.style.marginTop = '12px';
+        fnTitle.textContent = 'Funcions del teclat';
+        sidebarList.appendChild(fnTitle);
+        for (const [fnId, meta] of Object.entries(KB_BTN_FN_META)
+                .filter(([id]) => id !== 'synth_cfg' && id !== 'synth_wave')) {
+          const item = _dragItem(fnId, `<span style="color:${meta.color}">${meta.icon}</span> <span>${meta.name}</span>`,
+            `Arrossega «${meta.name}» a una tecla (capa teclat) — o clica i després clica la tecla`);
+          item.classList.add('sim-fn-item');
+          item.addEventListener('click', () => {
+            const was = _pendingFnAssign === fnId;
+            _pendingFnAssign = was ? null : fnId;
+            sidebarList.querySelectorAll('.sim-fn-item').forEach(el => el.classList.remove('selected'));
+            if (!was) { item.classList.add('selected'); simlog(`Funcio «${meta.name}»: clica una tecla per assignar-la`, 'info'); }
+          });
           sidebarList.appendChild(item);
         }
         simModeSelect.appendChild(grp);
@@ -7534,15 +8553,8 @@
 
       const _includeDisplay = !!document.getElementById('fw-include-display')?.checked;
 
-      if (!confirm(`Instal·lar/actualitzar el firmware TECLA al dispositiu?\n\n` +
-        `• Actualització INCREMENTAL: només es copien els fitxers que han canviat.\n` +
-        `• La configuració del dispositiu s'actualitzarà amb la de l'app web.\n` +
-        `• Els modes no assignats a cap tecla no es copiaran.\n` +
-        (_includeDisplay
-          ? `• S'inclourà el mòdul de pantalla OLED\n\n`
-          : `• NO s'inclourà el mòdul de pantalla OLED (casella desactivada)\n\n`) +
-        `Vols continuar?`)) return;
-
+      // (Sense popup de confirmació: la instal·lació és incremental i segura;
+      //  la barra de progrés i el missatge final ja informen de tot.)
       document.getElementById('btn-install-fw').disabled = true;
       _fwProgress(0); _fwMsg('');
 
@@ -8237,6 +9249,27 @@ body{background:var(--sim-bg,#0a0a0a);color:var(--text,#e0e0e0);font-family:syst
       applyTheme(_savedTheme, false);
     }
   </script>
+  <!-- PANTALLA del dispositiu: virtual, translúcida i arrossegable (WebSerial
+       → consola CircuitPython, destil·lada: només notes, acords, funcions i
+       capes — res de volcat literal). Es pot desancorar fora de l'app (PiP). -->
+  <div class="devmon hidden" id="device-monitor">
+    <div class="devmon-head" id="devmon-head">
+      <span class="devmon-dot"></span>
+      <span class="devmon-title">TECLA · pantalla</span>
+      <button class="btn" id="devmon-pip" title="Desancora la pantalla en una finestra flotant fora de l'app">⇱</button>
+      <button class="btn devmon-connect" id="devmon-connect" title="Connecta la pantalla al port sèrie del TECLA">Connectar</button>
+      <button class="btn" id="devmon-clear" title="Neteja la pantalla">Netejar</button>
+      <button class="btn" id="devmon-close" title="Tanca la pantalla (la connexió es manté)">✕</button>
+    </div>
+    <div class="devmon-body" id="devmon-body">
+      <div class="devmon-logo-bg"></div>
+      <canvas class="devmon-canvas" id="devmon-canvas"></canvas>
+      <div class="devmon-hero" id="devmon-hero">
+        <div class="hint">Prem «Connectar» per veure en directe què fa el TECLA.</div>
+      </div>
+      <div class="devmon-now" id="devmon-now"><div class="tag"></div><div class="main"></div></div>
+    </div>
+  </div>
 </body>
 
 </html>

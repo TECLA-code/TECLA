@@ -578,8 +578,22 @@ def main():
         from core.simulator_mocks import shared_state as _sim_shared_state
     except (ImportError, AttributeError):
         _sim_shared_state = None
-    
-    
+
+    # ── Mode CONTROLADOR (sync amb el simulador de l'app) ───────────────────
+    # Quan l'app obre el canal de dades USB (usb_cdc.data), el dispositiu
+    # deixa de sonar en local i envia botons+pots al navegador: les tecles
+    # físiques CONTROLEN el simulador (core/sim_link.py, protocol de la v2).
+    # En desconnectar, el firmware reprèn el funcionament autònom.
+    _simlink = None
+    _sim_ctrl_active = False
+    try:
+        import usb_cdc as _usb_cdc
+        if _usb_cdc.data is not None:
+            from core.sim_link import SimLink
+            _simlink = SimLink(_usb_cdc.data, hardware.display_manager)
+    except Exception:
+        _simlink = None
+
     # Bucle principal
     _ctrl_c_count = 0
     _last_ctrl_c_time = 0
@@ -603,7 +617,41 @@ def main():
                 # Llegir botons i potenciòmetres
                 button_states = hardware.read_buttons()
                 pot_values = hardware.read_pots()
-                
+
+                # ── Mode CONTROLADOR: el simulador de l'app està connectat ──
+                if _simlink is not None:
+                    if _simlink.connected:
+                        if not _sim_ctrl_active:
+                            _sim_ctrl_active = True
+                            _simlink.reset()
+                            # Silenciar el so local: mentre el simulador mana,
+                            # el que sona és el navegador (mirall exacte).
+                            try:
+                                if hardware.keyboard_mode:
+                                    hardware.keyboard_mode.stop_all_notes()
+                                if mode_manager:
+                                    mode_manager.stop_all_sound()
+                            except Exception:
+                                pass
+                            print("Simulador connectat: mode controlador")
+                        _mask = 0
+                        for _bi in range(min(16, len(button_states))):
+                            if button_states[_bi]:
+                                _mask |= (1 << _bi)
+                        _simlink.pump(_mask, pot_values, current_time)
+                        if _simlink.diag_requested:
+                            _simlink.diag_requested = False
+                            try:
+                                _simlink.send_diag({
+                                    'v': '3.2', 'ram': gc.mem_free() if gc else 0})
+                            except Exception:
+                                pass
+                        time.sleep(0.005)
+                        continue
+                    elif _sim_ctrl_active:
+                        _sim_ctrl_active = False
+                        print("Simulador desconnectat: mode autònom")
+
                 # Comprovar canvis de mode (inclou gestió del botó teclat)
                 new_mode = hardware.check_mode_change(mode_names, button_states)
                 if new_mode and mode_manager and new_mode != mode_manager.current_mode_name:

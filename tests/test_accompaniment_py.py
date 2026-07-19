@@ -186,3 +186,67 @@ def test_cleanup_atura_la_base(kbd):
     kbd.cleanup()
     assert not kbd._accomp_active
     assert not kbd._accomp.patterns
+
+
+# ── Acompanyaments CUSTOM (editor "Acompanyaments" de l'app, v3.2) ───────────
+
+def test_custom_toca_la_sequencia_amb_octava_i_velocitat():
+    from modes.accompaniment import _make_custom
+    spec = {'sequence': [0, 2, 4, -1], 'octave': 1, 'velocity': 77, 'gate': 50}
+    pat = _make_custom(spec)
+    # passos: cada element de la seqüència dura 2 setzens (n parell dispara)
+    n0 = pat(0, CTX, None); n1 = pat(2, CTX, None); n2 = pat(4, CTX, None); n3 = pat(6, CTX, None)
+    assert n0[0][0] == 60 + 12 + 0      # grau 0, +1 octava
+    assert n1[0][0] == 60 + 12 + 4      # grau 2 (3a de l'escala major = E)
+    assert n2[0][0] == 60 + 12 + 7      # grau 4 (5a = G)
+    assert n3 == ()                     # silenci
+    assert n0[0][2] == 77               # brillantor = velocitat MIDI
+    assert abs(n0[0][1] - 1.0) < 1e-6   # gate 50% de 2 setzens = 1 pas
+    assert pat(1, CTX, None) == ()      # els setzens senars no disparen
+
+
+def test_custom_grau_alt_puja_d_octava():
+    from modes.accompaniment import _make_custom
+    pat = _make_custom({'sequence': [7], 'octave': 0, 'velocity': 90, 'gate': 90})
+    assert pat(0, CTX, None)[0][0] == 60 + 12   # grau 7 = tònica una octava amunt
+
+
+def test_add_custom_aplica_el_seu_bpm_i_sona():
+    out = FakeMidiOut()
+    eng = Accompaniment(out)
+    ok = eng.add_custom({'sequence': [0, 4], 'octave': 0, 'velocity': 90,
+                         'gate': 90, 'bpm': 200}, 1, now=0.0)
+    assert ok and eng.bpm == 200
+    eng.tick(0.0)
+    assert (60, 1) in _ons(out)
+    # el note-off arriba quan venç la durada
+    eng.tick(10.0)
+    assert (60, 1) in _offs(out)
+
+
+def test_cicle_inclou_els_customs_despres_dels_integrats(tmp_path):
+    import json
+    from core.config_manager import ConfigManager
+    from modes.mode_keyboard import KeyboardMode
+    from modes.accompaniment import handle_button, ACCOMP_PATTERN_IDS
+    cfg = {'banks': [{'name': 'T', 'type': 'teclat', 'modes': [''] * 16,
+                      'keyboard_scales': [0],
+                      'custom_accompaniments': [
+                          {'name': 'Meva Base', 'sequence': [0, 4], 'octave': 0,
+                           'velocity': 90, 'gate': 90, 'bpm': 140}]}],
+           'current_bank': 0}
+    p = tmp_path / 'cfg.json'
+    p.write_text(json.dumps(cfg))
+    kbd = KeyboardMode(FakeMidiOut(), {'octave': 4}, config_manager=ConfigManager(config_path=str(p)))
+    # tap: activa (idx 0) i cicla fins a l'últim integrat...
+    for _ in range(len(ACCOMP_PATTERN_IDS)):
+        handle_button(kbd, 0.1, 0.0)
+    # ...el següent tap ha de ser el custom
+    handle_button(kbd, 0.1, 0.0)
+    assert kbd._accomp_pat_idx == len(ACCOMP_PATTERN_IDS)
+    assert kbd._accomp.bpm == 140
+    assert kbd._accomp.patterns and kbd._accomp.patterns[0]['type'] == 'custom'
+    # i el tap següent torna al primer integrat (volta completa)
+    handle_button(kbd, 0.1, 0.0)
+    assert kbd._accomp_pat_idx == 0
+    assert kbd._accomp.bpm == 110

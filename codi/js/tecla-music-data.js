@@ -161,7 +161,14 @@ export const VL_TYPES = [
   { id: 'comu',       name: 'Tons comuns',   desc: 'Manté les notes compartides amb l\'acord anterior; només mou la resta' },
   { id: 'baix',       name: 'Baix conduït',  desc: 'Prioritza un baix llis (poc salt al greu) — bona línia de baix' },
   { id: 'ascendent',  name: 'Ascendent',     desc: 'Les veus tendeixen a pujar a cada acord — sensació d\'enlairament' },
+  { id: 'descendent', name: 'Descendent',    desc: 'Les veus tendeixen a baixar a cada acord — sensació de repòs' },
   { id: 'obert',      name: 'Obert',         desc: 'Distribució oberta (veus separades) — so més ampli i orquestral' },
+  { id: 'tancat',     name: 'Tancat',        desc: 'Posició tancada — les veus tan juntes com es pugui (so compacte)' },
+  { id: 'fonamental', name: 'Fonamental',    desc: 'El baix sempre a la fonamental de l\'acord (posició fonamental)' },
+  { id: 'inv1',       name: '1a Inversió',   desc: 'El baix a la tercera de l\'acord — inversions harmòniques en directe' },
+  { id: 'inv2',       name: '2a Inversió',   desc: 'El baix a la quinta de l\'acord — so suspès, clàssic dels cadencials' },
+  { id: 'drop2',      name: 'Drop 2',        desc: 'La segona veu des de dalt baixa una octava — voicing jazzístic ample' },
+  { id: 'pendol',     name: 'Pèndol',        desc: 'Alterna pujar i baixar a cada acord — moviment pendular, molt dinàmic' },
 ];
 
 // ══════════════════════════════════════════════════════════════

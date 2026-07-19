@@ -490,6 +490,11 @@ class ConfigManager:
     def get_all_custom_arps(self):
         """Retorna tots els patrons d'arpegiador personalitzats (per-capa)"""
         return self._bank_or_global('custom_arpeggiator_patterns', []) or []
+
+    def get_custom_accompaniments(self):
+        """Acompanyaments personalitzats (editor "Acompanyaments" de l'app,
+        per-capa). Llista de {name, sequence, octave, velocity, gate, bpm}."""
+        return self._bank_or_global('custom_accompaniments', []) or []
         
     def get_custom_arp_by_id(self, pattern_id):
         """Retorna un patró d'arpegiador específic pel seu ID"""
@@ -912,4 +917,5 @@ class ConfigManager:
         t = self._bank_or_global('voice_lead_types', None)
         if t:
             return list(t)
-        return ['proximitat', 'comu', 'baix', 'ascendent', 'obert']
+        return ['proximitat', 'comu', 'baix', 'ascendent', 'descendent', 'obert',
+                'tancat', 'fonamental', 'inv1', 'inv2', 'drop2', 'pendol']

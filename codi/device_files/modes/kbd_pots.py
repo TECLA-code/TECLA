@@ -49,6 +49,32 @@ def _try_synth_cc(kbd, function, pot_value, threshold):
     return True
 
 
+def _report(kbd, nom, valor):
+    """Testimoni de pot per a la PANTALLA virtual de l'app: "Pot Nom: valor".
+    Només amb consola connectada (cost zero en directe) i amb llindar per no
+    inundar (el valor ha de moure's ≥3 passos). MAI pot llançar: un testimoni
+    no pot trencar el so (i res de kbd.__dict__ — a CircuitPython no és fiable
+    i trencava update() sencer amb la Pantalla connectada)."""
+    try:
+        from modes.kbd_notes import _console_on
+        if not _console_on():
+            return
+        c = getattr(kbd, '_pot_report_cache', None)
+        if c is None:
+            c = {}
+            kbd._pot_report_cache = c
+        v = int(valor)
+        if nom not in c:
+            c[nom] = v      # primera lectura = sync de capa: silenci
+            return
+        if -3 < (v - c[nom]) < 3:
+            return
+        c[nom] = v
+        print("Pot %s: %d" % (nom, v))
+    except Exception:
+        pass
+
+
 def _apply_audio_cfg_pots(kbd, pot_values, force_update):
     """Config àudio activa: els 3 potes editen el so segons el mapatge de la tecla
     activa. Mateix mapeig físic que la resta (X=pot[1], Y=pot[0], Z=pot[2])."""
@@ -95,15 +121,18 @@ def apply_pot_function(kbd, pot_name, pot_value, force_update=False):
 
     if function in ('Brillantor', 'Velocity', 'Brightness (CC74)'):
         kbd.velocity = max(20, min(127, pot_value))
+        _report(kbd, 'Brillantor', kbd.velocity)
 
     elif function == 'Velocity/Arp Speed (dual)':
         kbd.velocity = max(20, min(127, pot_value))
+        _report(kbd, 'Brillantor', kbd.velocity)
         if kbd.arp_mode_active:
             speed_value = max(0, min(127, pot_value))
             kbd.arp_speed = 0.5 - (speed_value / 127.0) * 0.49
 
     elif function in ('Modulació', 'Modulation', 'Modulation (CC1)'):
         kbd._send_cc_if_changed(1, pot_value, threshold=threshold)
+        _report(kbd, 'Modulació', pot_value)
 
     elif function == 'Pitch Bend':
         if pot_value < 5:
@@ -111,9 +140,11 @@ def apply_pot_function(kbd, pot_name, pot_value, force_update=False):
         else:
             pitch_value = int((pot_value / 127.0) * 8191)
         kbd._send_pitch_bend(pitch_value)
+        _report(kbd, 'Pitch Bend', pot_value)
 
     elif function in ('Volum', 'Volume', 'Expression (CC11)'):
         kbd._send_cc_if_changed(7, pot_value, threshold=threshold)
+        _report(kbd, 'Volum', pot_value)
 
     elif function in ('Sustain', 'Sustain (CC64)'):
         # Sustain PROGRESSIU gestionat per TECLA (temps de release variable, sense CC64):
@@ -129,6 +160,7 @@ def apply_pot_function(kbd, pot_name, pot_value, force_update=False):
             kbd.gate_period = 0.5 - (pot_value / 127.0) * 0.45
             kbd.gate_min_expr = 0
             kbd.gate_duty = 0.5
+        _report(kbd, 'Gate', pot_value)
 
     elif function == 'Expression (CC11)':
         kbd._send_cc_if_changed(11, pot_value, threshold=threshold)
@@ -155,19 +187,6 @@ def apply_pot_function(kbd, pot_name, pot_value, force_update=False):
             if new_oct != kbd.octave:
                 kbd.octave = new_oct
                 print(f"🎵 Octava (pot): {kbd.octave}")
-
-    elif function in ("Inversió d'Acord", 'Tipus Inversió'):
-        ids = kbd.available_chord_inv_ids if kbd.available_chord_inv_ids else [0, 1, 2, 3]
-        last_val = getattr(kbd, '_chord_inv_pot_last_val', None)
-        if last_val is None:
-            kbd._chord_inv_pot_last_val = pot_value
-        elif abs(pot_value - last_val) >= 3:
-            kbd._chord_inv_pot_last_val = pot_value
-            new_idx = min(int((pot_value / 128.0) * len(ids)), len(ids) - 1)
-            if new_idx != kbd.chord_inversion_index:
-                kbd.chord_inversion_index = new_idx
-                _inv_names = ('Fonamental', '1a Inversió', '2a Inversió', '3a Inversió')
-                print(f"⇅ (pot) {_inv_names[ids[new_idx] % 4]}")
 
     elif function == "Eix d'Harmonia":
         ids = kbd.available_neg_harm_ids if kbd.available_neg_harm_ids else list(range(8))
@@ -206,6 +225,7 @@ def apply_arp_pot_function(kbd, pot_name, pot_value, force_update=False):
     if function in ('Velocitat (BPM)', 'Arp Speed (BPM)'):
         bpm = 30 + (pot_value / 127.0) * 1970
         kbd.arp_speed = 60.0 / bpm
+        _report(kbd, 'Velocitat', int(bpm))
 
     elif function in ('Patró De Direcció', 'Arp Pattern Selector'):
         if len(kbd.available_arp_modes) > 0:
@@ -226,12 +246,15 @@ def apply_arp_pot_function(kbd, pot_name, pot_value, force_update=False):
 
     elif function in ('Brillantor', 'Velocity'):
         kbd.velocity = max(20, min(127, pot_value))
+        _report(kbd, 'Brillantor', kbd.velocity)
 
     elif function in ('Volum', 'Volume'):
         kbd._send_cc_if_changed(7, pot_value, threshold=threshold)
+        _report(kbd, 'Volum', pot_value)
 
     elif function in ('Modulació', 'Modulation', 'Modulation (CC1)'):
         kbd._send_cc_if_changed(1, pot_value, threshold=threshold)
+        _report(kbd, 'Modulació', pot_value)
 
     elif function == 'Pitch Bend':
         if pot_value < 5:
@@ -239,6 +262,7 @@ def apply_arp_pot_function(kbd, pot_name, pot_value, force_update=False):
         else:
             pitch_value = int((pot_value / 127.0) * 8191)
         kbd._send_pitch_bend(pitch_value)
+        _report(kbd, 'Pitch Bend', pot_value)
 
     elif function in ('Gate', 'Gate Length'):
         if pot_value < 10:
@@ -249,6 +273,7 @@ def apply_arp_pot_function(kbd, pot_name, pot_value, force_update=False):
             kbd.gate_period = 0.5 - (pot_value / 127.0) * 0.45
             kbd.gate_min_expr = 0
             kbd.gate_duty = 0.5
+        _report(kbd, 'Gate', pot_value)
 
     else:
         if not _try_synth_cc(kbd, function, pot_value, threshold):
@@ -262,65 +287,3 @@ def apply_arp_pot_function(kbd, pot_name, pot_value, force_update=False):
 #  de potes d'acords i d'harmonia negativa ja no existeixen — vegeu
 #  update_parameters. Amb acords o h.neg actius, els potes fan les funcions
 #  del teclat.)
-
-
-def _apply_standard_fn(kbd, function, pot_value, threshold=2):
-    """Dispatcher compartit per totes les capes (funcions no-específiques de capa)."""
-    if function in ('Brillantor', 'Velocity', 'Brightness (CC74)'):
-        kbd.velocity = max(20, min(127, pot_value))
-    elif function in ('Modulació', 'Modulation', 'Modulation (CC1)'):
-        kbd._send_cc_if_changed(1, pot_value, threshold=threshold)
-    elif function == 'Pitch Bend':
-        kbd._send_pitch_bend(0 if pot_value < 5 else int((pot_value / 127.0) * 8191))
-    elif function in ('Volum', 'Volume', 'Expression (CC11)'):
-        kbd._send_cc_if_changed(7, pot_value, threshold=threshold)
-    elif function in ('Sustain', 'Sustain (CC64)'):
-        # Sustain PROGRESSIU gestionat per TECLA (temps de release variable, sense CC64).
-        kbd._set_sustain(pot_value)
-    elif function in ('Gate', 'Gate Length'):
-        if pot_value < 10:
-            kbd.gate_enabled = False
-            kbd._send_cc(11, 127)
-        else:
-            kbd.gate_enabled = True
-            kbd.gate_period = 0.5 - (pot_value / 127.0) * 0.45
-            kbd.gate_min_expr = 0
-            kbd.gate_duty = 0.5
-    elif function == 'Octava':
-        last_val = getattr(kbd, '_oct_pot_last_val', None)
-        if last_val is None:
-            kbd._oct_pot_last_val = pot_value
-        elif abs(pot_value - last_val) >= 3:
-            kbd._oct_pot_last_val = pot_value
-            new_oct = min(8, max(0, round((pot_value / 127.0) * 8)))
-            if new_oct != kbd.octave:
-                kbd.octave = new_oct
-                print(f"🎵 Octava (pot): {kbd.octave}")
-    elif function in ("Inversió d'Acord", 'Tipus Inversió'):
-        ids = kbd.available_chord_inv_ids if kbd.available_chord_inv_ids else [0, 1, 2, 3]
-        last_val = getattr(kbd, '_chord_inv_pot_last_val', None)
-        if last_val is None:
-            kbd._chord_inv_pot_last_val = pot_value
-        elif abs(pot_value - last_val) >= 3:
-            kbd._chord_inv_pot_last_val = pot_value
-            new_idx = min(int((pot_value / 128.0) * len(ids)), len(ids) - 1)
-            if new_idx != kbd.chord_inversion_index:
-                kbd.chord_inversion_index = new_idx
-                _inv = ('Fonamental', '1a Inversió', '2a Inversió', '3a Inversió')
-                print(f"⇅ (pot) {_inv[ids[new_idx] % 4]}")
-    elif function == "Eix d'Harmonia":
-        ids = kbd.available_neg_harm_ids if kbd.available_neg_harm_ids else list(range(8))
-        last_val = getattr(kbd, '_neg_harm_pot_last_val', None)
-        if last_val is None:
-            kbd._neg_harm_pot_last_val = pot_value
-        elif abs(pot_value - last_val) >= 3:
-            kbd._neg_harm_pot_last_val = pot_value
-            ci = min(int((pot_value / 128.0) * len(ids)), len(ids) - 1)
-            new_type = ids[ci]
-            if new_type != kbd.neg_harmony_type:
-                kbd.neg_harmony_type = new_type
-                _nh = ('Quinta', 'Unisonant', 'Terc.M', 'Terc.m', 'Tritó', 'Quarta', 'Sexta', 'Sept.m')
-                print(f"↕ (pot) {_nh[new_type % 8]}")
-    else:
-        if not _try_synth_cc(kbd, function, pot_value, threshold):
-            _try_free_cc(kbd, function, pot_value, threshold)

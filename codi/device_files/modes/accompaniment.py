@@ -56,6 +56,33 @@ PATTERNS = {
 }
 
 
+def _make_custom(spec):
+    """Patró CUSTOM creat a l'editor "Acompanyaments" de l'app.
+
+    spec: {'sequence': [grau 0-7 | -1(silenci), ...], 'octave': -2..2,
+           'velocity': 30-127, 'gate': 10-100 (% del pas), 'bpm': 60-200}
+    Cada pas de la seqüència dura 2 setzens (corxera). El grau indexa l'escala
+    del context (7 = tònica una octava amunt), com l'editor de l'arpegiador.
+    Mirall de makeCustomPattern (tecla-accompaniment.js)."""
+    seq = spec.get('sequence') or [0]
+    oct_off = 12 * int(spec.get('octave', 0) or 0)
+    vel = max(1, min(127, int(spec.get('velocity', 90) or 90)))
+    gate = max(10, min(100, int(spec.get('gate', 90) or 90)))
+    dur = 2.0 * gate / 100.0          # passos de setzè (fraccional permès)
+
+    def pat(n, ctx, rng):
+        if n % 2 != 0:
+            return ()
+        deg = seq[(n >> 1) % len(seq)]
+        if deg is None or deg < 0:
+            return ()
+        sc = ctx['scale']
+        note = ctx['root'] + oct_off + sc[deg % len(sc)] + 12 * (deg // len(sc))
+        return ((note, dur, vel),)
+
+    return pat
+
+
 def _mulberry(seed):
     """RNG determinista (port de mulberry32). Retorna funció () → [0,1)."""
     state = [seed & 0xFFFFFFFF]
@@ -102,8 +129,24 @@ class Accompaniment:
         if pat_type not in PATTERNS:
             return False
         self.remove_pattern(channel)
-        self.patterns.append({'type': pat_type, 'channel': channel,
+        self.patterns.append({'type': pat_type, 'fn': PATTERNS[pat_type], 'channel': channel,
                               'rng': _mulberry(0x9E37 + channel * 131 + len(pat_type))})
+        if not self._running:
+            self._running = True
+            self._step = 0
+            self._next_t = now
+        return True
+
+    def add_custom(self, spec, channel, now=0.0):
+        """Afegeix un acompanyament CUSTOM (editor de l'app). Aplica el seu BPM."""
+        self.remove_pattern(channel)
+        try:
+            fn = _make_custom(spec)
+        except Exception:
+            return False
+        self.set_tempo(int(spec.get('bpm', self.bpm) or self.bpm))
+        self.patterns.append({'type': 'custom', 'fn': fn, 'channel': channel,
+                              'rng': _mulberry(0x9E37 + channel * 131)})
         if not self._running:
             self._running = True
             self._step = 0
@@ -139,7 +182,7 @@ class Accompaniment:
     def _fire_step(self, n, now):
         step_s = self.step_s
         for pat in self.patterns:
-            fn = PATTERNS.get(pat['type'])
+            fn = pat.get('fn') or PATTERNS.get(pat['type'])
             if not fn:
                 continue
             try:
@@ -236,8 +279,20 @@ def sync_context(kbd):
     eng.set_context(max(24, min(96, root)), intervals)
 
 
+def _custom_specs(kbd):
+    """Acompanyaments custom de la config (editor "Acompanyaments" de l'app)."""
+    cm = getattr(kbd, 'config_manager', None)
+    if cm is None:
+        return []
+    try:
+        return cm.get_custom_accompaniments()
+    except Exception:
+        return []
+
+
 def handle_button(kbd, held, now):
-    """Gest del botó 'accomp': tap = activa/cicla patró · llarga = desactiva."""
+    """Gest del botó 'accomp': tap = activa/cicla patró (integrats + customs)
+    · premuda llarga = desactiva."""
     active = getattr(kbd, '_accomp_active', False)
     if held >= 0.5 and active:
         kbd._accomp_active = False
@@ -247,15 +302,23 @@ def handle_button(kbd, held, now):
         print("Base OFF")
         return
     eng = _engine(kbd)
+    customs = _custom_specs(kbd)
+    total = len(ACCOMP_PATTERN_IDS) + len(customs)
     if not active:
         kbd._accomp_active = True
         kbd._accomp_pat_idx = 0
     else:
-        kbd._accomp_pat_idx = (getattr(kbd, '_accomp_pat_idx', 0) + 1) % len(ACCOMP_PATTERN_IDS)
+        kbd._accomp_pat_idx = (getattr(kbd, '_accomp_pat_idx', 0) + 1) % total
+    idx = kbd._accomp_pat_idx % total
     sync_context(kbd)
-    pat = ACCOMP_PATTERN_IDS[kbd._accomp_pat_idx]
-    eng.add_pattern(pat, ACCOMP_CHANNEL, now)
-    print("Base: %s" % ACCOMP_PATTERN_NAMES[kbd._accomp_pat_idx])
+    if idx < len(ACCOMP_PATTERN_IDS):
+        eng.set_tempo(110)   # els integrats tornen al tempo estàndard
+        eng.add_pattern(ACCOMP_PATTERN_IDS[idx], ACCOMP_CHANNEL, now)
+        print("Base: %s" % ACCOMP_PATTERN_NAMES[idx])
+    else:
+        spec = customs[idx - len(ACCOMP_PATTERN_IDS)]
+        eng.add_custom(spec, ACCOMP_CHANNEL, now)
+        print("Base: %s" % spec.get('name', 'Custom'))
 
 
 def stop(kbd):

@@ -121,3 +121,10 @@ class PotLayers:
                 midi_out.send(ControlChange(cc, max(0, min(127, v))))
             except Exception:
                 pass
+            # Testimoni per a la PANTALLA (animacions reactives): mai llança
+            try:
+                from modes.kbd_notes import _console_on
+                if _console_on():
+                    print("Pot %s: %d" % (layer.get(axis_key) or ('CC%d' % cc), v))
+            except Exception:
+                pass

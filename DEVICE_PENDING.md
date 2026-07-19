@@ -1,6 +1,67 @@
 # Canvis pendents al dispositiu TECLA
 
-## 0. v3.1.3 — STOP a prova de DAW + Config Modes només-MIDI — 2026-07-16
+## 0. v3.3.0 — TANCAMENT: Pantalla viva, simulador complet, acompanyaments — 2026-07-19
+
+✅ TOT INSTAL·LAT AL DISPOSITIU I PUBLICAT. Recull de les versions 3.2.x:
+
+- **Pantalla virtual** (botó "Pantalla"): connexió automàtica de port, acords
+  amb nomenclatura professional (C, Am7, F/A… també els MANUALS agrupant notes
+  simultànies), funcions amb el color de l'app, looper elegant, testimonis de
+  pots, logo de fons segons el tema, arrossegable/redimensionable i
+  desancorable (PiP). Animacions REACTIVES als potes per família de mode:
+  anell (teclat, color per fonamental), oscil·loscopi (ones), equalitzador
+  (ritmes), orbes (clàssics), camp d'estrelles (generatius).
+- **Simulador**: diagrama flotant idèntic a Dispositiu, capes il·limitades
+  ciclables amb la tecla 13 (creació amb tipologia + esborrat), lateral
+  drag&drop "Modes i funcions" idèntic a Dispositiu, sync automàtic amb el
+  dispositiu físic (mode controlador), pots X/Y ben mapats.
+- **Capa teclat**: acompanyaments personalitzats (seqüències per graus amb
+  octava/brillantor/BPM/gate), 12 formes de conducció de veus (inversions
+  incloses), sustain per trams, potes només-MIDI.
+- **Firmware**: testimonis per a la Pantalla amb cost zero sense consola i a
+  prova de bombes (mai poden trencar el so); octaves amb numeració del
+  dispositiu; primera lectura de pots silenciosa (res de fantasmes al canvi
+  de capa).
+- PENDENT (fora del tancament): i18n ES/EN de les funcions noves (Pantalla,
+  xips del sim, editor d'acompanyaments — ara en català); motor d'àudio,
+  OLED i mode controlador ampliat per a la revisió Pico 2.
+
+---
+
+## 0. v3.2.0 — Acompanyaments custom, VL ampliada, sync simulador, monitor — 2026-07-18
+
+✅ JA INSTAL·LAT AL DISPOSITIU (instal·lació directa incremental, 9 fitxers).
+
+- **Acompanyaments personalitzats**: nou apartat "Acompanyaments" a la capa
+  teclat de l'app — seqüències per graus de l'escala amb passos (4-16), octava
+  (−2..+2), brillantor, velocitat (BPM propi) i durada de nota (gate). La tecla
+  'Base (acomp.)' els cicla després dels 4 integrats. `custom_accompaniments`
+  per-capa; motor: accompaniment._make_custom (mirall JS makeCustomPattern).
+- **Conducció de veus ampliada (12 formes)**: + Descendent, Tancat,
+  Fonamental, 1a Inversió, 2a Inversió (les "Inversions Harmòniques" òrfenes
+  viuen ara aquí), Drop 2 i Pèndol. L'antic apartat d'inversions i el pot
+  "Inversió d'Acord" (que no feien res) s'han retirat de app i firmware.
+- **Sustain per TRAMS**: OFF · 0.5 · 1.2 · 2.5 · 5 · 8s · ∞ (el tram infinit
+  ara comença a 118 — abans 125, inabastable amb l'escalat real de l'ADC).
+  Tram anunciat per consola; histèresi anti-soroll.
+- **Sync amb el simulador (mode controlador)**: botó "🔌 Sync dispositiu" a la
+  pestanya Simulador — el TECLA físic controla el simulador pel canal de dades
+  USB (core/sim_link ara SÍ cablejat a main.py; el so local es pausa mentre
+  està connectat, protocol de la v2).
+- **Monitor del dispositiu**: botó "Monitor" a la capçalera de l'app — consola
+  virtual minimalista per WebSerial (notes ♪ i acords ▣ amb noms C-D-E,
+  funcions on/off, canvis de capa, errors) sense executar main.py des del shell.
+- **Capes IL·LIMITADES a app i simulador**: el límit de 6 queda només per al
+  DISPOSITIU (buildDeviceConfig exporta les 6 primeres i avisa).
+- App: popup de confirmació d'"Instal·lar firmware" eliminat; opció OLED
+  oculta; res d'àudio al simulador (efectes Àudio 1-6 i funcions synth fora
+  del lateral i del panell Config).
+- Tests: 229 en verd (nous: acompanyaments custom ×4, formes VL ×8, trams
+  de sustain).
+
+---
+
+## 1. v3.1.3 — STOP a prova de DAW + Config Modes només-MIDI — 2026-07-16
 
 ✅ JA INSTAL·LAT AL DISPOSITIU (falta DESENDOLLAR i tornar a endollar: el
 dispositiu va quedar penjat durant les proves per sèrie i necessita el reinici

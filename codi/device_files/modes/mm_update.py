@@ -88,12 +88,40 @@ def _modeloop(mgr):
     return lp
 
 
+def _report_mode_pots(mgr, pot_values):
+    """Testimoni de potes per a la PANTALLA (animacions dels modes): "Pot X: 64".
+    Primera lectura en silenci (sync), llindar 3, i mai no llança."""
+    try:
+        from modes.kbd_notes import _console_on
+        if not _console_on():
+            return
+        c = getattr(mgr, '_pot_report_cache', None)
+        if c is None:
+            c = {}
+            mgr._pot_report_cache = c
+        for i, nom in ((0, 'X'), (1, 'Y'), (2, 'Z')):
+            if i >= len(pot_values):
+                break
+            v = int(pot_values[i])
+            if nom not in c:
+                c[nom] = v
+                continue
+            if -3 < (v - c[nom]) < 3:
+                continue
+            c[nom] = v
+            print("Pot %s: %d" % (nom, v))
+    except Exception:
+        pass
+
+
 def mm_update(mgr, pot_values, button_states):
     """Actualitza el mode actual i processa botons d'efecte."""
     change_mode = None
     try:
         status = {'change_mode': None}
         current_time = time.monotonic()
+        if mgr.current_mode is not None:
+            _report_mode_pots(mgr, pot_values)
 
         # Motor del loop MIDI (només si s'ha fet servir; el mòdul és lazy)
         _lp = mgr.__dict__.get('_modeloop')

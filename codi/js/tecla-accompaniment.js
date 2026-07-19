@@ -45,6 +45,29 @@ export const PATTERNS = {
     },
 };
 
+/**
+ * Patró CUSTOM creat a l'editor "Acompanyaments" de l'app.
+ * spec: { sequence: [grau 0-7 | -1(silenci)], octave: -2..2, velocity: 30-127,
+ *         gate: 10-100 (% del pas), bpm: 60-200 }
+ * Cada pas dura 2 setzens (corxera); el grau indexa l'escala del context
+ * (7 = tònica una octava amunt). Mirall de _make_custom (accompaniment.py).
+ */
+export function makeCustomPattern(spec) {
+    const seq = (spec.sequence && spec.sequence.length) ? spec.sequence : [0];
+    const octOff = 12 * ((spec.octave | 0) || 0);
+    const vel = Math.max(1, Math.min(127, (spec.velocity | 0) || 90));
+    const gate = Math.max(10, Math.min(100, (spec.gate | 0) || 90));
+    const dur = 2 * gate / 100;
+    return (n, ctx) => {
+        if (n % 2 !== 0) return [];
+        const deg = seq[(n >> 1) % seq.length];
+        if (deg == null || deg < 0) return [];
+        const sc = ctx.scale;
+        const note = ctx.root + octOff + sc[deg % sc.length] + 12 * Math.floor(deg / sc.length);
+        return [{ note, dur, vel }];
+    };
+}
+
 function _mulberry(seed) {
     let a = seed >>> 0;
     return () => {
@@ -82,6 +105,15 @@ export class Accompaniment {
         this._ensureRunning();
         return true;
     }
+    /** Acompanyament CUSTOM (editor de l'app): funció pròpia + el seu BPM. */
+    addCustom(spec, channel) {
+        this.removePattern(channel);
+        let fn; try { fn = makeCustomPattern(spec); } catch { return false; }
+        this.setTempo((spec.bpm | 0) || this.bpm);
+        this.patterns.push({ type: 'custom', _fn: fn, channel, _rng: _mulberry(0x9E37 + channel * 131) });
+        this._ensureRunning();
+        return true;
+    }
     removePattern(channel) {
         this._channelOff(channel);
         this.patterns = this.patterns.filter(p => p.channel !== channel);
@@ -111,7 +143,7 @@ export class Accompaniment {
     _fireStep(n) {
         const sMs = this.stepMs;
         for (const pat of this.patterns) {
-            const fn = PATTERNS[pat.type]; if (!fn) continue;
+            const fn = pat._fn || PATTERNS[pat.type]; if (!fn) continue;
             let events; try { events = fn(n, this.ctx, pat._rng) || []; } catch { events = []; }
             for (const ev of events) {
                 const note = Math.max(0, Math.min(127, ev.note | 0));

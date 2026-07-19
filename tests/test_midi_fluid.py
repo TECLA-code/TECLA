@@ -168,3 +168,23 @@ def test_tone_singleton_i_off():
         assert tone.pwm.frequency == 880
         tone.off()
         assert tone.pwm.duty_cycle == 0
+
+
+def test_nomenclatura_professional_dels_acords():
+    """chord_label: qualitat per conjunt de classes d'altura (independent del
+    voicing) + baix de la inversió ('C/E') — el que mostra la PANTALLA."""
+    from modes.kbd_notes import chord_label
+    assert chord_label([60, 64, 67]) == 'C'
+    assert chord_label([57, 60, 64]) == 'Am'
+    assert chord_label([65, 69, 72, 76]) == 'Fmaj7'
+    assert chord_label([62, 65, 69, 72]) == 'Dm7'
+    assert chord_label([67, 71, 74, 77]) == 'G7'
+    assert chord_label([60, 65, 67]) == 'Csus4'
+    assert chord_label([59, 62, 65]) == 'Bdim'
+    # Inversions: mateixes classes d'altura, baix diferent → 'C/E'
+    assert chord_label([64, 67, 72]) == 'C/E'
+    assert chord_label([67, 72, 76]) == 'C/G'
+    # Voicing obert i octaves repartides: la qualitat es conserva
+    assert chord_label([48, 64, 67, 72]) == 'C'
+    # No reconegut → llista de notes (fallback honest, octava del dispositiu)
+    assert 'C5' in chord_label([60, 61, 62])

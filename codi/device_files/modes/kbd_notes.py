@@ -17,6 +17,69 @@ except ImportError:
 _KEY_OFFSET = {'C':0,'C#':1,'D':2,'Eb':3,'E':4,'F':5,'F#':6,'G':7,'Ab':8,'A':9,'Bb':10,'B':11}
 _NEG_HARM_AXES = (3.5, 0.0, 2.0, 1.5, 6.0, 2.5, 4.5, 5.5)
 
+# ── Testimonis per a la consola virtual de l'app ─────────────────────────────
+# Les notes/acords tocats s'imprimeixen NOMÉS si hi ha una consola sèrie
+# connectada (el monitor de l'app o un shell): sense consola, cost zero.
+_NOTE_NAMES = ('C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B')
+
+
+def _console_on():
+    try:
+        import supervisor
+        return supervisor.runtime.serial_connected
+    except Exception:
+        return False
+
+
+def note_name(n):
+    """Nom de nota amb l'octava TAL COM LA NUMERA EL DISPOSITIU (l'octava N
+    del teclat comença a la nota MIDI N*12): a l'octava 5, 60 → 'C5'."""
+    return "%s%d" % (_NOTE_NAMES[n % 12], n // 12)
+
+
+# Qualitats d'acord per CONJUNT de classes d'altura (independent de la
+# inversió i del voicing): nomenclatura compositiva professional.
+_CHORD_QUALITIES = (
+    ((0, 4, 7), ''), ((0, 3, 7), 'm'), ((0, 3, 6), 'dim'), ((0, 4, 8), 'aug'),
+    ((0, 5, 7), 'sus4'), ((0, 2, 7), 'sus2'),
+    ((0, 4, 7, 10), '7'), ((0, 4, 7, 11), 'maj7'), ((0, 3, 7, 10), 'm7'),
+    ((0, 3, 7, 11), 'm(maj7)'), ((0, 3, 6, 10), 'm7b5'), ((0, 3, 6, 9), 'dim7'),
+    ((0, 4, 8, 10), '7#5'), ((0, 5, 7, 10), '7sus4'),
+    ((0, 4, 7, 9), '6'), ((0, 3, 7, 9), 'm6'), ((0, 4, 7, 2), 'add9'),
+    ((0, 3, 7, 2), 'm(add9)'),
+    ((0, 4, 7, 10, 2), '9'), ((0, 3, 7, 10, 2), 'm9'), ((0, 4, 7, 11, 2), 'maj9'),
+    ((0, 4, 7, 10, 2, 5), '11'), ((0, 3, 7, 10, 2, 5), 'm11'),
+    ((0, 4, 7, 10, 2, 9), '13'), ((0, 3, 7, 10, 2, 9), 'm13'),
+    ((0, 4, 7, 9, 2), '69'), ((0, 3, 7, 9, 2), 'm69'),
+)
+
+
+# Conjunts normalitzats (tuples ordenades de classes d'altura relatives):
+# sense frozenset — a CircuitPython no és garantit.
+_CHORD_QUALITY_SETS = tuple(
+    (tuple(sorted(set(i % 12 for i in intervals))), quality)
+    for intervals, quality in _CHORD_QUALITIES)
+
+
+def chord_label(notes):
+    """Nomenclatura de l'acord: 'F', 'Fm7', 'Gsus4', i la inversió com a baix
+    ('C/E'). Reconeix la qualitat pel conjunt de classes d'altura (val per a
+    qualsevol voicing/inversió, també després de la conducció de veus o de
+    l'harmonia negativa). Si no la reconeix, llista les notes."""
+    if not notes:
+        return ''
+    pcs = sorted(set(n % 12 for n in notes))
+    for root_pc in pcs:
+        rel = tuple(sorted(set((pc - root_pc) % 12 for pc in pcs)))
+        for interval_set, quality in _CHORD_QUALITY_SETS:
+            if rel == interval_set:
+                nom = _NOTE_NAMES[root_pc] + quality
+                bass_pc = min(notes) % 12
+                if bass_pc != root_pc:
+                    nom += '/' + _NOTE_NAMES[bass_pc]
+                return nom
+    return ' '.join(note_name(n) for n in sorted(notes))
+
 
 def cycle_neg_harm_type(kbd, step):
     ids = kbd.available_neg_harm_ids
@@ -184,6 +247,13 @@ def _send_chord(kbd, chord_notes, btn_idx):
     # So intern (PWM monofònic): només la fonamental de l'acord.
     if final_notes:
         kbd._update_pwm_for_note(final_notes[0])
+        # Testimoni per a la pantalla virtual: NOMENCLATURA de l'acord
+        # ("▣ Fm7", "▣ C/E") — cost zero sense consola connectada.
+        if _console_on():
+            try:
+                print("▣ " + chord_label(final_notes))
+            except Exception:
+                pass
 
 
 _MINOR_SCALE = (0, 2, 3, 5, 7, 8, 10)

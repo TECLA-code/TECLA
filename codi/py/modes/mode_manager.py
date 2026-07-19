@@ -178,14 +178,6 @@ class ModeManager:
         from modes.mm_cleanup import mm_deactivate_pausa
         mm_deactivate_pausa(self)
 
-    def _silent_current_mode_controls(self):
-        from modes.mm_cleanup import mm_silent_controls
-        mm_silent_controls(self)
-
-    def _stop_notes(self, notes_info):
-        from modes.mm_cleanup import mm_stop_notes
-        mm_stop_notes(self, notes_info)
-
     # ── Metodes petits mantinguts inline ─────────────────────────────────────
 
     @property
