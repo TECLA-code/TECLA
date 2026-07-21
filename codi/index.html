@@ -2163,6 +2163,10 @@
                 <!-- JS renders keys here -->
               </div>
             </div>
+            <!-- Guardar centrat SOTA el diagrama de la capa de modes -->
+            <div class="mode-layer-actions" style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;justify-content:center">
+              <button class="btn btn-sm btn-primary" id="btn-save-modes-layer" data-i18n="guardar_5">Guardar</button>
+            </div>
           </div>
           <div class="modes-section" id="modes-section" style="margin-top:16px">
             <div class="section-title">Modes al dispositiu &nbsp;<span id="modes-count"
@@ -2291,6 +2295,11 @@
           </div>
           <div class="kb-device-area">
             <div class="keys-grid" id="kb-fn-grid"></div>
+            <!-- Guardar/Restablir centrats SOTA el diagrama (columna central) -->
+            <div class="kb-fn-actions" style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;justify-content:center">
+              <button class="btn btn-sm btn-primary" id="btn-save-kb-fn" data-i18n="guardar_5">Guardar</button>
+              <button class="btn btn-sm" id="btn-reset-kb-fn" data-i18n="restablir_per_defecte">Restablir per defecte</button>
+            </div>
           </div>
           <div class="kb-pots-col">
             <!-- Capes de potes d'acords i h.negativa retirades (tancament v3.1):
@@ -2301,10 +2310,6 @@
             </div>
             <div id="kb-pots-col-knobs"></div>
           </div>
-        </div>
-        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;justify-content:center">
-          <button class="btn btn-sm btn-primary" id="btn-save-kb-fn" data-i18n="guardar_5">Guardar</button>
-          <button class="btn btn-sm" id="btn-reset-kb-fn" data-i18n="restablir_per_defecte">Restablir per defecte</button>
         </div>
       </div>
 
@@ -4587,28 +4592,46 @@
       return { ok: true, reader, carry: buf, pending };
     }
 
-    async function _monConnect() {
-      if (!('serial' in navigator)) { showGlobalToast('La pantalla necessita Chrome o Edge (Web Serial)', 'error'); return; }
-      let candidates = [];
-      try { candidates = await navigator.serial.getPorts(); } catch { }
-      let adopted = null, sawData = false;
-      for (const p of candidates) {
-        const r = await _monProbe(p);
-        if (r.ok) { adopted = { port: p, ...r }; break; }
-        if (r.data) sawData = true;
-      }
-      if (!adopted) {
-        // Cap port autoritzat vàlid: demana'n un (únic moment amb selector)
-        let p;
-        try { p = await navigator.serial.requestPort(); } catch { return; }
-        const r = await _monProbe(p);
-        if (r.data) {
-          showGlobalToast('Aquest és el port de DADES (simulador). Prem «Connectar» de nou: l\'altre port ja quedarà memoritzat.', 'error');
-          return;
+    // silent=true (obrir la pantalla): connexió AUTOMÀTICA només amb ports ja
+    // memoritzats, MAI el selector. silent=false (botó «Connectar»): si cal,
+    // demana el port un cop (i es recorda per sempre en aquest origen).
+    let _monConnecting = false;
+    async function _monConnect(silent = false) {
+      if (!('serial' in navigator)) { if (!silent) showGlobalToast('La pantalla necessita Chrome o Edge (Web Serial)', 'error'); return; }
+      if (_monConnecting || _monPort) return;   // res d'obertures simultànies (evita auto-«ocupat»)
+      _monConnecting = true;
+      try {
+        let candidates = [];
+        try { candidates = await navigator.serial.getPorts(); } catch { }
+        let adopted = null, sawData = false, sawBusy = false;
+        for (const p of candidates) {
+          const r = await _monProbe(p);
+          if (r.ok) { adopted = { port: p, ...r }; break; }
+          if (r.data) sawData = true;
+          if (r.busy) sawBusy = true;
         }
-        if (r.busy) { showGlobalToast('Port ocupat per una altra app (shell/Thonny?). Tanca-la i torna-hi.', 'error'); return; }
-        adopted = { port: p, ...r };
+        if (!adopted) {
+          // Ocupat = el port EXISTEIX però el té una altra app: el selector no
+          // hi faria res, així que millor avisar. Selector només si cal permís.
+          if (sawBusy) {
+            if (!silent) showGlobalToast('El port de la consola està ocupat (una altra pestanya de l\'app, un monitor sèrie, Thonny o Mu). Tanca-ho i torna a prémer «Connectar».', 'error');
+            return;
+          }
+          if (silent) return;                    // obrir la pantalla no molesta mai amb el selector
+          let p;
+          try { p = await navigator.serial.requestPort(); } catch { return; }
+          const r = await _monProbe(p);
+          if (r.data) { showGlobalToast('Aquest és el port de DADES (simulador). Prem «Connectar» de nou i tria l\'altre port; després ja es recordarà.', 'error'); return; }
+          if (r.busy) { showGlobalToast('Port ocupat per una altra app (shell/Thonny/Mu?). Tanca-la i torna-hi.', 'error'); return; }
+          adopted = { port: p, ...r };
+        }
+        _monConnectRead(adopted);
+      } finally {
+        _monConnecting = false;
       }
+    }
+
+    function _monConnectRead(adopted) {
       _monPort = adopted.port;
       _monReader = adopted.reader;
       _monPanel.classList.add('live');
@@ -4643,9 +4666,11 @@
 
     document.getElementById('btn-monitor')?.addEventListener('click', () => {
       _monPanel.classList.toggle('hidden');
-      if (!_monPanel.classList.contains('hidden') && !_monPort) _monConnect();
+      // Obrir la pantalla: connexió automàtica silenciosa (mai el selector).
+      if (!_monPanel.classList.contains('hidden') && !_monPort) _monConnect(true);
     });
-    document.getElementById('devmon-connect')?.addEventListener('click', () => { if (!_monPort) _monConnect(); });
+    // Botó «Connectar»: aquí sí que pot demanar el port un cop (i es recorda).
+    document.getElementById('devmon-connect')?.addEventListener('click', () => { if (!_monPort) _monConnect(false); });
     document.getElementById('devmon-close')?.addEventListener('click', () => _monPanel.classList.add('hidden'));
     document.getElementById('devmon-clear')?.addEventListener('click', () => {
       _monNow.querySelector('.main').textContent = '';
@@ -4942,6 +4967,12 @@
       }, 2500);
     }
 
+    // Botó «Guardar» visible sota el diagrama de la capa de modes: reutilitza
+    // exactament la mateixa lògica de desat (btn-save-keys viu a la bank-bar,
+    // amagada en reparentar el configurador dins la pestanya Dispositiu).
+    document.getElementById('btn-save-modes-layer')?.addEventListener('click', () => {
+      document.getElementById('btn-save-keys')?.click();
+    });
     document.getElementById('btn-save-keys')?.addEventListener('click', async (e) => {
       _readGridIntoBank(_keysConfig.currentBank);
       _saveKeysConfig(_keysConfig);

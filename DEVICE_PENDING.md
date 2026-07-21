@@ -1,5 +1,24 @@
 # Canvis pendents al dispositiu TECLA
 
+## 0. v3.3.2 — Connexió de la pantalla robusta + botons de desat — 2026-07-21
+
+✅ NOMÉS APP-WEB (cap canvi de firmware; el dispositiu segueix a v3.3.x).
+
+- **Pantalla — connexió sense selector**: obrir la pantalla ara fa una
+  connexió AUTOMÀTICA silenciosa (mai el selector de ports); el selector només
+  surt si es prem «Connectar» i encara no hi ha permís. Si el port de la
+  consola està OCUPAT (una altra pestanya, un monitor sèrie, Thonny/Mu) es
+  mostra un avís clar en comptes d'un selector inútil. Guarda contra obertures
+  simultànies (evitava un fals «port ocupat»). *La lògica de detecció de port
+  no s'havia tocat des de la v3.3.0; el problema era ambiental (port ocupat).*
+- **Capa TECLAT**: «Guardar» i «Restablir per defecte» ara centrats SOTA el
+  diagrama (abans sota tot el bloc de 3 columnes).
+- **Capa MODES**: nou botó «Guardar» visible i centrat sota el diagrama
+  (reutilitza el desat de sempre; el botó de la bank-bar queda amagat en
+  reparentar el configurador a la pestanya Dispositiu).
+
+---
+
 ## 0. v3.3.1 — Poliment final: pantalla cuidada + estat firmware net — 2026-07-21
 
 ✅ INSTAL·LAT AL DISPOSITIU (v3.3.1) I A PUNT PER PUBLICAR.
