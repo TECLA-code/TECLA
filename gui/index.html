@@ -97,6 +97,8 @@
     .key-btn.key-type-hold_mod.active { border-color: rgba(30,180,220,.9); box-shadow: 0 0 0 2px rgba(30,180,220,.5); }
     .key-btn.key-type-midi_note { background: rgba(220,60,200,.22); border-color: rgba(220,60,200,.6); box-shadow: 0 3px 0 rgba(220,60,200,.25); }
     .key-btn.key-type-midi_note.active { border-color: rgba(220,60,200,.9); box-shadow: 0 0 0 2px rgba(220,60,200,.5); }
+    .key-btn.key-type-open_app { background: rgba(230,90,70,.22); border-color: rgba(230,90,70,.6); box-shadow: 0 3px 0 rgba(230,90,70,.25); }
+    .key-btn.key-type-open_app.active { border-color: rgba(230,90,70,.9); box-shadow: 0 0 0 2px rgba(230,90,70,.5); }
     .lang-btn.active { border-color: var(--accent); color: var(--accent); }
     .hlang-btn { font-size: 10px; padding: 3px 7px; border-radius: 5px; border: 1px solid var(--border); background: transparent; color: var(--text3); cursor: pointer; font-family: var(--font); letter-spacing: .04em; transition: color .15s, border-color .15s; }
     .hlang-btn:hover { color: var(--text2); border-color: var(--border-h); }
@@ -169,10 +171,11 @@
     progress::-webkit-progress-value { background: var(--accent); border-radius: 2px; transition: width .25s; }
     .fw-msg { font-size: 11.5px; color: var(--text2); margin-top: 7px; min-height: 18px; }
     /* Guide */
-    .guide-wrap { max-width: 680px; padding: 20px; }
+    .guide-wrap { max-width: 720px; padding: 20px; margin: 0 auto; }
     .guide-h1 { font-size: 13px; font-weight: 600; color: var(--text); margin: 20px 0 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
     .guide-h1:first-child { margin-top: 0; }
     .guide-h2 { font-size: 12px; font-weight: 600; color: var(--text); margin: 14px 0 5px; }
+    .guide-p { font-size: 12.5px; color: var(--text2); line-height: 1.8; margin-bottom: 10px; }
     .guide-li { font-size: 12.5px; color: var(--text2); line-height: 1.75; padding-left: 14px; position: relative; margin-bottom: 2px; }
     .guide-li::before { content: "–"; position: absolute; left: 0; color: var(--text3); }
     .guide-note { font-size: 11.5px; color: var(--text3); background: var(--surface2); border-left: 2px solid var(--border-h); padding: 8px 12px; border-radius: 0 var(--radius) var(--radius) 0; margin: 8px 0; }
@@ -239,7 +242,7 @@
       <button class="hlang-btn lang-btn" data-lang="es">ES</button>
       <button class="hlang-btn lang-btn" data-lang="en">EN</button>
       <div style="width:1px;height:14px;background:var(--border);margin:0 2px"></div>
-      <button class="btn" id="btn-connect" data-t="btn_connect">Connecta</button>
+      <button class="btn" id="btn-connect" data-t="btn_connect">Connecta dispositiu</button>
       <button class="btn" id="btn-disconnect" style="display:none" data-t="btn_disconnect">Desconnectar</button>
     </div>
   </header>
@@ -310,10 +313,14 @@
         <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.65" data-th="profiles_my_desc">Totes les capes del dispositiu en ordre. La tecla <em>Canviar de capa</em> les recorre seq&uuml;encialment. La capa activa apareix ressaltada.</p>
         <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
           <button class="btn btn-sm btn-primary" id="btn-new-layer-tab" data-t="profiles_new">+ Nova capa</button>
-          <button class="btn btn-sm" id="btn-export-all" data-t="profiles_export">&darr; Exportar</button>
-          <button class="btn btn-sm" id="btn-import-profile" data-t="profiles_import">&uarr; Importar</button>
-          <input type="file" id="import-profile-file" accept=".json" style="display:none">
+          <button class="btn btn-sm" id="btn-export-all" data-t="profiles_export">&darr; Exportar seleccionades</button>
+          <button class="btn btn-sm" id="btn-import-profile" data-t="profiles_import">&uarr; Importar d'un fitxer</button>
+          <input type="file" id="import-profile-file" accept=".json,application/json" multiple style="display:none">
         </div>
+        <label class="cb" style="margin-bottom:8px;color:var(--text2)">
+          <input type="checkbox" id="chk-select-all-layers" checked>
+          <span data-t="profiles_select_all">Seleccionar-les totes</span>
+        </label>
         <div id="profiles-list" style="display:flex;flex-direction:column;gap:8px"></div>
       </div>
     </div>
@@ -368,34 +375,29 @@
     <div class="fw-grid">
       <div class="card">
         <div class="card-title" data-t="fw_status_title">Estat del sistema</div>
-        <div class="fw-status-row"><span class="fw-status-key" data-t="fw_status_vol">Volum CIRCUITPY</span><span class="fw-status-val fw-unk" id="fw-circuitpy">?</span></div>
+        <div class="fw-status-row"><span class="fw-status-key" data-t="fw_status_vol">Volum del dispositiu</span><span class="fw-status-val fw-unk" id="fw-circuitpy">?</span></div>
         <div class="fw-status-row"><span class="fw-status-key">CircuitPython</span><span class="fw-status-val fw-unk" id="fw-cpython">?</span></div>
         <div style="margin-top:12px"><button class="btn" id="btn-fw-refresh" data-t="fw_refresh">↺ Refrescar estat</button></div>
       </div>
       <div class="card">
-        <div class="card-title" data-t="fw_step1_title">Pas 1 &mdash; Instal&middot;lar CircuitPython</div>
-        <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.65" data-th="fw_step1_desc">Entra al mode bootloader mantenint <strong>BOOTSEL</strong> mentre connectes el USB-C. El dispositiu apareixerà com <strong>RPI-RP2</strong>.</p>
+        <div class="card-title" data-t="fw_step1_title">Pas 1 &mdash; Sistema base</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.65" data-th="fw_step1_desc">Nom&eacute;s cal la primera vegada. Connecta la placa mantenint premut <strong>BOOTSEL</strong>: apareixer&agrave; com a <strong>RPI-RP2</strong>. Tria aquest volum quan el di&agrave;leg t'ho demani.</p>
         <div style="display:flex;flex-direction:column;gap:8px">
-          <a class="btn btn-primary" href="https://circuitpython.org/board/raspberry_pi_pico/" target="_blank">&darr; Descarregar CircuitPython (circuitpython.org)</a>
+          <button class="btn btn-primary" id="btn-install-cp" data-t="fw_transfer_cp">&darr; Transferir CircuitPython 10.0.3 al RPI-RP2</button>
+          <button class="btn" id="btn-install-libs" data-t="fw_transfer_libs">&darr; Transferir llibreries (adafruit_hid) al dispositiu</button>
+          <button class="btn btn-danger" id="btn-flash-nuke" data-t="fw_transfer_nuke">&#9888; Transferir Flash Nuke (esborrar-ho tot)</button>
         </div>
-        <p style="font-size:11px;color:var(--text2);margin-top:10px;line-height:1.6" data-th="fw_step1_sub">Obre el Finder &rarr; arrossega el fitxer <strong>.uf2</strong> al volum <strong>RPI-RP2</strong>. El dispositiu es reiniciarà com <strong>CIRCUITPY</strong>.</p>
+        <p style="font-size:11px;color:var(--text2);margin-top:10px;line-height:1.6" data-th="fw_step1_sub">Despr&eacute;s del CircuitPython el dispositiu es reinicia sol i reapareix amb el seu nom de disc (<strong>CIRCUITPY</strong> per defecte). Llavors ja pots transferir-hi les llibreries.</p>
       </div>
       <div class="card">
-        <div class="card-title" data-t="fw_step2_title">Pas 2 &mdash; Instal&middot;lar les llibreries</div>
-        <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.65" data-th="fw_step2_desc">Descarrega el bundle de llibreries de CircuitPython i copia la carpeta <strong>adafruit_hid</strong> dins la carpeta <strong>lib/</strong> del CIRCUITPY.</p>
-        <a class="btn btn-primary" href="https://circuitpython.org/libraries" target="_blank">&darr; Descarregar Bundle de Llibreries</a>
-        <p style="font-size:11px;color:var(--text2);margin-top:10px;line-height:1.6" data-th="fw_step2_sub">Cerca <strong>adafruit-circuitpython-bundle</strong> &rarr; descomprimeix &rarr; les llibreries s'instal·laran automàticament.</p>
-        <p style="font-size:11px;color:#f0a020;background:rgba(240,160,32,.08);border-left:2px solid rgba(240,160,32,.5);padding:7px 10px;border-radius:0 4px 4px 0;margin-top:10px;line-height:1.6">&#9888; La versi&oacute; del bundle <strong>ha de coincidir</strong> amb la versi&oacute; de CircuitPython instal&middot;lada (p.ex. CircuitPython 9.x &rarr; bundle 9.x). Si el dispositiu mostra <code style="font-size:10.5px">ValueError: archivo .mpy incompatible</code>, substitueix la carpeta <strong>adafruit_hid</strong> pel bundle de la versi&oacute; correcta.</p>
-      </div>
-      <div class="card">
-        <div class="card-title" data-t="fw_step3_title">Pas 3 &mdash; Actualitzar el firmware</div>
-        <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.65" data-th="fw_step3_desc">Un cop el CIRCUITPY &eacute;s visible, genera i exporta el fitxer <strong>code.py</strong> amb la teva configuraci&oacute; al dispositiu.</p>
+        <div class="card-title" data-t="fw_step2_title">Pas 2 &mdash; Actualitzar el firmware</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.65" data-th="fw_step2_desc">Envia la teva configuraci&oacute; al dispositiu: es copia el <strong>code.py</strong> generat i, si falten, tamb&eacute; les llibreries.</p>
         <button class="btn btn-primary" id="btn-fw-export" data-t="btn_fw_update">Actualitzar firmware</button>
-        <div style="margin-top:12px">
-          <progress id="fw-progress" value="0" max="100"></progress>
-          <div class="fw-msg" id="fw-progress-msg"></div>
-        </div>
       </div>
+    </div>
+    <div style="padding:0 20px 20px">
+      <progress id="fw-progress" value="0" max="100"></progress>
+      <div class="fw-msg" id="fw-progress-msg"></div>
     </div>
   </div>
 
@@ -560,13 +562,38 @@
         <div class="form-group">
           <label data-t="drawer_click_step_label">Densitat (1 clic cada N unitats)</label>
           <select id="pot-step-size">
-            <option value="2">1 clic cada 2 unitats (molt dens)</option>
-            <option value="5">1 clic cada 5 unitats (dens)</option>
-            <option value="10">1 clic cada 10 unitats (normal)</option>
-            <option value="20">1 clic cada 20 unitats (espa&iuml;at)</option>
-            <option value="30">1 clic cada 30 unitats (molt espa&iuml;at)</option>
+            <option value="2" data-t="dens_2">Cada 2 unitats (molt dens)</option>
+            <option value="5" data-t="dens_5">Cada 5 unitats (dens)</option>
+            <option value="10" data-t="dens_10">Cada 10 unitats (normal)</option>
+            <option value="20" data-t="dens_20">Cada 20 unitats (espa&iuml;at)</option>
+            <option value="30" data-t="dens_30">Cada 30 unitats (molt espa&iuml;at)</option>
           </select>
         </div>
+      </div>
+      <!-- Escriure text per pas (Pots) -->
+      <div id="settings-pot-text_step" style="display: none; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px;">
+        <p style="font-size:12px;color:var(--text2);line-height:1.65;margin-bottom:12px" data-th="drawer_text_step_desc">Escriu un text cada vegada que el potenci&ograve;metre avan&ccedil;a N unitats. Girant cap a la dreta escriu el primer text i cap a l'esquerra el segon. Amb <strong>+</strong> i <strong>&minus;</strong> tens un control de zoom.</p>
+        <div class="checkbox-grid">
+          <div class="form-group" style="margin-bottom:0">
+            <label data-t="drawer_text_up_label">Text girant a la dreta</label>
+            <input type="text" id="pot-text-up" placeholder="+" maxlength="20">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label data-t="drawer_text_down_label">Text girant a l'esquerra</label>
+            <input type="text" id="pot-text-down" placeholder="&minus;" maxlength="20">
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:12px;margin-bottom:0">
+          <label data-t="drawer_text_step_label">Densitat (1 pols cada N unitats)</label>
+          <select id="pot-text-step-size">
+            <option value="2" data-t="dens_2">Cada 2 unitats (molt dens)</option>
+            <option value="5" data-t="dens_5">Cada 5 unitats (dens)</option>
+            <option value="10" data-t="dens_10">Cada 10 unitats (normal)</option>
+            <option value="20" data-t="dens_20">Cada 20 unitats (espa&iuml;at)</option>
+            <option value="30" data-t="dens_30">Cada 30 unitats (molt espa&iuml;at)</option>
+          </select>
+        </div>
+        <div class="guide-note" style="margin-top:12px" data-th="drawer_text_step_tip">Per fer <strong>zoom</strong>: escriu <strong>+</strong> i <strong>&minus;</strong>, i assigna una tecla de tipus <em>Modificador Mantingut</em> amb Cmd/Ctrl si l'aplicaci&oacute; ho requereix.</div>
       </div>
       <!-- MIDI CC (Pots) -->
       <div id="settings-pot-midi_cc" style="display: none; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px;">
@@ -606,6 +633,30 @@
           <select id="key-layer-dir">
             <option value="next" data-t="layer_dir_next">Capa Següent (→)</option>
             <option value="prev" data-t="layer_dir_prev">Capa Anterior (←)</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label data-t="layer_mode_label">En arribar al final</label>
+          <select id="key-layer-mode">
+            <option value="wrap" data-t="layer_mode_wrap">Continuar en c&iacute;rcul (l'&uacute;ltima &rarr; la primera)</option>
+            <option value="clamp" data-t="layer_mode_clamp">Fer topall (quedar-se a l'extrem)</option>
+          </select>
+        </div>
+        <div class="guide-note" style="margin-top:12px" data-th="layer_mode_desc">Amb <strong>topall</strong>, la tecla deixa de fer efecte quan ja ets a la primera o a l'&uacute;ltima capa: aix&iacute; sempre saps on ets encara que et perdis entre capes.</div>
+      </div>
+      <!-- Obrir aplicació (Keys) -->
+      <div id="settings-open_app" style="display: none; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px;">
+        <p style="font-size:12px;color:var(--text2);line-height:1.65;margin-bottom:12px" data-t="drawer_open_app_desc">Obre una aplicació escrivint el seu nom al llançador del sistema (Spotlight a macOS, Menú Inici a Windows).</p>
+        <div class="form-group">
+          <label data-t="drawer_open_app_label">Nom de l'aplicació</label>
+          <input type="text" id="key-open-app" placeholder="Google Chrome">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label data-t="drawer_open_app_os">Sistema operatiu</label>
+          <select id="key-open-os">
+            <option value="mac" data-t="open_app_os_mac">macOS (Spotlight)</option>
+            <option value="windows" data-t="open_app_os_win">Windows (Menú Inici)</option>
+            <option value="linux" data-t="open_app_os_linux">Linux (Super)</option>
           </select>
         </div>
       </div>
@@ -680,6 +731,24 @@
 
     function _potAngle(v) { return -135 + (Math.max(0, Math.min(127, v)) / 127) * 270; }
 
+    function _esc(s) { return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]); }
+
+    // Etiqueta curta sota el knob al dispositiu virtual
+    function _potShort(p) {
+      const f = p.function;
+      if (f === 'none') return 'Buit';
+      if (f === 'click_step') return 'Clic/' + (p.step_size || 10);
+      if (f === 'text_step') return _esc((p.text_up ?? '+') + (p.text_down ?? '-')).substring(0, 8);
+      if (f === 'volume') return 'Volum';
+      if (f === 'brightness') return 'Brill.';
+      if (f === 'scroll_y') return 'Scroll Y';
+      if (f === 'scroll_x') return 'Scroll X';
+      if (f === 'mouse_x') return 'Ratolí X';
+      if (f === 'mouse_y') return 'Ratolí Y';
+      if (f === 'midi_cc') return 'CC' + (p.midi_cc_num ?? 7);
+      return f;
+    }
+
     // Render del Dispositiu (Esquerra)
     function renderDevice() {
       // Pots
@@ -693,7 +762,7 @@
         div.innerHTML = `
           <div class="pot-label">${POT_NAMES[i]}</div>
           <div class="pot-knob" style="transform: rotate(${_potAngle(p.value)}deg); cursor: ns-resize;"><div class="pot-indicator"></div></div>
-          <div style="font-size: 9px; color: var(--text3); font-family: var(--mono);">${p.function === 'none' ? 'Buit' : p.function === 'click_step' ? ('Clic/' + (p.step_size||10)) : p.function === 'volume' ? 'Volum' : p.function === 'brightness' ? 'Brill.' : p.function === 'scroll_y' ? 'Scroll Y' : p.function === 'scroll_x' ? 'Scroll X' : p.function === 'mouse_x' ? 'Ratolí X' : p.function === 'mouse_y' ? 'Ratolí Y' : p.function === 'midi_cc' ? ('CC' + (p.midi_cc_num ?? 7)) : p.function}</div>
+          <div style="font-size: 9px; color: var(--text3); font-family: var(--mono);">${_potShort(p)}</div>
           <div style="font-size: 9px; color: var(--accent); font-family: var(--mono); min-height:12px;">${p.value}</div>
         `;
         const knobEl = div.querySelector('.pot-knob');
@@ -746,7 +815,8 @@
           const mc = {'Mouse.LEFT_BUTTON':'L-CLK','Mouse.RIGHT_BUTTON':'R-CLK','Mouse.MIDDLE_BUTTON':'M-CLK'};
           funcShort = mc[k.mouse] || 'Mouse';
         } else if (k.type === 'layer_change') {
-          funcShort = k.layer_dir === 'prev' ? '← Capa' : 'Capa →';
+          const _stop = k.layer_mode === 'clamp';
+          funcShort = k.layer_dir === 'prev' ? (_stop ? '|← Capa' : '← Capa') : (_stop ? 'Capa →|' : 'Capa →');
         } else if (k.type === 'hold_mod') {
           const _ms = {'Keycode.COMMAND':'⌘','Keycode.CONTROL':'⌃','Keycode.ALT':'⌥','Keycode.SHIFT':'⇧','Keycode.LEFT_GUI':'⊞'};
           funcShort = (_ms[k.modifier] || '?') + ' HOLD';
@@ -754,6 +824,8 @@
           const _nn = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
           const n = k.midi_note ?? 60;
           funcShort = _nn[n%12] + (Math.floor(n/12)-1);
+        } else if (k.type === 'open_app') {
+          funcShort = k.app ? '\u25B6 ' + k.app.substring(0,6) : 'App';
         }
         btn.innerHTML = `<div class="key-num">${i + 1}</div>${funcShort ? `<div class="key-label">${funcShort}</div>` : ''}`;
         btn.addEventListener('click', () => handleElementClick('key', i));
@@ -772,7 +844,7 @@
     // Carregar el formulari de configuració
     const typeSelect = document.getElementById('elem-type');
     typeSelect.addEventListener('change', (e) => {
-      ['settings-key','settings-string','settings-consumer','settings-mouse','settings-layer_change','settings-hold_mod','settings-pot-click_step','settings-pot-midi_cc','settings-midi_note'].forEach(id => {
+      ['settings-key','settings-string','settings-consumer','settings-mouse','settings-layer_change','settings-hold_mod','settings-pot-click_step','settings-pot-text_step','settings-pot-midi_cc','settings-midi_note','settings-open_app'].forEach(id => {
         const el = document.getElementById(id); if (el) el.style.display = 'none';
       });
       const val = e.target.value;
@@ -783,8 +855,10 @@
       if (val === 'layer_change') document.getElementById('settings-layer_change').style.display = 'block';
       if (val === 'hold_mod') document.getElementById('settings-hold_mod').style.display = 'block';
       if (val === 'click_step') document.getElementById('settings-pot-click_step').style.display = 'block';
+      if (val === 'text_step') document.getElementById('settings-pot-text_step').style.display = 'block';
       if (val === 'midi_cc') document.getElementById('settings-pot-midi_cc').style.display = 'block';
       if (val === 'midi_note') document.getElementById('settings-midi_note').style.display = 'block';
+      if (val === 'open_app') document.getElementById('settings-open_app').style.display = 'block';
     });
 
     let _formLoading = false;
@@ -809,16 +883,27 @@
           <option value="layer_change" data-t="type_layer">${_i('type_layer')}</option>
           <option value="hold_mod" data-t="type_hold_mod">${_i('type_hold_mod')}</option>
           <option value="midi_note" data-t="type_midi_note">${_i('type_midi_note')}</option>
+          <option value="open_app" data-t="type_open_app">${_i('type_open_app')}</option>
         `;
         typeSelect.value = k.type;
         
-        // Reset sub-formularis
+        // Reset sub-formularis: una tecla nova no ha d'heretar el que hi havia de l'anterior
         document.getElementById('mod-ctrl').checked = false;
         document.getElementById('mod-shift').checked = false;
         document.getElementById('mod-alt').checked = false;
         document.getElementById('mod-cmd').checked = false;
         document.getElementById('key-string').value = '';
-        
+        document.getElementById('key-keycode').value = 'Keycode.A';
+        document.getElementById('key-consumer').value = 'ConsumerControlCode.PLAY_PAUSE';
+        document.getElementById('key-mouse').value = 'Mouse.LEFT_BUTTON';
+        document.getElementById('key-layer-dir').value = 'next';
+        document.getElementById('key-layer-mode').value = 'wrap';
+        document.getElementById('key-hold-mod').value = 'Keycode.COMMAND';
+        document.getElementById('key-midi-note').value = 60;
+        document.getElementById('key-midi-channel').value = 1;
+        document.getElementById('key-midi-velocity').value = 100;
+        document.getElementById('key-open-app').value = '';
+
         if (k.type === 'key') {
           document.getElementById('key-keycode').value = k.keycode || 'Keycode.A';
           if (k.mods) {
@@ -835,32 +920,52 @@
           document.getElementById('key-mouse').value = k.mouse || 'Mouse.LEFT_BUTTON';
         } else if (k.type === 'layer_change') {
           document.getElementById('key-layer-dir').value = k.layer_dir || 'next';
+          document.getElementById('key-layer-mode').value = k.layer_mode || 'wrap';
         } else if (k.type === 'hold_mod') {
           document.getElementById('key-hold-mod').value = k.modifier || 'Keycode.COMMAND';
         } else if (k.type === 'midi_note') {
           document.getElementById('key-midi-note').value = k.midi_note ?? 60;
           document.getElementById('key-midi-channel').value = k.midi_channel ?? _loadMidiChannel();
           document.getElementById('key-midi-velocity').value = k.midi_velocity ?? 100;
+        } else if (k.type === 'open_app') {
+          document.getElementById('key-open-app').value = k.app || '';
+          document.getElementById('key-open-os').value = k.os || 'mac';
         }
       } else if (type === 'pot') {
         const p = config.pots[id];
         title.innerText = `Configurant Potenciòmetre ${POT_NAMES[id]}`;
         
         typeSelect.innerHTML = `
-          <option value="none">Cap (Desactivat)</option>
-          <option value="volume">Volum de l'ordinador</option>
-          <option value="brightness">Brillantor de la pantalla</option>
-          <option value="scroll_y">Ratolí: Scroll Vertical</option>
-          <option value="scroll_x">Ratolí: Scroll Horitzontal</option>
-          <option value="mouse_x">Ratolí: Moviment X (Esq/Dre)</option>
-          <option value="mouse_y">Ratolí: Moviment Y (Dalt/Baix)</option>
-          <option value="click_step">Clic per moviment (pas configurable)</option>
-          <option value="midi_cc">MIDI CC (Controlador 0–127)</option>
+          <option value="none">${_i('pot_none')}</option>
+          <option value="volume">${_i('pot_volume')}</option>
+          <option value="brightness">${_i('pot_brightness')}</option>
+          <option value="scroll_y">${_i('pot_scroll_y')}</option>
+          <option value="scroll_x">${_i('pot_scroll_x')}</option>
+          <option value="mouse_x">${_i('pot_mouse_x')}</option>
+          <option value="mouse_y">${_i('pot_mouse_y')}</option>
+          <option value="click_step">${_i('pot_click_step')}</option>
+          <option value="text_step">${_i('pot_text_step')}</option>
+          <option value="midi_cc">${_i('pot_midi_cc')}</option>
         `;
         typeSelect.value = p.function;
+
+        // Reset sub-formularis dels pots
+        document.getElementById('pot-step-size').value = 10;
+        document.getElementById('pot-text-up').value = '+';
+        document.getElementById('pot-text-down').value = '-';
+        document.getElementById('pot-text-step-size').value = 10;
+        document.getElementById('pot-midi-cc-num').value = 7;
+        document.getElementById('pot-midi-cc-channel').value = 1;
+
         if (p.function === 'click_step') {
           document.getElementById('settings-pot-click_step').style.display = 'block';
           document.getElementById('pot-step-size').value = p.step_size || 10;
+        }
+        if (p.function === 'text_step') {
+          document.getElementById('settings-pot-text_step').style.display = 'block';
+          document.getElementById('pot-text-up').value = p.text_up ?? '+';
+          document.getElementById('pot-text-down').value = p.text_down ?? '-';
+          document.getElementById('pot-text-step-size').value = p.step_size || 10;
         }
         if (p.function === 'midi_cc') {
           document.getElementById('settings-pot-midi_cc').style.display = 'block';
@@ -896,17 +1001,26 @@
           k.mouse = document.getElementById('key-mouse').value;
         } else if (fType === 'layer_change') {
           k.layer_dir = document.getElementById('key-layer-dir').value;
+          k.layer_mode = document.getElementById('key-layer-mode').value || 'wrap';
         } else if (fType === 'hold_mod') {
           k.modifier = document.getElementById('key-hold-mod').value;
         } else if (fType === 'midi_note') {
           k.midi_note = parseInt(document.getElementById('key-midi-note').value) || 60;
           k.midi_channel = Math.min(16, Math.max(1, parseInt(document.getElementById('key-midi-channel').value) || 1));
           k.midi_velocity = Math.min(127, Math.max(0, parseInt(document.getElementById('key-midi-velocity').value) || 100));
+        } else if (fType === 'open_app') {
+          k.app = document.getElementById('key-open-app').value;
+          k.os = document.getElementById('key-open-os').value || 'mac';
         }
         config.keys[id] = k;
       } else if (type === 'pot') {
         const potData = { function: fType, label: `Pot ${POT_NAMES[id]}`, id, value: config.pots[id]?.value || 0 };
         if (fType === 'click_step') potData.step_size = parseInt(document.getElementById('pot-step-size').value) || 10;
+        if (fType === 'text_step') {
+          potData.text_up = document.getElementById('pot-text-up').value || '+';
+          potData.text_down = document.getElementById('pot-text-down').value || '-';
+          potData.step_size = parseInt(document.getElementById('pot-text-step-size').value) || 10;
+        }
         if (fType === 'midi_cc') {
           potData.midi_cc_num = Math.min(127, Math.max(0, parseInt(document.getElementById('pot-midi-cc-num').value) || 7));
           potData.midi_cc_channel = Math.min(16, Math.max(1, parseInt(document.getElementById('pot-midi-cc-channel').value) || 1));
@@ -1063,14 +1177,16 @@ except Exception:
       const allPots = layers.map(l => l.pots);
 
       const hasHoldMod   = allKeys.flat().some(k => k.type === 'hold_mod');
-      const needsKeyboard = allKeys.flat().some(k => k.type === 'key' || k.type === 'hold_mod');
-      const needsString   = allKeys.flat().some(k => k.type === 'string');
+      const needsKeyboard = allKeys.flat().some(k => k.type === 'key' || k.type === 'hold_mod' || k.type === 'open_app');
+      const needsString   = allKeys.flat().some(k => k.type === 'string' || k.type === 'open_app') || allPots.flat().some(p => p.function === 'text_step');
       const needsConsumer = allKeys.flat().some(k => k.type === 'consumer') || allPots.flat().some(p => p.function === 'volume' || p.function === 'brightness');
       const needsMouse    = allKeys.flat().some(k => k.type === 'mouse') || allPots.flat().some(p => p.function.startsWith('mouse') || p.function.startsWith('scroll') || p.function === 'click_step');
       const needsMidi     = allKeys.flat().some(k => k.type === 'midi_note') || allPots.flat().some(p => p.function === 'midi_cc');
 
       let code = `# TECLA MacroPad - Codi generat autom\u00e0ticament\nimport time\nimport board\nimport digitalio\nimport usb_hid\nimport analogio\n\n`;
-      if (needsKeyboard) code += `from adafruit_hid.keycode import Keycode\nfrom adafruit_hid.keyboard import Keyboard\n`;
+      if (needsKeyboard) code += `from adafruit_hid.keycode import Keycode\n`;
+      // Escriure text també necessita el Keyboard: sense això el code.py peta amb NameError
+      if (needsKeyboard || needsString) code += `from adafruit_hid.keyboard import Keyboard\n`;
       if (needsString)   code += `from adafruit_hid.keyboard_layout_us import KeyboardLayoutUS\n`;
       if (needsConsumer) code += `from adafruit_hid.consumer_control import ConsumerControl\nfrom adafruit_hid.consumer_control_code import ConsumerControlCode\n`;
       if (needsMouse)    code += `from adafruit_hid.mouse import Mouse\n`;
@@ -1091,15 +1207,20 @@ except Exception:
       code += `last_btn_states = [False] * 16\n`;
       if (multiLayer) code += `current_layer = 0\nLAYER_COUNT = ${layers.length}\n`;
       if (hasHoldMod) code += `DEBOUNCE_TIME = 0.02\n`;
-      // Click-step bucket init vars (scan all layers)
+      // Bucket init vars per als pots per pas — clic i text (escaneja totes les capes)
       for (let p = 0; p < 3; p++) {
-        const pp = layers.map(l => l.pots[p]).find(pp => pp && pp.function === 'click_step');
+        const pp = layers.map(l => l.pots[p]).find(pp => pp && (pp.function === 'click_step' || pp.function === 'text_step'));
         if (!pp) continue;
         const step = pp.step_size || 10;
         code += `last_click_bucket_p${p} = pots[${p}].value // 512 // ${step}\n`;
       }
 
       code += `\n# --- Loop Principal ---\nwhile True:\n    # TECLES\n`;
+
+      // Text literal segur per a Python (cometes, barres i salts de línia)
+      function _pyStr(s) {
+        return String(s ?? '').replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '');
+      }
 
       function _keyAction(k, indent) {
         const i2 = indent + '    ';
@@ -1109,16 +1230,37 @@ except Exception:
         }
         if (k.type === 'hold_mod') return `${indent}keyboard.press(${k.modifier || 'Keycode.COMMAND'})\n`;
         if (k.type === 'layer_change') {
-          const d = k.layer_dir === 'prev' ? '-1' : '1';
-          return `${indent}current_layer = (current_layer + ${d}) % LAYER_COUNT\n`;
+          const prev = k.layer_dir === 'prev';
+          if (k.layer_mode === 'clamp') {
+            // Topall: es queda a l'extrem en comptes de tornar a l'altre cap
+            return prev
+              ? `${indent}current_layer = max(current_layer - 1, 0)\n`
+              : `${indent}current_layer = min(current_layer + 1, LAYER_COUNT - 1)\n`;
+          }
+          return `${indent}current_layer = (current_layer + ${prev ? '-1' : '1'}) % LAYER_COUNT\n`;
         }
         if (k.type === 'key') {
           const pmods = (k.mods||[]).map(m => ({'Ctrl':'Keycode.CONTROL','Shift':'Keycode.SHIFT','Alt':'Keycode.ALT','Cmd':'Keycode.COMMAND'})[m]||'').filter(Boolean);
           return `${indent}keyboard.press(${pmods.length ? pmods.join(', ') + ', ' : ''}${k.keycode})\n`;
         }
-        if (k.type === 'string') return `${indent}layout.write("${k.string}")\n`;
+        if (k.type === 'string') return `${indent}layout.write("${_pyStr(k.string)}")\n`;
         if (k.type === 'consumer') return `${indent}cc.send(${k.consumer})\n`;
         if (k.type === 'mouse') return `${indent}mouse.click(${k.mouse})\n`;
+        if (k.type === 'open_app') {
+          const appRaw = k.app || '';
+          const app = _pyStr(appRaw);
+          const os = k.os || 'mac';
+          const launch = os === 'mac'
+            ? `${indent}keyboard.send(Keycode.COMMAND, Keycode.SPACE)\n`
+            : `${indent}keyboard.send(Keycode.GUI)\n`;
+          let c = `${indent}# Obrir aplicaci\u00f3: ${appRaw}\n`;
+          c += launch;
+          c += `${indent}time.sleep(0.6)\n`;
+          c += `${indent}layout.write("${app}")\n`;
+          c += `${indent}time.sleep(0.4)\n`;
+          c += `${indent}keyboard.send(Keycode.ENTER)\n`;
+          return c;
+        }
         return `${indent}pass\n`;
       }
       function _keyRelease(k, indent) {
@@ -1174,6 +1316,17 @@ except Exception:
           c += `${ind}curr_bucket_p${p} = pots[${p}].value // 512 // ${step}\n`;
           c += `${ind}if curr_bucket_p${p} != last_click_bucket_p${p}:\n`;
           c += `${i2}mouse.click(Mouse.LEFT_BUTTON)\n`;
+          c += `${i2}last_click_bucket_p${p} = curr_bucket_p${p}\n\n`;
+        } else if (pf === 'text_step') {
+          const step = pp.step_size || 10;
+          const up = _pyStr(pp.text_up ?? '+');
+          const down = _pyStr(pp.text_down ?? '-');
+          c += `${ind}curr_bucket_p${p} = pots[${p}].value // 512 // ${step}\n`;
+          c += `${ind}if curr_bucket_p${p} != last_click_bucket_p${p}:\n`;
+          c += `${i2}if curr_bucket_p${p} > last_click_bucket_p${p}:\n`;
+          c += `${i2}    layout.write("${up}")\n`;
+          c += `${i2}else:\n`;
+          c += `${i2}    layout.write("${down}")\n`;
           c += `${i2}last_click_bucket_p${p} = curr_bucket_p${p}\n\n`;
         } else if (pf === 'midi_cc') {
           const ccNum = pp.midi_cc_num ?? 7;
@@ -1257,15 +1410,24 @@ except Exception:
       layers.forEach((layer, idx) => {
         const row = document.createElement('div');
         row.className = 'profile-row' + (idx === currentLayerIdx ? ' profile-row-active' : '');
+        const nKeys = layer.keys.filter(k => k.type && k.type !== 'none').length;
+        const nPots = layer.pots.filter(p => p.function && p.function !== 'none').length;
         row.innerHTML = `
-          <div><span style="font-size:10px;color:var(--text3);margin-right:6px">${idx+1}</span><span class="profile-row-name">${layer.name || 'Sense nom'}</span></div>
-          <div style="display:flex;gap:5px">
+          <div style="display:flex;align-items:center;gap:8px;min-width:0">
+            <input type="checkbox" class="layer-export-chk" data-idx="${idx}" checked title="${_i('profiles_pick_hint')}" style="accent-color:var(--accent);cursor:pointer;flex-shrink:0">
+            <div style="min-width:0">
+              <span style="font-size:10px;color:var(--text3);margin-right:6px">${idx+1}</span><span class="profile-row-name">${_esc(layer.name || 'Sense nom')}</span>
+              <div style="font-size:10.5px;color:var(--text3);margin-top:2px">${nKeys}/16 ${_i('profiles_keys')} · ${nPots}/3 ${_i('profiles_pots')}</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:5px;flex-shrink:0">
             <button class="btn btn-sm btn-primary">${_i('profiles_edit')}</button>
             <button class="btn btn-sm" ${idx===0?'disabled':''}>&#x2191;</button>
             <button class="btn btn-sm" ${idx===layers.length-1?'disabled':''}>&#x2193;</button>
             <button class="btn btn-sm" title="Reanomenar">&#x270E;</button>
             <button class="btn btn-sm btn-danger">&#x2715;</button>
           </div>`;
+        row.querySelector('.layer-export-chk').addEventListener('change', _syncSelectAllChk);
         row.querySelectorAll('button')[0].addEventListener('click', () => {
           currentLayerIdx = idx; config = layers[idx];
           _syncLayerBar(); renderDevice();
@@ -1284,6 +1446,7 @@ except Exception:
         row.querySelectorAll('button')[4].addEventListener('click', () => _removeDeviceLayer(idx));
         list.appendChild(row);
       });
+      _syncSelectAllChk();
     }
 
     function _loadProfile(name) {
@@ -1347,14 +1510,109 @@ except Exception:
       showToast(isLast ? `Capa reiniciada.` : `Capa "${name}" eliminada.`, 'ok');
     }
 
-    function _exportProfileJSON() {
-      const data = {};
-      layers.forEach((l, i) => { data[l.name || `Capa ${i+1}`] = { keys: l.keys, pots: l.pots }; });
+    // ══ IMPORTAR / EXPORTAR CAPES ═══════════════════════════════════
+    // Format del fitxer: autodescriptiu i versionat, perquè les capes es puguin
+    // compartir entre usuaris i entre versions de l'app.
+    const LAYER_FILE_TYPE = 'tecla-macropad-layers';
+
+    function _slug(txt) {
+      return (txt || 'capes').toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'capes';
+    }
+
+    function _layerPayload(l) {
+      return { name: l.name || 'Capa', keys: l.keys, pots: l.pots };
+    }
+
+    function _downloadLayers(list, filename) {
+      const data = {
+        type: LAYER_FILE_TYPE,
+        version: 1,
+        app: 'TECLA MacroPad',
+        exportedAt: new Date().toISOString(),
+        layers: list.map(_layerPayload),
+      };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = 'tecla-capes.json';
+      a.download = filename;
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    }
+
+    function _selectedLayerIdxs() {
+      return [...document.querySelectorAll('.layer-export-chk:checked')].map(c => +c.dataset.idx);
+    }
+
+    function _syncSelectAllChk() {
+      const all = [...document.querySelectorAll('.layer-export-chk')];
+      const chk = document.getElementById('chk-select-all-layers');
+      if (!chk || !all.length) return;
+      const n = all.filter(c => c.checked).length;
+      chk.checked = n === all.length;
+      chk.indeterminate = n > 0 && n < all.length;
+    }
+
+    function _exportSelectedLayers() {
+      const idxs = _selectedLayerIdxs();
+      if (!idxs.length) { showToast(_i('profiles_pick_one'), 'err'); return; }
+      const sel = idxs.map(i => layers[i]).filter(Boolean);
+      const date = new Date().toISOString().slice(0, 10);
+      const name = sel.length === 1 ? `tecla-capa-${_slug(sel[0].name)}.json` : `tecla-capes-${date}.json`;
+      _downloadLayers(sel, name);
+      showToast(`${sel.length} ${_i('profiles_exported')}`, 'ok');
+    }
+
+    // Accepta el format nou, l'antic (objecte nom→capa), llistes i capes soltes.
+    function _extractLayers(data) {
+      const out = [];
+      const push = (name, src) => {
+        if (!src || !Array.isArray(src.keys)) return;
+        const nl = _defaultLayer(name || src.name || 'Capa importada');
+        nl.keys = JSON.parse(JSON.stringify(src.keys));
+        if (Array.isArray(src.pots)) nl.pots = JSON.parse(JSON.stringify(src.pots));
+        out.push(_normalizeLayer(nl));
+      };
+      if (data && data.type === LAYER_FILE_TYPE && Array.isArray(data.layers)) {
+        data.layers.forEach(l => push(l.name, l));
+      } else if (Array.isArray(data)) {
+        data.forEach((l, i) => push(l.name || `Importada ${i + 1}`, l.layers ? l.layers[0] : l));
+      } else if (data && typeof data === 'object') {
+        if (Array.isArray(data.keys)) push(data.name, data);          // una sola capa
+        else Object.entries(data).forEach(([k, v]) => push(k, v?.layers ? v.layers[0] : v));
+      }
+      return out;
+    }
+
+    // Evita trepitjar noms existents en importar capes compartides.
+    function _uniqueLayerName(name) {
+      const taken = new Set(layers.map(l => l.name));
+      if (!taken.has(name)) return name;
+      let n = 2;
+      while (taken.has(`${name} (${n})`)) n++;
+      return `${name} (${n})`;
+    }
+
+    function _importLayersFromFile(file) {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        let imported = [];
+        try {
+          imported = _extractLayers(JSON.parse(ev.target.result));
+        } catch {
+          showToast(_i('profiles_bad_file'), 'err');
+          return;
+        }
+        if (!imported.length) { showToast(_i('profiles_no_layers'), 'err'); return; }
+        imported.forEach(l => { l.name = _uniqueLayerName(l.name); layers.push(l); });
+        currentLayerIdx = layers.length - imported.length;
+        config = layers[currentLayerIdx];
+        saveLayers(); _syncLayerBar(); renderDevice(); renderProfiles();
+        if (currentSelection.type) loadConfigForm();
+        showToast(`${imported.length} ${_i('profiles_imported')}`, 'ok');
+      };
+      reader.readAsText(file);
     }
 
     document.getElementById('btn-save-to-library')?.addEventListener('click', () => {
@@ -1372,31 +1630,14 @@ except Exception:
       logSim(`Nova capa "${name.trim()}" creada`, 'SYS');
       document.querySelector('[data-tab="config"]')?.click();
     });
-    document.getElementById('btn-export-all')?.addEventListener('click', () => _exportProfileJSON());
+    document.getElementById('btn-export-all')?.addEventListener('click', _exportSelectedLayers);
     document.getElementById('btn-import-profile')?.addEventListener('click', () => document.getElementById('import-profile-file')?.click());
+    document.getElementById('chk-select-all-layers')?.addEventListener('change', e => {
+      document.querySelectorAll('.layer-export-chk').forEach(c => { c.checked = e.target.checked; });
+    });
     document.getElementById('import-profile-file')?.addEventListener('change', e => {
-      const file = e.target.files[0]; if (!file) return;
-      const reader = new FileReader();
-      reader.onload = ev => {
-        try {
-          const data = JSON.parse(ev.target.result);
-          const entries = Array.isArray(data) ? data.map((l,i) => [l.name||`Importada ${i+1}`,l]) : Object.entries(data);
-          let count = 0;
-          for (const [k,v] of entries) {
-            const src = v?.layers ? v.layers[0] : v;
-            if (!src?.keys) continue;
-            const nl = _defaultLayer(k);
-            nl.keys = JSON.parse(JSON.stringify(src.keys));
-            if (src.pots) { nl.pots = JSON.parse(JSON.stringify(src.pots)); }
-            _normalizeLayer(nl);
-            layers.push(nl); count++;
-          }
-          if (count) { currentLayerIdx = layers.length-1; config = layers[currentLayerIdx]; saveLayers(); _syncLayerBar(); renderDevice(); renderProfiles(); }
-          showToast(`${count} capa${count!==1?'es':''} importada${count!==1?'es':''} correctament.`, 'ok');
-        } catch { showToast('Error: fitxer JSON inv\u00e0lid.'); }
-        e.target.value = '';
-      };
-      reader.readAsText(file);
+      [...e.target.files].forEach(_importLayersFromFile);
+      e.target.value = '';
     });
 
     // Tab navigation
@@ -1411,63 +1652,170 @@ except Exception:
       });
     });
 
-    // Firmware: exportar
+    // ── Instal·lació incremental ───────────────────────────────────
+    // Escriure a un volum CIRCUITPY és lent (cada escriptura força un sync del
+    // sistema de fitxers). Comparant primer el contingut només copiem el que ha
+    // canviat de debò: en una actualització típica només hi va el code.py.
+
+    // Llegeix un fitxer del dispositiu; null si no hi és o no es pot llegir.
+    async function _readDeviceFile(dir, path) {
+      try {
+        const parts = path.split('/');
+        let d = dir;
+        for (let i = 0; i < parts.length - 1; i++) d = await d.getDirectoryHandle(parts[i]);
+        const fh = await d.getFileHandle(parts[parts.length - 1]);
+        return await (await fh.getFile()).text();
+      } catch { return null; }
+    }
+
+    // Escriu només si el contingut difereix del que ja hi ha. true = copiat.
+    async function _writeIfChanged(dir, path, content) {
+      if (await _readDeviceFile(dir, path) === content) return false;
+      const parts = path.split('/');
+      let d = dir;
+      for (let i = 0; i < parts.length - 1; i++) d = await d.getDirectoryHandle(parts[i], { create: true });
+      const fh = await d.getFileHandle(parts[parts.length - 1], { create: true });
+      const w = await fh.createWritable(); await w.write(content); await w.close();
+      return true;
+    }
+
+    // Pla de fitxers d'una actualització completa: codi + llibreries + boot.
+    function _firmwarePlan(code) {
+      const plan = [{ path: 'code.py', content: code }];
+      for (const [fname, content] of Object.entries(ADAFRUIT_HID_PY)) {
+        plan.push({ path: `lib/adafruit_hid/${fname}`, content });
+      }
+      plan.push({ path: 'boot.py', content: BOOT_PY });
+      const savedName = localStorage.getItem('tecla_device_name');
+      const savedSuffix = localStorage.getItem('tecla_disk_suffix');
+      if (savedName) plan.push({ path: 'config/device_name.txt', content: savedName });
+      if (savedSuffix != null) plan.push({ path: 'config/disk_label.txt', content: 'TECLA' + savedSuffix });
+      return plan;
+    }
+
+    // Firmware: actualitzar (incremental)
     const _fwExport = document.getElementById('btn-fw-export');
     if (_fwExport) _fwExport.addEventListener('click', async () => {
-      const msgEl = document.getElementById('fw-progress-msg');
-      const progEl = document.getElementById('fw-progress');
       const code = generateCode();
-      if ('showDirectoryPicker' in window) {
-        try {
-          if (!_deviceDir) msgEl.textContent = 'Selecciona el volum CIRCUITPY…';
-          const dir = _deviceDir || await window.showDirectoryPicker({ mode: 'readwrite', startIn: 'desktop' });
-          progEl.value = 50; msgEl.textContent = 'Escrivint code.py…';
-          const fh = await dir.getFileHandle('code.py', { create: true });
-          const w = await fh.createWritable();
-          await w.write(code); await w.close();
-
-          progEl.value = 75; msgEl.textContent = 'Instal·lant llibreries...';
-          try {
-            const libDir = await dir.getDirectoryHandle('lib', { create: true });
-            const hidDir = await libDir.getDirectoryHandle('adafruit_hid', { create: true });
-            for (const [fname, content] of Object.entries(ADAFRUIT_HID_PY)) {
-              const f = await hidDir.getFileHandle(fname, { create: true });
-              const fw = await f.createWritable();
-              await fw.write(content);
-              await fw.close();
-            }
-          } catch(err) {
-            console.error('Error writing libs', err);
-          }
-
-          progEl.value = 90; msgEl.textContent = 'Instal·lant sistema de boot...';
-          try {
-            const bfh = await dir.getFileHandle('boot.py', { create: true });
-            const bw = await bfh.createWritable(); await bw.write(BOOT_PY); await bw.close();
-            const savedName = localStorage.getItem('tecla_device_name');
-            const savedSuffix = localStorage.getItem('tecla_disk_suffix');
-            if (savedName || savedSuffix != null) {
-              const cfgDir = await dir.getDirectoryHandle('config', { create: true });
-              if (savedName) { const nf = await cfgDir.getFileHandle('device_name.txt', { create: true }); const nw = await nf.createWritable(); await nw.write(savedName); await nw.close(); }
-              if (savedSuffix != null) { const df = await cfgDir.getFileHandle('disk_label.txt', { create: true }); const dw = await df.createWritable(); await dw.write('TECLA' + savedSuffix); await dw.close(); }
-            }
-          } catch(err) {
-            console.error('Error writing boot system', err);
-          }
-
-          progEl.value = 100; msgEl.textContent = '✓ code.py exportat correctament!';
-          setTimeout(() => { progEl.value = 0; msgEl.textContent = ''; }, 4000);
-        } catch (e) {
-          progEl.value = 0;
-          if (e.name !== 'AbortError') { msgEl.textContent = 'Error: ' + e.message; }
-          else { msgEl.textContent = ''; }
-        }
-      } else {
+      if (!('showDirectoryPicker' in window)) {
         const blob = new Blob([code], { type: 'text/x-python' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob); a.download = 'code.py';
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        msgEl.textContent = "code.py descarregat. Copia'l manualment a CIRCUITPY.";
+        _fwMsg(_i('fw_downloaded_code'));
+        return;
+      }
+      _fwExport.disabled = true;
+      _fwProg(0); _fwMsg('');
+      try {
+        if (!_deviceDir) _fwMsg(_i('fw_pick_device'));
+        const dir = _deviceDir || await window.showDirectoryPicker({ mode: 'readwrite', startIn: 'desktop' });
+        const plan = _firmwarePlan(code);
+        let done = 0, skipped = 0;
+        const errors = [];
+        for (let i = 0; i < plan.length; i++) {
+          const entry = plan[i];
+          _fwMsg(`${_i('fw_checking')} ${entry.path}…`);
+          try {
+            if (await _writeIfChanged(dir, entry.path, entry.content)) done++; else skipped++;
+          } catch (err) {
+            errors.push(`${entry.path}: ${err.message}`);
+            console.error('Error escrivint', entry.path, err);
+          }
+          _fwProg(Math.round(((i + 1) / plan.length) * 100));
+        }
+        _fwProg(100);
+        if (errors.length) {
+          _fwMsg(`⚠ ${_i('fw_incomplete_a')} (${errors.length} ${_i('fw_incomplete_files')}). ${_i('fw_incomplete_retry')}`);
+          showToast(`⚠ ${_i('fw_incomplete_a')}: ${errors.length} ${_i('fw_incomplete_files')}`, 'err');
+        } else {
+          _fwMsg(`✓ ${_i('fw_done_a')} ${done} ${_i('fw_done_copied')}, ${skipped} ${_i('fw_done_uptodate')} ${_i('fw_done_unplug')}`);
+          showToast(`✓ ${done} ${_i('fw_done_copied')}, ${skipped} ${_i('fw_done_uptodate')}`, 'ok');
+        }
+      } catch (e) {
+        _fwProg(0);
+        if (e.name !== 'AbortError') { _fwMsg('Error: ' + e.message); showToast('Error: ' + e.message, 'err'); }
+        else _fwMsg('');
+      } finally {
+        _fwExport.disabled = false;
+      }
+    });
+
+    // ── Transferències directes al dispositiu (UF2 i llibreries) ──────
+    const FW_DIR = '../codi/firmware/';
+    const FW_CIRCUITPYTHON = 'adafruit-circuitpython-raspberry_pi_pico-es-10.0.3.uf2';
+    const FW_NUKE = 'flash_nuke.uf2';
+
+    function _fwMsg(txt) { const el = document.getElementById('fw-progress-msg'); if (el) el.textContent = txt; }
+    function _fwProg(v) { const el = document.getElementById('fw-progress'); if (el) el.value = v; }
+    function _fwReset(delay = 5000) { setTimeout(() => { _fwProg(0); _fwMsg(''); }, delay); }
+
+    // Escriu els fitxers d'adafruit_hid dins lib/adafruit_hid del volum donat.
+    async function _installHidLibs(dir) {
+      let copied = 0, skipped = 0;
+      for (const [fname, content] of Object.entries(ADAFRUIT_HID_PY)) {
+        if (await _writeIfChanged(dir, `lib/adafruit_hid/${fname}`, content)) copied++; else skipped++;
+      }
+      return { copied, skipped };
+    }
+
+    // Copia un .uf2 al volum del bootloader (RPI-RP2), que el flasheja i es reinicia.
+    async function _transferUf2(filename, label) {
+      try {
+        _fwProg(15); _fwMsg(`${_i('fw_loading')} ${label}…`);
+        const res = await fetch(FW_DIR + filename);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.arrayBuffer();
+        _fwProg(50);
+        if ('showSaveFilePicker' in window) {
+          _fwMsg(_i('fw_pick_rpi'));
+          const handle = await window.showSaveFilePicker({
+            suggestedName: filename,
+            types: [{ description: 'UF2 Firmware', accept: { 'application/octet-stream': ['.uf2'] } }]
+          });
+          const w = await handle.createWritable();
+          await w.write(data); await w.close();
+          _fwProg(100); _fwMsg(`✓ ${label} ${_i('fw_transferred')}`);
+          showToast(`✓ ${label} ${_i('fw_transferred')}`, 'ok');
+        } else {
+          // Sense File System Access API: descàrrega i còpia manual
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(new Blob([data], { type: 'application/octet-stream' }));
+          a.download = filename;
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          _fwProg(100); _fwMsg(_i('fw_downloaded_manual'));
+        }
+        _fwReset();
+      } catch (e) {
+        _fwProg(0);
+        if (e.name !== 'AbortError') { _fwMsg('Error: ' + e.message); showToast('Error: ' + e.message, 'err'); }
+        else _fwMsg('');
+      }
+    }
+
+    document.getElementById('btn-install-cp')?.addEventListener('click', () =>
+      _transferUf2(FW_CIRCUITPYTHON, 'CircuitPython 10.0.3'));
+
+    document.getElementById('btn-flash-nuke')?.addEventListener('click', () => {
+      if (!confirm(_i('fw_nuke_confirm'))) return;
+      _transferUf2(FW_NUKE, 'Flash Nuke');
+    });
+
+    document.getElementById('btn-install-libs')?.addEventListener('click', async () => {
+      if (!('showDirectoryPicker' in window)) { showToast(_i('fw_need_chrome'), 'err'); return; }
+      try {
+        if (!_deviceDir) _fwMsg(_i('fw_pick_device'));
+        const dir = _deviceDir || await window.showDirectoryPicker({ mode: 'readwrite', startIn: 'desktop' });
+        _fwProg(40); _fwMsg(_i('fw_installing_libs'));
+        const { copied, skipped } = await _installHidLibs(dir);
+        _fwProg(100);
+        const summary = `✓ ${dir.name}: ${copied} ${_i('fw_done_copied')}, ${skipped} ${_i('fw_done_uptodate')}`;
+        _fwMsg(summary); showToast(summary, 'ok');
+        _fwReset();
+      } catch (e) {
+        _fwProg(0);
+        if (e.name !== 'AbortError') { _fwMsg('Error: ' + e.message); showToast('Error: ' + e.message, 'err'); }
+        else _fwMsg('');
       }
     });
 
@@ -1484,18 +1832,21 @@ except Exception:
       try {
         const dir = _deviceDir || await window.showDirectoryPicker({ startIn: 'desktop' });
         const name = dir.name;
-        const isCP = name === 'CIRCUITPY';
-        cpEl.textContent = isCP ? '✓ Detectat' : name + ' (no és CIRCUITPY)';
+        // El volum es pot haver reanomenat (p.ex. TECLA): el que el fa vàlid és
+        // que hi hagi boot_out.txt, no pas com es digui.
+        let version = null, isCP = false;
+        try {
+          const fh = await dir.getFileHandle('boot_out.txt');
+          const txt = await (await fh.getFile()).text();
+          isCP = /CircuitPython/i.test(txt);
+          const m = txt.match(/CircuitPython ([\d.]+)/);
+          version = m ? m[1] : null;
+        } catch { isCP = false; }
+        cpEl.textContent = isCP ? `✓ ${name}` : `${name} ${_i('fw_not_device')}`;
         cpEl.className = 'fw-status-val ' + (isCP ? 'fw-ok' : 'fw-err');
         if (isCP) {
-          try {
-            const fh = await dir.getFileHandle('boot_out.txt');
-            const f = await fh.getFile();
-            const txt = await f.text();
-            const m = txt.match(/CircuitPython ([\d.]+)/);
-            pyEl.textContent = m ? '✓ ' + m[1] : '✓ Detectat';
-            pyEl.className = 'fw-status-val fw-ok';
-          } catch { pyEl.textContent = '?'; pyEl.className = 'fw-status-val fw-unk'; }
+          pyEl.textContent = version ? '✓ ' + version : '✓ Detectat';
+          pyEl.className = 'fw-status-val fw-ok';
         } else {
           pyEl.textContent = '—'; pyEl.className = 'fw-status-val fw-unk';
         }
@@ -1637,11 +1988,8 @@ except Exception:
     });
     document.getElementById('btn-export-layer')?.addEventListener('click', () => {
       const l = layers[currentLayerIdx];
-      const blob = new Blob([JSON.stringify({ [l.name || 'Capa']: { keys: l.keys, pots: l.pots } }, null, 2)], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `tecla-capa-${(l.name || 'capa').toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      _downloadLayers([l], `tecla-capa-${_slug(l.name)}.json`);
+      showToast(`1 ${_i('profiles_exported')}`, 'ok');
     });
     document.getElementById('btn-import-layer')?.addEventListener('click', () =>
       document.getElementById('import-profile-file')?.click());
@@ -1762,16 +2110,16 @@ except Exception:
 
     // ══ I18N ══════════════════════════════════════════════════════════
     const _GUIDE = {
-      ca: `<div class="guide-toc"><a href="#g1">1. Començar en 3 passos</a><a href="#g2">2. Assignar funcions</a><a href="#g3">3. Potenciòmetres</a><a href="#g4">4. Capes</a><a href="#g5">5. MIDI ràpid (visuals, TouchDesigner…)</a><a href="#g6">6. Enviar-ho al dispositiu</a></div><div id="g1"><div class="guide-h1">1. Començar en 3 passos</div><p class="guide-li"><strong>1.</strong> Clica una tecla del dispositiu virtual: el panell de la dreta mostra la seva configuració.</p><p class="guide-li"><strong>2.</strong> Tria la funció i els seus detalls. <strong>Tot es desa automàticament</strong>, no cal aplicar res.</p><p class="guide-li"><strong>3.</strong> Connecta el TECLA per USB-C i prem <strong>Actualitzar firmware</strong> (pestanya <em>Firmware</em>).</p><div class="guide-note">Primera vegada amb el dispositiu? Mira l'apartat 6: cal instal·lar CircuitPython un sol cop.</div></div><div id="g2"><div class="guide-h1">2. Assignar funcions</div><p class="guide-li">Clica qualsevol de les <strong>16 tecles</strong> i edita-la al panell lateral. Els canvis s'apliquen a l'instant.</p><div class="guide-h2">Tipus de funció</div><p class="guide-li"><strong>Tecla / Drecera</strong>: combinació de tecles (Ctrl+C, Cmd+S, F5…). Amb el botó <strong>⌨ Capturar drecera</strong> només cal prémer-la al teu teclat i queda assignada.</p><p class="guide-li"><strong>Escriure text</strong>: escriu una frase sencera automàticament.</p><p class="guide-li"><strong>Control multimèdia</strong>: reproduir, pausa, volum, brillantor…</p><p class="guide-li"><strong>Ratolí</strong>: clic esquerre, dret o central.</p><p class="guide-li"><strong>Canviar de capa</strong>: salta a la capa següent o anterior des del dispositiu.</p><p class="guide-li"><strong>Modificador mantingut</strong>: manté Cmd/Ctrl/Alt/Shift mentre la tecla està premuda.</p><p class="guide-li"><strong>Nota MIDI</strong>: envia una nota MIDI (nota, canal i velocitat configurables).</p><div class="guide-h2">Trucs</div><p class="guide-li"><strong>Copiar / Enganxar</strong> (a dalt del panell): duplica la configuració d'una tecla a una altra, fins i tot entre capes.</p><p class="guide-li">Cada color de tecla indica el tipus de funció assignada: lila = drecera, verd = text, groc = multimèdia, cian = ratolí, rosa = MIDI, taronja = capa.</p></div><div id="g3"><div class="guide-h1">3. Potenciòmetres</div><p class="guide-li">El TECLA té <strong>3 potenciòmetres</strong> (X, Y, Z). Clica'ls per configurar-los al mateix panell lateral.</p><p class="guide-li">Funcions: volum, brillantor, scroll vertical/horitzontal, moviment del ratolí X/Y, clic per pas i <strong>MIDI CC</strong> (per controlar paràmetres de sintetitzadors o visuals).</p><div class="guide-note">Pots girar el knob virtual (arrossega amunt/avall o fes scroll) per simular-ne el valor.</div></div><div id="g4"><div class="guide-h1">4. Capes</div><p class="guide-li">Les capes són configuracions completes de les 16 tecles + 3 potenciòmetres. El dispositiu les recorre amb una tecla <em>Canviar de capa</em>.</p><p class="guide-li">La barra superior mostra totes les capes com a <strong>xips</strong>: clic per activar-ne una, doble clic per reanomenar-la.</p><p class="guide-li">Botons de la barra: <strong>+ Nova</strong>, <strong>⎘ duplicar</strong>, <strong>✎ reanomenar</strong>, <strong>✕ eliminar</strong>, <strong>↓ exportar</strong> la capa activa a un fitxer JSON i <strong>↑ importar</strong> capes des d'un JSON.</p><p class="guide-li">A la pestanya <em>Capes</em> pots reordenar-les i afegir configuracions ja fetes (calculadora, edició de vídeo…).</p><div class="guide-note">Comparteix les teves capes exportant el JSON; qualsevol altre TECLA les pot importar tal qual.</div></div><div id="g5"><div class="guide-h1">5. MIDI ràpid (visuals, TouchDesigner…)</div><p class="guide-li">Per fer visuals o música sovint cal <strong>moltes tecles amb notes MIDI</strong>. L'eina <strong>♬ MIDI ràpid</strong> (a sota del panell lateral) ho fa en un clic:</p><p class="guide-li"><strong>Omplir aquesta capa</strong>: assigna 16 notes consecutives a partir de la nota inicial.</p><p class="guide-li"><strong>Generar capes noves</strong>: crea N capes seguides, cadascuna amb les 16 notes següents. Amb 4 capes tens 64 notes MIDI llestes en dos clics.</p><div class="guide-note">Exemple TouchDesigner: genera 4 capes des de la nota 36, canal 1, i mapeja cada nota a un efecte. Afegeix una tecla <em>Canviar de capa</em> si vols saltar entre bancs des del dispositiu.</div></div><div id="g6"><div class="guide-h1">6. Enviar-ho al dispositiu</div><div class="guide-h2">Només la primera vegada</div><p class="guide-li"><strong>1.</strong> Mantén premut <strong>BOOTSEL</strong> mentre connectes l'USB-C: apareixerà el volum <strong>RPI-RP2</strong>.</p><p class="guide-li"><strong>2.</strong> Descarrega CircuitPython (pestanya <em>Firmware</em>, Pas 1) i arrossega el fitxer <strong>.uf2</strong> a RPI-RP2. Es reiniciarà com a <strong>CIRCUITPY</strong>.</p><div class="guide-h2">Cada vegada que canviïs la configuració</div><p class="guide-li"><strong>1.</strong> Pestanya <em>Firmware</em> → <strong>Actualitzar firmware</strong>.</p><p class="guide-li"><strong>2.</strong> Selecciona el volum <strong>CIRCUITPY</strong> al diàleg. L'app hi copia <strong>code.py</strong> i les llibreries automàticament.</p><p class="guide-li"><strong>3.</strong> El TECLA es reinicia sol i ja funciona amb la nova configuració.</p><div class="guide-note">Cal Chrome o Edge per escriure directament al dispositiu. Amb Safari es descarrega <strong>code.py</strong> i cal copiar-lo a mà a CIRCUITPY. Les capes es desen al navegador (localStorage): exporta-les a JSON si vols una còpia de seguretat.</div></div>`,
-      es: `<div class="guide-toc"><a href="#g1">1. Empezar en 3 pasos</a><a href="#g2">2. Asignar funciones</a><a href="#g3">3. Potenciómetros</a><a href="#g4">4. Capas</a><a href="#g5">5. MIDI rápido (visuales, TouchDesigner…)</a><a href="#g6">6. Enviarlo al dispositivo</a></div><div id="g1"><div class="guide-h1">1. Empezar en 3 pasos</div><p class="guide-li"><strong>1.</strong> Haz clic en una tecla del dispositivo virtual: el panel de la derecha muestra su configuración.</p><p class="guide-li"><strong>2.</strong> Elige la función y sus detalles. <strong>Todo se guarda automáticamente</strong>, no hay que aplicar nada.</p><p class="guide-li"><strong>3.</strong> Conecta el TECLA por USB-C y pulsa <strong>Actualizar firmware</strong> (pestaña <em>Firmware</em>).</p><div class="guide-note">¿Primera vez con el dispositivo? Mira el apartado 6: hay que instalar CircuitPython una sola vez.</div></div><div id="g2"><div class="guide-h1">2. Asignar funciones</div><p class="guide-li">Haz clic en cualquiera de las <strong>16 teclas</strong> y edítala en el panel lateral. Los cambios se aplican al instante.</p><div class="guide-h2">Tipos de función</div><p class="guide-li"><strong>Tecla / Atajo</strong>: combinación de teclas (Ctrl+C, Cmd+S, F5…). Con el botón <strong>⌨ Capturar atajo</strong> basta con pulsarlo en tu teclado y queda asignado.</p><p class="guide-li"><strong>Escribir texto</strong>: escribe una frase entera automáticamente.</p><p class="guide-li"><strong>Control multimedia</strong>: reproducir, pausa, volumen, brillo…</p><p class="guide-li"><strong>Ratón</strong>: clic izquierdo, derecho o central.</p><p class="guide-li"><strong>Cambiar de capa</strong>: salta a la capa siguiente o anterior desde el dispositivo.</p><p class="guide-li"><strong>Modificador mantenido</strong>: mantiene Cmd/Ctrl/Alt/Shift mientras la tecla está pulsada.</p><p class="guide-li"><strong>Nota MIDI</strong>: envía una nota MIDI (nota, canal y velocidad configurables).</p><div class="guide-h2">Trucos</div><p class="guide-li"><strong>Copiar / Pegar</strong> (arriba del panel): duplica la configuración de una tecla en otra, incluso entre capas.</p><p class="guide-li">Cada color de tecla indica el tipo de función asignada: lila = atajo, verde = texto, amarillo = multimedia, cian = ratón, rosa = MIDI, naranja = capa.</p></div><div id="g3"><div class="guide-h1">3. Potenciómetros</div><p class="guide-li">El TECLA tiene <strong>3 potenciómetros</strong> (X, Y, Z). Haz clic en ellos para configurarlos en el mismo panel lateral.</p><p class="guide-li">Funciones: volumen, brillo, scroll vertical/horizontal, movimiento del ratón X/Y, clic por paso y <strong>MIDI CC</strong> (para controlar parámetros de sintetizadores o visuales).</p><div class="guide-note">Puedes girar el knob virtual (arrastra arriba/abajo o haz scroll) para simular su valor.</div></div><div id="g4"><div class="guide-h1">4. Capas</div><p class="guide-li">Las capas son configuraciones completas de las 16 teclas + 3 potenciómetros. El dispositivo las recorre con una tecla <em>Cambiar de capa</em>.</p><p class="guide-li">La barra superior muestra todas las capas como <strong>chips</strong>: clic para activar una, doble clic para renombrarla.</p><p class="guide-li">Botones de la barra: <strong>+ Nueva</strong>, <strong>⎘ duplicar</strong>, <strong>✎ renombrar</strong>, <strong>✕ eliminar</strong>, <strong>↓ exportar</strong> la capa activa a un archivo JSON e <strong>↑ importar</strong> capas desde un JSON.</p><p class="guide-li">En la pestaña <em>Capas</em> puedes reordenarlas y añadir configuraciones ya hechas (calculadora, edición de vídeo…).</p><div class="guide-note">Comparte tus capas exportando el JSON; cualquier otro TECLA puede importarlas tal cual.</div></div><div id="g5"><div class="guide-h1">5. MIDI rápido (visuales, TouchDesigner…)</div><p class="guide-li">Para visuales o música a menudo hacen falta <strong>muchas teclas con notas MIDI</strong>. La herramienta <strong>♬ MIDI rápido</strong> (debajo del panel lateral) lo hace en un clic:</p><p class="guide-li"><strong>Rellenar esta capa</strong>: asigna 16 notas consecutivas a partir de la nota inicial.</p><p class="guide-li"><strong>Generar capas nuevas</strong>: crea N capas seguidas, cada una con las 16 notas siguientes. Con 4 capas tienes 64 notas MIDI listas en dos clics.</p><div class="guide-note">Ejemplo TouchDesigner: genera 4 capas desde la nota 36, canal 1, y mapea cada nota a un efecto. Añade una tecla <em>Cambiar de capa</em> si quieres saltar entre bancos desde el dispositivo.</div></div><div id="g6"><div class="guide-h1">6. Enviarlo al dispositivo</div><div class="guide-h2">Solo la primera vez</div><p class="guide-li"><strong>1.</strong> Mantén pulsado <strong>BOOTSEL</strong> mientras conectas el USB-C: aparecerá el volumen <strong>RPI-RP2</strong>.</p><p class="guide-li"><strong>2.</strong> Descarga CircuitPython (pestaña <em>Firmware</em>, Paso 1) y arrastra el archivo <strong>.uf2</strong> a RPI-RP2. Se reiniciará como <strong>CIRCUITPY</strong>.</p><div class="guide-h2">Cada vez que cambies la configuración</div><p class="guide-li"><strong>1.</strong> Pestaña <em>Firmware</em> → <strong>Actualizar firmware</strong>.</p><p class="guide-li"><strong>2.</strong> Selecciona el volumen <strong>CIRCUITPY</strong> en el diálogo. La app copia <strong>code.py</strong> y las librerías automáticamente.</p><p class="guide-li"><strong>3.</strong> El TECLA se reinicia solo y ya funciona con la nueva configuración.</p><div class="guide-note">Se necesita Chrome o Edge para escribir directamente en el dispositivo. Con Safari se descarga <strong>code.py</strong> y hay que copiarlo a mano a CIRCUITPY. Las capas se guardan en el navegador (localStorage): expórtalas a JSON si quieres una copia de seguridad.</div></div>`,
-      en: `<div class="guide-toc"><a href="#g1">1. Start in 3 steps</a><a href="#g2">2. Assign functions</a><a href="#g3">3. Potentiometers</a><a href="#g4">4. Layers</a><a href="#g5">5. Quick MIDI (visuals, TouchDesigner…)</a><a href="#g6">6. Send it to the device</a></div><div id="g1"><div class="guide-h1">1. Start in 3 steps</div><p class="guide-li"><strong>1.</strong> Click a key on the virtual device: the panel on the right shows its configuration.</p><p class="guide-li"><strong>2.</strong> Pick the function and its details. <strong>Everything saves automatically</strong> — nothing to apply.</p><p class="guide-li"><strong>3.</strong> Connect TECLA via USB-C and press <strong>Update firmware</strong> (<em>Firmware</em> tab).</p><div class="guide-note">First time with the device? See section 6: CircuitPython must be installed once.</div></div><div id="g2"><div class="guide-h1">2. Assign functions</div><p class="guide-li">Click any of the <strong>16 keys</strong> and edit it in the side panel. Changes apply instantly.</p><div class="guide-h2">Function types</div><p class="guide-li"><strong>Key / Shortcut</strong>: a key combination (Ctrl+C, Cmd+S, F5…). With the <strong>⌨ Capture shortcut</strong> button, just press it on your keyboard and it's assigned.</p><p class="guide-li"><strong>Type text</strong>: types a whole phrase automatically.</p><p class="guide-li"><strong>Media control</strong>: play, pause, volume, brightness…</p><p class="guide-li"><strong>Mouse</strong>: left, right or middle click.</p><p class="guide-li"><strong>Switch layer</strong>: jumps to the next or previous layer from the device.</p><p class="guide-li"><strong>Held modifier</strong>: holds Cmd/Ctrl/Alt/Shift while the key is pressed.</p><p class="guide-li"><strong>MIDI note</strong>: sends a MIDI note (note, channel and velocity configurable).</p><div class="guide-h2">Tips</div><p class="guide-li"><strong>Copy / Paste</strong> (top of the panel): duplicates one key's configuration onto another, even across layers.</p><p class="guide-li">Each key colour shows the assigned function type: purple = shortcut, green = text, yellow = media, cyan = mouse, pink = MIDI, orange = layer.</p></div><div id="g3"><div class="guide-h1">3. Potentiometers</div><p class="guide-li">TECLA has <strong>3 potentiometers</strong> (X, Y, Z). Click them to configure them in the same side panel.</p><p class="guide-li">Functions: volume, brightness, vertical/horizontal scroll, mouse X/Y movement, click-per-step and <strong>MIDI CC</strong> (to control synth or visual parameters).</p><div class="guide-note">You can turn the virtual knob (drag up/down or scroll) to simulate its value.</div></div><div id="g4"><div class="guide-h1">4. Layers</div><p class="guide-li">Layers are full configurations of the 16 keys + 3 potentiometers. The device cycles through them with a <em>Switch layer</em> key.</p><p class="guide-li">The top bar shows all layers as <strong>chips</strong>: click to activate one, double-click to rename it.</p><p class="guide-li">Bar buttons: <strong>+ New</strong>, <strong>⎘ duplicate</strong>, <strong>✎ rename</strong>, <strong>✕ delete</strong>, <strong>↓ export</strong> the active layer to a JSON file and <strong>↑ import</strong> layers from JSON.</p><p class="guide-li">In the <em>Layers</em> tab you can reorder them and add ready-made setups (calculator, video editing…).</p><div class="guide-note">Share your layers by exporting the JSON; any other TECLA can import them as-is.</div></div><div id="g5"><div class="guide-h1">5. Quick MIDI (visuals, TouchDesigner…)</div><p class="guide-li">Visuals and music often need <strong>lots of keys with MIDI notes</strong>. The <strong>♬ Quick MIDI</strong> tool (below the side panel) does it in one click:</p><p class="guide-li"><strong>Fill this layer</strong>: assigns 16 consecutive notes starting from the first note.</p><p class="guide-li"><strong>Generate new layers</strong>: creates N layers in a row, each with the next 16 notes. With 4 layers you get 64 MIDI notes ready in two clicks.</p><div class="guide-note">TouchDesigner example: generate 4 layers from note 36, channel 1, and map each note to an effect. Add a <em>Switch layer</em> key to jump between banks from the device.</div></div><div id="g6"><div class="guide-h1">6. Send it to the device</div><div class="guide-h2">First time only</div><p class="guide-li"><strong>1.</strong> Hold <strong>BOOTSEL</strong> while plugging in the USB-C: the <strong>RPI-RP2</strong> volume appears.</p><p class="guide-li"><strong>2.</strong> Download CircuitPython (<em>Firmware</em> tab, Step 1) and drag the <strong>.uf2</strong> file onto RPI-RP2. It restarts as <strong>CIRCUITPY</strong>.</p><div class="guide-h2">Every time you change the configuration</div><p class="guide-li"><strong>1.</strong> <em>Firmware</em> tab → <strong>Update firmware</strong>.</p><p class="guide-li"><strong>2.</strong> Select the <strong>CIRCUITPY</strong> volume in the dialog. The app copies <strong>code.py</strong> and the libraries automatically.</p><p class="guide-li"><strong>3.</strong> TECLA restarts on its own and runs the new configuration.</p><div class="guide-note">Chrome or Edge is required to write directly to the device. On Safari, <strong>code.py</strong> is downloaded and must be copied to CIRCUITPY manually. Layers are stored in the browser (localStorage): export them to JSON for a backup.</div></div>`,
+      ca: `<div class="guide-toc"><a href="#g1">1. Què és TECLA</a><a href="#g2">2. TECLA_edu Macropad</a><a href="#g3">3. Assignar funcions a les tecles</a><a href="#g4">4. Els potenciòmetres</a><a href="#g5">5. Capes: moltes configuracions en un sol dispositiu</a><a href="#g6">6. MIDI ràpid (visuals, TouchDesigner, Ableton…)</a><a href="#g7">7. Enviar la configuració al dispositiu</a></div><div id="g1"><div class="guide-h1">1. Què és TECLA</div><p class="guide-p">TECLA és un projecte artístic, tecnològic i educatiu que busca, a través de la creació de dispositius electrònics, promoure la filosofia del DIY i del codi obert per investigar, experimentar i aprendre de diferents àrees del coneixement.</p><p class="guide-p">TECLA entén l’aprenentatge com quelcom transversal i interdisciplinari intricant la programació, el disseny, les arts plàstiques, el modelatge 3D, la música, la física, l’electrònica, la robòtica i les matemàtiques.</p></div><div id="g2"><div class="guide-h1">2. TECLA_edu Macropad</div><p class="guide-p">Aquesta app-web serveix principalment per configurar el dispositiu TECLA_edu com un Macropad. A continuació es mostra pas a pas com funciona i quines són les seves característiques.</p><p class="guide-p">El dispositiu TECLA_edu disposa de <strong>16 tecles</strong> i <strong>3 potenciòmetres</strong>. El TECLA_edu programat com un macropad permet enviar qualsevol funció de teclat i de ratolí: shortcuts, text, funcions multimèdia, edició de vídeo, calculadora, comandament, etc. Les possibilitats són moltes. En el mateix dispositiu podem tenir múltiples capes amb diferents usos.</p><p class="guide-p">Tot es configura des d’aquesta app web, sense instal·lar res: connecta el dispositiu per USB i prem el botó que hi ha a la part superior dreta que posa <strong>Connecta dispositiu</strong>.</p><div class="guide-h2">Com està organitzada l'app</div><p class="guide-li"><strong>Dispositiu</strong>: el dispositiu virtual i el panell per assignar funcions. És on faràs el 90% de la feina.</p><p class="guide-li"><strong>Capes</strong>: gestiona totes les capes i afegeix configuracions ja fetes.</p><p class="guide-li"><strong>Firmware</strong>: instal·la el sistema base i envia la teva configuració al dispositiu.</p><p class="guide-li"><strong>Configuració</strong>: el canal MIDI per defecte i la identitat USB (el nom del port i del disc del dispositiu).</p><div class="guide-note">La primera vegada que utilitzes un TECLA_edu cal instal·lar-hi el sistema base (CircuitPython). Ho expliquem a l'apartat 7 i només es fa un cop.</div></div><div id="g3"><div class="guide-h1">3. Assignar funcions a les tecles</div><p class="guide-p">A la pestanya <strong>Dispositiu</strong> veuràs el dibuix del TECLA_edu: les 16 tecles a l'esquerra i els 3 potenciòmetres a la dreta.</p><div class="guide-h2">El gest bàsic</div><p class="guide-li"><strong>1.</strong> Clica una tecla del dibuix. El panell de la dreta passa a mostrar aquella tecla.</p><p class="guide-li"><strong>2.</strong> A <em>Funció principal</em> tria què vols que faci.</p><p class="guide-li"><strong>3.</strong> Omple les opcions que apareixen just a sota.</p><p class="guide-li"><strong>4.</strong> Ja està: <strong>no hi ha cap botó de desar</strong>, tot es guarda sol (ho indica el punt verd del panell).</p><div class="guide-h2">Què pot fer una tecla</div><p class="guide-li"><strong>Tecla / Drecera</strong> — envia una combinació (Ctrl+C, Cmd+S, F5…). Prem <em>Capturar drecera del teclat</em> i fes la combinació al teu teclat: queda assignada sola.</p><p class="guide-li"><strong>Escriure text</strong> — escriu una paraula o una frase sencera.</p><p class="guide-li"><strong>Control multimèdia</strong> — reproduir, pausa, pista següent, volum, brillantor…</p><p class="guide-li"><strong>Ratolí</strong> — clic esquerre, dret o central.</p><p class="guide-li"><strong>Modificador mantingut</strong> — mentre premis la tecla, manté Cmd, Ctrl, Alt o Shift. Serveix per combinar-la amb un potenciòmetre o amb una altra tecla.</p><p class="guide-li"><strong>Nota MIDI</strong> — envia una nota (nota, canal i velocitat configurables).</p><p class="guide-li"><strong>Obrir aplicació</strong> — escriu el nom d'un programa al cercador del sistema i l'obre.</p><p class="guide-li"><strong>Canviar de capa</strong> — salta a la capa següent o anterior (apartat 5).</p><p class="guide-li"><strong>Cap</strong> — tecla desactivada.</p><div class="guide-h2">Per anar més ràpid</div><p class="guide-li"><strong>Copiar</strong> i <strong>Enganxar</strong> (a dalt del panell) dupliquen la configuració d'una tecla a una altra, fins i tot entre capes diferents.</p><p class="guide-li">El <strong>color</strong> de cada tecla indica el tipus de funció: lila = drecera, verd = text, groc = multimèdia, cian = ratolí, rosa = MIDI, taronja = canvi de capa.</p></div><div id="g4"><div class="guide-h1">4. Els potenciòmetres</div><p class="guide-p">Els 3 potenciòmetres (X, Y i Z) són comandaments giratoris. Clica'ls al dibuix i configura'ls al mateix panell de la dreta.</p><div class="guide-h2">Què pot fer un potenciòmetre</div><p class="guide-li"><strong>Volum</strong> i <strong>Brillantor</strong> — puja i baixa el volum o la brillantor de l'ordinador.</p><p class="guide-li"><strong>Scroll vertical / horitzontal</strong> — fa scroll com la roda del ratolí.</p><p class="guide-li"><strong>Moviment del ratolí X / Y</strong> — mou el cursor.</p><p class="guide-li"><strong>Clic per moviment</strong> — envia un clic esquerre cada cop que el gires una mica. Ideal per passar imatges o avançar diapositives.</p><p class="guide-li"><strong>Escriure text per moviment</strong> — escriu un text girant a la dreta i un altre girant a l'esquerra.</p><p class="guide-li"><strong>MIDI CC</strong> — envia un controlador MIDI (0–127) per controlar sintetitzadors, efectes o visuals.</p><div class="guide-h2">Fer zoom amb un potenciòmetre</div><p class="guide-li">Tria <strong>Escriure text per moviment</strong>, posa <strong>+</strong> al text de la dreta i <strong>−</strong> al de l'esquerra.</p><p class="guide-li">Si el programa demana Cmd/Ctrl per fer zoom (Cmd + / Ctrl +), assigna a una tecla el tipus <strong>Modificador mantingut</strong>: mantén-la premuda mentre gires el potenciòmetre.</p><p class="guide-li">La <strong>densitat</strong> decideix cada quant s'escriu el text: baixa-la si el zoom va massa ràpid, puja-la si va massa lent.</p><div class="guide-note">Al dibuix pots girar els knobs (arrossega amunt i avall, o fes scroll a sobre) per veure com respondrien. És només una simulació visual: el que compta és la configuració.</div></div><div id="g5"><div class="guide-h1">5. Capes: moltes configuracions en un sol dispositiu</div><p class="guide-p">Una <strong>capa</strong> és una configuració sencera de les 16 tecles i els 3 potenciòmetres. Pots tenir-ne diverses al dispositiu i canviar-hi des d'una tecla: una capa per editar vídeo, una altra per fer música, una altra de calculadora…</p><div class="guide-h2">La barra de capes</div><p class="guide-li">Cada capa és un <strong>xip</strong> a la barra superior. Clica'l per editar aquella capa; fes-hi <strong>doble clic</strong> per canviar-li el nom.</p><p class="guide-li"><strong>+ Nova</strong> crea una capa buida i <strong>⎘</strong> duplica l'actual (perfecte per fer variacions).</p><p class="guide-li"><strong>✎</strong> reanomena, <strong>✕</strong> elimina la capa activa.</p><p class="guide-li"><strong>↓</strong> exporta la capa activa a un fitxer i <strong>↑</strong> importa capes d'un fitxer.</p><div class="guide-h2">Canviar de capa des del dispositiu</div><p class="guide-li">Assigna a una tecla el tipus <strong>Canviar de capa</strong> i tria la direcció: capa següent (→) o anterior (←).</p><p class="guide-li">A <em>En arribar al final</em> tries què passa a l'última capa: <strong>continuar en cercle</strong> (torna a la primera) o <strong>fer topall</strong> (es queda a l'extrem).</p><p class="guide-li">El <strong>topall</strong> és útil per no perdre's: si prems i prems i no passa res, saps segur que ets al principi o al final de les capes. Amb dues tecles, una cap endavant i una cap enrere, sempre pots orientar-te.</p><div class="guide-h2">Compartir configuracions</div><p class="guide-li">A la pestanya <em>Capes</em> cada capa té una casella: marca les que vulguis i prem <strong>Exportar seleccionades</strong> per desar-les en un fitxer <strong>.json</strong>.</p><p class="guide-li">Amb <strong>Importar d'un fitxer</strong> pots afegir capes que t'hagi passat una altra persona. Si un nom ja existeix, la capa nova s'afegeix com a "Nom (2)" i no en trepitja cap.</p><div class="guide-note">El fitxer exportat és text pla i porta el seu propi format: el pots enviar per correu, penjar en un repositori o guardar-te'l com a còpia de seguretat.</div></div><div id="g6"><div class="guide-h1">6. MIDI ràpid (visuals, TouchDesigner, Ableton…)</div><p class="guide-p">Per fer visuals o música sovint necessites moltes tecles amb notes MIDI diferents. L'eina <strong>MIDI ràpid</strong>, a sota del panell de la dreta, ho fa en un clic.</p><p class="guide-li">Tria la <strong>nota inicial</strong>, el <strong>canal</strong> i la <strong>velocitat</strong>.</p><p class="guide-li"><strong>Omplir aquesta capa</strong> assigna 16 notes consecutives a les 16 tecles.</p><p class="guide-li"><strong>Generar capes noves</strong> crea diverses capes seguides, cadascuna amb les 16 notes següents. Amb 4 capes tens 64 notes preparades.</p><div class="guide-note">Exemple amb TouchDesigner: genera 4 capes a partir de la nota 36 pel canal 1, i mapeja cada nota a un efecte. Afegeix una tecla <em>Canviar de capa</em> amb <em>topall</em> per moure't entre bancs sense perdre't.</div></div><div id="g7"><div class="guide-h1">7. Enviar la configuració al dispositiu</div><div class="guide-h2">Només la primera vegada: instal·lar el sistema base</div><p class="guide-li"><strong>1.</strong> Desconnecta el TECLA_edu. Mantén premut el botó <strong>BOOTSEL</strong> de la placa mentre el connectes per USB-C.</p><p class="guide-li"><strong>2.</strong> Apareixerà un disc anomenat <strong>RPI-RP2</strong>.</p><p class="guide-li"><strong>3.</strong> Ves a la pestanya <em>Firmware</em> i prem <strong>Transferir CircuitPython al RPI-RP2</strong>: tria el disc RPI-RP2 al diàleg i l'app hi copia el sistema directament.</p><p class="guide-li"><strong>4.</strong> El dispositiu es reinicia sol i el disc passa a dir-se <strong>CIRCUITPY</strong>. Prem llavors <strong>Transferir llibreries</strong> i tria aquest disc.</p><div class="guide-note">Si alguna cosa ha quedat malmesa, <strong>Flash Nuke</strong> esborra la memòria del dispositiu i el deixa com de fàbrica; després cal tornar a transferir el CircuitPython.</div><div class="guide-h2">Cada vegada que canviïs la configuració</div><p class="guide-li"><strong>1.</strong> Connecta el TECLA_edu per USB-C.</p><p class="guide-li"><strong>2.</strong> Ves a la pestanya <em>Firmware</em> i prem <strong>Actualitzar firmware</strong>.</p><p class="guide-li"><strong>3.</strong> Al diàleg que s'obre, selecciona el disc <strong>CIRCUITPY</strong> i dóna-hi permís.</p><p class="guide-li"><strong>4.</strong> L'app hi copia la teva configuració i les llibreries necessàries. El dispositiu es reinicia i ja funciona.</p><div class="guide-note">Cal <strong>Chrome</strong> o <strong>Edge</strong> per escriure directament al dispositiu. Amb Safari es descarrega el fitxer <strong>code.py</strong> i l'has de copiar tu mateix al disc CIRCUITPY.</div><div class="guide-note">Les capes es guarden dins el navegador. No es perden en tancar l'app, però desapareixerien si esborres les dades del navegador: si una configuració t'importa, exporta-la a un fitxer.</div></div>`,
+      es: `<div class="guide-toc"><a href="#g1">1. Qué es TECLA</a><a href="#g2">2. TECLA_edu Macropad</a><a href="#g3">3. Asignar funciones a las teclas</a><a href="#g4">4. Los potenciómetros</a><a href="#g5">5. Capas: muchas configuraciones en un solo dispositivo</a><a href="#g6">6. MIDI rápido (visuales, TouchDesigner, Ableton…)</a><a href="#g7">7. Enviar la configuración al dispositivo</a></div><div id="g1"><div class="guide-h1">1. Qué es TECLA</div><p class="guide-p">TECLA es un proyecto artístico, tecnológico y educativo que busca, a través de la creación de dispositivos electrónicos, promover la filosofía del DIY y del código abierto para investigar, experimentar y aprender de diferentes áreas del conocimiento.</p><p class="guide-p">TECLA entiende el aprendizaje como algo transversal e interdisciplinario, entrelazando la programación, el diseño, las artes plásticas, el modelado 3D, la música, la física, la electrónica, la robótica y las matemáticas.</p></div><div id="g2"><div class="guide-h1">2. TECLA_edu Macropad</div><p class="guide-p">Esta app-web sirve principalmente para configurar el dispositivo TECLA_edu como un Macropad. A continuación se muestra paso a paso cómo funciona y cuáles son sus características.</p><p class="guide-p">El dispositivo TECLA_edu dispone de <strong>16 teclas</strong> y <strong>3 potenciómetros</strong>. El TECLA_edu programado como macropad permite enviar cualquier función de teclado y de ratón: atajos, texto, funciones multimedia, edición de vídeo, calculadora, mando, etc. Las posibilidades son muchas. En el mismo dispositivo podemos tener múltiples capas con diferentes usos.</p><p class="guide-p">Todo se configura desde esta app web, sin instalar nada: conecta el dispositivo por USB y pulsa el botón de la parte superior derecha que pone <strong>Conectar dispositivo</strong>.</p><div class="guide-h2">Cómo está organizada la app</div><p class="guide-li"><strong>Dispositivo</strong>: el dispositivo virtual y el panel para asignar funciones. Es donde harás el 90% del trabajo.</p><p class="guide-li"><strong>Capas</strong>: gestiona todas las capas y añade configuraciones ya hechas.</p><p class="guide-li"><strong>Firmware</strong>: instala el sistema base y envía tu configuración al dispositivo.</p><p class="guide-li"><strong>Configuración</strong>: el canal MIDI por defecto y la identidad USB (el nombre del puerto y del disco del dispositivo).</p><div class="guide-note">La primera vez que utilizas un TECLA_edu hay que instalarle el sistema base (CircuitPython). Lo explicamos en el apartado 7 y solo se hace una vez.</div></div><div id="g3"><div class="guide-h1">3. Asignar funciones a las teclas</div><p class="guide-p">En la pestaña <strong>Dispositivo</strong> verás el dibujo del TECLA_edu: las 16 teclas a la izquierda y los 3 potenciómetros a la derecha.</p><div class="guide-h2">El gesto básico</div><p class="guide-li"><strong>1.</strong> Haz clic en una tecla del dibujo. El panel de la derecha pasa a mostrar esa tecla.</p><p class="guide-li"><strong>2.</strong> En <em>Función principal</em> elige qué quieres que haga.</p><p class="guide-li"><strong>3.</strong> Rellena las opciones que aparecen justo debajo.</p><p class="guide-li"><strong>4.</strong> Ya está: <strong>no hay botón de guardar</strong>, todo se guarda solo (lo indica el punto verde del panel).</p><div class="guide-h2">Qué puede hacer una tecla</div><p class="guide-li"><strong>Tecla / Atajo</strong> — envía una combinación (Ctrl+C, Cmd+S, F5…). Pulsa <em>Capturar atajo del teclado</em> y haz la combinación en tu teclado: queda asignada sola.</p><p class="guide-li"><strong>Escribir texto</strong> — escribe una palabra o una frase entera.</p><p class="guide-li"><strong>Control multimedia</strong> — reproducir, pausa, pista siguiente, volumen, brillo…</p><p class="guide-li"><strong>Ratón</strong> — clic izquierdo, derecho o central.</p><p class="guide-li"><strong>Modificador mantenido</strong> — mientras pulsas la tecla, mantiene Cmd, Ctrl, Alt o Shift. Sirve para combinarla con un potenciómetro o con otra tecla.</p><p class="guide-li"><strong>Nota MIDI</strong> — envía una nota (nota, canal y velocidad configurables).</p><p class="guide-li"><strong>Abrir aplicación</strong> — escribe el nombre de un programa en el buscador del sistema y lo abre.</p><p class="guide-li"><strong>Cambiar de capa</strong> — salta a la capa siguiente o anterior (apartado 5).</p><p class="guide-li"><strong>Ninguna</strong> — tecla desactivada.</p><div class="guide-h2">Para ir más rápido</div><p class="guide-li"><strong>Copiar</strong> y <strong>Pegar</strong> (arriba del panel) duplican la configuración de una tecla en otra, incluso entre capas distintas.</p><p class="guide-li">El <strong>color</strong> de cada tecla indica el tipo de función: lila = atajo, verde = texto, amarillo = multimedia, cian = ratón, rosa = MIDI, naranja = cambio de capa.</p></div><div id="g4"><div class="guide-h1">4. Los potenciómetros</div><p class="guide-p">Los 3 potenciómetros (X, Y y Z) son mandos giratorios. Haz clic en ellos en el dibujo y configúralos en el mismo panel de la derecha.</p><div class="guide-h2">Qué puede hacer un potenciómetro</div><p class="guide-li"><strong>Volumen</strong> y <strong>Brillo</strong> — sube y baja el volumen o el brillo del ordenador.</p><p class="guide-li"><strong>Scroll vertical / horizontal</strong> — hace scroll como la rueda del ratón.</p><p class="guide-li"><strong>Movimiento del ratón X / Y</strong> — mueve el cursor.</p><p class="guide-li"><strong>Clic por movimiento</strong> — envía un clic izquierdo cada vez que lo giras un poco. Ideal para pasar imágenes o avanzar diapositivas.</p><p class="guide-li"><strong>Escribir texto por movimiento</strong> — escribe un texto girando a la derecha y otro girando a la izquierda.</p><p class="guide-li"><strong>MIDI CC</strong> — envía un controlador MIDI (0–127) para controlar sintetizadores, efectos o visuales.</p><div class="guide-h2">Hacer zoom con un potenciómetro</div><p class="guide-li">Elige <strong>Escribir texto por movimiento</strong>, pon <strong>+</strong> en el texto de la derecha y <strong>−</strong> en el de la izquierda.</p><p class="guide-li">Si el programa pide Cmd/Ctrl para hacer zoom (Cmd + / Ctrl +), asigna a una tecla el tipo <strong>Modificador mantenido</strong>: mantenla pulsada mientras giras el potenciómetro.</p><p class="guide-li">La <strong>densidad</strong> decide cada cuánto se escribe el texto: bájala si el zoom va demasiado rápido, súbela si va demasiado lento.</p><div class="guide-note">En el dibujo puedes girar los knobs (arrastra arriba y abajo, o haz scroll encima) para ver cómo responderían. Es solo una simulación visual: lo que cuenta es la configuración.</div></div><div id="g5"><div class="guide-h1">5. Capas: muchas configuraciones en un solo dispositivo</div><p class="guide-p">Una <strong>capa</strong> es una configuración entera de las 16 teclas y los 3 potenciómetros. Puedes tener varias en el dispositivo y cambiar entre ellas desde una tecla: una capa para editar vídeo, otra para hacer música, otra de calculadora…</p><div class="guide-h2">La barra de capas</div><p class="guide-li">Cada capa es un <strong>chip</strong> en la barra superior. Haz clic para editar esa capa; haz <strong>doble clic</strong> para cambiarle el nombre.</p><p class="guide-li"><strong>+ Nueva</strong> crea una capa vacía y <strong>⎘</strong> duplica la actual (perfecto para hacer variaciones).</p><p class="guide-li"><strong>✎</strong> renombra, <strong>✕</strong> elimina la capa activa.</p><p class="guide-li"><strong>↓</strong> exporta la capa activa a un archivo y <strong>↑</strong> importa capas de un archivo.</p><div class="guide-h2">Cambiar de capa desde el dispositivo</div><p class="guide-li">Asigna a una tecla el tipo <strong>Cambiar de capa</strong> y elige la dirección: capa siguiente (→) o anterior (←).</p><p class="guide-li">En <em>Al llegar al final</em> eliges qué pasa en la última capa: <strong>continuar en círculo</strong> (vuelve a la primera) o <strong>hacer tope</strong> (se queda en el extremo).</p><p class="guide-li">El <strong>tope</strong> es útil para no perderse: si pulsas y pulsas y no pasa nada, sabes seguro que estás al principio o al final de las capas. Con dos teclas, una hacia delante y otra hacia atrás, siempre puedes orientarte.</p><div class="guide-h2">Compartir configuraciones</div><p class="guide-li">En la pestaña <em>Capas</em> cada capa tiene una casilla: marca las que quieras y pulsa <strong>Exportar seleccionadas</strong> para guardarlas en un archivo <strong>.json</strong>.</p><p class="guide-li">Con <strong>Importar de un archivo</strong> puedes añadir capas que te haya pasado otra persona. Si un nombre ya existe, la capa nueva se añade como "Nombre (2)" y no pisa ninguna.</p><div class="guide-note">El archivo exportado es texto plano y lleva su propio formato: puedes enviarlo por correo, subirlo a un repositorio o guardarlo como copia de seguridad.</div></div><div id="g6"><div class="guide-h1">6. MIDI rápido (visuales, TouchDesigner, Ableton…)</div><p class="guide-p">Para hacer visuales o música a menudo necesitas muchas teclas con notas MIDI diferentes. La herramienta <strong>MIDI rápido</strong>, debajo del panel de la derecha, lo hace en un clic.</p><p class="guide-li">Elige la <strong>nota inicial</strong>, el <strong>canal</strong> y la <strong>velocidad</strong>.</p><p class="guide-li"><strong>Rellenar esta capa</strong> asigna 16 notas consecutivas a las 16 teclas.</p><p class="guide-li"><strong>Generar capas nuevas</strong> crea varias capas seguidas, cada una con las 16 notas siguientes. Con 4 capas tienes 64 notas preparadas.</p><div class="guide-note">Ejemplo con TouchDesigner: genera 4 capas a partir de la nota 36 por el canal 1, y mapea cada nota a un efecto. Añade una tecla <em>Cambiar de capa</em> con <em>tope</em> para moverte entre bancos sin perderte.</div></div><div id="g7"><div class="guide-h1">7. Enviar la configuración al dispositivo</div><div class="guide-h2">Solo la primera vez: instalar el sistema base</div><p class="guide-li"><strong>1.</strong> Desconecta el TECLA_edu. Mantén pulsado el botón <strong>BOOTSEL</strong> de la placa mientras lo conectas por USB-C.</p><p class="guide-li"><strong>2.</strong> Aparecerá un disco llamado <strong>RPI-RP2</strong>.</p><p class="guide-li"><strong>3.</strong> Ve a la pestaña <em>Firmware</em> y pulsa <strong>Transferir CircuitPython al RPI-RP2</strong>: elige el disco RPI-RP2 en el diálogo y la app copia el sistema directamente.</p><p class="guide-li"><strong>4.</strong> El dispositivo se reinicia solo y el disco pasa a llamarse <strong>CIRCUITPY</strong>. Pulsa entonces <strong>Transferir librerías</strong> y elige ese disco.</p><div class="guide-note">Si algo se ha estropeado, <strong>Flash Nuke</strong> borra la memoria del dispositivo y lo deja de fábrica; después hay que volver a transferir CircuitPython.</div><div class="guide-h2">Cada vez que cambies la configuración</div><p class="guide-li"><strong>1.</strong> Conecta el TECLA_edu por USB-C.</p><p class="guide-li"><strong>2.</strong> Ve a la pestaña <em>Firmware</em> y pulsa <strong>Actualizar firmware</strong>.</p><p class="guide-li"><strong>3.</strong> En el diálogo que se abre, selecciona el disco <strong>CIRCUITPY</strong> y dale permiso.</p><p class="guide-li"><strong>4.</strong> La app copia tu configuración y las librerías necesarias. El dispositivo se reinicia y ya funciona.</p><div class="guide-note">Se necesita <strong>Chrome</strong> o <strong>Edge</strong> para escribir directamente en el dispositivo. Con Safari se descarga el archivo <strong>code.py</strong> y tienes que copiarlo tú mismo al disco CIRCUITPY.</div><div class="guide-note">Las capas se guardan dentro del navegador. No se pierden al cerrar la app, pero desaparecerían si borras los datos del navegador: si una configuración te importa, expórtala a un archivo.</div></div>`,
+      en: `<div class="guide-toc"><a href="#g1">1. What TECLA is</a><a href="#g2">2. TECLA_edu Macropad</a><a href="#g3">3. Assigning functions to the keys</a><a href="#g4">4. The potentiometers</a><a href="#g5">5. Layers: many setups in a single device</a><a href="#g6">6. Quick MIDI (visuals, TouchDesigner, Ableton…)</a><a href="#g7">7. Sending the configuration to the device</a></div><div id="g1"><div class="guide-h1">1. What TECLA is</div><p class="guide-p">TECLA is an artistic, technological and educational project that, through the creation of electronic devices, promotes the DIY and open-source philosophy in order to research, experiment and learn across different areas of knowledge.</p><p class="guide-p">TECLA understands learning as something transversal and interdisciplinary, weaving together programming, design, visual arts, 3D modelling, music, physics, electronics, robotics and mathematics.</p></div><div id="g2"><div class="guide-h1">2. TECLA_edu Macropad</div><p class="guide-p">This web app is mainly used to configure the TECLA_edu device as a Macropad. Below you'll find, step by step, how it works and what it can do.</p><p class="guide-p">The TECLA_edu device has <strong>16 keys</strong> and <strong>3 potentiometers</strong>. Programmed as a macropad, TECLA_edu can send any keyboard or mouse function: shortcuts, text, media functions, video editing, calculator, remote control, and so on. The possibilities are many. A single device can hold multiple layers for different uses.</p><p class="guide-p">Everything is configured from this web app, with nothing to install: connect the device over USB and press the <strong>Connect device</strong> button at the top right.</p><div class="guide-h2">How the app is organised</div><p class="guide-li"><strong>Device</strong>: the virtual device and the panel for assigning functions. This is where you'll do 90% of the work.</p><p class="guide-li"><strong>Layers</strong>: manage every layer and add ready-made setups.</p><p class="guide-li"><strong>Firmware</strong>: install the base system and send your configuration to the device.</p><p class="guide-li"><strong>Settings</strong>: the default MIDI channel and the USB identity (the device's port and drive name).</p><div class="guide-note">The first time you use a TECLA_edu you need to install the base system (CircuitPython). We explain it in section 7 and it's a one-off.</div></div><div id="g3"><div class="guide-h1">3. Assigning functions to the keys</div><p class="guide-p">In the <strong>Device</strong> tab you'll see the TECLA_edu drawing: the 16 keys on the left and the 3 potentiometers on the right.</p><div class="guide-h2">The basic gesture</div><p class="guide-li"><strong>1.</strong> Click a key in the drawing. The panel on the right switches to that key.</p><p class="guide-li"><strong>2.</strong> Under <em>Main function</em>, choose what it should do.</p><p class="guide-li"><strong>3.</strong> Fill in the options that appear just below.</p><p class="guide-li"><strong>4.</strong> Done: <strong>there is no save button</strong>, everything is stored automatically (the green dot in the panel confirms it).</p><div class="guide-h2">What a key can do</div><p class="guide-li"><strong>Key / Shortcut</strong> — sends a combination (Ctrl+C, Cmd+S, F5…). Press <em>Capture keyboard shortcut</em> and perform the combination on your keyboard: it gets assigned by itself.</p><p class="guide-li"><strong>Type text</strong> — types a word or a whole sentence.</p><p class="guide-li"><strong>Media control</strong> — play, pause, next track, volume, brightness…</p><p class="guide-li"><strong>Mouse</strong> — left, right or middle click.</p><p class="guide-li"><strong>Held modifier</strong> — while the key is pressed, it holds Cmd, Ctrl, Alt or Shift. Useful to combine it with a potentiometer or another key.</p><p class="guide-li"><strong>MIDI note</strong> — sends a note (note, channel and velocity configurable).</p><p class="guide-li"><strong>Open application</strong> — types a program's name into the system launcher and opens it.</p><p class="guide-li"><strong>Switch layer</strong> — jumps to the next or previous layer (section 5).</p><p class="guide-li"><strong>None</strong> — key disabled.</p><div class="guide-h2">To work faster</div><p class="guide-li"><strong>Copy</strong> and <strong>Paste</strong> (top of the panel) duplicate one key's configuration onto another, even across different layers.</p><p class="guide-li">Each key's <strong>colour</strong> shows its function type: purple = shortcut, green = text, yellow = media, cyan = mouse, pink = MIDI, orange = layer switch.</p></div><div id="g4"><div class="guide-h1">4. The potentiometers</div><p class="guide-p">The 3 potentiometers (X, Y and Z) are rotary controls. Click them in the drawing and configure them in the same panel on the right.</p><div class="guide-h2">What a potentiometer can do</div><p class="guide-li"><strong>Volume</strong> and <strong>Brightness</strong> — raise and lower the computer's volume or brightness.</p><p class="guide-li"><strong>Vertical / horizontal scroll</strong> — scrolls like a mouse wheel.</p><p class="guide-li"><strong>Mouse X / Y movement</strong> — moves the cursor.</p><p class="guide-li"><strong>Click per movement</strong> — sends a left click every time you turn it a little. Great for flipping through images or slides.</p><p class="guide-li"><strong>Type text per movement</strong> — types one text when turning right and another when turning left.</p><p class="guide-li"><strong>MIDI CC</strong> — sends a MIDI controller (0–127) to drive synths, effects or visuals.</p><div class="guide-h2">Zooming with a potentiometer</div><p class="guide-li">Choose <strong>Type text per movement</strong>, put <strong>+</strong> in the right-turn text and <strong>−</strong> in the left-turn one.</p><p class="guide-li">If the program needs Cmd/Ctrl to zoom (Cmd + / Ctrl +), assign a key as a <strong>Held modifier</strong>: hold it down while turning the potentiometer.</p><p class="guide-li"><strong>Density</strong> decides how often the text is typed: lower it if zooming is too fast, raise it if it's too slow.</p><div class="guide-note">In the drawing you can turn the knobs (drag up and down, or scroll over them) to see how they would respond. It's only a visual simulation: what matters is the configuration.</div></div><div id="g5"><div class="guide-h1">5. Layers: many setups in a single device</div><p class="guide-p">A <strong>layer</strong> is a complete configuration of the 16 keys and the 3 potentiometers. You can keep several in the device and switch between them with a key: one layer for video editing, another for music, another as a calculator…</p><div class="guide-h2">The layer bar</div><p class="guide-li">Each layer is a <strong>chip</strong> in the top bar. Click it to edit that layer; <strong>double-click</strong> to rename it.</p><p class="guide-li"><strong>+ New</strong> creates an empty layer and <strong>⎘</strong> duplicates the current one (perfect for variations).</p><p class="guide-li"><strong>✎</strong> renames, <strong>✕</strong> deletes the active layer.</p><p class="guide-li"><strong>↓</strong> exports the active layer to a file and <strong>↑</strong> imports layers from a file.</p><div class="guide-h2">Switching layers from the device</div><p class="guide-li">Assign a key as <strong>Switch layer</strong> and choose the direction: next layer (→) or previous (←).</p><p class="guide-li">Under <em>When reaching the end</em> you choose what happens on the last layer: <strong>wrap around</strong> (back to the first) or <strong>stop at the end</strong> (stay on the edge).</p><p class="guide-li"><strong>Stopping</strong> helps you not get lost: if you press again and again and nothing happens, you know for sure you're at the first or last layer. With two keys, one forward and one back, you can always find your bearings.</p><div class="guide-h2">Sharing setups</div><p class="guide-li">In the <em>Layers</em> tab every layer has a checkbox: tick the ones you want and press <strong>Export selected</strong> to save them into a <strong>.json</strong> file.</p><p class="guide-li">With <strong>Import from a file</strong> you can add layers someone else sent you. If a name already exists, the new layer comes in as "Name (2)" and overwrites nothing.</p><div class="guide-note">The exported file is plain text and carries its own format: email it, put it in a repository, or keep it as a backup.</div></div><div id="g6"><div class="guide-h1">6. Quick MIDI (visuals, TouchDesigner, Ableton…)</div><p class="guide-p">Visuals and music often need many keys with different MIDI notes. The <strong>Quick MIDI</strong> tool, below the panel on the right, does it in one click.</p><p class="guide-li">Choose the <strong>first note</strong>, the <strong>channel</strong> and the <strong>velocity</strong>.</p><p class="guide-li"><strong>Fill this layer</strong> assigns 16 consecutive notes to the 16 keys.</p><p class="guide-li"><strong>Generate new layers</strong> creates several layers in a row, each with the next 16 notes. Four layers give you 64 notes ready to go.</p><div class="guide-note">TouchDesigner example: generate 4 layers starting at note 36 on channel 1, and map each note to an effect. Add a <em>Switch layer</em> key with <em>stop at the end</em> to move between banks without getting lost.</div></div><div id="g7"><div class="guide-h1">7. Sending the configuration to the device</div><div class="guide-h2">First time only: installing the base system</div><p class="guide-li"><strong>1.</strong> Unplug the TECLA_edu. Hold down the <strong>BOOTSEL</strong> button on the board while plugging it in over USB-C.</p><p class="guide-li"><strong>2.</strong> A drive named <strong>RPI-RP2</strong> will appear.</p><p class="guide-li"><strong>3.</strong> Go to the <em>Firmware</em> tab and press <strong>Transfer CircuitPython to RPI-RP2</strong>: pick the RPI-RP2 drive in the dialog and the app copies the system straight to it.</p><p class="guide-li"><strong>4.</strong> The device restarts on its own and the drive becomes <strong>CIRCUITPY</strong>. Then press <strong>Transfer libraries</strong> and pick that drive.</p><div class="guide-note">If something got broken, <strong>Flash Nuke</strong> wipes the device's memory back to factory state; you then need to transfer CircuitPython again.</div><div class="guide-h2">Every time you change the configuration</div><p class="guide-li"><strong>1.</strong> Connect the TECLA_edu over USB-C.</p><p class="guide-li"><strong>2.</strong> Go to the <em>Firmware</em> tab and press <strong>Update firmware</strong>.</p><p class="guide-li"><strong>3.</strong> In the dialog that opens, select the <strong>CIRCUITPY</strong> drive and grant permission.</p><p class="guide-li"><strong>4.</strong> The app copies your configuration and the required libraries. The device restarts and it's running.</p><div class="guide-note"><strong>Chrome</strong> or <strong>Edge</strong> is required to write directly to the device. On Safari the <strong>code.py</strong> file is downloaded and you must copy it to the CIRCUITPY drive yourself.</div><div class="guide-note">Layers are stored inside the browser. They survive closing the app, but would disappear if you clear the browser's data: if a setup matters to you, export it to a file.</div></div>`,
     };
     const _DICT = {
       ca: {
         nav_config:'Dispositiu', nav_profiles:'Capes', nav_settings:'Configuració', nav_fw:'Firmware', nav_guide:'Guia', nav_theme:'Aparença',
         cfg_midi_title:'Canal MIDI', cfg_midi_desc:"Canal MIDI per defecte que s'aplicarà a les tecles i potenciòmetres MIDI nous.", cfg_midi_ch:'Canal:', cfg_save:'Guardar',
         cfg_usb_title:'Identitat USB', cfg_port_name:'Nom del port:', cfg_disk_name:'Nom del disc:', cfg_device_title:'Dispositiu', cfg_disconnect:'Desconnectar',
-        btn_connect:'Connecta', btn_disconnect:'Desconnectar',
+        btn_connect:'Connecta dispositiu', btn_disconnect:'Desconnectar',
         device_off:'desconnectat',
         layer_lbl:'Capes:', btn_new_layer:'+ Nova', btn_rename:'Reanomenar la capa activa', btn_del:'Eliminar la capa activa',
         tt_dup:'Duplicar la capa activa', tt_export_layer:'Exportar la capa activa (JSON)', tt_import_layer:'Importar capes (JSON)', tt_hub:"Tornar al hub d'aplicacions",
@@ -1784,16 +2132,33 @@ except Exception:
         midi_fill_confirm:'Aquesta capa ja té tecles configurades. Vols sobreescriure-les amb notes MIDI?',
         log_copied:'Configuració copiada', log_layer_dup:'Capa duplicada', log_midi_layers:'capes MIDI generades',
         btn_fw_update:'Actualitzar firmware',
-        fw_status_title:'Estat del sistema', fw_status_vol:'Volum CIRCUITPY', fw_refresh:'↺ Refrescar estat',
-        fw_step1_title:'Pas 1 — Instal·lar CircuitPython',
-        fw_step1_desc:'Entra al mode bootloader mantenint <strong>BOOTSEL</strong> mentre connectes el USB-C. El dispositiu apareixerà com <strong>RPI-RP2</strong>.',
-        fw_step1_sub:'Obre el Finder &rarr; arrossega el fitxer <strong>.uf2</strong> al volum <strong>RPI-RP2</strong>. El dispositiu es reiniciarà com <strong>CIRCUITPY</strong>.',
-        fw_step2_title:'Pas 2 — Instal·lar les llibreries',
-        fw_step2_desc:'Descarrega el bundle de llibreries de CircuitPython i copia la carpeta <strong>adafruit_hid</strong> dins la carpeta <strong>lib/</strong> del CIRCUITPY.',
-        fw_step2_sub:'Cerca <strong>adafruit-circuitpython-bundle</strong> &rarr; descomprimeix &rarr; les llibreries s\'instal·laran autom\u00e0ticament.',
-        fw_step3_title:'Pas 3 — Actualitzar el firmware',
-        fw_step3_desc:'Un cop el CIRCUITPY és visible, genera i exporta el fitxer <strong>code.py</strong> amb la teva configuració al dispositiu.',
-        profiles_new:'+ Nova capa', profiles_export:'↓ Exportar', profiles_import:'↑ Importar',
+        fw_status_title:'Estat del sistema', fw_status_vol:'Volum del dispositiu', fw_not_device:'(no sembla un dispositiu CircuitPython)', fw_refresh:'↺ Refrescar estat',
+        fw_step1_title:'Pas 1 — Sistema base',
+        fw_step1_desc:"Només cal la primera vegada. Connecta la placa mantenint premut <strong>BOOTSEL</strong>: apareixerà com a <strong>RPI-RP2</strong>. Tria aquest volum quan el diàleg t'ho demani.",
+        fw_step1_sub:'Després del CircuitPython el dispositiu es reinicia sol i reapareix amb el seu nom de disc (<strong>CIRCUITPY</strong> per defecte). Llavors ja pots transferir-hi les llibreries.',
+        fw_step2_title:'Pas 2 — Actualitzar el firmware',
+        fw_step2_desc:'Envia la teva configuració al dispositiu: es copia el <strong>code.py</strong> generat i, si falten, també les llibreries.',
+        fw_transfer_cp:'↓ Transferir CircuitPython 10.0.3 al RPI-RP2',
+        fw_transfer_libs:'↓ Transferir llibreries (adafruit_hid) al dispositiu',
+        fw_transfer_nuke:'⚠ Transferir Flash Nuke (esborrar-ho tot)',
+        fw_loading:'Carregant', fw_pick_rpi:'Selecciona el volum RPI-RP2 al diàleg…',
+        fw_transferred:'transferit correctament',
+        fw_downloaded_manual:"Fitxer descarregat: copia'l manualment al volum RPI-RP2.",
+        fw_pick_device:'Selecciona el volum del dispositiu…', fw_installing_libs:'Instal·lant llibreries…',
+        fw_checking:'Comprovant', fw_done_a:'Firmware TECLA:', fw_done_copied:'fitxers copiats',
+        fw_done_uptodate:'ja al dia.', fw_done_unplug:'NO desendollis el dispositiu: es reinicia sol en uns segons.',
+        fw_incomplete_a:'Actualització INCOMPLETA', fw_incomplete_files:'fitxers',
+        fw_incomplete_retry:'El firmware anterior es manté actiu: torna a clicar Actualitzar — només es recopiarà el que falta.',
+        fw_downloaded_code:"code.py descarregat. Copia'l manualment al dispositiu.",
+        fw_libs_done:'fitxers instal·lats a', fw_need_chrome:'Cal Chrome o Edge per escriure al dispositiu.',
+        fw_nuke_confirm:'El Flash Nuke esborra TOTA la memòria del dispositiu (firmware i fitxers). Després caldrà tornar a instal·lar el CircuitPython. Vols continuar?',
+        profiles_new:'+ Nova capa', profiles_export:'↓ Exportar seleccionades', profiles_import:"↑ Importar d'un fitxer",
+        profiles_select_all:'Seleccionar-les totes', profiles_pick_hint:'Incloure aquesta capa en exportar',
+        profiles_keys:'tecles', profiles_pots:'potenciòmetres',
+        profiles_pick_one:'Selecciona almenys una capa per exportar.',
+        profiles_exported:'capa(es) exportada(es)', profiles_imported:'capa(es) importada(es)',
+        profiles_bad_file:'Error: el fitxer no és un JSON vàlid.',
+        profiles_no_layers:'El fitxer no conté cap capa vàlida.',
         profiles_edit:'Editar',
         profiles_my_desc:'Totes les capes del dispositiu en ordre. La tecla <em>Canviar de capa</em> les recorre seqüencialment. La capa activa apareix ressaltada.',
         drawer_type:'Funció Principal', btn_save_elem:'Aplicar Canvis',
@@ -1809,6 +2174,18 @@ except Exception:
         drawer_midi_cc_num_label:'Número CC (0–127)', drawer_midi_cc_ch_label:'Canal MIDI (1–16)',
         layer_change_desc:'Aquesta tecla canviarà de capa al ser premuda.',
         layer_dir_label:'Direcció', layer_dir_next:'Capa Següent (→)', layer_dir_prev:'Capa Anterior (←)',
+        layer_mode_label:'En arribar al final', layer_mode_wrap:"Continuar en cercle (l'última → la primera)", layer_mode_clamp:"Fer topall (quedar-se a l'extrem)",
+        layer_mode_desc:'Amb <strong>topall</strong>, la tecla deixa de fer efecte quan ja ets a la primera o a l\'última capa: així sempre saps on ets encara que et perdis entre capes.',
+        pot_none:'Cap (Desactivat)', pot_volume:"Volum de l'ordinador", pot_brightness:'Brillantor de la pantalla',
+        pot_scroll_y:'Ratolí: Scroll Vertical', pot_scroll_x:'Ratolí: Scroll Horitzontal',
+        pot_mouse_x:'Ratolí: Moviment X (Esq/Dre)', pot_mouse_y:'Ratolí: Moviment Y (Dalt/Baix)',
+        pot_click_step:'Clic per moviment (pas configurable)', pot_text_step:'Escriure text per moviment (zoom + / −)', pot_midi_cc:'MIDI CC (Controlador 0–127)',
+        drawer_text_step_desc:"Escriu un text cada vegada que el potenciòmetre avança N unitats. Girant cap a la dreta escriu el primer text i cap a l'esquerra el segon. Amb <strong>+</strong> i <strong>−</strong> tens un control de zoom.",
+        drawer_text_up_label:'Text girant a la dreta', drawer_text_down_label:"Text girant a l'esquerra",
+        drawer_text_step_label:'Densitat (1 pols cada N unitats)',
+        drawer_text_step_tip:'Per fer <strong>zoom</strong>: escriu <strong>+</strong> i <strong>−</strong>, i assigna una tecla de tipus <em>Modificador Mantingut</em> amb Cmd/Ctrl si l\'aplicació ho requereix.',
+        dens_2:'Cada 2 unitats (molt dens)', dens_5:'Cada 5 unitats (dens)', dens_10:'Cada 10 unitats (normal)',
+        dens_20:'Cada 20 unitats (espaiat)', dens_30:'Cada 30 unitats (molt espaiat)',
         theme_title:'Aparença', theme_editor:'Editor de temes', theme_new:'+ Nou tema',
         theme_random:'🎲 Aleatori', theme_save:'Desa i aplica', theme_reset:'Restablir', theme_name_lbl:'Nom:',
         ct_bg:'Fons', ct_surface:'Superfície', ct_surface2:'Superfície 2', ct_text:'Text', ct_accent:'Accent',
@@ -1818,7 +2195,7 @@ except Exception:
         nav_config:'Dispositivo', nav_profiles:'Capas', nav_settings:'Configuración', nav_fw:'Firmware', nav_guide:'Guía', nav_theme:'Apariencia',
         cfg_midi_title:'Canal MIDI', cfg_midi_desc:'Canal MIDI por defecto que se aplicará a las teclas y potenciómetros MIDI nuevos.', cfg_midi_ch:'Canal:', cfg_save:'Guardar',
         cfg_usb_title:'Identidad USB', cfg_port_name:'Nombre del puerto:', cfg_disk_name:'Nombre del disco:', cfg_device_title:'Dispositivo', cfg_disconnect:'Desconectar',
-        btn_connect:'Conectar', btn_disconnect:'Desconectar',
+        btn_connect:'Conectar dispositivo', btn_disconnect:'Desconectar',
         device_off:'desconectado',
         layer_lbl:'Capas:', btn_new_layer:'+ Nueva', btn_rename:'Renombrar la capa activa', btn_del:'Eliminar la capa activa',
         tt_dup:'Duplicar la capa activa', tt_export_layer:'Exportar la capa activa (JSON)', tt_import_layer:'Importar capas (JSON)', tt_hub:'Volver al hub de aplicaciones',
@@ -1831,16 +2208,33 @@ except Exception:
         midi_fill_confirm:'Esta capa ya tiene teclas configuradas. ¿Quieres sobrescribirlas con notas MIDI?',
         log_copied:'Configuración copiada', log_layer_dup:'Capa duplicada', log_midi_layers:'capas MIDI generadas',
         btn_fw_update:'Actualizar firmware',
-        fw_status_title:'Estado del sistema', fw_status_vol:'Volumen CIRCUITPY', fw_refresh:'↺ Actualizar estado',
-        fw_step1_title:'Paso 1 — Instalar CircuitPython',
-        fw_step1_desc:'Entra en modo bootloader manteniendo <strong>BOOTSEL</strong> mientras conectas el USB-C. El dispositivo aparecerá como <strong>RPI-RP2</strong>.',
-        fw_step1_sub:'Abre el Finder &rarr; arrastra el archivo <strong>.uf2</strong> al volumen <strong>RPI-RP2</strong>. El dispositivo se reiniciará como <strong>CIRCUITPY</strong>.',
-        fw_step2_title:'Paso 2 — Instalar las librerías',
-        fw_step2_desc:'Descarga el bundle de librerías de CircuitPython y las librerías se instalarán automáticamente.',
-        fw_step2_sub:'Busca <strong>adafruit-circuitpython-bundle</strong> &rarr; descomprime &rarr; copia la carpeta <strong>adafruit_hid</strong> a <strong>CIRCUITPY/lib/</strong>.',
-        fw_step3_title:'Paso 3 — Actualizar el firmware',
-        fw_step3_desc:'Una vez CIRCUITPY está visible, genera y exporta el archivo <strong>code.py</strong> con tu configuración al dispositivo.',
-        profiles_new:'+ Nueva capa', profiles_export:'↓ Exportar', profiles_import:'↑ Importar',
+        fw_status_title:'Estado del sistema', fw_status_vol:'Volumen del dispositivo', fw_not_device:'(no parece un dispositivo CircuitPython)', fw_refresh:'↺ Actualizar estado',
+        fw_step1_title:'Paso 1 — Sistema base',
+        fw_step1_desc:'Solo hace falta la primera vez. Conecta la placa manteniendo pulsado <strong>BOOTSEL</strong>: aparecerá como <strong>RPI-RP2</strong>. Elige ese volumen cuando el diálogo lo pida.',
+        fw_step1_sub:'Tras el CircuitPython el dispositivo se reinicia solo y reaparece con su nombre de disco (<strong>CIRCUITPY</strong> por defecto). Entonces ya puedes transferirle las librerías.',
+        fw_step2_title:'Paso 2 — Actualizar el firmware',
+        fw_step2_desc:'Envía tu configuración al dispositivo: se copia el <strong>code.py</strong> generado y, si faltan, también las librerías.',
+        fw_transfer_cp:'↓ Transferir CircuitPython 10.0.3 al RPI-RP2',
+        fw_transfer_libs:'↓ Transferir librerías (adafruit_hid) al dispositivo',
+        fw_transfer_nuke:'⚠ Transferir Flash Nuke (borrarlo todo)',
+        fw_loading:'Cargando', fw_pick_rpi:'Selecciona el volumen RPI-RP2 en el diálogo…',
+        fw_transferred:'transferido correctamente',
+        fw_downloaded_manual:'Archivo descargado: cópialo manualmente al volumen RPI-RP2.',
+        fw_pick_device:'Selecciona el volumen del dispositivo…', fw_installing_libs:'Instalando librerías…',
+        fw_checking:'Comprobando', fw_done_a:'Firmware TECLA:', fw_done_copied:'archivos copiados',
+        fw_done_uptodate:'ya al día.', fw_done_unplug:'NO desenchufes el dispositivo: se reinicia solo en unos segundos.',
+        fw_incomplete_a:'Actualización INCOMPLETA', fw_incomplete_files:'archivos',
+        fw_incomplete_retry:'El firmware anterior se mantiene activo: vuelve a pulsar Actualizar — solo se recopiará lo que falta.',
+        fw_downloaded_code:'code.py descargado. Cópialo manualmente al dispositivo.',
+        fw_libs_done:'archivos instalados en', fw_need_chrome:'Se necesita Chrome o Edge para escribir en el dispositivo.',
+        fw_nuke_confirm:'El Flash Nuke borra TODA la memoria del dispositivo (firmware y archivos). Después habrá que reinstalar CircuitPython. ¿Quieres continuar?',
+        profiles_new:'+ Nueva capa', profiles_export:'↓ Exportar seleccionadas', profiles_import:'↑ Importar de un archivo',
+        profiles_select_all:'Seleccionarlas todas', profiles_pick_hint:'Incluir esta capa al exportar',
+        profiles_keys:'teclas', profiles_pots:'potenciómetros',
+        profiles_pick_one:'Selecciona al menos una capa para exportar.',
+        profiles_exported:'capa(s) exportada(s)', profiles_imported:'capa(s) importada(s)',
+        profiles_bad_file:'Error: el archivo no es un JSON válido.',
+        profiles_no_layers:'El archivo no contiene ninguna capa válida.',
         profiles_edit:'Editar',
         profiles_my_desc:'Todas las capas del dispositivo en orden. La tecla <em>Cambiar de capa</em> las recorre secuencialmente. La capa activa aparece resaltada.',
         drawer_type:'Función Principal', btn_save_elem:'Aplicar Cambios',
@@ -1856,6 +2250,18 @@ except Exception:
         drawer_midi_cc_num_label:'Número CC (0–127)', drawer_midi_cc_ch_label:'Canal MIDI (1–16)',
         layer_change_desc:'Esta tecla cambiará de capa al ser pulsada.',
         layer_dir_label:'Dirección', layer_dir_next:'Capa Siguiente (→)', layer_dir_prev:'Capa Anterior (←)',
+        layer_mode_label:'Al llegar al final', layer_mode_wrap:'Continuar en círculo (la última → la primera)', layer_mode_clamp:'Hacer tope (quedarse en el extremo)',
+        layer_mode_desc:'Con <strong>tope</strong>, la tecla deja de hacer efecto cuando ya estás en la primera o en la última capa: así siempre sabes dónde estás aunque te pierdas entre capas.',
+        pot_none:'Ninguna (Desactivado)', pot_volume:'Volumen del ordenador', pot_brightness:'Brillo de la pantalla',
+        pot_scroll_y:'Ratón: Scroll Vertical', pot_scroll_x:'Ratón: Scroll Horizontal',
+        pot_mouse_x:'Ratón: Movimiento X (Izq/Der)', pot_mouse_y:'Ratón: Movimiento Y (Arriba/Abajo)',
+        pot_click_step:'Clic por movimiento (paso configurable)', pot_text_step:'Escribir texto por movimiento (zoom + / −)', pot_midi_cc:'MIDI CC (Controlador 0–127)',
+        drawer_text_step_desc:'Escribe un texto cada vez que el potenciómetro avanza N unidades. Girando a la derecha escribe el primer texto y a la izquierda el segundo. Con <strong>+</strong> y <strong>−</strong> tienes un control de zoom.',
+        drawer_text_up_label:'Texto girando a la derecha', drawer_text_down_label:'Texto girando a la izquierda',
+        drawer_text_step_label:'Densidad (1 pulso cada N unidades)',
+        drawer_text_step_tip:'Para hacer <strong>zoom</strong>: escribe <strong>+</strong> y <strong>−</strong>, y asigna una tecla de tipo <em>Modificador Mantenido</em> con Cmd/Ctrl si la aplicación lo requiere.',
+        dens_2:'Cada 2 unidades (muy denso)', dens_5:'Cada 5 unidades (denso)', dens_10:'Cada 10 unidades (normal)',
+        dens_20:'Cada 20 unidades (espaciado)', dens_30:'Cada 30 unidades (muy espaciado)',
         theme_title:'Apariencia', theme_editor:'Editor de temas', theme_new:'+ Nuevo tema',
         theme_random:'🎲 Aleatorio', theme_save:'Guardar y aplicar', theme_reset:'Restablecer', theme_name_lbl:'Nombre:',
         ct_bg:'Fondo', ct_surface:'Superficie', ct_surface2:'Superficie 2', ct_text:'Texto', ct_accent:'Acento',
@@ -1865,7 +2271,7 @@ except Exception:
         nav_config:'Device', nav_profiles:'Layers', nav_settings:'Configuration', nav_fw:'Firmware', nav_guide:'Guide', nav_theme:'Appearance',
         cfg_midi_title:'MIDI Channel', cfg_midi_desc:'Default MIDI channel applied to new MIDI keys and potentiometers.', cfg_midi_ch:'Channel:', cfg_save:'Save',
         cfg_usb_title:'USB Identity', cfg_port_name:'Port name:', cfg_disk_name:'Disk name:', cfg_device_title:'Device', cfg_disconnect:'Disconnect',
-        btn_connect:'Connect', btn_disconnect:'Disconnect',
+        btn_connect:'Connect device', btn_disconnect:'Disconnect',
         device_off:'disconnected',
         layer_lbl:'Layers:', btn_new_layer:'+ New', btn_rename:'Rename active layer', btn_del:'Delete active layer',
         tt_dup:'Duplicate active layer', tt_export_layer:'Export active layer (JSON)', tt_import_layer:'Import layers (JSON)', tt_hub:'Back to app hub',
@@ -1878,16 +2284,33 @@ except Exception:
         midi_fill_confirm:'This layer already has configured keys. Overwrite them with MIDI notes?',
         log_copied:'Configuration copied', log_layer_dup:'Layer duplicated', log_midi_layers:'MIDI layers generated',
         btn_fw_update:'Update firmware',
-        fw_status_title:'System status', fw_status_vol:'CIRCUITPY volume', fw_refresh:'↺ Refresh status',
-        fw_step1_title:'Step 1 — Install CircuitPython',
-        fw_step1_desc:'Enter bootloader mode by holding <strong>BOOTSEL</strong> while connecting USB-C. The device will appear as <strong>RPI-RP2</strong>.',
-        fw_step1_sub:'Open Finder &rarr; drag the <strong>.uf2</strong> file to the <strong>RPI-RP2</strong> volume. The device will reboot as <strong>CIRCUITPY</strong>.',
-        fw_step2_title:'Step 2 — Install libraries',
-        fw_step2_desc:'Download the CircuitPython library bundle and libraries will be installed automatically.',
-        fw_step2_sub:'Find <strong>adafruit-circuitpython-bundle</strong> &rarr; unzip &rarr; copy the <strong>adafruit_hid</strong> folder to <strong>CIRCUITPY/lib/</strong>.',
-        fw_step3_title:'Step 3 — Update firmware',
-        fw_step3_desc:'Once CIRCUITPY is visible, generate and export the <strong>code.py</strong> file with your configuration to the device.',
-        profiles_new:'+ New layer', profiles_export:'↓ Export', profiles_import:'↑ Import',
+        fw_status_title:'System status', fw_status_vol:'Device volume', fw_not_device:'(does not look like a CircuitPython device)', fw_refresh:'↺ Refresh status',
+        fw_step1_title:'Step 1 — Base system',
+        fw_step1_desc:'Only needed the first time. Plug the board in while holding <strong>BOOTSEL</strong>: it shows up as <strong>RPI-RP2</strong>. Pick that volume when the dialog asks.',
+        fw_step1_sub:'After CircuitPython the device restarts on its own and reappears with its drive name (<strong>CIRCUITPY</strong> by default). Then you can transfer the libraries to it.',
+        fw_step2_title:'Step 2 — Update the firmware',
+        fw_step2_desc:'Sends your configuration to the device: the generated <strong>code.py</strong> is copied and, if missing, the libraries too.',
+        fw_transfer_cp:'↓ Transfer CircuitPython 10.0.3 to RPI-RP2',
+        fw_transfer_libs:'↓ Transfer libraries (adafruit_hid) to the device',
+        fw_transfer_nuke:'⚠ Transfer Flash Nuke (erase everything)',
+        fw_loading:'Loading', fw_pick_rpi:'Select the RPI-RP2 volume in the dialog…',
+        fw_transferred:'transferred successfully',
+        fw_downloaded_manual:'File downloaded: copy it manually to the RPI-RP2 volume.',
+        fw_pick_device:'Select the device volume…', fw_installing_libs:'Installing libraries…',
+        fw_checking:'Checking', fw_done_a:'TECLA firmware:', fw_done_copied:'files copied',
+        fw_done_uptodate:'already up to date.', fw_done_unplug:'DO NOT unplug the device: it restarts on its own in a few seconds.',
+        fw_incomplete_a:'INCOMPLETE update', fw_incomplete_files:'files',
+        fw_incomplete_retry:'The previous firmware stays active: press Update again — only what is missing will be copied.',
+        fw_downloaded_code:'code.py downloaded. Copy it to the device manually.',
+        fw_libs_done:'files installed on', fw_need_chrome:'Chrome or Edge is required to write to the device.',
+        fw_nuke_confirm:"Flash Nuke erases the device's ENTIRE memory (firmware and files). CircuitPython will have to be reinstalled afterwards. Continue?",
+        profiles_new:'+ New layer', profiles_export:'↓ Export selected', profiles_import:'↑ Import from a file',
+        profiles_select_all:'Select them all', profiles_pick_hint:'Include this layer when exporting',
+        profiles_keys:'keys', profiles_pots:'potentiometers',
+        profiles_pick_one:'Select at least one layer to export.',
+        profiles_exported:'layer(s) exported', profiles_imported:'layer(s) imported',
+        profiles_bad_file:'Error: the file is not valid JSON.',
+        profiles_no_layers:'The file contains no valid layers.',
         profiles_edit:'Edit',
         profiles_my_desc:'All device layers in order. The <em>Switch layer</em> key cycles through them sequentially. The active layer is highlighted.',
         drawer_type:'Main function', btn_save_elem:'Apply Changes',
@@ -1903,6 +2326,18 @@ except Exception:
         drawer_midi_cc_num_label:'CC Number (0–127)', drawer_midi_cc_ch_label:'MIDI Channel (1–16)',
         layer_change_desc:'This key will switch layer when pressed.',
         layer_dir_label:'Direction', layer_dir_next:'Next Layer (→)', layer_dir_prev:'Previous Layer (←)',
+        layer_mode_label:'When reaching the end', layer_mode_wrap:'Wrap around (last → first)', layer_mode_clamp:'Stop at the end (stay on the edge)',
+        layer_mode_desc:'With <strong>stop</strong>, the key does nothing once you are on the first or last layer: you always know where you are, even if you get lost between layers.',
+        pot_none:'None (Disabled)', pot_volume:'Computer volume', pot_brightness:'Screen brightness',
+        pot_scroll_y:'Mouse: Vertical scroll', pot_scroll_x:'Mouse: Horizontal scroll',
+        pot_mouse_x:'Mouse: X movement (Left/Right)', pot_mouse_y:'Mouse: Y movement (Up/Down)',
+        pot_click_step:'Click per movement (configurable step)', pot_text_step:'Type text per movement (zoom + / −)', pot_midi_cc:'MIDI CC (Controller 0–127)',
+        drawer_text_step_desc:'Types a text every time the potentiometer advances N units. Turning right types the first text, turning left the second. With <strong>+</strong> and <strong>−</strong> you get a zoom control.',
+        drawer_text_up_label:'Text when turning right', drawer_text_down_label:'Text when turning left',
+        drawer_text_step_label:'Density (1 pulse every N units)',
+        drawer_text_step_tip:'For <strong>zoom</strong>: type <strong>+</strong> and <strong>−</strong>, and assign a <em>Held Modifier</em> key with Cmd/Ctrl if the application requires it.',
+        dens_2:'Every 2 units (very dense)', dens_5:'Every 5 units (dense)', dens_10:'Every 10 units (normal)',
+        dens_20:'Every 20 units (spaced)', dens_30:'Every 30 units (very spaced)',
         theme_title:'Appearance', theme_editor:'Theme editor', theme_new:'+ New theme',
         theme_random:'🎲 Random', theme_save:'Save and apply', theme_reset:'Reset', theme_name_lbl:'Name:',
         ct_bg:'Background', ct_surface:'Surface', ct_surface2:'Surface 2', ct_text:'Text', ct_accent:'Accent',
