@@ -2037,7 +2037,7 @@
     .devmon-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); flex-shrink: 0 }
     .devmon.live .devmon-dot { background: var(--green); box-shadow: 0 0 8px var(--green) }
     .devmon-title { font-weight: 600; letter-spacing: .05em; flex: 1 }
-    .devmon-body { position: relative; min-height: 280px; display: flex; flex-direction: column;
+    .devmon-body { position: relative; flex: 1; min-height: 280px; display: flex; flex-direction: column;
       align-items: center; justify-content: center; padding: 18px 16px 14px; overflow: hidden }
     /* Logo: protagonista a l'inici; marca d'aigua «que s'intueix» quan la pantalla treballa */
     /* Logo SEMPRE de fons (color del tema): brillant mentre no s'usa,
@@ -2723,8 +2723,6 @@
       <div class="fw-grid">
         <div class="card">
           <div class="card-title" data-i18n="estat_del_sistema">Estat del sistema</div>
-          <div class="fw-status-row"><span class="fw-status-key" data-i18n="mode_bootloader">Mode Bootloader</span><span
-              class="fw-status-val fw-unk" id="fw-bootloader">?</span></div>
           <div class="fw-status-row"><span class="fw-status-key" data-i18n="volum">Volum</span><span
               class="fw-status-val fw-unk" id="fw-circuitpy">?</span></div>
           <div class="fw-status-row"><span class="fw-status-key" data-i18n="circuitpython">CircuitPython</span><span class="fw-status-val fw-unk"
@@ -4202,6 +4200,21 @@
 
     // Neteja + classificació d'una línia de consola. Retorna null si NO s'ha
     // de mostrar (RAM, arrencada, brossa ANSI, línies no musicals).
+    // La pantalla és una peça CUIDADA: mai hi surt cap falta d'ortografia.
+    // El firmware imprimeix alguns noms sense accents (segur per a la consola);
+    // aquí els restaurem a un català correcte, paraula a paraula.
+    const _MON_ACCENTS = {
+      'Conduccio': 'Conducció', 'Expressio': 'Expressió', 'Progressio': 'Progressió',
+      'Modulacio': 'Modulació', 'Ressonancia': 'Ressonància', 'Arpeggiador': 'Arpegiador',
+      'Doric': 'Dòric', 'Jonic': 'Jònic', 'Eolic': 'Eòlic', 'Napolita': 'Napolità',
+    };
+    function _monFix(s) {
+      return String(s == null ? '' : s)
+        .replace(/\s*\(pot\)\s*/gi, ' ')                 // la pantalla no és la consola: fora "(pot)"
+        .replace(/[A-Za-zÀ-ÿ]+/g, w => _MON_ACCENTS[w] || w)
+        .trim();
+    }
+
     function _monParse(raw) {
       const line = raw.replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)?/g, '')
                       .replace(/\x1b\[[0-9;]*[A-Za-z]/g, '').trim();
@@ -4218,6 +4231,12 @@
       if ((m = line.match(/^Base: (.+)/))) return { tag: 'Acompanyament', main: m[1], cls: 'fn' };
       if (/^Base OFF/.test(line)) return { tag: 'Acompanyament', main: 'OFF', cls: 'fn' };
       if ((m = line.match(/^Mode: (.+)/))) return { tag: 'Mode', main: m[1], cls: 'fn' };
+      if ((m = line.match(/^Octava(?: modes)?:\s*(-?\d+)/))) return { tag: 'Octava', main: m[1], cls: 'fn' };
+      // Efectes temporals de la capa MODES (el configurador altera els potes):
+      // ha de veure's per pantalla per tenir referència del que passa.
+      if ((m = line.match(/^\[EFECTE\]\s*Bot[óo]\s*\d+:\s*.+?->\s*(.+)/))) return { tag: 'Efecte', main: _monFix(m[1]), cls: 'fn' };
+      if ((m = line.match(/^(.+?)\s+ON\s*\(latch\)/))) return { tag: 'Efecte', main: _monFix(m[1]), cls: 'fn' };
+      if ((m = line.match(/^([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ0-9 .·']*?)\s+OFF$/))) return { tag: 'Efecte', main: _monFix(m[1]) + ' · off', cls: 'fn' };
       // Looper del teclat i loop de la capa modes — text ELEGANT i mínim
       if ((m = line.match(/^🔁♩?\s*Loop(?:er)?\b:?\s*(.*)/))) {
         const t = m[1] || '';
@@ -4255,8 +4274,12 @@
         ];
         for (const [re, tagName] of FN_TAGS) {
           if (re.test(line)) {
-            const net = line.replace(/^[^A-Za-zÀ-ÿ0-9]+\s*/, '').replace(/^(Tonalitat|Harmonia Negativa|Mode Acords|Conduccio):?\s*/i, '').trim();
-            return net ? { tag: tagName, main: net.slice(0, 42), cls: 'fn' } : null;
+            const net = _monFix(line
+              .replace(/^[^A-Za-zÀ-ÿ0-9]+\s*/, '')                                          // símbols inicials (🎼 Δ ↕ …)
+              .replace(/^(Escala|Tonalitat|Arpe?gg?iador|Harmonia Negativa|H\.?\s?Neg\.?|Mode Acords|Acord|Conduccio(?:\s+de\s+veus)?|Progressi[oó]|Funcions? Harm[oò]niques?)\s*:?\s*/i, '')  // la paraula-etiqueta ja és el tag
+              .replace(/\s*\(\d+\s*\/\s*\d+\)\s*$/, ''))                                      // comptador "(1/7)"
+              .slice(0, 42);
+            return net ? { tag: tagName, main: net, cls: 'fn' } : null;
           }
         }
       }
@@ -4275,7 +4298,8 @@
       'Loop': KB_BTN_FN_META.looper?.color, 'Acompanyament': KB_BTN_FN_META.accomp?.color,
       'Sustain': '#38bdf8', 'Modulació': '#e09020', 'Brillantor': '#fbbf24',
       'Volum': '#2eb87e', 'Gate': '#e74c3c', 'Pitch Bend': '#9b59b6', 'Velocitat': '#e74c3c',
-      'Config Modes': '#8e6cff', 'Mode': '#8e6cff',
+      'Config Modes': '#8e6cff', 'Mode': '#8e6cff', 'Efecte': '#8e6cff',
+      'Octava': KB_BTN_FN_META.octave_up?.color || '#2eb87e',
     };
     // To de color per classe d'altura (C=0 → vermellós, cercle cromàtic complet)
     function _monPcHue(label) {
@@ -4342,7 +4366,13 @@
       _monPanel.classList.add('inuse');
       _monNow.className = 'devmon-now ' + ev.cls;
       _monNow.querySelector('.tag').textContent = ev.tag;
-      _monNow.querySelector('.main').textContent = ev.main;
+      // Ortografia cuidada + mida que s'adapta al text (els noms llargs es
+      // llegeixen sempre; les notes/acords, ben grans).
+      const txt = (ev.cls === 'nota' || ev.cls === 'acord') ? ev.main : _monFix(ev.main);
+      const mn = _monNow.querySelector('.main');
+      mn.textContent = txt;
+      const n = txt.length;
+      mn.style.fontSize = n <= 6 ? '' : n <= 12 ? '25px' : n <= 20 ? '20px' : '16px';
       // Color: acords/notes pel TO de la fonamental (i l'anell l'acompanya);
       // funcions pel color de la funció a l'app; resta, el del tema.
       let color = '';
@@ -4687,6 +4717,10 @@
         for (const el of document.querySelectorAll('style, link[rel="stylesheet"]')) {
           pip.document.head.appendChild(el.cloneNode(true));
         }
+        // El TEMA viu a body.className (theme-*) i, si és personalitzat, en
+        // variables --* sobre <html> (ja copiades amb els atributs de dalt).
+        // Sense la classe del body, la finestra PiP perdia l'aparença de l'app.
+        pip.document.body.className = document.body.className;
         pip.document.body.style.cssText = 'margin:0;height:100%;display:flex';
         pip.document.documentElement.style.height = '100%';
         pip.document.title = 'TECLA · pantalla';
@@ -8454,7 +8488,6 @@
     async function _fwRefresh() {
       _fwMsg('Comprovant dispositiu…'); _fwProgress(0);
       if (!device.isConnected()) {
-        _fwBadge('fw-bootloader', 'No detectat', false);
         _fwBadge('fw-circuitpy', 'No connectat', false);
         _fwBadge('fw-cpython', '—', null);
         _fwBadge('fw-tecla', '—', null);
@@ -8463,7 +8496,6 @@
         document.getElementById('btn-verify-fw').disabled = true;
         return;
       }
-      _fwBadge('fw-bootloader', 'No (mode normal)', null);
       _fwBadge('fw-circuitpy', device.name || 'Muntat', true);
       _fwProgress(30);
 
@@ -8482,7 +8514,7 @@
         const hasModes = (await device.listDir('modes')).length > 0;
         const hasCore = (await device.fileExists('core/config_manager.py')) || (await device.fileExists('core/config_manager.mpy'));
         if (hasMain && hasModes && hasCore) {
-          try { const ver = await device.readFile('tecla_version.txt'); teclaStatus = ver.trim() || 'Instal·lat'; }
+          try { const ver = await device.readFile('tecla_version.txt'); teclaStatus = ver.trim().replace(/\s*\(web install\)\s*/i, '') || 'Instal·lat'; }
           catch { teclaStatus = 'Instal·lat'; }
           teclaOk = true;
         } else if (hasMain) { teclaStatus = 'Parcial (falta core o modes)'; }
@@ -8725,7 +8757,7 @@
           }, null, 1));
         } catch (e) { console.warn('tecla_manifest.json:', e.message); }
         if (complete) {
-          try { await device.writeFile('tecla_version.txt', `TECLA v${appVersion || '3'} (web install)`); }
+          try { await device.writeFile('tecla_version.txt', `TECLA v${appVersion || '3'}`); }
           catch { /* informatiu, no bloqueja */ }
         }
 

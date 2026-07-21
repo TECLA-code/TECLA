@@ -186,7 +186,7 @@ def apply_pot_function(kbd, pot_name, pot_value, force_update=False):
             new_oct = min(8, max(0, round((pot_value / 127.0) * 8)))
             if new_oct != kbd.octave:
                 kbd.octave = new_oct
-                print(f"🎵 Octava (pot): {kbd.octave}")
+                print("Octava: %d" % kbd.octave)
 
     elif function == "Eix d'Harmonia":
         ids = kbd.available_neg_harm_ids if kbd.available_neg_harm_ids else list(range(8))
@@ -200,7 +200,7 @@ def apply_pot_function(kbd, pot_name, pot_value, force_update=False):
             if new_type != kbd.neg_harmony_type:
                 kbd.neg_harmony_type = new_type
                 _nh_names = ('Quinta', 'Unisonant', 'Terc.M', 'Terc.m', 'Tritó', 'Quarta', 'Sexta', 'Sept.m')
-                print(f"↕ (pot) {_nh_names[new_type % 8]}")
+                print("↕ Harmonia Negativa: %s" % _nh_names[new_type % 8])
 
     else:
         if not _try_synth_cc(kbd, function, pot_value, threshold):
@@ -242,7 +242,7 @@ def apply_arp_pot_function(kbd, pot_name, pot_value, force_update=False):
                     kbd.arp_mode_index = new_mode
                     kbd.arp_index = 0
                     kbd.arp_direction = 1
-                    print(f"🎶 Arpeggiador (pot): {kbd._get_arp_name(kbd.arp_mode_index)}")
+                    print("🎶 Arpegiador: %s" % kbd._get_arp_name(kbd.arp_mode_index))
 
     elif function in ('Brillantor', 'Velocity'):
         kbd.velocity = max(20, min(127, pot_value))

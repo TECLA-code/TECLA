@@ -1,6 +1,6 @@
 {
-  "version": "3.3.0",
-  "generated": "2026-07-19 23:43",
+  "version": "3.3.1",
+  "generated": "2026-07-21 12:54",
   "files": [
     "boot.py",
     "config/__init__.py",
@@ -196,7 +196,7 @@
     "modes/kbd_buttons.mpy": "19b29d7956473cda4769dbdbd81290c216c9daf0da8a401ac8e4c34741b61742",
     "modes/kbd_looper.mpy": "520ed7b33389e1744faec13307667835b48cbaea147070d880f430ff57294e6a",
     "modes/kbd_notes.mpy": "6b1b1821e71d0393df8106e337e5bf3896dcb062d8d550b952712c0b2d5383c1",
-    "modes/kbd_pots.mpy": "d870b68ed80271349663e77e654149076588459f4d4cb41fdb128111a6493e3d",
+    "modes/kbd_pots.mpy": "0af235f73a5fc094e41a3e9b21d2fb35008054d350f8faf6d35e408519f133af",
     "modes/kbd_voicelead.mpy": "0723ab1d03acc8cba33b9262ed6267889d9faf3c021428b1ae7b1a02ec428c91",
     "modes/mm_cleanup.mpy": "91ff6c9cc5714518d75217a6f50e90637d2405776e5b0fbf784ffcd1d9658858",
     "modes/mm_lifecycle.mpy": "7d9611ba4eaf40b9d7f78c8872689cee96124fe046deccd6cb5fcf5297315a9e",

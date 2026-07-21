@@ -1,5 +1,26 @@
 # Canvis pendents al dispositiu TECLA
 
+## 0. v3.3.1 — Poliment final: pantalla cuidada + estat firmware net — 2026-07-21
+
+✅ INSTAL·LAT AL DISPOSITIU (v3.3.1) I A PUNT PER PUBLICAR.
+
+- **Pantalla sense faltes d'ortografia**: mapa d'accents (Dòric, Conducció,
+  Expressió…) aplicat al text; la mida de la lletra s'adapta a la llargada
+  perquè els noms llargs es llegeixin sempre.
+- **Pantalla no és la consola**: fora el "(pot)" (firmware i pantalla). La
+  funció d'octava per pot ja no xoca amb la Tonalitat (imprimia 🎵).
+- **Efectes temporals de la capa MODES a la pantalla**: activació/ciclat de
+  latch, Config Modes i octava de modes ja hi surten (referència del que
+  passa quan el configurador altera els potes).
+- **Centrat perfecte** a qualsevol mida (dins l'app i en finestra PiP): el cos
+  de la pantalla ara creix amb el panell (`flex:1`).
+- **PiP manté l'aparença de l'app**: es copia la classe de tema del `body` a
+  la finestra desancorada (abans perdia el tema).
+- **Pestanya Firmware**: fora la fila "Mode Bootloader"; "Firmware TECLA"
+  mostra només "TECLA vX.X.X" (sense "(web install)").
+
+---
+
 ## 0. v3.3.0 — TANCAMENT: Pantalla viva, simulador complet, acompanyaments — 2026-07-19
 
 ✅ TOT INSTAL·LAT AL DISPOSITIU I PUBLICAT. Recull de les versions 3.2.x:
