@@ -4370,7 +4370,10 @@
       document.getElementById('devmon-hero')?.remove();
       _monPanel.classList.add('inuse');
       _monNow.className = 'devmon-now ' + ev.cls;
-      _monNow.querySelector('.tag').textContent = ev.tag;
+      // L'etiqueta també passa pel corrector: mai una falta a la pantalla,
+      // vingui d'on vingui el text (i així el color de funció sempre lliga).
+      const tag = _monFix(ev.tag);
+      _monNow.querySelector('.tag').textContent = tag;
       // Ortografia cuidada + mida que s'adapta al text (els noms llargs es
       // llegeixen sempre; les notes/acords, ben grans).
       const txt = (ev.cls === 'nota' || ev.cls === 'acord') ? ev.main : _monFix(ev.main);
@@ -4385,7 +4388,7 @@
         const hue = _monPcHue(ev.main);
         if (hue !== null) color = `hsl(${hue} 82% 66%)`;
       } else {
-        color = _MON_TAG_COLORS[ev.tag] || '';
+        color = _MON_TAG_COLORS[tag] || _MON_TAG_COLORS[ev.tag] || '';
       }
       const mainEl = _monNow.querySelector('.main');
       mainEl.style.color = color;
@@ -4747,6 +4750,20 @@
     })();
 
     // ── Desancorar: finestra flotant FORA de l'app (Document Picture-in-Picture) ──
+    // La finestra desancorada porta l'aparença de l'app i la MANTÉ: si canvies
+    // de tema amb la pantalla oberta, el canvi hi arriba a l'instant.
+    let _monPipWin = null;
+    window._monSyncPipTheme = () => {
+      const w = _monPipWin;
+      if (!w || w.closed) return;
+      try {
+        const html = w.document.documentElement;
+        html.className = document.documentElement.className;
+        html.setAttribute('style', document.documentElement.getAttribute('style') || '');
+        html.style.height = '100%';
+        w.document.body.className = document.body.className;
+      } catch { }
+    };
     document.getElementById('devmon-pip')?.addEventListener('click', async () => {
       if (!('documentPictureInPicture' in window)) {
         showGlobalToast('Per desancorar la pantalla cal Chrome 116+ (Document Picture-in-Picture)', 'error');
@@ -4773,7 +4790,9 @@
         _monPanel.classList.add('pip');
         pip.document.body.appendChild(_monPanel);   // el node es MOU (la connexió sèrie continua viva aquí)
         _monAnim.start();                           // i l'animació continua girant al PiP
+        _monPipWin = pip;
         pip.addEventListener('pagehide', () => {
+          _monPipWin = null;
           _monPanel.classList.remove('pip');
           document.body.appendChild(_monPanel);
         });
@@ -8902,6 +8921,7 @@
           if (el) el.value = vars[k] || '';
         }
       }
+      window._monSyncPipTheme?.();   // també per als temes personalitzats
     }
 
     function _readCustomPickers() {
@@ -9028,6 +9048,7 @@
         _renderSavedThemes();
       }
       _updateModeIndicator();
+      window._monSyncPipTheme?.();   // la pantalla desancorada canvia de tema amb l'app
     }
 
     document.querySelectorAll('.theme-card').forEach(btn => {
