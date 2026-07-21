@@ -8580,16 +8580,18 @@
       _fwBadge('fw-cpython', cpVersion, cpVersion !== 'no trobat' && cpVersion !== '?');
       _fwProgress(60);
 
+      // Quin firmware TECLA hi ha al dispositiu. CircuitPython arrenca code.py
+      // amb preferència sobre main.py: si hi són tots dos, mana el Macropad.
       let teclaStatus = 'No instal·lat'; let teclaOk = false;
       try {
+        let macropad = false;
+        try { macropad = /TECLA MacroPad/i.test(await device.readFile('code.py')); } catch { /* sense code.py */ }
         const hasMain = (await device.fileExists('main.py')) || (await device.fileExists('main.mpy'));
         const hasModes = (await device.listDir('modes')).length > 0;
         const hasCore = (await device.fileExists('core/config_manager.py')) || (await device.fileExists('core/config_manager.mpy'));
-        if (hasMain && hasModes && hasCore) {
-          try { const ver = await device.readFile('tecla_version.txt'); teclaStatus = ver.trim().replace(/\s*\(web install\)\s*/i, '') || 'Instal·lat'; }
-          catch { teclaStatus = 'Instal·lat'; }
-          teclaOk = true;
-        } else if (hasMain) { teclaStatus = 'Parcial (falta core o modes)'; }
+        if (macropad) { teclaStatus = 'TECLA Macropad'; teclaOk = true; }
+        else if (hasMain && hasModes && hasCore) { teclaStatus = 'TECLA Instrument'; teclaOk = true; }
+        else if (hasMain) { teclaStatus = 'Parcial (falta core o modes)'; }
       } catch { teclaStatus = 'Error llegint dispositiu'; }
       _fwBadge('fw-tecla', teclaStatus, teclaOk);
       _fwProgress(100);
@@ -8837,7 +8839,7 @@
         if (complete) {
           const verStr = devVersion && appVersion && devVersion !== appVersion
             ? ` v${devVersion} → v${appVersion}` : (appVersion ? ` v${appVersion}` : '');
-          _fwMsg(`✓ Firmware TECLA${verStr}: ${done} fitxers copiats, ${skipped} ja al dia. NO desendollis el dispositiu: es reinicia sol en uns segons.`);
+          _fwMsg('✓ Dispositiu TECLA actualitzat correctament');
           log(`✓ Firmware TECLA instal·lat${verStr}: ${done} copiats, ${skipped} saltats (idèntics).`, 'ok');
         } else {
           _fwMsg(`⚠ Instal·lació INCOMPLETA (${errors.length} fitxers). El firmware anterior es manté actiu: torna a clicar Instal·lar — només es recopiarà el que falta.`);

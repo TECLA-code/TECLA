@@ -377,6 +377,7 @@
         <div class="card-title" data-t="fw_status_title">Estat del sistema</div>
         <div class="fw-status-row"><span class="fw-status-key" data-t="fw_status_vol">Volum del dispositiu</span><span class="fw-status-val fw-unk" id="fw-circuitpy">?</span></div>
         <div class="fw-status-row"><span class="fw-status-key">CircuitPython</span><span class="fw-status-val fw-unk" id="fw-cpython">?</span></div>
+        <div class="fw-status-row"><span class="fw-status-key" data-t="fw_status_tecla">Firmware TECLA</span><span class="fw-status-val fw-unk" id="fw-tecla">?</span></div>
         <div style="margin-top:12px"><button class="btn" id="btn-fw-refresh" data-t="fw_refresh">↺ Refrescar estat</button></div>
       </div>
       <div class="card">
@@ -1648,6 +1649,7 @@ except Exception:
         tab.classList.add('active');
         document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
         if (tab.dataset.tab === 'profiles') { renderProfiles(); _renderDeviceLayers(); }
+        if (tab.dataset.tab === 'firmware' && _deviceDir) _fwRefreshStatus();
         if (tab.dataset.tab === 'settings') _buildSettingsTab();
       });
     });
@@ -1729,8 +1731,9 @@ except Exception:
           _fwMsg(`⚠ ${_i('fw_incomplete_a')} (${errors.length} ${_i('fw_incomplete_files')}). ${_i('fw_incomplete_retry')}`);
           showToast(`⚠ ${_i('fw_incomplete_a')}: ${errors.length} ${_i('fw_incomplete_files')}`, 'err');
         } else {
-          _fwMsg(`✓ ${_i('fw_done_a')} ${done} ${_i('fw_done_copied')}, ${skipped} ${_i('fw_done_uptodate')} ${_i('fw_done_unplug')}`);
-          showToast(`✓ ${done} ${_i('fw_done_copied')}, ${skipped} ${_i('fw_done_uptodate')}`, 'ok');
+          _fwMsg(`✓ ${_i('fw_done')}`);
+          showToast(`✓ ${_i('fw_done')}`, 'ok');
+          _fwRefreshStatus();
         }
       } catch (e) {
         _fwProg(0);
@@ -1819,43 +1822,69 @@ except Exception:
       }
     });
 
-    // Firmware: refrescar estat
-    const _fwRefresh = document.getElementById('btn-fw-refresh');
-    if (_fwRefresh) _fwRefresh.addEventListener('click', async () => {
-      const cpEl = document.getElementById('fw-circuitpy');
-      const pyEl = document.getElementById('fw-cpython');
+    // ── Estat del dispositiu ──────────────────────────────────────
+    function _fwBadge(id, text, ok) {
+      const el = document.getElementById(id); if (!el) return;
+      el.textContent = text;
+      el.className = 'fw-status-val ' + (ok === true ? 'fw-ok' : ok === false ? 'fw-err' : 'fw-unk');
+    }
+
+    async function _dirExists(dir, name) {
+      try { await dir.getDirectoryHandle(name); return true; } catch { return false; }
+    }
+
+    // Quin firmware hi ha al dispositiu. CircuitPython arrenca code.py amb
+    // preferència sobre main.py, per això el Macropad mana si hi són tots dos.
+    async function _detectTeclaFirmware(dir) {
+      const code = await _readDeviceFile(dir, 'code.py');
+      if (code && /TECLA MacroPad/i.test(code)) return { name: _i('fw_kind_macropad'), ok: true };
+      const hasMain = (await _readDeviceFile(dir, 'main.py')) !== null;
+      if (hasMain && (await _dirExists(dir, 'modes')) && (await _dirExists(dir, 'core'))) {
+        return { name: _i('fw_kind_instrument'), ok: true };
+      }
+      if (code) return { name: _i('fw_kind_other'), ok: true };
+      if (hasMain) return { name: _i('fw_kind_partial'), ok: false };
+      return { name: _i('fw_kind_none'), ok: false };
+    }
+
+    async function _fwRefreshStatus({ ask = false } = {}) {
       if (!_deviceDir && !('showDirectoryPicker' in window)) {
-        cpEl.textContent = 'No suportat'; cpEl.className = 'fw-status-val fw-err';
-        pyEl.textContent = 'Cal Chrome/Edge'; pyEl.className = 'fw-status-val fw-err';
+        _fwBadge('fw-circuitpy', 'No suportat', false);
+        _fwBadge('fw-cpython', 'Cal Chrome/Edge', false);
+        _fwBadge('fw-tecla', '—', null);
+        return;
+      }
+      if (!_deviceDir && !ask) {
+        _fwBadge('fw-circuitpy', _i('fw_not_connected'), false);
+        _fwBadge('fw-cpython', '—', null);
+        _fwBadge('fw-tecla', '—', null);
         return;
       }
       try {
         const dir = _deviceDir || await window.showDirectoryPicker({ startIn: 'desktop' });
-        const name = dir.name;
         // El volum es pot haver reanomenat (p.ex. TECLA): el que el fa vàlid és
         // que hi hagi boot_out.txt, no pas com es digui.
         let version = null, isCP = false;
-        try {
-          const fh = await dir.getFileHandle('boot_out.txt');
-          const txt = await (await fh.getFile()).text();
-          isCP = /CircuitPython/i.test(txt);
-          const m = txt.match(/CircuitPython ([\d.]+)/);
+        const bootOut = await _readDeviceFile(dir, 'boot_out.txt');
+        if (bootOut) {
+          isCP = /CircuitPython/i.test(bootOut);
+          const m = bootOut.match(/CircuitPython ([\d.]+)/);
           version = m ? m[1] : null;
-        } catch { isCP = false; }
-        cpEl.textContent = isCP ? `✓ ${name}` : `${name} ${_i('fw_not_device')}`;
-        cpEl.className = 'fw-status-val ' + (isCP ? 'fw-ok' : 'fw-err');
+        }
+        _fwBadge('fw-circuitpy', isCP ? `✓ ${dir.name}` : `${dir.name} ${_i('fw_not_device')}`, isCP);
+        _fwBadge('fw-cpython', isCP ? (version ? '✓ ' + version : '✓ Detectat') : '—', isCP ? true : null);
         if (isCP) {
-          pyEl.textContent = version ? '✓ ' + version : '✓ Detectat';
-          pyEl.className = 'fw-status-val fw-ok';
+          const fw = await _detectTeclaFirmware(dir);
+          _fwBadge('fw-tecla', fw.name, fw.ok);
         } else {
-          pyEl.textContent = '—'; pyEl.className = 'fw-status-val fw-unk';
+          _fwBadge('fw-tecla', '—', null);
         }
       } catch (e) {
-        if (e.name !== 'AbortError') {
-          cpEl.textContent = 'Error'; cpEl.className = 'fw-status-val fw-err';
-        }
+        if (e.name !== 'AbortError') _fwBadge('fw-circuitpy', 'Error', false);
       }
-    });
+    }
+
+    document.getElementById('btn-fw-refresh')?.addEventListener('click', () => _fwRefreshStatus({ ask: true }));
 
     // ══ DISPOSITIU CONNECTAT ══════════════════════════════════════
     function setConnected(name) {
@@ -1876,9 +1905,10 @@ except Exception:
       try {
         const dir = await window.showDirectoryPicker({ mode: 'readwrite', startIn: 'desktop' });
         _deviceDir = dir; setConnected(dir.name);
+        _fwRefreshStatus();   // l'estat s'omple sol en connectar
       } catch(e) { if (e.name !== 'AbortError') showToast('Error: ' + e.message, 'err'); }
     });
-    document.getElementById('btn-disconnect')?.addEventListener('click', setDisconnected);
+    document.getElementById('btn-disconnect')?.addEventListener('click', () => { setDisconnected(); _fwRefreshStatus(); });
 
     // ══ CONFIGURACIÓ (SETTINGS) ═════════════════════════════════════
     const _MIDI_CH_KEY = 'tecla_midi_channel';
@@ -2145,7 +2175,11 @@ except Exception:
         fw_transferred:'transferit correctament',
         fw_downloaded_manual:"Fitxer descarregat: copia'l manualment al volum RPI-RP2.",
         fw_pick_device:'Selecciona el volum del dispositiu…', fw_installing_libs:'Instal·lant llibreries…',
-        fw_checking:'Comprovant', fw_done_a:'Firmware TECLA:', fw_done_copied:'fitxers copiats',
+        fw_checking:'Comprovant', fw_done:'Dispositiu TECLA actualitzat correctament',
+        fw_status_tecla:'Firmware TECLA', fw_not_connected:'No connectat',
+        fw_kind_macropad:'TECLA Macropad', fw_kind_instrument:'TECLA Instrument',
+        fw_kind_other:'Altre codi (code.py)', fw_kind_partial:'Parcial (incomplet)', fw_kind_none:'No instal·lat',
+        fw_done_a:'Firmware TECLA:', fw_done_copied:'fitxers copiats',
         fw_done_uptodate:'ja al dia.', fw_done_unplug:'NO desendollis el dispositiu: es reinicia sol en uns segons.',
         fw_incomplete_a:'Actualització INCOMPLETA', fw_incomplete_files:'fitxers',
         fw_incomplete_retry:'El firmware anterior es manté actiu: torna a clicar Actualitzar — només es recopiarà el que falta.',
@@ -2221,7 +2255,11 @@ except Exception:
         fw_transferred:'transferido correctamente',
         fw_downloaded_manual:'Archivo descargado: cópialo manualmente al volumen RPI-RP2.',
         fw_pick_device:'Selecciona el volumen del dispositivo…', fw_installing_libs:'Instalando librerías…',
-        fw_checking:'Comprobando', fw_done_a:'Firmware TECLA:', fw_done_copied:'archivos copiados',
+        fw_checking:'Comprobando', fw_done:'Dispositivo TECLA actualizado correctamente',
+        fw_status_tecla:'Firmware TECLA', fw_not_connected:'No conectado',
+        fw_kind_macropad:'TECLA Macropad', fw_kind_instrument:'TECLA Instrument',
+        fw_kind_other:'Otro código (code.py)', fw_kind_partial:'Parcial (incompleto)', fw_kind_none:'No instalado',
+        fw_done_a:'Firmware TECLA:', fw_done_copied:'archivos copiados',
         fw_done_uptodate:'ya al día.', fw_done_unplug:'NO desenchufes el dispositivo: se reinicia solo en unos segundos.',
         fw_incomplete_a:'Actualización INCOMPLETA', fw_incomplete_files:'archivos',
         fw_incomplete_retry:'El firmware anterior se mantiene activo: vuelve a pulsar Actualizar — solo se recopiará lo que falta.',
@@ -2297,7 +2335,11 @@ except Exception:
         fw_transferred:'transferred successfully',
         fw_downloaded_manual:'File downloaded: copy it manually to the RPI-RP2 volume.',
         fw_pick_device:'Select the device volume…', fw_installing_libs:'Installing libraries…',
-        fw_checking:'Checking', fw_done_a:'TECLA firmware:', fw_done_copied:'files copied',
+        fw_checking:'Checking', fw_done:'TECLA device updated successfully',
+        fw_status_tecla:'TECLA firmware', fw_not_connected:'Not connected',
+        fw_kind_macropad:'TECLA Macropad', fw_kind_instrument:'TECLA Instrument',
+        fw_kind_other:'Other code (code.py)', fw_kind_partial:'Partial (incomplete)', fw_kind_none:'Not installed',
+        fw_done_a:'TECLA firmware:', fw_done_copied:'files copied',
         fw_done_uptodate:'already up to date.', fw_done_unplug:'DO NOT unplug the device: it restarts on its own in a few seconds.',
         fw_incomplete_a:'INCOMPLETE update', fw_incomplete_files:'files',
         fw_incomplete_retry:'The previous firmware stays active: press Update again — only what is missing will be copied.',
