@@ -4569,7 +4569,17 @@
     // dades (que envia trames "I xxxx" de sim_link tan bon punt s'obre).
     // Només es demana el selector si encara no hi ha cap port autoritzat.
     async function _monProbe(port) {
-      try { await port.open({ baudRate: 115200 }); } catch { return { busy: true }; }
+      // No tocar MAI el port que el Sync del simulador té obert (és el de dades).
+      if (window._thinLinkPort && port === window._thinLinkPort) return { data: true };
+      try {
+        await port.open({ baudRate: 115200 });
+      } catch {
+        // Sovint el port el teníem obert NOSALTRES i n'hem perdut la referència
+        // (p. ex. el TECLA s'ha reiniciat). Tanca'l i reintenta un cop.
+        try { await port.close(); } catch { }
+        try { await port.open({ baudRate: 115200 }); }
+        catch { return { busy: true }; }
+      }
       const reader = port.readable.getReader();
       const dec = new TextDecoder();
       let buf = '', pending = null, isData = false;
@@ -4603,26 +4613,22 @@
       try {
         let candidates = [];
         try { candidates = await navigator.serial.getPorts(); } catch { }
-        let adopted = null, sawData = false, sawBusy = false;
+        let adopted = null;
         for (const p of candidates) {
           const r = await _monProbe(p);
           if (r.ok) { adopted = { port: p, ...r }; break; }
-          if (r.data) sawData = true;
-          if (r.busy) sawBusy = true;
+          // data / ocupat / mort → prova el següent port ja autoritzat
         }
         if (!adopted) {
-          // Ocupat = el port EXISTEIX però el té una altra app: el selector no
-          // hi faria res, així que millor avisar. Selector només si cal permís.
-          if (sawBusy) {
-            if (!silent) showGlobalToast('El port de la consola està ocupat (una altra pestanya de l\'app, un monitor sèrie, Thonny o Mu). Tanca-ho i torna a prémer «Connectar».', 'error');
-            return;
-          }
           if (silent) return;                    // obrir la pantalla no molesta mai amb el selector
+          // Cap port memoritzat serveix (pot haver quedat obsolet si el TECLA
+          // s'ha reiniciat: la USB re-enumera). Deixa triar el port ACTUAL i viu
+          // — és l'escapatòria fiable quan un port cau; després es recorda.
           let p;
           try { p = await navigator.serial.requestPort(); } catch { return; }
           const r = await _monProbe(p);
-          if (r.data) { showGlobalToast('Aquest és el port de DADES (simulador). Prem «Connectar» de nou i tria l\'altre port; després ja es recordarà.', 'error'); return; }
-          if (r.busy) { showGlobalToast('Port ocupat per una altra app (shell/Thonny/Mu?). Tanca-la i torna-hi.', 'error'); return; }
+          if (r.data) { showGlobalToast('Aquest és el port de DADES (simulador). Prem «Connectar» de nou i tria l\'ALTRE port; després ja es recordarà.', 'error'); return; }
+          if (r.busy) { showGlobalToast('No s\'ha pogut obrir aquest port. Desendolla i torna a endollar el TECLA (o recarrega la pàgina) i torna-hi.', 'error'); return; }
           adopted = { port: p, ...r };
         }
         _monConnectRead(adopted);
@@ -4678,6 +4684,20 @@
       _monPanel.classList.remove('inuse');
     });
     window.addEventListener('beforeunload', () => { try { _monReader?.cancel(); _monPort?.close(); } catch { } });
+    // Si el TECLA es desendolla o es REINICIA (re-enumera la USB), el port cau:
+    // neteja l'estat a l'instant perquè la propera obertura reconnecti net i no
+    // es quedi mostrant un fals «port ocupat» sobre una referència morta.
+    if ('serial' in navigator) {
+      navigator.serial.addEventListener('disconnect', (e) => {
+        if (_monPort && e.target === _monPort) {
+          try { _monReader?.cancel(); } catch { }
+          try { _monPort?.close(); } catch { }
+          _monPort = null; _monReader = null;
+          _monPanel.classList.remove('live');
+          document.getElementById('devmon-connect')?.classList.remove('hidden');
+        }
+      });
+    }
     // Mida ajustable: recorda-la entre sessions
     try {
       const s = JSON.parse(localStorage.getItem('tecla-pantalla-mida') || 'null');
@@ -8093,6 +8113,8 @@
     thinLink.onLog = (m, t) => { try { simlog(m, t); } catch (e) { } };
     thinLink.onStatus = (s) => {
       const btn = document.getElementById('btn-thin-connect');
+      // Perquè la Pantalla no toqui MAI el port que el Sync del simulador té obert.
+      window._thinLinkPort = s === 'connected' ? (thinLink.port || null) : null;
       if (s === 'connected') {
         if (_thinStatusEl) _thinStatusEl.textContent = 'Dispositiu sincronitzat — les tecles físiques controlen el simulador';
         if (btn) { btn.textContent = '🔌 Desconnectar'; btn.classList.add('btn-primary'); }

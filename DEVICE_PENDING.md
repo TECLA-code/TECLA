@@ -1,5 +1,24 @@
 # Canvis pendents al dispositiu TECLA
 
+## 0. v3.3.3 — Pantalla: recuperació fiable del port ("fals ocupat") — 2026-07-21
+
+✅ NOMÉS APP-WEB (cap canvi de firmware).
+
+Símptoma: "el port de la consola està ocupat" sense cap altra app oberta, quan
+"fa un moment funcionava". Causa: el TECLA re-enumera la USB quan es reinicia
+(o una connexió prèvia no s'havia alliberat), i el port memoritzat quedava
+obsolet. A la v3.3.2 el missatge d'"ocupat" bloquejava el selector, així que no
+es podia triar el port viu. Ara:
+
+- En prémer «Connectar», si cap port memoritzat funciona, SEMPRE es pot triar
+  el port ACTUAL (viu) amb el selector — l'escapatòria fiable quan un port cau.
+- La sonda intenta reclamar un port que teníem obert nosaltres (tanca+reobre).
+- Listener de `disconnect`: si el TECLA es desendolla o es reinicia, l'estat
+  de la pantalla es neteja a l'instant (res de referències mortes).
+- La pantalla no toca MAI el port que el Sync del simulador té obert.
+
+---
+
 ## 0. v3.3.2 — Connexió de la pantalla robusta + botons de desat — 2026-07-21
 
 ✅ NOMÉS APP-WEB (cap canvi de firmware; el dispositiu segueix a v3.3.x).
