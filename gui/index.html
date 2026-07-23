@@ -1177,15 +1177,26 @@ except Exception:
       const allKeys = layers.map(l => l.keys);
       const allPots = layers.map(l => l.pots);
 
+      // Els símbols aritmètics canvien de glif segons la disposició del teclat
+      // de l'ordinador (p.ex. amb un teclat espanyol/català "+"→"¿" i "-"→"'").
+      // Les tecles del teclat NUMÈRIC produeixen +,-,*,/ igual a totes les
+      // disposicions, així que hi passem aquests símbols quan van sols.
+      const KEYPAD_CHAR = { '+': 'Keycode.KEYPAD_PLUS', '-': 'Keycode.KEYPAD_MINUS', '*': 'Keycode.KEYPAD_ASTERISK', '/': 'Keycode.KEYPAD_FORWARD_SLASH' };
+      const _isKeypadChar = (t) => typeof t === 'string' && t.length === 1 && !!KEYPAD_CHAR[t];
+
       const hasHoldMod   = allKeys.flat().some(k => k.type === 'hold_mod');
       const needsKeyboard = allKeys.flat().some(k => k.type === 'key' || k.type === 'hold_mod' || k.type === 'open_app');
       const needsString   = allKeys.flat().some(k => k.type === 'string' || k.type === 'open_app') || allPots.flat().some(p => p.function === 'text_step');
+      // Keycode cal si hi ha tecles/modificadors o si algun text usa el teclat numèric.
+      const usesKeypad = allKeys.flat().some(k => k.type === 'string' && _isKeypadChar(k.string))
+        || allPots.flat().some(p => p.function === 'text_step' && (_isKeypadChar(p.text_up ?? '+') || _isKeypadChar(p.text_down ?? '-')));
+      const needsKeycode = needsKeyboard || usesKeypad;
       const needsConsumer = allKeys.flat().some(k => k.type === 'consumer') || allPots.flat().some(p => p.function === 'volume' || p.function === 'brightness');
       const needsMouse    = allKeys.flat().some(k => k.type === 'mouse') || allPots.flat().some(p => p.function.startsWith('mouse') || p.function.startsWith('scroll') || p.function === 'click_step');
       const needsMidi     = allKeys.flat().some(k => k.type === 'midi_note') || allPots.flat().some(p => p.function === 'midi_cc');
 
       let code = `# TECLA MacroPad - Codi generat autom\u00e0ticament\nimport time\nimport board\nimport digitalio\nimport usb_hid\nimport analogio\n\n`;
-      if (needsKeyboard) code += `from adafruit_hid.keycode import Keycode\n`;
+      if (needsKeycode) code += `from adafruit_hid.keycode import Keycode\n`;
       // Escriure text també necessita el Keyboard: sense això el code.py peta amb NameError
       if (needsKeyboard || needsString) code += `from adafruit_hid.keyboard import Keyboard\n`;
       if (needsString)   code += `from adafruit_hid.keyboard_layout_us import KeyboardLayoutUS\n`;
@@ -1222,6 +1233,11 @@ except Exception:
       function _pyStr(s) {
         return String(s ?? '').replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '');
       }
+      // Sentència per escriure un text. Els símbols +,-,*,/ sols van pel teclat
+      // numèric (independent de la disposició); la resta amb layout.write.
+      function _typeStmt(text) {
+        return _isKeypadChar(text) ? `keyboard.send(${KEYPAD_CHAR[text]})` : `layout.write("${_pyStr(text)}")`;
+      }
 
       function _keyAction(k, indent) {
         const i2 = indent + '    ';
@@ -1244,7 +1260,7 @@ except Exception:
           const pmods = (k.mods||[]).map(m => ({'Ctrl':'Keycode.CONTROL','Shift':'Keycode.SHIFT','Alt':'Keycode.ALT','Cmd':'Keycode.COMMAND'})[m]||'').filter(Boolean);
           return `${indent}keyboard.press(${pmods.length ? pmods.join(', ') + ', ' : ''}${k.keycode})\n`;
         }
-        if (k.type === 'string') return `${indent}layout.write("${_pyStr(k.string)}")\n`;
+        if (k.type === 'string') return `${indent}${_typeStmt(k.string)}\n`;
         if (k.type === 'consumer') return `${indent}cc.send(${k.consumer})\n`;
         if (k.type === 'mouse') return `${indent}mouse.click(${k.mouse})\n`;
         if (k.type === 'open_app') {
@@ -1320,14 +1336,14 @@ except Exception:
           c += `${i2}last_click_bucket_p${p} = curr_bucket_p${p}\n\n`;
         } else if (pf === 'text_step') {
           const step = pp.step_size || 10;
-          const up = _pyStr(pp.text_up ?? '+');
-          const down = _pyStr(pp.text_down ?? '-');
+          const up = _typeStmt(pp.text_up ?? '+');
+          const down = _typeStmt(pp.text_down ?? '-');
           c += `${ind}curr_bucket_p${p} = pots[${p}].value // 512 // ${step}\n`;
           c += `${ind}if curr_bucket_p${p} != last_click_bucket_p${p}:\n`;
           c += `${i2}if curr_bucket_p${p} > last_click_bucket_p${p}:\n`;
-          c += `${i2}    layout.write("${up}")\n`;
+          c += `${i2}    ${up}\n`;
           c += `${i2}else:\n`;
-          c += `${i2}    layout.write("${down}")\n`;
+          c += `${i2}    ${down}\n`;
           c += `${i2}last_click_bucket_p${p} = curr_bucket_p${p}\n\n`;
         } else if (pf === 'midi_cc') {
           const ccNum = pp.midi_cc_num ?? 7;
