@@ -631,6 +631,27 @@
             <input type="number" id="pot-midi-cc-channel" min="1" max="16" value="1">
           </div>
         </div>
+        <div style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px">
+          <div class="card-title" style="margin-bottom:10px" data-t="pot_range_title">Rang i corba</div>
+          <div class="checkbox-grid">
+            <div class="form-group" style="margin-bottom:0">
+              <label data-t="pot_min_label">Valor mínim</label>
+              <input type="number" id="pot-cc-min" min="0" max="127" value="0">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label data-t="pot_max_label">Valor màxim</label>
+              <input type="number" id="pot-cc-max" min="0" max="127" value="127">
+            </div>
+          </div>
+          <div class="form-group" style="margin-top:12px;margin-bottom:0">
+            <label data-t="pot_curve_label">Corba de resposta</label>
+            <select id="pot-cc-curve">
+              <option value="linear" data-t="curve_linear">Lineal (uniforme)</option>
+              <option value="exp" data-t="curve_exp">Exponencial (fi al principi)</option>
+              <option value="log" data-t="curve_log">Logarítmica (fi al final)</option>
+            </select>
+          </div>
+        </div>
       </div>
       <!-- Nota MIDI (Keys) -->
       <div id="settings-midi_note" style="display: none; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px;">
@@ -980,6 +1001,9 @@
         document.getElementById('pot-text-step-size').value = 10;
         document.getElementById('pot-midi-cc-num').value = 7;
         document.getElementById('pot-midi-cc-channel').value = 1;
+        document.getElementById('pot-cc-min').value = 0;
+        document.getElementById('pot-cc-max').value = 127;
+        document.getElementById('pot-cc-curve').value = 'linear';
 
         if (p.function === 'click_step') {
           document.getElementById('settings-pot-click_step').style.display = 'block';
@@ -995,6 +1019,9 @@
           document.getElementById('settings-pot-midi_cc').style.display = 'block';
           document.getElementById('pot-midi-cc-num').value = p.midi_cc_num ?? 7;
           document.getElementById('pot-midi-cc-channel').value = p.midi_cc_channel ?? 1;
+          document.getElementById('pot-cc-min').value = p.cc_min ?? 0;
+          document.getElementById('pot-cc-max').value = p.cc_max ?? 127;
+          document.getElementById('pot-cc-curve').value = p.cc_curve || 'linear';
         }
       }
       
@@ -1048,6 +1075,9 @@
         if (fType === 'midi_cc') {
           potData.midi_cc_num = Math.min(127, Math.max(0, parseInt(document.getElementById('pot-midi-cc-num').value) || 7));
           potData.midi_cc_channel = Math.min(16, Math.max(1, parseInt(document.getElementById('pot-midi-cc-channel').value) || 1));
+          potData.cc_min = Math.min(127, Math.max(0, parseInt(document.getElementById('pot-cc-min').value) || 0));
+          potData.cc_max = Math.min(127, Math.max(0, parseInt(document.getElementById('pot-cc-max').value) || 127));
+          potData.cc_curve = document.getElementById('pot-cc-curve').value || 'linear';
         }
         config.pots[id] = potData;
       }
@@ -1460,7 +1490,17 @@ except Exception:
         } else if (pf === 'midi_cc') {
           const ccNum = pp.midi_cc_num ?? 7;
           const ccCh  = (pp.midi_cc_channel || 1) - 1;
-          c += `${ind}curr_p${p} = pots[${p}].value >> 9\n`;
+          const lo = pp.cc_min ?? 0, hi = pp.cc_max ?? 127, curve = pp.cc_curve || 'linear';
+          const custom = lo !== 0 || hi !== 127 || curve !== 'linear';
+          if (!custom) {
+            c += `${ind}curr_p${p} = pots[${p}].value >> 9\n`;
+          } else {
+            // Rang [lo,hi] (invertible) i corba de resposta aplicats al valor 0–127.
+            c += `${ind}_t${p} = (pots[${p}].value >> 9) / 127\n`;
+            if (curve === 'exp') c += `${ind}_t${p} = _t${p} * _t${p}\n`;
+            else if (curve === 'log') c += `${ind}_t${p} = _t${p} ** 0.5\n`;
+            c += `${ind}curr_p${p} = ${lo} + int((${hi - lo}) * _t${p} + 0.5)\n`;
+          }
           c += `${ind}if curr_p${p} != last_pot_vals[${p}]:\n`;
           c += `${i2}usb_midi.ports[1].write(bytes([0xB0 | ${ccCh}, ${ccNum}, curr_p${p}]))\n`;
           c += `${i2}last_pot_vals[${p}] = curr_p${p}\n\n`;
@@ -2349,6 +2389,8 @@ except Exception:
         type_consumer:'Control Multimèdia', type_mouse:'Ratolí (Clics)', type_layer:'Canviar de Capa', type_hold_mod:'Modificador Mantingut', type_midi_note:'Nota MIDI',
         drawer_midi_note_label:'Nota MIDI (0–127)', drawer_midi_ch_label:'Canal (1–16)', drawer_midi_vel_label:'Velocitat (0–127)',
         drawer_midi_cc_num_label:'Número CC (0–127)', drawer_midi_cc_ch_label:'Canal MIDI (1–16)',
+        pot_range_title:'Rang i corba', pot_min_label:'Valor mínim', pot_max_label:'Valor màxim', pot_curve_label:'Corba de resposta',
+        curve_linear:'Lineal (uniforme)', curve_exp:'Exponencial (fi al principi)', curve_log:'Logarítmica (fi al final)',
         layer_change_desc:'Aquesta tecla canviarà de capa al ser premuda.',
         layer_dir_label:'Direcció', layer_dir_next:'Capa Següent (→)', layer_dir_prev:'Capa Anterior (←)',
         layer_mode_label:'En arribar al final', layer_mode_wrap:"Continuar en cercle (l'última → la primera)", layer_mode_clamp:"Fer topall (quedar-se a l'extrem)",
@@ -2432,6 +2474,8 @@ except Exception:
         type_consumer:'Control Multimedia', type_mouse:'Ratón (Clics)', type_layer:'Cambiar de Capa', type_hold_mod:'Modificador Mantenido', type_midi_note:'Nota MIDI',
         drawer_midi_note_label:'Nota MIDI (0–127)', drawer_midi_ch_label:'Canal (1–16)', drawer_midi_vel_label:'Velocidad (0–127)',
         drawer_midi_cc_num_label:'Número CC (0–127)', drawer_midi_cc_ch_label:'Canal MIDI (1–16)',
+        pot_range_title:'Rango y curva', pot_min_label:'Valor mínimo', pot_max_label:'Valor máximo', pot_curve_label:'Curva de respuesta',
+        curve_linear:'Lineal (uniforme)', curve_exp:'Exponencial (fino al principio)', curve_log:'Logarítmica (fino al final)',
         layer_change_desc:'Esta tecla cambiará de capa al ser pulsada.',
         layer_dir_label:'Dirección', layer_dir_next:'Capa Siguiente (→)', layer_dir_prev:'Capa Anterior (←)',
         layer_mode_label:'Al llegar al final', layer_mode_wrap:'Continuar en círculo (la última → la primera)', layer_mode_clamp:'Hacer tope (quedarse en el extremo)',
@@ -2515,6 +2559,8 @@ except Exception:
         type_consumer:'Media Control', type_mouse:'Mouse (Clicks)', type_layer:'Switch Layer', type_hold_mod:'Held Modifier', type_midi_note:'MIDI Note',
         drawer_midi_note_label:'MIDI Note (0–127)', drawer_midi_ch_label:'Channel (1–16)', drawer_midi_vel_label:'Velocity (0–127)',
         drawer_midi_cc_num_label:'CC Number (0–127)', drawer_midi_cc_ch_label:'MIDI Channel (1–16)',
+        pot_range_title:'Range and curve', pot_min_label:'Minimum value', pot_max_label:'Maximum value', pot_curve_label:'Response curve',
+        curve_linear:'Linear (even)', curve_exp:'Exponential (fine at the start)', curve_log:'Logarithmic (fine at the end)',
         layer_change_desc:'This key will switch layer when pressed.',
         layer_dir_label:'Direction', layer_dir_next:'Next Layer (→)', layer_dir_prev:'Previous Layer (←)',
         layer_mode_label:'When reaching the end', layer_mode_wrap:'Wrap around (last → first)', layer_mode_clamp:'Stop at the end (stay on the edge)',
