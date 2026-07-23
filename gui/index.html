@@ -285,22 +285,6 @@
       </div>
       <div class="insp-body" id="insp-body"></div>
       <div class="insp-autosave" data-t="autosave_note">Els canvis es desen autom&agrave;ticament</div>
-      <div class="insp-tools">
-        <div class="card-title" data-t="midi_tools_title">&#9836; MIDI r&agrave;pid</div>
-        <p class="insp-tools-desc" data-th="midi_tools_desc">Omple capes senceres amb notes MIDI consecutives (16 per capa). Ideal per a TouchDesigner, Ableton o qualsevol programa que escolti MIDI.</p>
-        <div class="midi-grid">
-          <div class="form-group"><label data-t="midi_base_lbl">Nota inicial</label><input type="number" id="midi-fill-base" min="0" max="127" value="36"></div>
-          <div class="form-group"><label data-t="midi_ch_lbl">Canal</label><input type="number" id="midi-fill-ch" min="1" max="16" value="1"></div>
-          <div class="form-group"><label data-t="midi_vel_lbl">Velocitat</label><input type="number" id="midi-fill-vel" min="1" max="127" value="100"></div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:6px">
-          <button class="btn btn-primary" id="btn-midi-fill" data-t="btn_midi_fill">Omplir aquesta capa (16 notes)</button>
-          <div style="display:flex;gap:6px;align-items:center">
-            <button class="btn" id="btn-midi-layers" style="flex:1" data-t="btn_midi_layers">Generar capes noves</button>
-            <input type="number" id="midi-fill-nlayers" min="1" max="8" value="4" style="width:52px" title="Nombre de capes a generar">
-          </div>
-        </div>
-      </div>
     </aside>
   </div>
   </div><!-- #tab-config -->
@@ -322,6 +306,26 @@
           <span data-t="profiles_select_all">Seleccionar-les totes</span>
         </label>
         <div id="profiles-list" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+      <div class="card">
+        <div class="card-title" data-t="midi_tools_title">&#9836; MIDI r&agrave;pid</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.65" data-th="midi_tools_desc">Omple capes senceres amb notes MIDI consecutives. Ideal per a TouchDesigner, Ableton o qualsevol programa que escolti MIDI.</p>
+        <div class="midi-grid" style="max-width:360px">
+          <div class="form-group" style="margin-bottom:0"><label data-t="midi_base_lbl">Nota inicial</label><input type="number" id="midi-fill-base" min="0" max="127" value="36"></div>
+          <div class="form-group" style="margin-bottom:0"><label data-t="midi_ch_lbl">Canal</label><input type="number" id="midi-fill-ch" min="1" max="16" value="1"></div>
+          <div class="form-group" style="margin-bottom:0"><label data-t="midi_vel_lbl">Velocitat</label><input type="number" id="midi-fill-vel" min="1" max="127" value="100"></div>
+        </div>
+        <label class="cb" style="margin:12px 0 4px;color:var(--text2)">
+          <input type="checkbox" id="midi-fill-corner" checked>
+          <span data-th="midi_corner_lbl">Reservar la tecla 16 per <strong>canviar de capa</strong> (&rarr;)</span>
+        </label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center">
+          <button class="btn btn-sm btn-primary" id="btn-midi-fill" data-t="btn_midi_fill">Omplir la capa activa</button>
+          <div style="display:flex;gap:6px;align-items:center">
+            <button class="btn btn-sm" id="btn-midi-layers" data-t="btn_midi_layers">Generar capes noves</button>
+            <input type="number" id="midi-fill-nlayers" min="1" max="8" value="4" style="width:52px" title="Nombre de capes a generar">
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1111,43 +1115,56 @@
     // ── MIDI ràpid: omplir capes amb notes consecutives ────────────
     const _NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
     function _noteName(n) { return _NOTE_NAMES[n % 12] + (Math.floor(n / 12) - 1); }
-    function _midiFillLayer(layer, base, ch, vel) {
-      for (let i = 0; i < 16; i++) {
+    // Omple una capa amb notes consecutives. Si es reserva la cantonada, la
+    // tecla 16 passa a "Canviar de capa" i s'assignen 15 notes (0–14).
+    function _midiFillLayer(layer, base, ch, vel, reserveCorner) {
+      const nNotes = reserveCorner ? 15 : 16;
+      for (let i = 0; i < nNotes; i++) {
         const n = Math.min(127, base + i);
         layer.keys[i] = { type:'midi_note', label:_noteName(n), id:i, midi_note:n, midi_channel:ch, midi_velocity:vel };
       }
+      if (reserveCorner) {
+        layer.keys[15] = { type:'layer_change', label:'Capa →', id:15, layer_dir:'next', layer_mode:'wrap' };
+      }
+      return nNotes;
     }
     function _midiToolVals() {
       return {
         base: Math.min(127, Math.max(0, parseInt(document.getElementById('midi-fill-base').value) || 0)),
         ch: Math.min(16, Math.max(1, parseInt(document.getElementById('midi-fill-ch').value) || 1)),
         vel: Math.min(127, Math.max(1, parseInt(document.getElementById('midi-fill-vel').value) || 100)),
+        corner: !!document.getElementById('midi-fill-corner')?.checked,
       };
     }
     document.getElementById('btn-midi-fill')?.addEventListener('click', () => {
-      const { base, ch, vel } = _midiToolVals();
+      const { base, ch, vel, corner } = _midiToolVals();
       const used = config.keys.some(k => k.type !== 'none');
       if (used && !confirm(_i('midi_fill_confirm'))) return;
-      _midiFillLayer(config, base, ch, vel);
-      saveLayers(); renderDevice(); if (currentSelection.type) loadConfigForm();
-      logSim(`MIDI ${_noteName(base)}–${_noteName(Math.min(127, base + 15))} (ch ${ch})`, 'SYS');
+      const nn = _midiFillLayer(config, base, ch, vel, corner);
+      saveLayers(); _syncLayerBar(); renderDevice(); if (currentSelection.type) loadConfigForm();
+      logSim(`MIDI ${_noteName(base)}–${_noteName(Math.min(127, base + nn - 1))} (ch ${ch})`, 'SYS');
+      showToast(`✓ ${nn} ${_i('log_midi_filled')}`, 'ok');
     });
     document.getElementById('btn-midi-layers')?.addEventListener('click', () => {
-      const { base, ch, vel } = _midiToolVals();
+      const { base, ch, vel, corner } = _midiToolVals();
+      const perLayer = corner ? 15 : 16;
       const n = Math.min(8, Math.max(1, parseInt(document.getElementById('midi-fill-nlayers').value) || 1));
       const firstIdx = layers.length;
       for (let j = 0; j < n; j++) {
-        const b = base + j * 16;
+        const b = base + j * perLayer;
         if (b > 127) break;
-        const l = _defaultLayer(`MIDI ${_noteName(b)}–${_noteName(Math.min(127, b + 15))}`);
-        _midiFillLayer(l, b, ch, vel);
+        const l = _defaultLayer(`MIDI ${_noteName(b)}–${_noteName(Math.min(127, b + perLayer - 1))}`);
+        _midiFillLayer(l, b, ch, vel, corner);
         layers.push(l);
       }
       if (layers.length === firstIdx) return;
       currentLayerIdx = firstIdx;
       config = layers[currentLayerIdx];
-      saveLayers(); _syncLayerBar(); renderDevice(); if (currentSelection.type) loadConfigForm();
-      logSim(`${layers.length - firstIdx} ${_i('log_midi_layers')}`, 'SYS');
+      saveLayers(); _syncLayerBar(); renderDevice(); renderProfiles(); if (currentSelection.type) loadConfigForm();
+      const made = layers.length - firstIdx;
+      logSim(`${made} ${_i('log_midi_layers')}`, 'SYS');
+      showToast(`✓ ${made} ${_i('log_midi_layers')}`, 'ok');
+      document.querySelector('[data-tab="config"]')?.click();
     });
 
     // Generador Codi CircuitPython (multi-capa)
@@ -2262,9 +2279,10 @@ except Exception:
         chip_hint:'Clic: activar · Doble clic: reanomenar', prompt_rename:'Nou nom de la capa:', prompt_new_layer:'Nom de la nova capa:',
         btn_copy:'Copiar', btn_paste:'Enganxar', autosave_note:'Els canvis es desen automàticament',
         rec_shortcut:'⌨ Capturar drecera del teclat', rec_waiting:'Prem la drecera ara…',
-        midi_tools_title:'♬ MIDI ràpid', midi_tools_desc:'Omple capes senceres amb notes MIDI consecutives (16 per capa). Ideal per a TouchDesigner, Ableton o qualsevol programa que escolti MIDI.',
+        midi_tools_title:'♬ MIDI ràpid', midi_tools_desc:'Omple capes senceres amb notes MIDI consecutives. Ideal per a TouchDesigner, Ableton o qualsevol programa que escolti MIDI.',
         midi_base_lbl:'Nota inicial', midi_ch_lbl:'Canal', midi_vel_lbl:'Velocitat',
-        btn_midi_fill:'Omplir aquesta capa (16 notes)', btn_midi_layers:'Generar capes noves',
+        btn_midi_fill:'Omplir la capa activa', btn_midi_layers:'Generar capes noves',
+        midi_corner_lbl:'Reservar la tecla 16 per <strong>canviar de capa</strong> (→)', log_midi_filled:'notes assignades a la capa',
         midi_fill_confirm:'Aquesta capa ja té tecles configurades. Vols sobreescriure-les amb notes MIDI?',
         log_copied:'Configuració copiada', log_layer_dup:'Capa duplicada', log_midi_layers:'capes MIDI generades',
         btn_fw_update:'Actualitzar firmware',
@@ -2344,9 +2362,10 @@ except Exception:
         chip_hint:'Clic: activar · Doble clic: renombrar', prompt_rename:'Nuevo nombre de la capa:', prompt_new_layer:'Nombre de la nueva capa:',
         btn_copy:'Copiar', btn_paste:'Pegar', autosave_note:'Los cambios se guardan automáticamente',
         rec_shortcut:'⌨ Capturar atajo del teclado', rec_waiting:'Pulsa el atajo ahora…',
-        midi_tools_title:'♬ MIDI rápido', midi_tools_desc:'Rellena capas enteras con notas MIDI consecutivas (16 por capa). Ideal para TouchDesigner, Ableton o cualquier programa que escuche MIDI.',
+        midi_tools_title:'♬ MIDI rápido', midi_tools_desc:'Rellena capas enteras con notas MIDI consecutivas. Ideal para TouchDesigner, Ableton o cualquier programa que escuche MIDI.',
         midi_base_lbl:'Nota inicial', midi_ch_lbl:'Canal', midi_vel_lbl:'Velocidad',
-        btn_midi_fill:'Rellenar esta capa (16 notas)', btn_midi_layers:'Generar capas nuevas',
+        btn_midi_fill:'Rellenar la capa activa', btn_midi_layers:'Generar capas nuevas',
+        midi_corner_lbl:'Reservar la tecla 16 para <strong>cambiar de capa</strong> (→)', log_midi_filled:'notas asignadas a la capa',
         midi_fill_confirm:'Esta capa ya tiene teclas configuradas. ¿Quieres sobrescribirlas con notas MIDI?',
         log_copied:'Configuración copiada', log_layer_dup:'Capa duplicada', log_midi_layers:'capas MIDI generadas',
         btn_fw_update:'Actualizar firmware',
@@ -2426,9 +2445,10 @@ except Exception:
         chip_hint:'Click: activate · Double click: rename', prompt_rename:'New layer name:', prompt_new_layer:'New layer name:',
         btn_copy:'Copy', btn_paste:'Paste', autosave_note:'Changes are saved automatically',
         rec_shortcut:'⌨ Capture keyboard shortcut', rec_waiting:'Press the shortcut now…',
-        midi_tools_title:'♬ Quick MIDI', midi_tools_desc:'Fill entire layers with consecutive MIDI notes (16 per layer). Perfect for TouchDesigner, Ableton or any MIDI-listening software.',
+        midi_tools_title:'♬ Quick MIDI', midi_tools_desc:'Fill entire layers with consecutive MIDI notes. Perfect for TouchDesigner, Ableton or any MIDI-listening software.',
         midi_base_lbl:'First note', midi_ch_lbl:'Channel', midi_vel_lbl:'Velocity',
-        btn_midi_fill:'Fill this layer (16 notes)', btn_midi_layers:'Generate new layers',
+        btn_midi_fill:'Fill the active layer', btn_midi_layers:'Generate new layers',
+        midi_corner_lbl:'Reserve key 16 for <strong>layer switch</strong> (→)', log_midi_filled:'notes assigned to the layer',
         midi_fill_confirm:'This layer already has configured keys. Overwrite them with MIDI notes?',
         log_copied:'Configuration copied', log_layer_dup:'Layer duplicated', log_midi_layers:'MIDI layers generated',
         btn_fw_update:'Update firmware',
