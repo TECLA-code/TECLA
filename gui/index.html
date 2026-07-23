@@ -345,7 +345,7 @@
       </div>
       <div class="card">
         <div class="card-title" data-t="cfg_os_title">Sistema operatiu</div>
-        <p style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.65" data-th="cfg_os_desc">Sistema de l'ordinador on connectes el TECLA. S'usa per enviar s&iacute;mbols que no s&oacute;n al teclat (&phi;, &pi;, &euro;&hellip;) amb la seq&uuml;&egrave;ncia d'entrada Unicode correcta.</p>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.65" data-th="cfg_os_desc">Sistema de l'ordinador on connectes el TECLA. S'usa per enviar s&iacute;mbols que no s&oacute;n al teclat (&phi;, &pi;, &euro;, emojis&hellip;) amb la seq&uuml;&egrave;ncia d'entrada Unicode correcta.</p>
         <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
           <label style="font-size:12px;font-weight:500;min-width:80px" data-t="cfg_os_lbl">Sistema:</label>
           <select id="cfg-os" style="width:120px">
@@ -1185,32 +1185,44 @@ except Exception:
     pass
 `;
 
-    // Bloc Python que "escriu" un caràcter Unicode amb la seqüència d'entrada
-    // del sistema (independent de la disposició de teclat). type_text() reparteix:
-    // ASCII per layout.write, la resta per la via Unicode.
+    // Bloc Python que "escriu" un caràcter Unicode amb la seqüència d'entrada del
+    // sistema (independent de la disposició de teclat). type_text() reparteix:
+    // ASCII per layout.write, la resta per la via Unicode. Suporta emojis
+    // (codis > U+FFFF): a macOS via parell substitut, a Linux directament.
     function _unicodeHelperPy(os) {
       const HEXK = `_HEXK = [Keycode.ZERO, Keycode.ONE, Keycode.TWO, Keycode.THREE, Keycode.FOUR,\n         Keycode.FIVE, Keycode.SIX, Keycode.SEVEN, Keycode.EIGHT, Keycode.NINE,\n         Keycode.A, Keycode.B, Keycode.C, Keycode.D, Keycode.E, Keycode.F]\n`;
       let c = `\n# --- Entrada Unicode (${os}) ---\n` + HEXK;
       if (os === 'win') {
+        // Alt + teclat numèric hexadecimal (cal EnableHexNumpad=1). Els emojis
+        // (astral) no són fiables per aquesta via a Windows.
         c += `_HEXK_NUM = [Keycode.KEYPAD_ZERO, Keycode.KEYPAD_ONE, Keycode.KEYPAD_TWO, Keycode.KEYPAD_THREE, Keycode.KEYPAD_FOUR,\n             Keycode.KEYPAD_FIVE, Keycode.KEYPAD_SIX, Keycode.KEYPAD_SEVEN, Keycode.KEYPAD_EIGHT, Keycode.KEYPAD_NINE,\n             Keycode.A, Keycode.B, Keycode.C, Keycode.D, Keycode.E, Keycode.F]\n`;
         c += `def _uni(cp):\n`;
         c += `    keyboard.press(Keycode.ALT)\n`;
         c += `    keyboard.send(Keycode.KEYPAD_PLUS)\n`;
-        c += `    for _s in (12, 8, 4, 0):\n`;
-        c += `        keyboard.send(_HEXK_NUM[(cp >> _s) & 0xF])\n`;
+        c += `    for _ch in "%x" % cp:\n`;
+        c += `        keyboard.send(_HEXK_NUM[int(_ch, 16)])\n`;
         c += `    keyboard.release(Keycode.ALT)\n`;
       } else if (os === 'linux') {
+        // Ctrl+Shift+U + hex (mida variable) + Enter. Cobreix BMP i emojis.
         c += `def _uni(cp):\n`;
         c += `    keyboard.send(Keycode.LEFT_CONTROL, Keycode.LEFT_SHIFT, Keycode.U)\n`;
-        c += `    for _s in (12, 8, 4, 0):\n`;
-        c += `        keyboard.send(_HEXK[(cp >> _s) & 0xF])\n`;
+        c += `    for _ch in "%x" % cp:\n`;
+        c += `        keyboard.send(_HEXK[int(_ch, 16)])\n`;
         c += `    keyboard.send(Keycode.ENTER)\n`;
       } else { // mac
-        c += `def _uni(cp):\n`;
+        // Option + 4 dígits hex. Per als emojis cal el parell substitut UTF-16.
+        c += `def _uni_hex4(u):\n`;
         c += `    keyboard.press(Keycode.OPTION)\n`;
         c += `    for _s in (12, 8, 4, 0):\n`;
-        c += `        keyboard.send(_HEXK[(cp >> _s) & 0xF])\n`;
+        c += `        keyboard.send(_HEXK[(u >> _s) & 0xF])\n`;
         c += `    keyboard.release(Keycode.OPTION)\n`;
+        c += `def _uni(cp):\n`;
+        c += `    if cp > 0xFFFF:\n`;
+        c += `        cp -= 0x10000\n`;
+        c += `        _uni_hex4(0xD800 + (cp >> 10))\n`;
+        c += `        _uni_hex4(0xDC00 + (cp & 0x3FF))\n`;
+        c += `    else:\n`;
+        c += `        _uni_hex4(cp)\n`;
       }
       c += `def type_text(s):\n`;
       c += `    for ch in s:\n`;
@@ -2240,7 +2252,7 @@ except Exception:
       ca: {
         nav_config:'Dispositiu', nav_profiles:'Capes', nav_settings:'Configuració', nav_fw:'Firmware', nav_guide:'Guia', nav_theme:'Aparença',
         cfg_midi_title:'Canal MIDI', cfg_midi_desc:"Canal MIDI per defecte que s'aplicarà a les tecles i potenciòmetres MIDI nous.", cfg_midi_ch:'Canal:', cfg_save:'Guardar',
-        cfg_os_title:'Sistema operatiu', cfg_os_desc:"Sistema de l'ordinador on connectes el TECLA. S'usa per enviar símbols que no són al teclat (φ, π, €…) amb la seqüència d'entrada Unicode correcta.", cfg_os_lbl:'Sistema:', cfg_os_saved:'Sistema operatiu desat:',
+        cfg_os_title:'Sistema operatiu', cfg_os_desc:"Sistema de l'ordinador on connectes el TECLA. S'usa per enviar símbols que no són al teclat (φ, π, €, emojis…) amb la seqüència d'entrada Unicode correcta.", cfg_os_lbl:'Sistema:', cfg_os_saved:'Sistema operatiu desat:',
         cfg_os_note:"Per als símbols Unicode cal un ajust únic al sistema de destí: a <strong>macOS</strong>, activa la font d'entrada <strong>Unicode Hex Input</strong>; a <strong>Windows</strong>, la clau de registre <strong>EnableHexNumpad=1</strong>. A <strong>Linux</strong> (IBus/GTK) funciona directament.",
         cfg_usb_title:'Identitat USB', cfg_port_name:'Nom del port:', cfg_disk_name:'Nom del disc:', cfg_device_title:'Dispositiu', cfg_disconnect:'Desconnectar',
         btn_connect:'Connecta dispositiu', btn_disconnect:'Desconnectar',
@@ -2322,7 +2334,7 @@ except Exception:
       es: {
         nav_config:'Dispositivo', nav_profiles:'Capas', nav_settings:'Configuración', nav_fw:'Firmware', nav_guide:'Guía', nav_theme:'Apariencia',
         cfg_midi_title:'Canal MIDI', cfg_midi_desc:'Canal MIDI por defecto que se aplicará a las teclas y potenciómetros MIDI nuevos.', cfg_midi_ch:'Canal:', cfg_save:'Guardar',
-        cfg_os_title:'Sistema operativo', cfg_os_desc:'Sistema del ordenador donde conectas el TECLA. Se usa para enviar símbolos que no están en el teclado (φ, π, €…) con la secuencia de entrada Unicode correcta.', cfg_os_lbl:'Sistema:', cfg_os_saved:'Sistema operativo guardado:',
+        cfg_os_title:'Sistema operativo', cfg_os_desc:'Sistema del ordenador donde conectas el TECLA. Se usa para enviar símbolos que no están en el teclado (φ, π, €, emojis…) con la secuencia de entrada Unicode correcta.', cfg_os_lbl:'Sistema:', cfg_os_saved:'Sistema operativo guardado:',
         cfg_os_note:'Para los símbolos Unicode hace falta un ajuste único en el sistema de destino: en <strong>macOS</strong>, activa la fuente de entrada <strong>Unicode Hex Input</strong>; en <strong>Windows</strong>, la clave de registro <strong>EnableHexNumpad=1</strong>. En <strong>Linux</strong> (IBus/GTK) funciona directamente.',
         cfg_usb_title:'Identidad USB', cfg_port_name:'Nombre del puerto:', cfg_disk_name:'Nombre del disco:', cfg_device_title:'Dispositivo', cfg_disconnect:'Desconectar',
         btn_connect:'Conectar dispositivo', btn_disconnect:'Desconectar',
@@ -2404,7 +2416,7 @@ except Exception:
       en: {
         nav_config:'Device', nav_profiles:'Layers', nav_settings:'Configuration', nav_fw:'Firmware', nav_guide:'Guide', nav_theme:'Appearance',
         cfg_midi_title:'MIDI Channel', cfg_midi_desc:'Default MIDI channel applied to new MIDI keys and potentiometers.', cfg_midi_ch:'Channel:', cfg_save:'Save',
-        cfg_os_title:'Operating system', cfg_os_desc:'The system of the computer where you plug the TECLA. Used to send symbols not on the keyboard (φ, π, €…) with the correct Unicode input sequence.', cfg_os_lbl:'System:', cfg_os_saved:'Operating system saved:',
+        cfg_os_title:'Operating system', cfg_os_desc:'The system of the computer where you plug the TECLA. Used to send symbols not on the keyboard (φ, π, €, emojis…) with the correct Unicode input sequence.', cfg_os_lbl:'System:', cfg_os_saved:'Operating system saved:',
         cfg_os_note:'Unicode symbols need a one-time setting on the target system: on <strong>macOS</strong>, enable the <strong>Unicode Hex Input</strong> source; on <strong>Windows</strong>, the registry key <strong>EnableHexNumpad=1</strong>. On <strong>Linux</strong> (IBus/GTK) it works directly.',
         cfg_usb_title:'USB Identity', cfg_port_name:'Port name:', cfg_disk_name:'Disk name:', cfg_device_title:'Device', cfg_disconnect:'Disconnect',
         btn_connect:'Connect device', btn_disconnect:'Disconnect',
