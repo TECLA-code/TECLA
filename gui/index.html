@@ -42,8 +42,13 @@
     .insp-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); z-index: 5; }
     .drawer-title { font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: .08em; }
     .insp-body { padding: 16px 16px 8px; }
-    .insp-autosave { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--text3); padding: 10px 16px 14px; }
-    .insp-autosave::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+    .insp-autosave { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--text3); padding: 10px 16px 14px; transition: color .15s; }
+    .insp-autosave::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; transition: box-shadow .15s; }
+    .insp-autosave.saved { color: var(--green); font-weight: 600; }
+    .insp-autosave.saved::before { box-shadow: 0 0 7px var(--green); }
+    /* Marca "té funció desada" a tecles i pots del dispositiu */
+    .key-btn.assigned::after { content: ""; position: absolute; top: 5px; right: 5px; width: 6px; height: 6px; border-radius: 50%; background: var(--green); border: 1.5px solid rgba(0,0,0,0.35); box-sizing: content-box; }
+    .pot-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: inline-block; vertical-align: middle; margin-left: 4px; box-shadow: 0 0 4px var(--green); }
     .insp-tools { border-top: 1px solid var(--border); padding: 14px 16px 20px; margin-top: auto; }
     .insp-tools-desc { font-size: 11px; color: var(--text3); line-height: 1.6; margin-bottom: 10px; }
     .midi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
@@ -781,7 +786,7 @@
         div.innerHTML = `
           <div class="pot-label">${POT_NAMES[i]}</div>
           <div class="pot-knob" style="transform: rotate(${_potAngle(p.value)}deg); cursor: ns-resize;"><div class="pot-indicator"></div></div>
-          <div style="font-size: 9px; color: var(--text3); font-family: var(--mono);">${_potShort(p)}</div>
+          <div style="font-size: 9px; color: var(--text3); font-family: var(--mono);">${_potShort(p)}${p.function !== 'none' ? '<span class="pot-dot"></span>' : ''}</div>
           <div style="font-size: 9px; color: var(--accent); font-family: var(--mono); min-height:12px;">${p.value}</div>
         `;
         const knobEl = div.querySelector('.pot-knob');
@@ -817,7 +822,7 @@
       config.keys.forEach((k, i) => {
         const btn = document.createElement('div');
         let classes = 'key-btn';
-        if (k.type !== 'none') classes += ` key-type-${k.type}`;
+        if (k.type !== 'none') classes += ` key-type-${k.type} assigned`;
         if (currentSelection.type === 'key' && currentSelection.id === i) classes += ' active';
         btn.className = classes;
         let funcShort = '';
@@ -1049,6 +1054,20 @@
       
       saveLayers();
       renderDevice();
+      _flashSaved();
+    }
+    // Confirmació visual "Desat ✓" a cada edició (torna al text estàtic al cap d'un moment)
+    let _savedTimer = null;
+    function _flashSaved() {
+      const el = document.querySelector('.insp-autosave');
+      if (!el) return;
+      el.classList.add('saved');
+      el.textContent = _i('saved_flash');
+      clearTimeout(_savedTimer);
+      _savedTimer = setTimeout(() => {
+        el.classList.remove('saved');
+        el.textContent = _i('autosave_note');
+      }, 1300);
     }
     // Desat automàtic: qualsevol edició del formulari s'aplica a l'instant
     ['input','change'].forEach(ev => document.getElementById('insp-body').addEventListener(ev, () => {
@@ -2277,7 +2296,7 @@ except Exception:
         layer_lbl:'Capes:', btn_new_layer:'+ Nova', btn_rename:'Reanomenar la capa activa', btn_del:'Eliminar la capa activa',
         tt_dup:'Duplicar la capa activa', tt_export_layer:'Exportar la capa activa (JSON)', tt_import_layer:'Importar capes (JSON)', tt_hub:"Tornar al hub d'aplicacions",
         chip_hint:'Clic: activar · Doble clic: reanomenar', prompt_rename:'Nou nom de la capa:', prompt_new_layer:'Nom de la nova capa:',
-        btn_copy:'Copiar', btn_paste:'Enganxar', autosave_note:'Els canvis es desen automàticament',
+        btn_copy:'Copiar', btn_paste:'Enganxar', autosave_note:'Els canvis es desen automàticament', saved_flash:'✓ Desat',
         rec_shortcut:'⌨ Capturar drecera del teclat', rec_waiting:'Prem la drecera ara…',
         midi_tools_title:'♬ MIDI ràpid', midi_tools_desc:'Omple capes senceres amb notes MIDI consecutives. Ideal per a TouchDesigner, Ableton o qualsevol programa que escolti MIDI.',
         midi_base_lbl:'Nota inicial', midi_ch_lbl:'Canal', midi_vel_lbl:'Velocitat',
@@ -2360,7 +2379,7 @@ except Exception:
         layer_lbl:'Capas:', btn_new_layer:'+ Nueva', btn_rename:'Renombrar la capa activa', btn_del:'Eliminar la capa activa',
         tt_dup:'Duplicar la capa activa', tt_export_layer:'Exportar la capa activa (JSON)', tt_import_layer:'Importar capas (JSON)', tt_hub:'Volver al hub de aplicaciones',
         chip_hint:'Clic: activar · Doble clic: renombrar', prompt_rename:'Nuevo nombre de la capa:', prompt_new_layer:'Nombre de la nueva capa:',
-        btn_copy:'Copiar', btn_paste:'Pegar', autosave_note:'Los cambios se guardan automáticamente',
+        btn_copy:'Copiar', btn_paste:'Pegar', autosave_note:'Los cambios se guardan automáticamente', saved_flash:'✓ Guardado',
         rec_shortcut:'⌨ Capturar atajo del teclado', rec_waiting:'Pulsa el atajo ahora…',
         midi_tools_title:'♬ MIDI rápido', midi_tools_desc:'Rellena capas enteras con notas MIDI consecutivas. Ideal para TouchDesigner, Ableton o cualquier programa que escuche MIDI.',
         midi_base_lbl:'Nota inicial', midi_ch_lbl:'Canal', midi_vel_lbl:'Velocidad',
@@ -2443,7 +2462,7 @@ except Exception:
         layer_lbl:'Layers:', btn_new_layer:'+ New', btn_rename:'Rename active layer', btn_del:'Delete active layer',
         tt_dup:'Duplicate active layer', tt_export_layer:'Export active layer (JSON)', tt_import_layer:'Import layers (JSON)', tt_hub:'Back to app hub',
         chip_hint:'Click: activate · Double click: rename', prompt_rename:'New layer name:', prompt_new_layer:'New layer name:',
-        btn_copy:'Copy', btn_paste:'Paste', autosave_note:'Changes are saved automatically',
+        btn_copy:'Copy', btn_paste:'Paste', autosave_note:'Changes are saved automatically', saved_flash:'✓ Saved',
         rec_shortcut:'⌨ Capture keyboard shortcut', rec_waiting:'Press the shortcut now…',
         midi_tools_title:'♬ Quick MIDI', midi_tools_desc:'Fill entire layers with consecutive MIDI notes. Perfect for TouchDesigner, Ableton or any MIDI-listening software.',
         midi_base_lbl:'First note', midi_ch_lbl:'Channel', midi_vel_lbl:'Velocity',
