@@ -573,15 +573,15 @@
       </div>
       <!-- Escriure text per pas (Pots) -->
       <div id="settings-pot-text_step" style="display: none; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px;">
-        <p style="font-size:12px;color:var(--text2);line-height:1.65;margin-bottom:12px" data-th="drawer_text_step_desc">Escriu un text cada vegada que el potenci&ograve;metre avan&ccedil;a N unitats. Girant cap a la dreta escriu el primer text i cap a l'esquerra el segon. Amb <strong>+</strong> i <strong>&minus;</strong> tens un control de zoom.</p>
+        <p style="font-size:12px;color:var(--text2);line-height:1.65;margin-bottom:12px" data-th="drawer_text_step_desc">Escriu el text indicat cada vegada que el potenci&ograve;metre avan&ccedil;a N unitats: un text girant cap a l'esquerra i un altre cap a la dreta. Pots posar-hi qualsevol s&iacute;mbol (per exemple <strong>+</strong> i <strong>&minus;</strong> per fer zoom).</p>
         <div class="checkbox-grid">
-          <div class="form-group" style="margin-bottom:0">
-            <label data-t="drawer_text_up_label">Text girant a la dreta</label>
-            <input type="text" id="pot-text-up" placeholder="+" maxlength="20">
-          </div>
           <div class="form-group" style="margin-bottom:0">
             <label data-t="drawer_text_down_label">Text girant a l'esquerra</label>
             <input type="text" id="pot-text-down" placeholder="&minus;" maxlength="20">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label data-t="drawer_text_up_label">Text girant a la dreta</label>
+            <input type="text" id="pot-text-up" placeholder="+" maxlength="20">
           </div>
         </div>
         <div class="form-group" style="margin-top:12px;margin-bottom:0">
@@ -594,7 +594,7 @@
             <option value="30" data-t="dens_30">Cada 30 unitats (molt espa&iuml;at)</option>
           </select>
         </div>
-        <div class="guide-note" style="margin-top:12px" data-th="drawer_text_step_tip">Per fer <strong>zoom</strong>: escriu <strong>+</strong> i <strong>&minus;</strong>, i assigna una tecla de tipus <em>Modificador Mantingut</em> amb Cmd/Ctrl si l'aplicaci&oacute; ho requereix.</div>
+        <div class="guide-note" style="margin-top:12px" data-th="drawer_text_step_tip">Els s&iacute;mbols <strong>+ &minus; * /</strong> s'envien pel teclat num&egrave;ric, aix&iacute; que surten igual sigui quina sigui la disposici&oacute; de teclat de l'ordinador. Per fer <strong>zoom</strong>, combina'ls amb una tecla de tipus <em>Modificador Mantingut</em> (Cmd/Ctrl) si l'aplicaci&oacute; ho requereix.</div>
       </div>
       <!-- MIDI CC (Pots) -->
       <div id="settings-pot-midi_cc" style="display: none; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px;">
@@ -2229,11 +2229,11 @@ except Exception:
         pot_none:'Cap (Desactivat)', pot_volume:"Volum de l'ordinador", pot_brightness:'Brillantor de la pantalla',
         pot_scroll_y:'Ratolí: Scroll Vertical', pot_scroll_x:'Ratolí: Scroll Horitzontal',
         pot_mouse_x:'Ratolí: Moviment X (Esq/Dre)', pot_mouse_y:'Ratolí: Moviment Y (Dalt/Baix)',
-        pot_click_step:'Clic per moviment (pas configurable)', pot_text_step:'Escriure text per moviment (zoom + / −)', pot_midi_cc:'MIDI CC (Controlador 0–127)',
-        drawer_text_step_desc:"Escriu un text cada vegada que el potenciòmetre avança N unitats. Girant cap a la dreta escriu el primer text i cap a l'esquerra el segon. Amb <strong>+</strong> i <strong>−</strong> tens un control de zoom.",
+        pot_click_step:'Clic per moviment (pas configurable)', pot_text_step:'Escriure text', pot_midi_cc:'MIDI CC (Controlador 0–127)',
+        drawer_text_step_desc:"Escriu el text indicat cada vegada que el potenciòmetre avança N unitats: un text girant cap a l'esquerra i un altre cap a la dreta. Pots posar-hi qualsevol símbol (per exemple <strong>+</strong> i <strong>−</strong> per fer zoom).",
         drawer_text_up_label:'Text girant a la dreta', drawer_text_down_label:"Text girant a l'esquerra",
         drawer_text_step_label:'Densitat (1 pols cada N unitats)',
-        drawer_text_step_tip:'Per fer <strong>zoom</strong>: escriu <strong>+</strong> i <strong>−</strong>, i assigna una tecla de tipus <em>Modificador Mantingut</em> amb Cmd/Ctrl si l\'aplicació ho requereix.',
+        drawer_text_step_tip:'Els símbols <strong>+ − * /</strong> s\'envien pel teclat numèric, així que surten igual sigui quina sigui la disposició de teclat de l\'ordinador. Per fer <strong>zoom</strong>, combina\'ls amb una tecla de tipus <em>Modificador Mantingut</em> (Cmd/Ctrl) si l\'aplicació ho requereix.',
         dens_2:'Cada 2 unitats (molt dens)', dens_5:'Cada 5 unitats (dens)', dens_10:'Cada 10 unitats (normal)',
         dens_20:'Cada 20 unitats (espaiat)', dens_30:'Cada 30 unitats (molt espaiat)',
         theme_title:'Aparença', theme_editor:'Editor de temes', theme_new:'+ Nou tema',
@@ -2309,11 +2309,11 @@ except Exception:
         pot_none:'Ninguna (Desactivado)', pot_volume:'Volumen del ordenador', pot_brightness:'Brillo de la pantalla',
         pot_scroll_y:'Ratón: Scroll Vertical', pot_scroll_x:'Ratón: Scroll Horizontal',
         pot_mouse_x:'Ratón: Movimiento X (Izq/Der)', pot_mouse_y:'Ratón: Movimiento Y (Arriba/Abajo)',
-        pot_click_step:'Clic por movimiento (paso configurable)', pot_text_step:'Escribir texto por movimiento (zoom + / −)', pot_midi_cc:'MIDI CC (Controlador 0–127)',
-        drawer_text_step_desc:'Escribe un texto cada vez que el potenciómetro avanza N unidades. Girando a la derecha escribe el primer texto y a la izquierda el segundo. Con <strong>+</strong> y <strong>−</strong> tienes un control de zoom.',
+        pot_click_step:'Clic por movimiento (paso configurable)', pot_text_step:'Escribir texto', pot_midi_cc:'MIDI CC (Controlador 0–127)',
+        drawer_text_step_desc:'Escribe el texto indicado cada vez que el potenciómetro avanza N unidades: un texto girando hacia la izquierda y otro hacia la derecha. Puedes poner cualquier símbolo (por ejemplo <strong>+</strong> y <strong>−</strong> para hacer zoom).',
         drawer_text_up_label:'Texto girando a la derecha', drawer_text_down_label:'Texto girando a la izquierda',
         drawer_text_step_label:'Densidad (1 pulso cada N unidades)',
-        drawer_text_step_tip:'Para hacer <strong>zoom</strong>: escribe <strong>+</strong> y <strong>−</strong>, y asigna una tecla de tipo <em>Modificador Mantenido</em> con Cmd/Ctrl si la aplicación lo requiere.',
+        drawer_text_step_tip:'Los símbolos <strong>+ − * /</strong> se envían por el teclado numérico, así que salen igual sea cual sea la distribución de teclado del ordenador. Para hacer <strong>zoom</strong>, combínalos con una tecla de tipo <em>Modificador Mantenido</em> (Cmd/Ctrl) si la aplicación lo requiere.',
         dens_2:'Cada 2 unidades (muy denso)', dens_5:'Cada 5 unidades (denso)', dens_10:'Cada 10 unidades (normal)',
         dens_20:'Cada 20 unidades (espaciado)', dens_30:'Cada 30 unidades (muy espaciado)',
         theme_title:'Apariencia', theme_editor:'Editor de temas', theme_new:'+ Nuevo tema',
@@ -2389,11 +2389,11 @@ except Exception:
         pot_none:'None (Disabled)', pot_volume:'Computer volume', pot_brightness:'Screen brightness',
         pot_scroll_y:'Mouse: Vertical scroll', pot_scroll_x:'Mouse: Horizontal scroll',
         pot_mouse_x:'Mouse: X movement (Left/Right)', pot_mouse_y:'Mouse: Y movement (Up/Down)',
-        pot_click_step:'Click per movement (configurable step)', pot_text_step:'Type text per movement (zoom + / −)', pot_midi_cc:'MIDI CC (Controller 0–127)',
-        drawer_text_step_desc:'Types a text every time the potentiometer advances N units. Turning right types the first text, turning left the second. With <strong>+</strong> and <strong>−</strong> you get a zoom control.',
+        pot_click_step:'Click per movement (configurable step)', pot_text_step:'Type text', pot_midi_cc:'MIDI CC (Controller 0–127)',
+        drawer_text_step_desc:'Types the given text every time the potentiometer advances N units: one text when turning left and another when turning right. You can use any symbol (for example <strong>+</strong> and <strong>−</strong> for zoom).',
         drawer_text_up_label:'Text when turning right', drawer_text_down_label:'Text when turning left',
         drawer_text_step_label:'Density (1 pulse every N units)',
-        drawer_text_step_tip:'For <strong>zoom</strong>: type <strong>+</strong> and <strong>−</strong>, and assign a <em>Held Modifier</em> key with Cmd/Ctrl if the application requires it.',
+        drawer_text_step_tip:'The symbols <strong>+ − * /</strong> are sent through the numeric keypad, so they come out the same whatever the computer\'s keyboard layout is. For <strong>zoom</strong>, combine them with a <em>Held Modifier</em> key (Cmd/Ctrl) if the application requires it.',
         dens_2:'Every 2 units (very dense)', dens_5:'Every 5 units (dense)', dens_10:'Every 10 units (normal)',
         dens_20:'Every 20 units (spaced)', dens_30:'Every 30 units (very spaced)',
         theme_title:'Appearance', theme_editor:'Theme editor', theme_new:'+ New theme',
