@@ -344,6 +344,20 @@
         </div>
       </div>
       <div class="card">
+        <div class="card-title" data-t="cfg_os_title">Sistema operatiu</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.65" data-th="cfg_os_desc">Sistema de l'ordinador on connectes el TECLA. S'usa per enviar s&iacute;mbols que no s&oacute;n al teclat (&phi;, &pi;, &euro;&hellip;) amb la seq&uuml;&egrave;ncia d'entrada Unicode correcta.</p>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+          <label style="font-size:12px;font-weight:500;min-width:80px" data-t="cfg_os_lbl">Sistema:</label>
+          <select id="cfg-os" style="width:120px">
+            <option value="mac">macOS</option>
+            <option value="win">Windows</option>
+            <option value="linux">Linux</option>
+          </select>
+          <button class="btn btn-sm btn-primary" id="btn-save-os" data-t="cfg_save">Guardar</button>
+        </div>
+        <div class="guide-note" style="margin-top:12px" data-th="cfg_os_note">Per als s&iacute;mbols Unicode cal un ajust &uacute;nic al sistema de dest&iacute;: a <strong>macOS</strong>, activa la font d'entrada <strong>Unicode Hex Input</strong>; a <strong>Windows</strong>, la clau de registre <strong>EnableHexNumpad=1</strong>. A <strong>Linux</strong> (IBus/GTK) funciona directament.</div>
+      </div>
+      <div class="card">
         <div class="card-title" data-t="cfg_usb_title">Identitat USB</div>
         <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -594,7 +608,7 @@
             <option value="30" data-t="dens_30">Cada 30 unitats (molt espa&iuml;at)</option>
           </select>
         </div>
-        <div class="guide-note" style="margin-top:12px" data-th="drawer_text_step_tip">Els s&iacute;mbols <strong>+ &minus; * /</strong> s'envien pel teclat num&egrave;ric, aix&iacute; que surten igual sigui quina sigui la disposici&oacute; de teclat de l'ordinador. Per fer <strong>zoom</strong>, combina'ls amb una tecla de tipus <em>Modificador Mantingut</em> (Cmd/Ctrl) si l'aplicaci&oacute; ho requereix.</div>
+        <div class="guide-note" style="margin-top:12px" data-th="drawer_text_step_tip">Els s&iacute;mbols <strong>+ &minus; * /</strong> s'envien pel teclat num&egrave;ric, aix&iacute; que surten igual sigui quina sigui la disposici&oacute; de teclat de l'ordinador. Per fer <strong>zoom</strong>, combina'ls amb una tecla de tipus <em>Modificador Mantingut</em> (Cmd/Ctrl) si l'aplicaci&oacute; ho requereix. Per a s&iacute;mbols que no s&oacute;n al teclat (&phi;, &pi;&hellip;), tria el teu sistema a <em>Configuraci&oacute;</em>.</div>
       </div>
       <!-- MIDI CC (Pots) -->
       <div id="settings-pot-midi_cc" style="display: none; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px;">
@@ -1171,6 +1185,43 @@ except Exception:
     pass
 `;
 
+    // Bloc Python que "escriu" un caràcter Unicode amb la seqüència d'entrada
+    // del sistema (independent de la disposició de teclat). type_text() reparteix:
+    // ASCII per layout.write, la resta per la via Unicode.
+    function _unicodeHelperPy(os) {
+      const HEXK = `_HEXK = [Keycode.ZERO, Keycode.ONE, Keycode.TWO, Keycode.THREE, Keycode.FOUR,\n         Keycode.FIVE, Keycode.SIX, Keycode.SEVEN, Keycode.EIGHT, Keycode.NINE,\n         Keycode.A, Keycode.B, Keycode.C, Keycode.D, Keycode.E, Keycode.F]\n`;
+      let c = `\n# --- Entrada Unicode (${os}) ---\n` + HEXK;
+      if (os === 'win') {
+        c += `_HEXK_NUM = [Keycode.KEYPAD_ZERO, Keycode.KEYPAD_ONE, Keycode.KEYPAD_TWO, Keycode.KEYPAD_THREE, Keycode.KEYPAD_FOUR,\n             Keycode.KEYPAD_FIVE, Keycode.KEYPAD_SIX, Keycode.KEYPAD_SEVEN, Keycode.KEYPAD_EIGHT, Keycode.KEYPAD_NINE,\n             Keycode.A, Keycode.B, Keycode.C, Keycode.D, Keycode.E, Keycode.F]\n`;
+        c += `def _uni(cp):\n`;
+        c += `    keyboard.press(Keycode.ALT)\n`;
+        c += `    keyboard.send(Keycode.KEYPAD_PLUS)\n`;
+        c += `    for _s in (12, 8, 4, 0):\n`;
+        c += `        keyboard.send(_HEXK_NUM[(cp >> _s) & 0xF])\n`;
+        c += `    keyboard.release(Keycode.ALT)\n`;
+      } else if (os === 'linux') {
+        c += `def _uni(cp):\n`;
+        c += `    keyboard.send(Keycode.LEFT_CONTROL, Keycode.LEFT_SHIFT, Keycode.U)\n`;
+        c += `    for _s in (12, 8, 4, 0):\n`;
+        c += `        keyboard.send(_HEXK[(cp >> _s) & 0xF])\n`;
+        c += `    keyboard.send(Keycode.ENTER)\n`;
+      } else { // mac
+        c += `def _uni(cp):\n`;
+        c += `    keyboard.press(Keycode.OPTION)\n`;
+        c += `    for _s in (12, 8, 4, 0):\n`;
+        c += `        keyboard.send(_HEXK[(cp >> _s) & 0xF])\n`;
+        c += `    keyboard.release(Keycode.OPTION)\n`;
+      }
+      c += `def type_text(s):\n`;
+      c += `    for ch in s:\n`;
+      c += `        cp = ord(ch)\n`;
+      c += `        if cp < 128:\n`;
+      c += `            layout.write(ch)\n`;
+      c += `        else:\n`;
+      c += `            _uni(cp)\n`;
+      return c;
+    }
+
     function generateCode() {
       const hasLayerChange = layers.some(l => l.keys.some(k => k.type === 'layer_change'));
       const multiLayer = layers.length > 1 || hasLayerChange;
@@ -1183,14 +1234,23 @@ except Exception:
       // disposicions, així que hi passem aquests símbols quan van sols.
       const KEYPAD_CHAR = { '+': 'Keycode.KEYPAD_PLUS', '-': 'Keycode.KEYPAD_MINUS', '*': 'Keycode.KEYPAD_ASTERISK', '/': 'Keycode.KEYPAD_FORWARD_SLASH' };
       const _isKeypadChar = (t) => typeof t === 'string' && t.length === 1 && !!KEYPAD_CHAR[t];
+      // Un caràcter fora de l'ASCII (φ, €, ñ…) no és a la majoria de teclats: s'ha
+      // d'enviar per la seqüència d'entrada Unicode del sistema (type_text()).
+      const _hasNonAscii = (t) => typeof t === 'string' && /[^\x00-\x7F]/.test(t);
+      const _osTarget = (typeof _loadOS === 'function' ? _loadOS() : 'mac');
 
       const hasHoldMod   = allKeys.flat().some(k => k.type === 'hold_mod');
       const needsKeyboard = allKeys.flat().some(k => k.type === 'key' || k.type === 'hold_mod' || k.type === 'open_app');
+      const _texts = [
+        ...allKeys.flat().filter(k => k.type === 'string').map(k => k.string),
+        ...allPots.flat().filter(p => p.function === 'text_step').flatMap(p => [p.text_up ?? '+', p.text_down ?? '-']),
+      ];
+      const usesUnicode = _texts.some(_hasNonAscii);
       const needsString   = allKeys.flat().some(k => k.type === 'string' || k.type === 'open_app') || allPots.flat().some(p => p.function === 'text_step');
-      // Keycode cal si hi ha tecles/modificadors o si algun text usa el teclat numèric.
+      // Keycode cal si hi ha tecles/modificadors, o si algun text usa el teclat numèric o Unicode.
       const usesKeypad = allKeys.flat().some(k => k.type === 'string' && _isKeypadChar(k.string))
         || allPots.flat().some(p => p.function === 'text_step' && (_isKeypadChar(p.text_up ?? '+') || _isKeypadChar(p.text_down ?? '-')));
-      const needsKeycode = needsKeyboard || usesKeypad;
+      const needsKeycode = needsKeyboard || usesKeypad || usesUnicode;
       const needsConsumer = allKeys.flat().some(k => k.type === 'consumer') || allPots.flat().some(p => p.function === 'volume' || p.function === 'brightness');
       const needsMouse    = allKeys.flat().some(k => k.type === 'mouse') || allPots.flat().some(p => p.function.startsWith('mouse') || p.function.startsWith('scroll') || p.function === 'click_step');
       const needsMidi     = allKeys.flat().some(k => k.type === 'midi_note') || allPots.flat().some(p => p.function === 'midi_cc');
@@ -1209,6 +1269,8 @@ except Exception:
       if (needsString)   code += `layout = KeyboardLayoutUS(keyboard)\n`;
       if (needsConsumer) code += `cc = ConsumerControl(usb_hid.devices)\n`;
       if (needsMouse)    code += `mouse = Mouse(usb_hid.devices)\n`;
+
+      if (usesUnicode) code += _unicodeHelperPy(_osTarget);
 
       code += `\n# --- Hardware Setup ---\n`;
       code += `btn_pins = [board.GP0, board.GP1, board.GP2, board.GP3, board.GP4, board.GP5, board.GP6, board.GP7, board.GP8, board.GP9, board.GP10, board.GP11, board.GP12, board.GP13, board.GP14, board.GP15]\n`;
@@ -1236,7 +1298,9 @@ except Exception:
       // Sentència per escriure un text. Els símbols +,-,*,/ sols van pel teclat
       // numèric (independent de la disposició); la resta amb layout.write.
       function _typeStmt(text) {
-        return _isKeypadChar(text) ? `keyboard.send(${KEYPAD_CHAR[text]})` : `layout.write("${_pyStr(text)}")`;
+        if (_isKeypadChar(text)) return `keyboard.send(${KEYPAD_CHAR[text]})`;
+        if (_hasNonAscii(text)) return `type_text("${_pyStr(text)}")`;
+        return `layout.write("${_pyStr(text)}")`;
       }
 
       function _keyAction(k, indent) {
@@ -1931,6 +1995,9 @@ except Exception:
     function _loadMidiChannel() { return Math.min(16, Math.max(1, parseInt(localStorage.getItem(_MIDI_CH_KEY) || '1', 10) || 1)); }
     function _saveMidiChannel(ch) { localStorage.setItem(_MIDI_CH_KEY, String(ch)); }
 
+    const _OS_KEY = 'tecla_os';
+    function _loadOS() { const v = localStorage.getItem(_OS_KEY); return ['mac','win','linux'].includes(v) ? v : 'mac'; }
+
     // Escriu un fitxer al dispositiu (CIRCUITPY) creant els directoris intermedis.
     async function _writeDeviceFile(path, content) {
       if (!_deviceDir) throw new Error('Dispositiu no connectat');
@@ -1951,7 +2018,16 @@ except Exception:
       if (nameInp) nameInp.value = localStorage.getItem('tecla_device_name') || '';
       const suffixInp = document.getElementById('cfg-disk-suffix');
       if (suffixInp) suffixInp.value = localStorage.getItem('tecla_disk_suffix') || '';
+      const osSel = document.getElementById('cfg-os');
+      if (osSel) osSel.value = _loadOS();
     }
+
+    document.getElementById('btn-save-os')?.addEventListener('click', () => {
+      const os = document.getElementById('cfg-os')?.value || 'mac';
+      localStorage.setItem(_OS_KEY, os);
+      const names = { mac: 'macOS', win: 'Windows', linux: 'Linux' };
+      showToast(`${_i('cfg_os_saved')} ${names[os]}`, 'ok');
+    });
 
     document.getElementById('btn-save-midi-channel')?.addEventListener('click', () => {
       const ch = Math.min(16, Math.max(1, parseInt(document.getElementById('cfg-midi-channel')?.value || '1', 10) || 1));
@@ -2164,6 +2240,8 @@ except Exception:
       ca: {
         nav_config:'Dispositiu', nav_profiles:'Capes', nav_settings:'Configuració', nav_fw:'Firmware', nav_guide:'Guia', nav_theme:'Aparença',
         cfg_midi_title:'Canal MIDI', cfg_midi_desc:"Canal MIDI per defecte que s'aplicarà a les tecles i potenciòmetres MIDI nous.", cfg_midi_ch:'Canal:', cfg_save:'Guardar',
+        cfg_os_title:'Sistema operatiu', cfg_os_desc:"Sistema de l'ordinador on connectes el TECLA. S'usa per enviar símbols que no són al teclat (φ, π, €…) amb la seqüència d'entrada Unicode correcta.", cfg_os_lbl:'Sistema:', cfg_os_saved:'Sistema operatiu desat:',
+        cfg_os_note:"Per als símbols Unicode cal un ajust únic al sistema de destí: a <strong>macOS</strong>, activa la font d'entrada <strong>Unicode Hex Input</strong>; a <strong>Windows</strong>, la clau de registre <strong>EnableHexNumpad=1</strong>. A <strong>Linux</strong> (IBus/GTK) funciona directament.",
         cfg_usb_title:'Identitat USB', cfg_port_name:'Nom del port:', cfg_disk_name:'Nom del disc:', cfg_device_title:'Dispositiu', cfg_disconnect:'Desconnectar',
         btn_connect:'Connecta dispositiu', btn_disconnect:'Desconnectar',
         device_off:'desconnectat',
@@ -2233,7 +2311,7 @@ except Exception:
         drawer_text_step_desc:"Escriu el text indicat cada vegada que el potenciòmetre avança N unitats: un text girant cap a l'esquerra i un altre cap a la dreta. Pots posar-hi qualsevol símbol (per exemple <strong>+</strong> i <strong>−</strong> per fer zoom).",
         drawer_text_up_label:'Text girant a la dreta', drawer_text_down_label:"Text girant a l'esquerra",
         drawer_text_step_label:'Densitat (1 pols cada N unitats)',
-        drawer_text_step_tip:'Els símbols <strong>+ − * /</strong> s\'envien pel teclat numèric, així que surten igual sigui quina sigui la disposició de teclat de l\'ordinador. Per fer <strong>zoom</strong>, combina\'ls amb una tecla de tipus <em>Modificador Mantingut</em> (Cmd/Ctrl) si l\'aplicació ho requereix.',
+        drawer_text_step_tip:'Els símbols <strong>+ − * /</strong> s\'envien pel teclat numèric, així que surten igual sigui quina sigui la disposició de teclat de l\'ordinador. Per fer <strong>zoom</strong>, combina\'ls amb una tecla de tipus <em>Modificador Mantingut</em> (Cmd/Ctrl) si l\'aplicació ho requereix. Per a símbols que no són al teclat (φ, π…), tria el teu sistema a <em>Configuració</em>.',
         dens_2:'Cada 2 unitats (molt dens)', dens_5:'Cada 5 unitats (dens)', dens_10:'Cada 10 unitats (normal)',
         dens_20:'Cada 20 unitats (espaiat)', dens_30:'Cada 30 unitats (molt espaiat)',
         theme_title:'Aparença', theme_editor:'Editor de temes', theme_new:'+ Nou tema',
@@ -2244,6 +2322,8 @@ except Exception:
       es: {
         nav_config:'Dispositivo', nav_profiles:'Capas', nav_settings:'Configuración', nav_fw:'Firmware', nav_guide:'Guía', nav_theme:'Apariencia',
         cfg_midi_title:'Canal MIDI', cfg_midi_desc:'Canal MIDI por defecto que se aplicará a las teclas y potenciómetros MIDI nuevos.', cfg_midi_ch:'Canal:', cfg_save:'Guardar',
+        cfg_os_title:'Sistema operativo', cfg_os_desc:'Sistema del ordenador donde conectas el TECLA. Se usa para enviar símbolos que no están en el teclado (φ, π, €…) con la secuencia de entrada Unicode correcta.', cfg_os_lbl:'Sistema:', cfg_os_saved:'Sistema operativo guardado:',
+        cfg_os_note:'Para los símbolos Unicode hace falta un ajuste único en el sistema de destino: en <strong>macOS</strong>, activa la fuente de entrada <strong>Unicode Hex Input</strong>; en <strong>Windows</strong>, la clave de registro <strong>EnableHexNumpad=1</strong>. En <strong>Linux</strong> (IBus/GTK) funciona directamente.',
         cfg_usb_title:'Identidad USB', cfg_port_name:'Nombre del puerto:', cfg_disk_name:'Nombre del disco:', cfg_device_title:'Dispositivo', cfg_disconnect:'Desconectar',
         btn_connect:'Conectar dispositivo', btn_disconnect:'Desconectar',
         device_off:'desconectado',
@@ -2313,7 +2393,7 @@ except Exception:
         drawer_text_step_desc:'Escribe el texto indicado cada vez que el potenciómetro avanza N unidades: un texto girando hacia la izquierda y otro hacia la derecha. Puedes poner cualquier símbolo (por ejemplo <strong>+</strong> y <strong>−</strong> para hacer zoom).',
         drawer_text_up_label:'Texto girando a la derecha', drawer_text_down_label:'Texto girando a la izquierda',
         drawer_text_step_label:'Densidad (1 pulso cada N unidades)',
-        drawer_text_step_tip:'Los símbolos <strong>+ − * /</strong> se envían por el teclado numérico, así que salen igual sea cual sea la distribución de teclado del ordenador. Para hacer <strong>zoom</strong>, combínalos con una tecla de tipo <em>Modificador Mantenido</em> (Cmd/Ctrl) si la aplicación lo requiere.',
+        drawer_text_step_tip:'Los símbolos <strong>+ − * /</strong> se envían por el teclado numérico, así que salen igual sea cual sea la distribución de teclado del ordenador. Para hacer <strong>zoom</strong>, combínalos con una tecla de tipo <em>Modificador Mantenido</em> (Cmd/Ctrl) si la aplicación lo requiere. Para símbolos que no están en el teclado (φ, π…), elige tu sistema en <em>Configuración</em>.',
         dens_2:'Cada 2 unidades (muy denso)', dens_5:'Cada 5 unidades (denso)', dens_10:'Cada 10 unidades (normal)',
         dens_20:'Cada 20 unidades (espaciado)', dens_30:'Cada 30 unidades (muy espaciado)',
         theme_title:'Apariencia', theme_editor:'Editor de temas', theme_new:'+ Nuevo tema',
@@ -2324,6 +2404,8 @@ except Exception:
       en: {
         nav_config:'Device', nav_profiles:'Layers', nav_settings:'Configuration', nav_fw:'Firmware', nav_guide:'Guide', nav_theme:'Appearance',
         cfg_midi_title:'MIDI Channel', cfg_midi_desc:'Default MIDI channel applied to new MIDI keys and potentiometers.', cfg_midi_ch:'Channel:', cfg_save:'Save',
+        cfg_os_title:'Operating system', cfg_os_desc:'The system of the computer where you plug the TECLA. Used to send symbols not on the keyboard (φ, π, €…) with the correct Unicode input sequence.', cfg_os_lbl:'System:', cfg_os_saved:'Operating system saved:',
+        cfg_os_note:'Unicode symbols need a one-time setting on the target system: on <strong>macOS</strong>, enable the <strong>Unicode Hex Input</strong> source; on <strong>Windows</strong>, the registry key <strong>EnableHexNumpad=1</strong>. On <strong>Linux</strong> (IBus/GTK) it works directly.',
         cfg_usb_title:'USB Identity', cfg_port_name:'Port name:', cfg_disk_name:'Disk name:', cfg_device_title:'Device', cfg_disconnect:'Disconnect',
         btn_connect:'Connect device', btn_disconnect:'Disconnect',
         device_off:'disconnected',
@@ -2393,7 +2475,7 @@ except Exception:
         drawer_text_step_desc:'Types the given text every time the potentiometer advances N units: one text when turning left and another when turning right. You can use any symbol (for example <strong>+</strong> and <strong>−</strong> for zoom).',
         drawer_text_up_label:'Text when turning right', drawer_text_down_label:'Text when turning left',
         drawer_text_step_label:'Density (1 pulse every N units)',
-        drawer_text_step_tip:'The symbols <strong>+ − * /</strong> are sent through the numeric keypad, so they come out the same whatever the computer\'s keyboard layout is. For <strong>zoom</strong>, combine them with a <em>Held Modifier</em> key (Cmd/Ctrl) if the application requires it.',
+        drawer_text_step_tip:'The symbols <strong>+ − * /</strong> are sent through the numeric keypad, so they come out the same whatever the computer\'s keyboard layout is. For <strong>zoom</strong>, combine them with a <em>Held Modifier</em> key (Cmd/Ctrl) if the application requires it. For symbols not on the keyboard (φ, π…), pick your system in <em>Settings</em>.',
         dens_2:'Every 2 units (very dense)', dens_5:'Every 5 units (dense)', dens_10:'Every 10 units (normal)',
         dens_20:'Every 20 units (spaced)', dens_30:'Every 30 units (very spaced)',
         theme_title:'Appearance', theme_editor:'Theme editor', theme_new:'+ New theme',
