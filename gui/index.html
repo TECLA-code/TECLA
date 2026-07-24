@@ -49,6 +49,20 @@
     /* Marca "té funció desada" a tecles i pots del dispositiu */
     .key-btn.assigned::after { content: ""; position: absolute; top: 5px; right: 5px; width: 6px; height: 6px; border-radius: 50%; background: var(--green); border: 1.5px solid rgba(0,0,0,0.35); box-sizing: content-box; }
     .pot-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: inline-block; vertical-align: middle; margin-left: 4px; box-shadow: 0 0 4px var(--green); }
+    /* Editor de macros */
+    .macro-step { display: flex; align-items: center; gap: 6px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 8px; }
+    .macro-step-idx { font-size: 10px; color: var(--text3); font-family: var(--mono); min-width: 12px; }
+    .macro-step-kind { font-size: 11px; color: var(--accent); font-weight: 600; white-space: nowrap; }
+    .macro-step .macro-f { font-size: 11.5px; padding: 4px 6px; min-width: 0; }
+    .macro-step select.macro-f { max-width: 110px; }
+    .macro-mods { display: flex; gap: 6px; flex-wrap: wrap; }
+    .macro-mods label { display: inline-flex; align-items: center; gap: 2px; font-size: 10px; color: var(--text2); text-transform: none; letter-spacing: 0; margin: 0; }
+    .macro-mods input { width: 12px; height: 12px; accent-color: var(--accent); }
+    .macro-step-ctrls { display: flex; gap: 2px; margin-left: auto; flex-shrink: 0; }
+    .macro-step-ctrls button { background: var(--surface3); border: 1px solid var(--border); color: var(--text2); border-radius: 4px; width: 22px; height: 22px; font-size: 11px; cursor: pointer; padding: 0; }
+    .macro-step-ctrls button:hover:not(:disabled) { color: var(--text); border-color: var(--border-h); }
+    .macro-step-ctrls button:disabled { opacity: .3; cursor: default; }
+    .macro-step-ctrls button.del:hover { color: #f05252; border-color: rgba(240,82,82,.4); }
     .insp-tools { border-top: 1px solid var(--border); padding: 14px 16px 20px; margin-top: auto; }
     .insp-tools-desc { font-size: 11px; color: var(--text3); line-height: 1.6; margin-bottom: 10px; }
     .midi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
@@ -104,6 +118,8 @@
     .key-btn.key-type-midi_note.active { border-color: rgba(220,60,200,.9); box-shadow: 0 0 0 2px rgba(220,60,200,.5); }
     .key-btn.key-type-open_app { background: rgba(230,90,70,.22); border-color: rgba(230,90,70,.6); box-shadow: 0 3px 0 rgba(230,90,70,.25); }
     .key-btn.key-type-open_app.active { border-color: rgba(230,90,70,.9); box-shadow: 0 0 0 2px rgba(230,90,70,.5); }
+    .key-btn.key-type-macro { background: rgba(20,180,160,.22); border-color: rgba(20,180,160,.6); box-shadow: 0 3px 0 rgba(20,180,160,.25); }
+    .key-btn.key-type-macro.active { border-color: rgba(20,180,160,.9); box-shadow: 0 0 0 2px rgba(20,180,160,.5); }
     .lang-btn.active { border-color: var(--accent); color: var(--accent); }
     .hlang-btn { font-size: 10px; padding: 3px 7px; border-radius: 5px; border: 1px solid var(--border); background: transparent; color: var(--text3); cursor: pointer; font-family: var(--font); letter-spacing: .04em; transition: color .15s, border-color .15s; }
     .hlang-btn:hover { color: var(--text2); border-color: var(--border-h); }
@@ -705,6 +721,16 @@
           </select>
         </div>
       </div>
+      <!-- Macro (Keys) -->
+      <div id="settings-macro" style="display: none; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px;">
+        <p style="font-size:12px;color:var(--text2);line-height:1.65;margin-bottom:12px" data-th="drawer_macro_desc">En prémer la tecla s'executen els passos en ordre: escriure text, dreceres i esperes. Ideal per automatitzar seq&uuml;&egrave;ncies (obrir, teclejar, executar&hellip;).</p>
+        <div id="macro-steps" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-sm" id="btn-macro-add-text" data-t="macro_add_text">+ Text</button>
+          <button class="btn btn-sm" id="btn-macro-add-key" data-t="macro_add_key">+ Drecera</button>
+          <button class="btn btn-sm" id="btn-macro-add-delay" data-t="macro_add_delay">+ Espera</button>
+        </div>
+      </div>
   </div><!-- #elem-form -->
 
   <script>
@@ -871,6 +897,9 @@
           funcShort = _nn[n%12] + (Math.floor(n/12)-1);
         } else if (k.type === 'open_app') {
           funcShort = k.app ? '\u25B6 ' + k.app.substring(0,6) : 'App';
+        } else if (k.type === 'macro') {
+          const n = (k.steps || []).length;
+          funcShort = '\u2699 ' + n + (n === 1 ? ' pas' : ' passos');
         }
         btn.innerHTML = `<div class="key-num">${i + 1}</div>${funcShort ? `<div class="key-label">${funcShort}</div>` : ''}`;
         btn.addEventListener('click', () => handleElementClick('key', i));
@@ -889,7 +918,7 @@
     // Carregar el formulari de configuració
     const typeSelect = document.getElementById('elem-type');
     typeSelect.addEventListener('change', (e) => {
-      ['settings-key','settings-string','settings-consumer','settings-mouse','settings-layer_change','settings-hold_mod','settings-pot-click_step','settings-pot-text_step','settings-pot-midi_cc','settings-midi_note','settings-open_app'].forEach(id => {
+      ['settings-key','settings-string','settings-consumer','settings-mouse','settings-layer_change','settings-hold_mod','settings-pot-click_step','settings-pot-text_step','settings-pot-midi_cc','settings-midi_note','settings-open_app','settings-macro'].forEach(id => {
         const el = document.getElementById(id); if (el) el.style.display = 'none';
       });
       const val = e.target.value;
@@ -904,6 +933,7 @@
       if (val === 'midi_cc') document.getElementById('settings-pot-midi_cc').style.display = 'block';
       if (val === 'midi_note') document.getElementById('settings-midi_note').style.display = 'block';
       if (val === 'open_app') document.getElementById('settings-open_app').style.display = 'block';
+      if (val === 'macro') { document.getElementById('settings-macro').style.display = 'block'; _renderMacroSteps(); }
     });
 
     let _formLoading = false;
@@ -929,6 +959,7 @@
           <option value="hold_mod" data-t="type_hold_mod">${_i('type_hold_mod')}</option>
           <option value="midi_note" data-t="type_midi_note">${_i('type_midi_note')}</option>
           <option value="open_app" data-t="type_open_app">${_i('type_open_app')}</option>
+          <option value="macro" data-t="type_macro">${_i('type_macro')}</option>
         `;
         typeSelect.value = k.type;
         
@@ -975,6 +1006,8 @@
         } else if (k.type === 'open_app') {
           document.getElementById('key-open-app').value = k.app || '';
           document.getElementById('key-open-os').value = k.os || 'mac';
+        } else if (k.type === 'macro') {
+          _macroDraft = Array.isArray(k.steps) ? JSON.parse(JSON.stringify(k.steps)) : [];
         }
       } else if (type === 'pot') {
         const p = config.pots[id];
@@ -1062,6 +1095,8 @@
         } else if (fType === 'open_app') {
           k.app = document.getElementById('key-open-app').value;
           k.os = document.getElementById('key-open-os').value || 'mac';
+        } else if (fType === 'macro') {
+          k.steps = JSON.parse(JSON.stringify(_macroDraft || []));
         }
         config.keys[id] = k;
       } else if (type === 'pot') {
@@ -1103,6 +1138,53 @@
     ['input','change'].forEach(ev => document.getElementById('insp-body').addEventListener(ev, () => {
       if (!_formLoading) applyElement();
     }));
+
+    // ── Editor de macros (seqüència de passos) ─────────────────────
+    let _macroDraft = [];
+    function _saveMacro() { applyElement(); }
+    function _renderMacroSteps() {
+      const wrap = document.getElementById('macro-steps'); if (!wrap) return;
+      wrap.innerHTML = '';
+      if (!_macroDraft.length) {
+        wrap.innerHTML = `<div style="font-size:11.5px;color:var(--text3)">${_i('macro_empty')}</div>`;
+        return;
+      }
+      const kcOpts = document.getElementById('key-keycode').innerHTML; // reutilitza la llista de tecles
+      _macroDraft.forEach((st, i) => {
+        const row = document.createElement('div');
+        row.className = 'macro-step';
+        let inner = `<span class="macro-step-idx">${i + 1}</span><span class="macro-step-kind">${_i('macro_step_' + st.kind)}</span>`;
+        if (st.kind === 'text') {
+          inner += `<input type="text" class="macro-f" data-f="text" value="${_esc(st.text || '')}" placeholder="${_i('macro_text_ph')}" style="flex:1">`;
+        } else if (st.kind === 'delay') {
+          inner += `<input type="number" class="macro-f" data-f="ms" min="0" max="10000" value="${st.ms ?? 200}" style="width:70px"><span style="font-size:10px;color:var(--text3)">ms</span>`;
+        } else if (st.kind === 'key') {
+          inner += `<select class="macro-f" data-f="keycode" style="flex:1">${kcOpts}</select>`;
+          inner += `<div class="macro-mods">` + ['Ctrl','Shift','Alt','Cmd'].map(m => `<label><input type="checkbox" class="macro-mod" data-m="${m}" ${(st.mods || []).includes(m) ? 'checked' : ''}>${m}</label>`).join('') + `</div>`;
+        }
+        inner += `<div class="macro-step-ctrls"><button data-a="up" ${i === 0 ? 'disabled' : ''}>&#8593;</button><button data-a="down" ${i === _macroDraft.length - 1 ? 'disabled' : ''}>&#8595;</button><button data-a="del" class="del">&#x2715;</button></div>`;
+        row.innerHTML = inner;
+        if (st.kind === 'key') row.querySelector('[data-f="keycode"]').value = st.keycode || 'Keycode.ENTER';
+        row.querySelectorAll('.macro-f').forEach(el => el.addEventListener('input', () => {
+          if (st.kind === 'text') st.text = el.value;
+          else if (st.kind === 'delay') st.ms = Math.max(0, Math.min(10000, parseInt(el.value) || 0));
+          else if (st.kind === 'key') st.keycode = el.value;
+          _saveMacro();
+        }));
+        row.querySelectorAll('.macro-mod').forEach(el => el.addEventListener('change', () => {
+          st.mods = [...row.querySelectorAll('.macro-mod:checked')].map(c => c.dataset.m);
+          _saveMacro();
+        }));
+        const [up, down, del] = row.querySelectorAll('.macro-step-ctrls button');
+        up.addEventListener('click', () => { if (i > 0) { [_macroDraft[i-1], _macroDraft[i]] = [_macroDraft[i], _macroDraft[i-1]]; _renderMacroSteps(); _saveMacro(); } });
+        down.addEventListener('click', () => { if (i < _macroDraft.length - 1) { [_macroDraft[i+1], _macroDraft[i]] = [_macroDraft[i], _macroDraft[i+1]]; _renderMacroSteps(); _saveMacro(); } });
+        del.addEventListener('click', () => { _macroDraft.splice(i, 1); _renderMacroSteps(); _saveMacro(); });
+        wrap.appendChild(row);
+      });
+    }
+    document.getElementById('btn-macro-add-text')?.addEventListener('click', () => { _macroDraft.push({ kind:'text', text:'' }); _renderMacroSteps(); _saveMacro(); });
+    document.getElementById('btn-macro-add-key')?.addEventListener('click', () => { _macroDraft.push({ kind:'key', keycode:'Keycode.ENTER', mods:[] }); _renderMacroSteps(); _saveMacro(); });
+    document.getElementById('btn-macro-add-delay')?.addEventListener('click', () => { _macroDraft.push({ kind:'delay', ms:200 }); _renderMacroSteps(); _saveMacro(); });
 
     // ── Copiar / Enganxar configuració d'elements ──────────────────
     let _elemClip = null; // { kind:'key'|'pot', data:{...} }
@@ -1317,17 +1399,23 @@ except Exception:
       const _hasNonAscii = (t) => typeof t === 'string' && /[^\x00-\x7F]/.test(t);
       const _osTarget = (typeof _loadOS === 'function' ? _loadOS() : 'mac');
 
+      // Passos de totes les macros (per detectar què necessiten: teclat, text, Unicode…).
+      const _macroSteps = allKeys.flat().filter(k => k.type === 'macro').flatMap(k => k.steps || []);
       const hasHoldMod   = allKeys.flat().some(k => k.type === 'hold_mod');
-      const needsKeyboard = allKeys.flat().some(k => k.type === 'key' || k.type === 'hold_mod' || k.type === 'open_app');
+      const needsKeyboard = allKeys.flat().some(k => k.type === 'key' || k.type === 'hold_mod' || k.type === 'open_app')
+        || _macroSteps.some(s => s.kind === 'key');
       const _texts = [
         ...allKeys.flat().filter(k => k.type === 'string').map(k => k.string),
         ...allPots.flat().filter(p => p.function === 'text_step').flatMap(p => [p.text_up ?? '+', p.text_down ?? '-']),
+        ..._macroSteps.filter(s => s.kind === 'text').map(s => s.text),
       ];
       const usesUnicode = _texts.some(_hasNonAscii);
-      const needsString   = allKeys.flat().some(k => k.type === 'string' || k.type === 'open_app') || allPots.flat().some(p => p.function === 'text_step');
+      const needsString   = allKeys.flat().some(k => k.type === 'string' || k.type === 'open_app') || allPots.flat().some(p => p.function === 'text_step')
+        || _macroSteps.some(s => s.kind === 'text');
       // Keycode cal si hi ha tecles/modificadors, o si algun text usa el teclat numèric o Unicode.
       const usesKeypad = allKeys.flat().some(k => k.type === 'string' && _isKeypadChar(k.string))
-        || allPots.flat().some(p => p.function === 'text_step' && (_isKeypadChar(p.text_up ?? '+') || _isKeypadChar(p.text_down ?? '-')));
+        || allPots.flat().some(p => p.function === 'text_step' && (_isKeypadChar(p.text_up ?? '+') || _isKeypadChar(p.text_down ?? '-')))
+        || _macroSteps.some(s => s.kind === 'text' && _isKeypadChar(s.text));
       const needsKeycode = needsKeyboard || usesKeypad || usesUnicode;
       const needsConsumer = allKeys.flat().some(k => k.type === 'consumer') || allPots.flat().some(p => p.function === 'volume' || p.function === 'brightness');
       const needsMouse    = allKeys.flat().some(k => k.type === 'mouse') || allPots.flat().some(p => p.function.startsWith('mouse') || p.function.startsWith('scroll') || p.function === 'click_step');
@@ -1419,6 +1507,19 @@ except Exception:
           c += `${indent}time.sleep(0.4)\n`;
           c += `${indent}keyboard.send(Keycode.ENTER)\n`;
           return c;
+        }
+        if (k.type === 'macro') {
+          const _MOD = {'Ctrl':'Keycode.CONTROL','Shift':'Keycode.SHIFT','Alt':'Keycode.ALT','Cmd':'Keycode.COMMAND'};
+          let c = '';
+          for (const st of (k.steps || [])) {
+            if (st.kind === 'text') { if (st.text) c += `${indent}${_typeStmt(st.text)}\n`; }
+            else if (st.kind === 'delay') c += `${indent}time.sleep(${Math.max(0, (st.ms || 0)) / 1000})\n`;
+            else if (st.kind === 'key') {
+              const pmods = (st.mods || []).map(m => _MOD[m]).filter(Boolean);
+              c += `${indent}keyboard.send(${pmods.length ? pmods.join(', ') + ', ' : ''}${st.keycode || 'Keycode.ENTER'})\n`;
+            }
+          }
+          return c || `${indent}pass\n`;
         }
         return `${indent}pass\n`;
       }
@@ -2386,7 +2487,10 @@ except Exception:
         drawer_click_step_label:'Densitat (1 clic cada N unitats)',
         drawer_click_step_desc:'Envia un clic esquerre cada vegada que el potenciòmetre canvia N unitats (rang 0–127).',
         type_none:'Cap (Desactivada)', type_key:'Tecla / Drecera', type_string:'Escriure Text',
-        type_consumer:'Control Multimèdia', type_mouse:'Ratolí (Clics)', type_layer:'Canviar de Capa', type_hold_mod:'Modificador Mantingut', type_midi_note:'Nota MIDI',
+        type_consumer:'Control Multimèdia', type_mouse:'Ratolí (Clics)', type_layer:'Canviar de Capa', type_hold_mod:'Modificador Mantingut', type_midi_note:'Nota MIDI', type_open_app:'Obrir aplicació', type_macro:'Macro (seqüència)',
+        drawer_macro_desc:'En prémer la tecla s\'executen els passos en ordre: escriure text, dreceres i esperes. Ideal per automatitzar seqüències (obrir, teclejar, executar…).',
+        macro_add_text:'+ Text', macro_add_key:'+ Drecera', macro_add_delay:'+ Espera', macro_empty:'Cap pas encara. Afegeix-ne un a sota.',
+        macro_step_text:'Text', macro_step_key:'Drecera', macro_step_delay:'Espera', macro_text_ph:'text a escriure',
         drawer_midi_note_label:'Nota MIDI (0–127)', drawer_midi_ch_label:'Canal (1–16)', drawer_midi_vel_label:'Velocitat (0–127)',
         drawer_midi_cc_num_label:'Número CC (0–127)', drawer_midi_cc_ch_label:'Canal MIDI (1–16)',
         pot_range_title:'Rang i corba', pot_min_label:'Valor mínim', pot_max_label:'Valor màxim', pot_curve_label:'Corba de resposta',
@@ -2471,7 +2575,10 @@ except Exception:
         drawer_click_step_label:'Densidad (1 clic cada N unidades)',
         drawer_click_step_desc:'Envía un clic izquierdo cada vez que el potenciómetro cambia N unidades (rango 0–127).',
         type_none:'Ninguna (Desactivada)', type_key:'Tecla / Atajo', type_string:'Escribir Texto',
-        type_consumer:'Control Multimedia', type_mouse:'Ratón (Clics)', type_layer:'Cambiar de Capa', type_hold_mod:'Modificador Mantenido', type_midi_note:'Nota MIDI',
+        type_consumer:'Control Multimedia', type_mouse:'Ratón (Clics)', type_layer:'Cambiar de Capa', type_hold_mod:'Modificador Mantenido', type_midi_note:'Nota MIDI', type_open_app:'Abrir aplicación', type_macro:'Macro (secuencia)',
+        drawer_macro_desc:'Al pulsar la tecla se ejecutan los pasos en orden: escribir texto, atajos y esperas. Ideal para automatizar secuencias (abrir, teclear, ejecutar…).',
+        macro_add_text:'+ Texto', macro_add_key:'+ Atajo', macro_add_delay:'+ Espera', macro_empty:'Ningún paso todavía. Añade uno abajo.',
+        macro_step_text:'Texto', macro_step_key:'Atajo', macro_step_delay:'Espera', macro_text_ph:'texto a escribir',
         drawer_midi_note_label:'Nota MIDI (0–127)', drawer_midi_ch_label:'Canal (1–16)', drawer_midi_vel_label:'Velocidad (0–127)',
         drawer_midi_cc_num_label:'Número CC (0–127)', drawer_midi_cc_ch_label:'Canal MIDI (1–16)',
         pot_range_title:'Rango y curva', pot_min_label:'Valor mínimo', pot_max_label:'Valor máximo', pot_curve_label:'Curva de respuesta',
@@ -2556,7 +2663,10 @@ except Exception:
         drawer_click_step_label:'Density (1 click every N units)',
         drawer_click_step_desc:'Sends a left click each time the potentiometer changes by N units (range 0–127).',
         type_none:'None (Disabled)', type_key:'Key / Shortcut', type_string:'Type Text',
-        type_consumer:'Media Control', type_mouse:'Mouse (Clicks)', type_layer:'Switch Layer', type_hold_mod:'Held Modifier', type_midi_note:'MIDI Note',
+        type_consumer:'Media Control', type_mouse:'Mouse (Clicks)', type_layer:'Switch Layer', type_hold_mod:'Held Modifier', type_midi_note:'MIDI Note', type_open_app:'Open application', type_macro:'Macro (sequence)',
+        drawer_macro_desc:'Pressing the key runs the steps in order: type text, shortcuts and waits. Great for automating sequences (open, type, run…).',
+        macro_add_text:'+ Text', macro_add_key:'+ Shortcut', macro_add_delay:'+ Wait', macro_empty:'No steps yet. Add one below.',
+        macro_step_text:'Text', macro_step_key:'Shortcut', macro_step_delay:'Wait', macro_text_ph:'text to type',
         drawer_midi_note_label:'MIDI Note (0–127)', drawer_midi_ch_label:'Channel (1–16)', drawer_midi_vel_label:'Velocity (0–127)',
         drawer_midi_cc_num_label:'CC Number (0–127)', drawer_midi_cc_ch_label:'MIDI Channel (1–16)',
         pot_range_title:'Range and curve', pot_min_label:'Minimum value', pot_max_label:'Maximum value', pot_curve_label:'Response curve',
