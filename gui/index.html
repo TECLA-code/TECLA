@@ -63,6 +63,37 @@
     .macro-step-ctrls button:hover:not(:disabled) { color: var(--text); border-color: var(--border-h); }
     .macro-step-ctrls button:disabled { opacity: .3; cursor: default; }
     .macro-step-ctrls button.del:hover { color: #f05252; border-color: rgba(240,82,82,.4); }
+    /* ══ PANTALLA del dispositiu (translúcida, arrossegable, PiP) ══ */
+    .devmon { position: fixed; right: 24px; bottom: 24px; z-index: 350; width: 400px; display: flex; flex-direction: column;
+      background: color-mix(in srgb, var(--surface) 82%, transparent); backdrop-filter: blur(18px) saturate(1.15); -webkit-backdrop-filter: blur(18px) saturate(1.15);
+      border: 1px solid var(--border-h); border-radius: 16px; box-shadow: 0 18px 60px rgba(0,0,0,.5); overflow: hidden;
+      font-family: var(--mono); resize: both; min-width: 300px; min-height: 240px; max-width: 92vw; max-height: 88vh; }
+    .devmon.hidden { display: none; }
+    .devmon-head { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent); font-size: 11px; color: var(--text2); cursor: grab; user-select: none; }
+    .devmon-head:active { cursor: grabbing; }
+    .devmon-head .btn { padding: 2px 8px; font-size: 10.5px; }
+    .devmon-head .btn.hidden { display: none; }
+    .devmon-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); flex-shrink: 0; }
+    .devmon.live .devmon-dot { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .devmon-title { font-weight: 600; letter-spacing: .05em; flex: 1; }
+    .devmon-body { position: relative; flex: 1; min-height: 240px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 18px 16px 14px; overflow: hidden; }
+    .devmon-logo-bg { position: absolute; inset: 0; margin: auto; display: flex; align-items: center; justify-content: center; font-size: 34px; font-weight: 700; letter-spacing: .3em; color: var(--text); opacity: .12; pointer-events: none; transition: opacity .8s ease; }
+    .devmon.inuse .devmon-logo-bg { opacity: .05; }
+    .devmon-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    .devmon-hero { position: absolute; left: 0; right: 0; bottom: 12px; display: flex; justify-content: center; }
+    .devmon-hero .hint { color: var(--text3); font-size: 10.5px; text-align: center; line-height: 1.6; max-width: 280px; padding: 0 12px; }
+    .devmon-now { position: relative; text-align: center; display: none; }
+    .devmon.inuse .devmon-now { display: block; }
+    @keyframes devmonPop { from { transform: scale(.94); opacity: .4; } to { transform: scale(1); opacity: 1; } }
+    .devmon-now .tag { font-size: 10px; letter-spacing: .35em; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; }
+    .devmon-now .main { font-size: 34px; font-weight: 700; letter-spacing: .04em; line-height: 1.2; color: var(--text); word-break: break-word; }
+    .devmon-now.capa .main { color: var(--green); text-shadow: 0 0 26px color-mix(in srgb, var(--green) 45%, transparent); }
+    .devmon-now.pot .main { color: var(--accent); }
+    .devmon.pip { position: static; width: 100%; height: 100%; border: 0; border-radius: 0; box-shadow: none; resize: none;
+      background: radial-gradient(130% 100% at 50% 0%, color-mix(in srgb, var(--surface) 90%, var(--accent) 10%) 0%, var(--surface) 48%, color-mix(in srgb, var(--surface) 85%, black) 100%); }
+    .devmon.pip .devmon-body { flex: 1; padding: 0; }
+    .devmon.pip .devmon-head { position: absolute; top: 0; left: 0; right: 0; z-index: 2; opacity: 0; transition: opacity .25s ease; background: color-mix(in srgb, var(--surface) 80%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .devmon.pip:hover .devmon-head { opacity: 1; }
     /* Paleta de comandes */
     .cmd-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.45); display: flex; align-items: flex-start; justify-content: center; padding-top: 12vh; }
     .cmd-box { width: 92%; max-width: 560px; background: var(--surface); border: 1px solid var(--border-h); border-radius: var(--r2); box-shadow: 0 20px 60px rgba(0,0,0,0.5); overflow: hidden; }
@@ -182,10 +213,7 @@
     #tab-config.active { overflow: hidden; }
     #tab-profiles.active { overflow-y: auto; }
     #tab-settings.active { overflow-y: auto; }
-    #tab-firmware.active, #tab-guide.active, #tab-theme.active, #tab-monitor.active, #tab-settings.active { overflow-y: auto; }
-    /* Monitor: ressaltat en prémer */
-    .key-btn.mon-hit { border-color: var(--accent) !important; box-shadow: 0 0 0 3px var(--accent), 0 0 16px var(--accent) !important; transform: scale(.94); }
-    .pot-wrapper.mon-hit .pot-knob { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent), 0 0 14px var(--accent); }
+    #tab-firmware.active, #tab-guide.active, #tab-theme.active, #tab-settings.active { overflow-y: auto; }
     /* Card */
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r2); padding: 18px; }
     .card-title { font-size: 11px; font-weight: 600; color: var(--text2); margin-bottom: 12px; letter-spacing: .06em; text-transform: uppercase; }
@@ -278,10 +306,30 @@
       <button class="hlang-btn lang-btn" data-lang="es">ES</button>
       <button class="hlang-btn lang-btn" data-lang="en">EN</button>
       <div style="width:1px;height:14px;background:var(--border);margin:0 2px"></div>
+      <button class="btn" id="btn-pantalla" data-t="btn_pantalla" title="Pantalla del dispositiu: veu en directe les accions del TECLA pel port sèrie">Pantalla</button>
       <button class="btn" id="btn-connect" data-t="btn_connect">Connecta dispositiu</button>
       <button class="btn" id="btn-disconnect" style="display:none" data-t="btn_disconnect">Desconnectar</button>
     </div>
   </header>
+
+  <!-- PANTALLA del dispositiu: translúcida, arrossegable i desancorable (PiP).
+       Llegeix la consola del TECLA per WebSerial i mostra en gran l'acció actual. -->
+  <div class="devmon hidden" id="device-monitor">
+    <div class="devmon-head" id="devmon-head">
+      <span class="devmon-dot"></span>
+      <span class="devmon-title">TECLA · pantalla</span>
+      <button class="btn" id="devmon-pip" title="Desancora la pantalla en una finestra flotant fora de l'app">&#x2921;</button>
+      <button class="btn devmon-connect" id="devmon-connect" data-t="devmon_connect" title="Connecta la pantalla al port sèrie del TECLA">Connectar</button>
+      <button class="btn" id="devmon-clear" data-t="devmon_clear" title="Neteja la pantalla">Netejar</button>
+      <button class="btn" id="devmon-close" title="Tanca la pantalla">&#x2715;</button>
+    </div>
+    <div class="devmon-body" id="devmon-body">
+      <div class="devmon-logo-bg">T E C L A</div>
+      <canvas class="devmon-canvas" id="devmon-canvas"></canvas>
+      <div class="devmon-hero" id="devmon-hero"><div class="hint" data-t="devmon_hint">Prem «Connectar» per veure en directe les accions del TECLA.</div></div>
+      <div class="devmon-now" id="devmon-now"><div class="tag"></div><div class="main"></div></div>
+    </div>
+  </div>
 
   <nav>
     <span class="nav-tab active" data-tab="config">Dispositiu</span>
@@ -290,7 +338,6 @@
     <span class="nav-tab" data-tab="theme">Aparen&ccedil;a</span>
     <span class="nav-tab" data-tab="guide">Guia</span>
     <span class="nav-tab" data-tab="settings">Configuraci&oacute;</span>
-    <span class="nav-tab" data-tab="monitor" data-t="nav_monitor">Monitor</span>
   </nav>
 
   <div class="tab-panel active" id="tab-config">
@@ -421,39 +468,6 @@
         <div style="display:flex;gap:8px;margin-top:10px">
           <button class="btn btn-sm" id="btn-cfg-disconnect" data-t="cfg_disconnect">Desconnectar</button>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MONITOR -->
-  <div class="tab-panel" id="tab-monitor">
-    <div style="max-width:900px;padding:20px;display:flex;flex-direction:column;gap:16px">
-      <div class="card">
-        <div class="card-title" data-t="mon_title">Monitor en viu</div>
-        <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.65" data-th="mon_desc">Il&middot;lumina el dispositiu en temps real: en prémer una tecla f&iacute;sica veus quina &eacute;s i quina acci&oacute; fa, i pots seguir els canvis de capa. Cal activar el <strong>mode monitor</strong>, actualitzar el firmware i connectar el MIDI.</p>
-        <label class="cb" style="margin-bottom:10px;color:var(--text2)">
-          <input type="checkbox" id="mon-enable">
-          <span data-th="mon_enable_lbl">Activar <strong>mode monitor</strong> (afegeix un senyal MIDI ocult al canal 16 al proper firmware)</span>
-        </label>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <button class="btn btn-sm btn-primary" id="mon-connect" data-t="mon_connect">Connectar MIDI</button>
-          <span class="fw-status-val fw-unk" id="mon-status" data-t="mon_status_off">No connectat</span>
-        </div>
-        <div class="guide-note" style="margin-top:10px" data-th="mon_note">El senyal va pel canal 16: si el filtres al teu DAW, no molesta. Nom&eacute;s cal Chrome o Edge (Web MIDI).</div>
-      </div>
-      <div class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-          <div class="card-title" style="margin:0" data-t="mon_device">Dispositiu</div>
-          <div style="font-size:12px;color:var(--text2)"><span data-t="mon_layer">Capa</span>: <span id="mon-layer" style="color:var(--accent);font-weight:600">1</span> · <span id="mon-action" style="color:var(--text)">—</span></div>
-        </div>
-        <div class="device-pane" style="padding:0">
-          <div class="pots-row" id="mon-pots"></div>
-          <div class="keys-grid" id="mon-keys" style="max-width:440px"></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title" data-t="mon_log">Registre</div>
-        <div id="mon-log" style="font-family:var(--mono);font-size:11.5px;color:var(--text2);max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:2px"></div>
       </div>
     </div>
   </div>
@@ -1355,12 +1369,12 @@
     // disc i el nom del port USB des de /config i els aplica en arrencar.
     const BOOT_PY = `import storage
 
-# Canal de dades USB (usb_cdc.data): el fa servir el mode CONTROLADOR del firmware
-# (l'app web pren el control del dispositiu per WebSerial des del Simulador).
-# Innocu per a la resta: la consola REPL continua al primer port CDC.
+# Un sol port CDC (la consola): el macropad hi imprimeix les accions perquè la
+# "Pantalla" de l'app les llegeixi per WebSerial. Sense port de dades, la
+# connexió de la pantalla és directa (un únic port a triar).
 try:
     import usb_cdc
-    usb_cdc.enable(console=True, data=True)
+    usb_cdc.enable(console=True, data=False)
 except Exception:
     pass
 
@@ -1448,9 +1462,6 @@ except Exception:
       // d'enviar per la seqüència d'entrada Unicode del sistema (type_text()).
       const _hasNonAscii = (t) => typeof t === 'string' && /[^\x00-\x7F]/.test(t);
       const _osTarget = (typeof _loadOS === 'function' ? _loadOS() : 'mac');
-      // Mode monitor: emet un "beacon" MIDI al canal 16 a cada pulsació i canvi
-      // de capa perquè l'app pugui il·luminar el dispositiu en viu (Web MIDI).
-      const _monitorOn = localStorage.getItem('tecla_monitor') === '1';
 
       // Passos de totes les macros (per detectar què necessiten: teclat, text, Unicode…).
       const _macroSteps = allKeys.flat().filter(k => k.type === 'macro').flatMap(k => k.steps || []);
@@ -1472,7 +1483,7 @@ except Exception:
       const needsKeycode = needsKeyboard || usesKeypad || usesUnicode;
       const needsConsumer = allKeys.flat().some(k => k.type === 'consumer') || allPots.flat().some(p => p.function === 'volume' || p.function === 'brightness');
       const needsMouse    = allKeys.flat().some(k => k.type === 'mouse') || allPots.flat().some(p => p.function.startsWith('mouse') || p.function.startsWith('scroll') || p.function === 'click_step');
-      const needsMidi     = allKeys.flat().some(k => k.type === 'midi_note') || allPots.flat().some(p => p.function === 'midi_cc') || _monitorOn;
+      const needsMidi     = allKeys.flat().some(k => k.type === 'midi_note') || allPots.flat().some(p => p.function === 'midi_cc');
 
       let code = `# TECLA MacroPad - Codi generat autom\u00e0ticament\nimport time\nimport board\nimport digitalio\nimport usb_hid\nimport analogio\n\n`;
       if (needsKeycode) code += `from adafruit_hid.keycode import Keycode\n`;
@@ -1497,6 +1508,9 @@ except Exception:
       code += `\npots = [analogio.AnalogIn(board.A1), analogio.AnalogIn(board.A0), analogio.AnalogIn(board.A2)]\n`;
       const _potInits = [0,1,2].map(p => layers.some(l => l.pots[p] && l.pots[p].function === 'midi_cc') ? `pots[${p}].value >> 9` : `pots[${p}].value // 1000`);
       code += `last_pot_vals = [${_potInits.join(', ')}]\n`;
+      // Testimoni de potes per a la Pantalla (moviment coarse 0–127).
+      const _monPots = [0,1,2].filter(p => layers.some(l => l.pots[p] && l.pots[p].function !== 'none'));
+      _monPots.forEach(p => { code += `_lastmv${p} = pots[${p}].value >> 9\n`; });
       code += `last_btn_states = [False] * 16\n`;
       if (multiLayer) code += `current_layer = 0\nLAYER_COUNT = ${layers.length}\n`;
       if (hasHoldMod) code += `DEBOUNCE_TIME = 0.02\n`;
@@ -1508,6 +1522,7 @@ except Exception:
         code += `last_click_bucket_p${p} = pots[${p}].value // 512 // ${step}\n`;
       }
 
+      code += `\nprint("TECLA Macropad")\n`;   // banner per identificar el port a la Pantalla
       code += `\n# --- Loop Principal ---\nwhile True:\n    # TECLES\n`;
 
       // Text literal segur per a Python (cometes, barres i salts de línia)
@@ -1531,12 +1546,12 @@ except Exception:
         if (k.type === 'hold_mod') return `${indent}keyboard.press(${k.modifier || 'Keycode.COMMAND'})\n`;
         if (k.type === 'layer_change') {
           const prev = k.layer_dir === 'prev';
-          const beacon = _monitorOn ? `${indent}usb_midi.ports[1].write(bytes([0xBF, 100, current_layer]))\n` : '';
+          const beacon = `${indent}print(">L\\t" + str(current_layer))\n`;   // testimoni de capa
           if (k.layer_mode === 'clamp') {
             // Topall: es queda a l'extrem en comptes de tornar a l'altre cap
-            return prev
-              ? `${indent}current_layer = max(current_layer - 1, 0)\n` + beacon
-              : `${indent}current_layer = min(current_layer + 1, LAYER_COUNT - 1)\n` + beacon;
+            return (prev
+              ? `${indent}current_layer = max(current_layer - 1, 0)\n`
+              : `${indent}current_layer = min(current_layer + 1, LAYER_COUNT - 1)\n`) + beacon;
           }
           return `${indent}current_layer = (current_layer + ${prev ? '-1' : '1'}) % LAYER_COUNT\n` + beacon;
         }
@@ -1596,10 +1611,11 @@ except Exception:
         let c = `${baseIndent}if btns[${i}].value != last_btn_states[${i}]:\n`;
         if (k.type === 'hold_mod') c += `${baseIndent}    time.sleep(DEBOUNCE_TIME)\n`;
         c += `${baseIndent}    if btns[${i}].value:\n`;
-        if (_monitorOn) c += `${baseIndent}        usb_midi.ports[1].write(bytes([0x9F, ${i}, 127]))\n`;
+        // Testimoni per a la Pantalla: imprimeix la tecla i la seva acció.
+        const _lbl = _pyStr(_keyFuncShort(k) || ('Tecla ' + (i + 1)));
+        c += `${baseIndent}        print(">K\\t${i + 1}\\t${_lbl}")\n`;
         c += _keyAction(k, baseIndent + '        ');
         c += `${baseIndent}    else:\n`;
-        if (_monitorOn) c += `${baseIndent}        usb_midi.ports[1].write(bytes([0x8F, ${i}, 0]))\n`;
         c += _keyRelease(k, baseIndent + '        ');
         c += `${baseIndent}    last_btn_states[${i}] = btns[${i}].value\n`;
         return c;
@@ -1694,6 +1710,16 @@ except Exception:
           const pp = config.pots[p]; if (!pp || pp.function === 'none') continue;
           code += _potCode(pp, p, '    ');
         }
+      }
+      // MONITOR de potes: imprimeix el moviment perquè es vegi a la Pantalla.
+      if (_monPots.length) {
+        code += `\n    # PANTALLA (potes)\n`;
+        _monPots.forEach(p => {
+          code += `    _mv${p} = pots[${p}].value >> 9\n`;
+          code += `    if abs(_mv${p} - _lastmv${p}) > 1:\n`;
+          code += `        print(">P\\t${POT_NAMES[p]}\\t" + str(_mv${p}))\n`;
+          code += `        _lastmv${p} = _mv${p}\n`;
+        });
       }
       code += `    time.sleep(0.01)\n`;
       return code;
@@ -1976,7 +2002,6 @@ except Exception:
         if (tab.dataset.tab === 'profiles') { renderProfiles(); _renderDeviceLayers(); }
         if (tab.dataset.tab === 'firmware' && _deviceDir) _fwRefreshStatus();
         if (tab.dataset.tab === 'settings') _buildSettingsTab();
-        if (tab.dataset.tab === 'monitor') { const c = document.getElementById('mon-enable'); if (c) c.checked = localStorage.getItem('tecla_monitor') === '1'; _monLayer = 0; _renderMonDevice(); }
       });
     });
 
@@ -2442,6 +2467,7 @@ except Exception:
       document.querySelectorAll('.theme-card:not([data-custom-id])').forEach(b => b.classList.toggle('active', b.dataset.theme===name && name!=='custom'));
       if (name !== 'custom') { _activeCustomId = null; _renderSavedThemes(); }
       _updateModeIndicator();
+      window._panSyncPipTheme?.();   // la pantalla desancorada canvia de tema amb l'app
     }
     document.querySelectorAll('.theme-card').forEach(btn => { if (!btn.dataset.customId) btn.addEventListener('click', () => applyTheme(btn.dataset.theme)); });
     ['bg','surface','surface2','text','accent'].forEach(f => {
@@ -2484,16 +2510,15 @@ except Exception:
     };
     const _DICT = {
       ca: {
-        nav_config:'Dispositiu', nav_profiles:'Capes', nav_settings:'Configuració', nav_fw:'Firmware', nav_guide:'Guia', nav_theme:'Aparença', nav_monitor:'Monitor',
-        mon_title:'Monitor en viu', mon_desc:'Il·lumina el dispositiu en temps real: en prémer una tecla física veus quina és i quina acció fa, i pots seguir els canvis de capa. Cal activar el <strong>mode monitor</strong>, actualitzar el firmware i connectar el MIDI.',
-        mon_enable_lbl:'Activar <strong>mode monitor</strong> (afegeix un senyal MIDI ocult al canal 16 al proper firmware)', mon_connect:'Connectar MIDI', mon_status_off:'No connectat',
-        mon_note:'El senyal va pel canal 16: si el filtres al teu DAW, no molesta. Només cal Chrome o Edge (Web MIDI).', mon_device:'Dispositiu', mon_layer:'Capa', mon_log:'Registre',
-        mon_inputs:'entrades', mon_key_lbl:'Tecla', mon_no_webmidi:'Cal Chrome o Edge per al Web MIDI.', mon_on_toast:'Mode monitor activat. Actualitza el firmware.', mon_off_toast:'Mode monitor desactivat.',
+        nav_config:'Dispositiu', nav_profiles:'Capes', nav_settings:'Configuració', nav_fw:'Firmware', nav_guide:'Guia', nav_theme:'Aparença', mon_no_webmidi:'Cal Chrome o Edge per al Web MIDI.', mon_on_toast:'Mode monitor activat. Actualitza el firmware.', mon_off_toast:'Mode monitor desactivat.',
         cfg_midi_title:'Canal MIDI', cfg_midi_desc:"Canal MIDI per defecte que s'aplicarà a les tecles i potenciòmetres MIDI nous.", cfg_midi_ch:'Canal:', cfg_save:'Guardar',
         cfg_os_title:'Sistema operatiu', cfg_os_desc:"Sistema de l'ordinador on connectes el TECLA. S'usa per enviar símbols que no són al teclat (φ, π, €, emojis…) amb la seqüència d'entrada Unicode correcta.", cfg_os_lbl:'Sistema:', cfg_os_saved:'Sistema operatiu desat:',
         cfg_os_note:"Per als símbols Unicode cal un ajust únic al sistema de destí: a <strong>macOS</strong>, activa la font d'entrada <strong>Unicode Hex Input</strong>; a <strong>Windows</strong>, la clau de registre <strong>EnableHexNumpad=1</strong>. A <strong>Linux</strong> (IBus/GTK) funciona directament.",
         cfg_usb_title:'Identitat USB', cfg_port_name:'Nom del port:', cfg_disk_name:'Nom del disc:', cfg_device_title:'Dispositiu', cfg_disconnect:'Desconnectar',
-        btn_connect:'Connecta dispositiu', btn_disconnect:'Desconnectar',
+        btn_connect:'Connecta dispositiu', btn_disconnect:'Desconnectar', btn_pantalla:'Pantalla',
+        devmon_connect:'Connectar', devmon_clear:'Netejar', devmon_hint:'Prem «Connectar» per veure en directe les accions del TECLA.',
+        pan_key:'Tecla', pan_layer:'Capa', pan_pot:'Pot', pan_no_serial:'La pantalla necessita Chrome o Edge (Web Serial).',
+        pan_busy:"No s'ha pogut obrir el port. Desendolla i torna a endollar el TECLA, o recarrega la pàgina.", pan_pip_need:'Per desancorar la pantalla cal Chrome 116+.',
         device_off:'desconnectat',
         layer_lbl:'Capes:', btn_new_layer:'+ Nova', btn_rename:'Reanomenar la capa activa', btn_del:'Eliminar la capa activa',
         tt_dup:'Duplicar la capa activa', tt_export_layer:'Exportar la capa activa (JSON)', tt_import_layer:'Importar capes (JSON)', tt_hub:"Tornar al hub d'aplicacions",
@@ -2577,16 +2602,15 @@ except Exception:
         lang_title:'Idioma',
       },
       es: {
-        nav_config:'Dispositivo', nav_profiles:'Capas', nav_settings:'Configuración', nav_fw:'Firmware', nav_guide:'Guía', nav_theme:'Apariencia', nav_monitor:'Monitor',
-        mon_title:'Monitor en vivo', mon_desc:'Ilumina el dispositivo en tiempo real: al pulsar una tecla física ves cuál es y qué acción hace, y puedes seguir los cambios de capa. Hay que activar el <strong>modo monitor</strong>, actualizar el firmware y conectar el MIDI.',
-        mon_enable_lbl:'Activar <strong>modo monitor</strong> (añade una señal MIDI oculta en el canal 16 al próximo firmware)', mon_connect:'Conectar MIDI', mon_status_off:'No conectado',
-        mon_note:'La señal va por el canal 16: si lo filtras en tu DAW, no molesta. Solo Chrome o Edge (Web MIDI).', mon_device:'Dispositivo', mon_layer:'Capa', mon_log:'Registro',
-        mon_inputs:'entradas', mon_key_lbl:'Tecla', mon_no_webmidi:'Se necesita Chrome o Edge para Web MIDI.', mon_on_toast:'Modo monitor activado. Actualiza el firmware.', mon_off_toast:'Modo monitor desactivado.',
+        nav_config:'Dispositivo', nav_profiles:'Capas', nav_settings:'Configuración', nav_fw:'Firmware', nav_guide:'Guía', nav_theme:'Apariencia', mon_no_webmidi:'Se necesita Chrome o Edge para Web MIDI.', mon_on_toast:'Modo monitor activado. Actualiza el firmware.', mon_off_toast:'Modo monitor desactivado.',
         cfg_midi_title:'Canal MIDI', cfg_midi_desc:'Canal MIDI por defecto que se aplicará a las teclas y potenciómetros MIDI nuevos.', cfg_midi_ch:'Canal:', cfg_save:'Guardar',
         cfg_os_title:'Sistema operativo', cfg_os_desc:'Sistema del ordenador donde conectas el TECLA. Se usa para enviar símbolos que no están en el teclado (φ, π, €, emojis…) con la secuencia de entrada Unicode correcta.', cfg_os_lbl:'Sistema:', cfg_os_saved:'Sistema operativo guardado:',
         cfg_os_note:'Para los símbolos Unicode hace falta un ajuste único en el sistema de destino: en <strong>macOS</strong>, activa la fuente de entrada <strong>Unicode Hex Input</strong>; en <strong>Windows</strong>, la clave de registro <strong>EnableHexNumpad=1</strong>. En <strong>Linux</strong> (IBus/GTK) funciona directamente.',
         cfg_usb_title:'Identidad USB', cfg_port_name:'Nombre del puerto:', cfg_disk_name:'Nombre del disco:', cfg_device_title:'Dispositivo', cfg_disconnect:'Desconectar',
-        btn_connect:'Conectar dispositivo', btn_disconnect:'Desconectar',
+        btn_connect:'Conectar dispositivo', btn_disconnect:'Desconectar', btn_pantalla:'Pantalla',
+        devmon_connect:'Conectar', devmon_clear:'Limpiar', devmon_hint:'Pulsa «Conectar» para ver en directo las acciones del TECLA.',
+        pan_key:'Tecla', pan_layer:'Capa', pan_pot:'Pot', pan_no_serial:'La pantalla necesita Chrome o Edge (Web Serial).',
+        pan_busy:'No se ha podido abrir el puerto. Desenchufa y vuelve a enchufar el TECLA, o recarga la página.', pan_pip_need:'Para desanclar la pantalla se necesita Chrome 116+.',
         device_off:'desconectado',
         layer_lbl:'Capas:', btn_new_layer:'+ Nueva', btn_rename:'Renombrar la capa activa', btn_del:'Eliminar la capa activa',
         tt_dup:'Duplicar la capa activa', tt_export_layer:'Exportar la capa activa (JSON)', tt_import_layer:'Importar capas (JSON)', tt_hub:'Volver al hub de aplicaciones',
@@ -2670,16 +2694,15 @@ except Exception:
         lang_title:'Idioma',
       },
       en: {
-        nav_config:'Device', nav_profiles:'Layers', nav_settings:'Configuration', nav_fw:'Firmware', nav_guide:'Guide', nav_theme:'Appearance', nav_monitor:'Monitor',
-        mon_title:'Live monitor', mon_desc:'Lights up the device in real time: pressing a physical key shows which one it is and what it does, and you can follow layer changes. You need to enable <strong>monitor mode</strong>, update the firmware and connect MIDI.',
-        mon_enable_lbl:'Enable <strong>monitor mode</strong> (adds a hidden MIDI signal on channel 16 to the next firmware)', mon_connect:'Connect MIDI', mon_status_off:'Not connected',
-        mon_note:'The signal goes on channel 16: filter it in your DAW and it stays out of the way. Chrome or Edge only (Web MIDI).', mon_device:'Device', mon_layer:'Layer', mon_log:'Log',
-        mon_inputs:'inputs', mon_key_lbl:'Key', mon_no_webmidi:'Chrome or Edge is required for Web MIDI.', mon_on_toast:'Monitor mode enabled. Update the firmware.', mon_off_toast:'Monitor mode disabled.',
+        nav_config:'Device', nav_profiles:'Layers', nav_settings:'Configuration', nav_fw:'Firmware', nav_guide:'Guide', nav_theme:'Appearance', mon_no_webmidi:'Chrome or Edge is required for Web MIDI.', mon_on_toast:'Monitor mode enabled. Update the firmware.', mon_off_toast:'Monitor mode disabled.',
         cfg_midi_title:'MIDI Channel', cfg_midi_desc:'Default MIDI channel applied to new MIDI keys and potentiometers.', cfg_midi_ch:'Channel:', cfg_save:'Save',
         cfg_os_title:'Operating system', cfg_os_desc:'The system of the computer where you plug the TECLA. Used to send symbols not on the keyboard (φ, π, €, emojis…) with the correct Unicode input sequence.', cfg_os_lbl:'System:', cfg_os_saved:'Operating system saved:',
         cfg_os_note:'Unicode symbols need a one-time setting on the target system: on <strong>macOS</strong>, enable the <strong>Unicode Hex Input</strong> source; on <strong>Windows</strong>, the registry key <strong>EnableHexNumpad=1</strong>. On <strong>Linux</strong> (IBus/GTK) it works directly.',
         cfg_usb_title:'USB Identity', cfg_port_name:'Port name:', cfg_disk_name:'Disk name:', cfg_device_title:'Device', cfg_disconnect:'Disconnect',
-        btn_connect:'Connect device', btn_disconnect:'Disconnect',
+        btn_connect:'Connect device', btn_disconnect:'Disconnect', btn_pantalla:'Screen',
+        devmon_connect:'Connect', devmon_clear:'Clear', devmon_hint:'Press «Connect» to see the TECLA actions live.',
+        pan_key:'Key', pan_layer:'Layer', pan_pot:'Pot', pan_no_serial:'The screen needs Chrome or Edge (Web Serial).',
+        pan_busy:'Could not open the port. Unplug and replug the TECLA, or reload the page.', pan_pip_need:'Undocking the screen needs Chrome 116+.',
         device_off:'disconnected',
         layer_lbl:'Layers:', btn_new_layer:'+ New', btn_rename:'Rename active layer', btn_del:'Delete active layer',
         tt_dup:'Duplicate active layer', tt_export_layer:'Export active layer (JSON)', tt_import_layer:'Import layers (JSON)', tt_hub:'Back to app hub',
@@ -2940,69 +2963,151 @@ except Exception:
       }
     });
 
-    // ══ MONITOR EN VIU (Web MIDI) ══════════════════════════════════════
-    let _monLayer = 0, _monAccess = null;
-    function _monLog(html) {
-      const el = document.getElementById('mon-log'); if (!el) return;
-      const d = document.createElement('div');
-      d.innerHTML = `<span style="color:var(--text3)">${new Date().toLocaleTimeString()}</span> ${html}`;
-      el.prepend(d);
-      while (el.children.length > 60) el.lastChild.remove();
+    // ══ PANTALLA del dispositiu (WebSerial → consola del TECLA) ══════════
+    let _panPort = null, _panReader = null, _panConnecting = false;
+    const _panPanel = document.getElementById('device-monitor');
+    const _panNow = document.getElementById('devmon-now');
+
+    // El firmware imprimeix: >K\t<n>\t<acció> · >L\t<index> · >P\t<nom>\t<valor>
+    function _panParse(raw) {
+      const line = raw.replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)?/g, '').replace(/\x1b\[[0-9;]*[A-Za-z]/g, '').replace(/\r/g, '').trim();
+      if (!line || line[0] !== '>') return null;
+      const parts = line.split('\t');
+      if (parts[0] === '>K') return { tag: `${_i('pan_key')} ${parts[1]}`, main: parts.slice(2).join('\t') || '—', cls: 'key' };
+      if (parts[0] === '>L') { const i = parseInt(parts[1]) || 0; return { tag: _i('pan_layer'), main: (layers[i]?.name) || (_i('pan_layer') + ' ' + (i + 1)), cls: 'capa' }; }
+      if (parts[0] === '>P') return { tag: `${_i('pan_pot')} ${parts[1]}`, main: parts[2] || '', cls: 'pot', pot: parts[1], val: parseInt(parts[2]) || 0 };
+      return null;
     }
-    function _renderMonDevice() {
-      const L = layers[_monLayer] || layers[0]; if (!L) return;
-      const keys = document.getElementById('mon-keys'), pots = document.getElementById('mon-pots');
-      if (!keys) return;
-      keys.innerHTML = '';
-      L.keys.forEach((k, i) => {
-        const btn = document.createElement('div');
-        btn.className = 'key-btn' + (k.type !== 'none' ? ` key-type-${k.type} assigned` : '');
-        btn.id = 'mon-key-' + i;
-        const fs = _keyFuncShort(k);
-        btn.innerHTML = `<div class="key-num">${i + 1}</div>${fs ? `<div class="key-label">${fs}</div>` : ''}`;
-        keys.appendChild(btn);
-      });
-      pots.innerHTML = '';
-      L.pots.forEach((p, i) => {
-        const div = document.createElement('div'); div.className = 'pot-wrapper'; div.id = 'mon-pot-' + i;
-        div.innerHTML = `<div class="pot-label">${POT_NAMES[i]}</div><div class="pot-knob"><div class="pot-indicator"></div></div><div style="font-size:9px;color:var(--text3);font-family:var(--mono)">${_potShort(p)}</div>`;
-        pots.appendChild(div);
-      });
-      const ml = document.getElementById('mon-layer'); if (ml) ml.textContent = (_monLayer + 1) + (L.name ? ` (${L.name})` : '');
+    function _panShow(ev) {
+      document.getElementById('devmon-hero')?.remove();
+      _panPanel.classList.add('inuse');
+      _panNow.className = 'devmon-now ' + ev.cls;
+      _panNow.querySelector('.tag').textContent = ev.tag;
+      const mn = _panNow.querySelector('.main');
+      mn.textContent = ev.main;
+      const n = (ev.main || '').length;
+      mn.style.fontSize = n <= 6 ? '' : n <= 12 ? '26px' : n <= 20 ? '20px' : '15px';
+      _panNow.style.animation = 'none'; void _panNow.offsetHeight; _panNow.style.animation = 'devmonPop .18s ease';
+      _panAnim.on(ev);
     }
-    function _onMidi(e) {
-      const [status, d1, d2] = e.data;
-      if (status === 0x9F && d1 < 16) {           // tecla premuda (beacon)
-        const el = document.getElementById('mon-key-' + d1); if (el) el.classList.add('mon-hit');
-        const k = (layers[_monLayer] || layers[0]).keys[d1];
-        const label = k && k.type !== 'none' ? _keyFuncShort(k) : '—';
-        const a = document.getElementById('mon-action'); if (a) a.textContent = `${_i('mon_key_lbl')} ${d1 + 1}: ${label}`;
-        _monLog(`<span style="color:var(--accent)">●</span> ${_i('mon_key_lbl')} ${d1 + 1} → ${_esc(label)}`);
-      } else if (status === 0x8F && d1 < 16) {     // tecla deixada anar
-        const el = document.getElementById('mon-key-' + d1); if (el) el.classList.remove('mon-hit');
-      } else if (status === 0xBF && d1 === 100) {  // canvi de capa (beacon)
-        _monLayer = Math.max(0, Math.min(layers.length - 1, d2));
-        _renderMonDevice();
-        _monLog(`<span style="color:var(--accent)">▤</span> ${_i('mon_layer')} ${_monLayer + 1}`);
+    // Animació: anell que batega amb cada acció; els potes X/Y/Z en regulen
+    // amplitud, velocitat i resplendor. Sobreviu el pas al PiP (refs de closure).
+    const _panAnim = (() => {
+      const canvas = document.getElementById('devmon-canvas');
+      const body = document.getElementById('devmon-body');
+      const ctx = canvas.getContext('2d');
+      const st = { amp: .4, speed: 1, bright: .5, energy: 0, t: 0, running: false };
+      function on(ev) {
+        if (ev.cls === 'pot') { const v = (ev.val || 0) / 127; if (ev.pot === 'X') st.amp = .15 + v * .85; else if (ev.pot === 'Y') st.speed = .5 + v * 2.5; else st.bright = v; }
+        else st.energy = 1;
       }
-    }
-    async function _monConnect() {
-      if (!navigator.requestMIDIAccess) { showToast(_i('mon_no_webmidi'), 'err'); return; }
+      function draw() {
+        if (!st.running) return;
+        try {
+          const w = canvas.width = body.clientWidth || 360, h = canvas.height = body.clientHeight || 260;
+          ctx.clearRect(0, 0, w, h);
+          st.t += .016 * st.speed;
+          const cx = w / 2, cy = h / 2, R = Math.min(w, h) * .28 * (1 + st.energy * .25);
+          const col = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#4a80f0';
+          ctx.globalAlpha = .3 + st.bright * .5; ctx.strokeStyle = col; ctx.shadowColor = col; ctx.shadowBlur = 8 + st.energy * 30; ctx.lineWidth = 1.5 + st.energy * 2.5;
+          ctx.beginPath();
+          for (let a = 0; a <= Math.PI * 2 + .13; a += .12) {
+            const wob = 1 + st.amp * .18 * Math.sin(a * 6 + st.t * 3) + st.energy * .12 * Math.sin(a * 3 - st.t * 5);
+            const x = cx + Math.cos(a) * R * wob, y = cy + Math.sin(a) * R * wob;
+            a === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+          }
+          ctx.closePath(); ctx.stroke();
+          ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+          st.energy *= .95;
+        } catch (e) { /* mai matar el bucle (transició al PiP) */ }
+        requestAnimationFrame(draw);
+      }
+      return { on, start() { if (!st.running) { st.running = true; requestAnimationFrame(draw); } } };
+    })();
+
+    async function _panConnect(silent = false) {
+      if (!('serial' in navigator)) { if (!silent) showToast(_i('pan_no_serial'), 'err'); return; }
+      if (_panConnecting || _panPort) return;
+      _panConnecting = true;
       try {
-        _monAccess = await navigator.requestMIDIAccess();
-        const bind = () => { let n = 0; _monAccess.inputs.forEach(inp => { inp.onmidimessage = _onMidi; n++; }); return n; };
-        const n = bind();
-        _monAccess.onstatechange = bind;
-        const st = document.getElementById('mon-status');
-        st.textContent = `✓ ${n} ${_i('mon_inputs')}`; st.className = 'fw-status-val fw-ok';
-        showToast(`✓ MIDI: ${n} ${_i('mon_inputs')}`, 'ok');
-        _monLog(`✓ ${n} ${_i('mon_inputs')}`);
-      } catch (err) { showToast('Error: ' + err.message, 'err'); }
+        let port = null;
+        try { const ports = await navigator.serial.getPorts(); if (ports.length) port = ports[0]; } catch { }
+        if (!port) { if (silent) return; try { port = await navigator.serial.requestPort(); } catch { return; } }
+        try { await port.open({ baudRate: 115200 }); }
+        catch { try { await port.close(); await port.open({ baudRate: 115200 }); } catch { if (!silent) showToast(_i('pan_busy'), 'err'); return; } }
+        _panRead(port);
+      } finally { _panConnecting = false; }
     }
-    document.getElementById('mon-connect')?.addEventListener('click', _monConnect);
-    document.getElementById('mon-enable')?.addEventListener('change', function () {
-      localStorage.setItem('tecla_monitor', this.checked ? '1' : '0');
-      showToast(this.checked ? _i('mon_on_toast') : _i('mon_off_toast'), 'ok');
+    function _panRead(port) {
+      _panPort = port; _panReader = port.readable.getReader();
+      _panPanel.classList.add('live');
+      document.getElementById('devmon-connect')?.classList.add('hidden');
+      _panAnim.start();
+      (async () => {
+        const dec = new TextDecoder(); let carry = '';
+        try {
+          for (;;) {
+            const r = await _panReader.read();
+            if (r.done) break;
+            carry += dec.decode(r.value, { stream: true });
+            const parts = carry.split(/\n/); carry = parts.pop();
+            for (const ln of parts) { const ev = _panParse(ln); if (ev) _panShow(ev); }
+          }
+        } catch { /* port desconnectat */ }
+        _panPanel.classList.remove('live');
+        document.getElementById('devmon-connect')?.classList.remove('hidden');
+        try { _panReader?.releaseLock(); } catch { }
+        try { await _panPort?.close(); } catch { }
+        _panPort = null; _panReader = null;
+      })();
+    }
+    document.getElementById('btn-pantalla')?.addEventListener('click', () => {
+      _panPanel.classList.toggle('hidden');
+      if (!_panPanel.classList.contains('hidden') && !_panPort) _panConnect(true);   // obrir: connexió silenciosa
+    });
+    document.getElementById('devmon-connect')?.addEventListener('click', () => { if (!_panPort) _panConnect(false); });
+    document.getElementById('devmon-close')?.addEventListener('click', () => _panPanel.classList.add('hidden'));
+    document.getElementById('devmon-clear')?.addEventListener('click', () => { _panNow.querySelector('.main').textContent = ''; _panNow.querySelector('.tag').textContent = ''; _panPanel.classList.remove('inuse'); });
+    window.addEventListener('beforeunload', () => { try { _panReader?.cancel(); _panPort?.close(); } catch { } });
+    if ('serial' in navigator) navigator.serial.addEventListener('disconnect', e => {
+      if (_panPort && e.target === _panPort) { try { _panReader?.cancel(); } catch { } try { _panPort?.close(); } catch { } _panPort = null; _panReader = null; _panPanel.classList.remove('live'); document.getElementById('devmon-connect')?.classList.remove('hidden'); }
+    });
+    window._pantallaTest = (line) => { const ev = _panParse(line); if (ev) _panShow(ev); return ev; };
+    // Mida ajustable (recordada)
+    try {
+      const sz = JSON.parse(localStorage.getItem('tecla-pantalla-mida') || 'null');
+      if (sz?.w) { _panPanel.style.width = sz.w; _panPanel.style.height = sz.h; }
+      new ResizeObserver(() => { if (_panPanel.classList.contains('hidden') || _panPanel.classList.contains('pip')) return; localStorage.setItem('tecla-pantalla-mida', JSON.stringify({ w: _panPanel.style.width || _panPanel.offsetWidth + 'px', h: _panPanel.style.height || _panPanel.offsetHeight + 'px' })); }).observe(_panPanel);
+    } catch { }
+    // Arrossegar per la capçalera
+    (() => {
+      const head = document.getElementById('devmon-head');
+      let sx = 0, sy = 0, px = 0, py = 0, dragging = false;
+      const setPos = (x, y) => { x = Math.max(0, Math.min(window.innerWidth - 120, x)); y = Math.max(0, Math.min(window.innerHeight - 40, y)); _panPanel.style.left = x + 'px'; _panPanel.style.top = y + 'px'; _panPanel.style.right = 'auto'; _panPanel.style.bottom = 'auto'; };
+      head?.addEventListener('pointerdown', e => { if (e.target.closest('.btn') || _panPanel.classList.contains('pip')) return; dragging = true; const r = _panPanel.getBoundingClientRect(); sx = e.clientX; sy = e.clientY; px = r.left; py = r.top; head.setPointerCapture(e.pointerId); });
+      head?.addEventListener('pointermove', e => { if (dragging) setPos(px + e.clientX - sx, py + e.clientY - sy); });
+      head?.addEventListener('pointerup', () => { if (!dragging) return; dragging = false; try { localStorage.setItem('tecla-pantalla-pos', JSON.stringify({ l: _panPanel.style.left, t: _panPanel.style.top })); } catch { } });
+      try { const pp = JSON.parse(localStorage.getItem('tecla-pantalla-pos') || 'null'); if (pp?.l) { _panPanel.style.left = pp.l; _panPanel.style.top = pp.t; _panPanel.style.right = 'auto'; _panPanel.style.bottom = 'auto'; } } catch { }
+    })();
+    // Desancorar en finestra flotant (Document Picture-in-Picture, Chrome 116+)
+    let _panPip = null;
+    window._panSyncPipTheme = () => { const w = _panPip; if (!w || w.closed) return; try { const html = w.document.documentElement; html.className = document.documentElement.className; html.setAttribute('style', document.documentElement.getAttribute('style') || ''); html.style.height = '100%'; w.document.body.className = document.body.className; } catch { } };
+    document.getElementById('devmon-pip')?.addEventListener('click', async () => {
+      if (!('documentPictureInPicture' in window)) { showToast(_i('pan_pip_need'), 'err'); return; }
+      try {
+        const pip = await documentPictureInPicture.requestWindow({ width: 440, height: 380 });
+        pip.document.documentElement.className = document.documentElement.className;
+        for (const attr of document.documentElement.attributes) { try { pip.document.documentElement.setAttribute(attr.name, attr.value); } catch { } }
+        for (const el of document.querySelectorAll('style, link[rel="stylesheet"]')) pip.document.head.appendChild(el.cloneNode(true));
+        pip.document.body.className = document.body.className;
+        pip.document.body.style.cssText = 'margin:0;height:100%;display:flex';
+        pip.document.documentElement.style.height = '100%';
+        pip.document.title = 'TECLA · pantalla';
+        _panPanel.classList.remove('hidden'); _panPanel.classList.add('pip');
+        pip.document.body.appendChild(_panPanel);   // el node es MOU (la connexió sèrie continua viva)
+        _panAnim.start(); _panPip = pip;
+        pip.addEventListener('pagehide', () => { _panPip = null; _panPanel.classList.remove('pip'); document.body.appendChild(_panPanel); });
+      } catch (e) { showToast('Error: ' + e.message, 'err'); }
     });
 
     // Inicialitzar selector de notes MIDI
