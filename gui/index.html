@@ -63,6 +63,18 @@
     .macro-step-ctrls button:hover:not(:disabled) { color: var(--text); border-color: var(--border-h); }
     .macro-step-ctrls button:disabled { opacity: .3; cursor: default; }
     .macro-step-ctrls button.del:hover { color: #f05252; border-color: rgba(240,82,82,.4); }
+    /* Paleta de comandes */
+    .cmd-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.45); display: flex; align-items: flex-start; justify-content: center; padding-top: 12vh; }
+    .cmd-box { width: 92%; max-width: 560px; background: var(--surface); border: 1px solid var(--border-h); border-radius: var(--r2); box-shadow: 0 20px 60px rgba(0,0,0,0.5); overflow: hidden; }
+    #cmd-input { width: 100%; border: none; border-bottom: 1px solid var(--border); background: transparent; color: var(--text); font-size: 15px; padding: 15px 18px; outline: none; font-family: var(--font); }
+    .cmd-list { max-height: 52vh; overflow-y: auto; padding: 6px; }
+    .cmd-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: var(--radius); cursor: pointer; }
+    .cmd-item.sel { background: color-mix(in srgb, var(--accent) 16%, transparent); }
+    .cmd-item-ico { width: 20px; text-align: center; color: var(--text3); flex-shrink: 0; font-size: 13px; }
+    .cmd-item.sel .cmd-item-ico { color: var(--accent); }
+    .cmd-item-label { font-size: 13px; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cmd-item-hint { font-size: 10.5px; color: var(--text3); font-family: var(--mono); flex-shrink: 0; }
+    .cmd-empty { padding: 18px; text-align: center; font-size: 12.5px; color: var(--text3); }
     .insp-tools { border-top: 1px solid var(--border); padding: 14px 16px 20px; margin-top: auto; }
     .insp-tools-desc { font-size: 11px; color: var(--text3); line-height: 1.6; margin-bottom: 10px; }
     .midi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
@@ -732,6 +744,14 @@
         </div>
       </div>
   </div><!-- #elem-form -->
+
+  <!-- Paleta de comandes (Cmd/Ctrl+K) -->
+  <div id="cmd-palette" class="cmd-overlay" style="display:none">
+    <div class="cmd-box">
+      <input type="text" id="cmd-input" data-tph="cmd_placeholder" placeholder="Escriu una acció…" autocomplete="off" spellcheck="false">
+      <div id="cmd-list" class="cmd-list"></div>
+    </div>
+  </div>
 
   <script>
     // Constants
@@ -2491,6 +2511,7 @@ except Exception:
         drawer_macro_desc:'En prémer la tecla s\'executen els passos en ordre: escriure text, dreceres i esperes. Ideal per automatitzar seqüències (obrir, teclejar, executar…).',
         macro_add_text:'+ Text', macro_add_key:'+ Drecera', macro_add_delay:'+ Espera', macro_empty:'Cap pas encara. Afegeix-ne un a sota.',
         macro_step_text:'Text', macro_step_key:'Drecera', macro_step_delay:'Espera', macro_text_ph:'text a escriure',
+        cmd_assign:'Assignar', cmd_go_layer:'Ves a la capa', cmd_go_key:'Ves a la tecla', cmd_go_pot:'Ves al pot', cmd_none:'Cap resultat', cmd_placeholder:'Escriu una acció (nota, drecera, canvi de capa…)',
         drawer_midi_note_label:'Nota MIDI (0–127)', drawer_midi_ch_label:'Canal (1–16)', drawer_midi_vel_label:'Velocitat (0–127)',
         drawer_midi_cc_num_label:'Número CC (0–127)', drawer_midi_cc_ch_label:'Canal MIDI (1–16)',
         pot_range_title:'Rang i corba', pot_min_label:'Valor mínim', pot_max_label:'Valor màxim', pot_curve_label:'Corba de resposta',
@@ -2579,6 +2600,7 @@ except Exception:
         drawer_macro_desc:'Al pulsar la tecla se ejecutan los pasos en orden: escribir texto, atajos y esperas. Ideal para automatizar secuencias (abrir, teclear, ejecutar…).',
         macro_add_text:'+ Texto', macro_add_key:'+ Atajo', macro_add_delay:'+ Espera', macro_empty:'Ningún paso todavía. Añade uno abajo.',
         macro_step_text:'Texto', macro_step_key:'Atajo', macro_step_delay:'Espera', macro_text_ph:'texto a escribir',
+        cmd_assign:'Asignar', cmd_go_layer:'Ir a la capa', cmd_go_key:'Ir a la tecla', cmd_go_pot:'Ir al pot', cmd_none:'Sin resultados', cmd_placeholder:'Escribe una acción (nota, atajo, cambio de capa…)',
         drawer_midi_note_label:'Nota MIDI (0–127)', drawer_midi_ch_label:'Canal (1–16)', drawer_midi_vel_label:'Velocidad (0–127)',
         drawer_midi_cc_num_label:'Número CC (0–127)', drawer_midi_cc_ch_label:'Canal MIDI (1–16)',
         pot_range_title:'Rango y curva', pot_min_label:'Valor mínimo', pot_max_label:'Valor máximo', pot_curve_label:'Curva de respuesta',
@@ -2667,6 +2689,7 @@ except Exception:
         drawer_macro_desc:'Pressing the key runs the steps in order: type text, shortcuts and waits. Great for automating sequences (open, type, run…).',
         macro_add_text:'+ Text', macro_add_key:'+ Shortcut', macro_add_delay:'+ Wait', macro_empty:'No steps yet. Add one below.',
         macro_step_text:'Text', macro_step_key:'Shortcut', macro_step_delay:'Wait', macro_text_ph:'text to type',
+        cmd_assign:'Assign', cmd_go_layer:'Go to layer', cmd_go_key:'Go to key', cmd_go_pot:'Go to pot', cmd_none:'No results', cmd_placeholder:'Type an action (note, shortcut, switch layer…)',
         drawer_midi_note_label:'MIDI Note (0–127)', drawer_midi_ch_label:'Channel (1–16)', drawer_midi_vel_label:'Velocity (0–127)',
         drawer_midi_cc_num_label:'CC Number (0–127)', drawer_midi_cc_ch_label:'MIDI Channel (1–16)',
         pot_range_title:'Range and curve', pot_min_label:'Minimum value', pot_max_label:'Maximum value', pot_curve_label:'Response curve',
@@ -2718,6 +2741,8 @@ except Exception:
       document.querySelectorAll('label').forEach(el => { if (el.dataset.t && t[el.dataset.t]) el.textContent = t[el.dataset.t]; });
       // data-th elements (innerHTML — for rich text with <strong>/<em>)
       document.querySelectorAll('[data-th]').forEach(el => { if (t[el.dataset.th]) el.innerHTML = t[el.dataset.th]; });
+      // data-tph elements (placeholder)
+      document.querySelectorAll('[data-tph]').forEach(el => { if (t[el.dataset.tph]) el.placeholder = t[el.dataset.tph]; });
       // Guide card — full HTML replacement
       const _gc = document.getElementById('guide-card'); if (_gc) _gc.innerHTML = _GUIDE[lang] || _GUIDE.ca;
       // Re-render dynamic lists so their buttons use current lang
@@ -2729,6 +2754,142 @@ except Exception:
       document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
     }
     document.querySelectorAll('.lang-btn').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
+
+    // ══ PALETA DE COMANDES (Cmd/Ctrl+K) ══════════════════════════════
+    function _norm(s) { return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+    const _NOTE_IDX = { c:0, 'c#':1, db:1, d:2, 'd#':3, eb:3, e:4, f:5, 'f#':6, gb:6, g:7, 'g#':8, ab:8, a:9, 'a#':10, bb:10, b:11 };
+    function _parseNoteToMidi(q) {
+      const m = _norm(q.trim()).match(/^([a-g])(#|b)?(-?\d+)$/);
+      if (!m) return null;
+      const semi = _NOTE_IDX[m[1] + (m[2] || '')];
+      if (semi == null) return null;
+      const n = (parseInt(m[3]) + 1) * 12 + semi;
+      return (n >= 0 && n <= 127) ? n : null;
+    }
+    const _CMD_SHORTCUTS = [
+      { l: 'Copiar', kc: 'Keycode.C', mods: ['Cmd'] }, { l: 'Enganxar', kc: 'Keycode.V', mods: ['Cmd'] },
+      { l: 'Tallar', kc: 'Keycode.X', mods: ['Cmd'] }, { l: 'Desar', kc: 'Keycode.S', mods: ['Cmd'] },
+      { l: 'Desfer', kc: 'Keycode.Z', mods: ['Cmd'] }, { l: 'Refer', kc: 'Keycode.Z', mods: ['Cmd', 'Shift'] },
+      { l: 'Seleccionar tot', kc: 'Keycode.A', mods: ['Cmd'] }, { l: 'Cercar', kc: 'Keycode.F', mods: ['Cmd'] },
+      { l: 'Enter', kc: 'Keycode.ENTER', mods: [] }, { l: 'Escape', kc: 'Keycode.ESCAPE', mods: [] },
+      { l: 'Tab', kc: 'Keycode.TAB', mods: [] }, { l: 'Espai', kc: 'Keycode.SPACE', mods: [] },
+    ];
+    const _KEY_TYPES = ['key','string','consumer','mouse','layer_change','hold_mod','midi_note','open_app','macro'];
+    const _KEY_TYPE_I18N = { key:'type_key', string:'type_string', consumer:'type_consumer', mouse:'type_mouse', layer_change:'type_layer', hold_mod:'type_hold_mod', midi_note:'type_midi_note', open_app:'type_open_app', macro:'type_macro' };
+    const _POT_FUNCS = ['volume','brightness','scroll_y','scroll_x','mouse_x','mouse_y','click_step','text_step','midi_cc'];
+    const _POT_FUNC_I18N = { volume:'pot_volume', brightness:'pot_brightness', scroll_y:'pot_scroll_y', scroll_x:'pot_scroll_x', mouse_x:'pot_mouse_x', mouse_y:'pot_mouse_y', click_step:'pot_click_step', text_step:'pot_text_step', midi_cc:'pot_midi_cc' };
+
+    function _modSym(mods) { return (mods || []).map(m => ({ Ctrl:'⌃', Shift:'⇧', Alt:'⌥', Cmd:'⌘' }[m] || '')).join(''); }
+    // Assigna una configuració a la tecla/pot seleccionats i refresca.
+    function _paletteAssignKey(cfg) {
+      const id = currentSelection.id;
+      config.keys[id] = Object.assign({ id, label: `${id + 1}` }, cfg);
+      saveLayers(); loadConfigForm(); renderDevice(); _flashSaved();
+    }
+    function _paletteAssignPot(cfg) {
+      const id = currentSelection.id;
+      config.pots[id] = Object.assign({ id, label: `Pot ${POT_NAMES[id]}`, value: config.pots[id]?.value || 0 }, cfg);
+      saveLayers(); loadConfigForm(); renderDevice(); _flashSaved();
+    }
+    // Selecciona un tipus i deixa que l'usuari afini els paràmetres a l'inspector.
+    function _paletteSetType(type) {
+      const sel = document.getElementById('elem-type');
+      sel.value = type; sel.dispatchEvent(new Event('change', { bubbles: true }));
+      applyElement();
+    }
+
+    function _buildCommands(q) {
+      const cmds = [];
+      const sel = currentSelection;
+      // Navegació entre capes
+      layers.forEach((l, i) => {
+        if (i === currentLayerIdx) return;
+        cmds.push({ ico: '▤', label: `${_i('cmd_go_layer')}: ${l.name || 'Capa ' + (i + 1)}`, hint: '', run: () => switchLayer(i) });
+      });
+      // Navegació entre tecles/pots
+      // "Ves a la tecla N" només si la consulta sencera és un número o "tecla N"
+      // (evita xocar amb notes com "c#4").
+      const kmatch = _norm(q).match(/^(?:tecla|key)?\s*(\d+)$/);
+      if (kmatch) {
+        const n = parseInt(kmatch[1]);
+        if (n >= 1 && n <= 16) cmds.push({ ico: '⌨', label: `${_i('cmd_go_key')} ${n}`, hint: '', always: true, run: () => handleElementClick('key', n - 1) });
+      }
+      ['X','Y','Z'].forEach((nm, i) => cmds.push({ ico: '◉', label: `${_i('cmd_go_pot')} ${nm}`, hint: '', run: () => handleElementClick('pot', i) }));
+
+      if (sel.type === 'key') {
+        // Nota MIDI a partir del text (ex: "c3", "f#4")
+        const note = _parseNoteToMidi(q);
+        if (note != null) {
+          const _nn = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+          const nm = _nn[note % 12] + (Math.floor(note / 12) - 1);
+          cmds.push({ ico: '♪', label: `${_i('type_midi_note')}: ${nm}`, hint: `${note}`, always: true, run: () => _paletteAssignKey({ type: 'midi_note', midi_note: note, midi_channel: _loadMidiChannel(), midi_velocity: 100 }) });
+        }
+        // Obrir aplicació a partir del text
+        const om = q.match(/^(?:obrir|abrir|open)\s+(.+)$/i);
+        if (om) cmds.push({ ico: '▶', label: `${_i('type_open_app')}: ${om[1]}`, hint: '', always: true, run: () => _paletteAssignKey({ type: 'open_app', app: om[1].trim(), os: (typeof _loadOS === 'function' ? _loadOS() : 'mac') }) });
+        // Dreceres habituals
+        _CMD_SHORTCUTS.forEach(sc => cmds.push({ ico: '⌘', label: sc.l, hint: _modSym(sc.mods) + sc.kc.replace('Keycode.', ''), run: () => _paletteAssignKey({ type: 'key', keycode: sc.kc, mods: sc.mods }) }));
+        // Tipus de funció
+        _KEY_TYPES.forEach(t => cmds.push({ ico: '›', label: `${_i('cmd_assign')}: ${_i(_KEY_TYPE_I18N[t])}`, hint: '', run: () => _paletteSetType(t) }));
+      } else if (sel.type === 'pot') {
+        _POT_FUNCS.forEach(f => cmds.push({ ico: '›', label: `${_i('cmd_assign')}: ${_i(_POT_FUNC_I18N[f])}`, hint: '', run: () => _paletteSetType(f) }));
+      }
+      // Filtre per substring (accent-insensible). Les comandes derivades de la
+      // consulta (nota, obrir app, anar a tecla) es mantenen sempre al capdamunt.
+      const nq = _norm(q);
+      const filtered = nq ? cmds.filter(c => c.always || _norm(c.label).includes(nq) || _norm(c.hint).includes(nq)) : cmds;
+      filtered.sort((a, b) => (b.always ? 1 : 0) - (a.always ? 1 : 0));
+      return filtered.slice(0, 40);
+    }
+
+    let _cmdItems = [], _cmdSel = 0;
+    function _renderPalette() {
+      const q = document.getElementById('cmd-input').value;
+      _cmdItems = _buildCommands(q);
+      _cmdSel = 0;
+      const list = document.getElementById('cmd-list');
+      if (!_cmdItems.length) { list.innerHTML = `<div class="cmd-empty">${_i('cmd_none')}</div>`; return; }
+      list.innerHTML = _cmdItems.map((c, i) =>
+        `<div class="cmd-item ${i === 0 ? 'sel' : ''}" data-i="${i}"><span class="cmd-item-ico">${c.ico}</span><span class="cmd-item-label">${_esc(c.label)}</span>${c.hint ? `<span class="cmd-item-hint">${_esc(c.hint)}</span>` : ''}</div>`
+      ).join('');
+      list.querySelectorAll('.cmd-item').forEach(el => {
+        el.addEventListener('mouseenter', () => _setCmdSel(+el.dataset.i));
+        el.addEventListener('click', () => _runCmd(+el.dataset.i));
+      });
+    }
+    function _setCmdSel(i) {
+      _cmdSel = Math.max(0, Math.min(_cmdItems.length - 1, i));
+      document.querySelectorAll('.cmd-item').forEach((el, j) => el.classList.toggle('sel', j === _cmdSel));
+      const cur = document.querySelector('.cmd-item.sel'); if (cur) cur.scrollIntoView({ block: 'nearest' });
+    }
+    function _runCmd(i) {
+      const c = _cmdItems[i]; if (!c) return;
+      _closePalette();
+      c.run();
+    }
+    function _openPalette() {
+      const ov = document.getElementById('cmd-palette');
+      ov.style.display = 'flex';
+      const inp = document.getElementById('cmd-input');
+      inp.value = ''; inp.focus();
+      _renderPalette();
+    }
+    function _closePalette() { document.getElementById('cmd-palette').style.display = 'none'; }
+    document.getElementById('cmd-input')?.addEventListener('input', _renderPalette);
+    document.getElementById('cmd-palette')?.addEventListener('mousedown', e => { if (e.target.id === 'cmd-palette') _closePalette(); });
+    document.getElementById('cmd-input')?.addEventListener('keydown', e => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); _setCmdSel(_cmdSel + 1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); _setCmdSel(_cmdSel - 1); }
+      else if (e.key === 'Enter') { e.preventDefault(); _runCmd(_cmdSel); }
+      else if (e.key === 'Escape') { e.preventDefault(); _closePalette(); }
+    });
+    window.addEventListener('keydown', e => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        const ov = document.getElementById('cmd-palette');
+        if (ov.style.display === 'none') _openPalette(); else _closePalette();
+      }
+    });
 
     // Inicialitzar selector de notes MIDI
     (function() {
