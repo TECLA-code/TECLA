@@ -182,7 +182,10 @@
     #tab-config.active { overflow: hidden; }
     #tab-profiles.active { overflow-y: auto; }
     #tab-settings.active { overflow-y: auto; }
-    #tab-firmware.active, #tab-guide.active, #tab-theme.active { overflow-y: auto; }
+    #tab-firmware.active, #tab-guide.active, #tab-theme.active, #tab-monitor.active, #tab-settings.active { overflow-y: auto; }
+    /* Monitor: ressaltat en prémer */
+    .key-btn.mon-hit { border-color: var(--accent) !important; box-shadow: 0 0 0 3px var(--accent), 0 0 16px var(--accent) !important; transform: scale(.94); }
+    .pot-wrapper.mon-hit .pot-knob { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent), 0 0 14px var(--accent); }
     /* Card */
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r2); padding: 18px; }
     .card-title { font-size: 11px; font-weight: 600; color: var(--text2); margin-bottom: 12px; letter-spacing: .06em; text-transform: uppercase; }
@@ -287,6 +290,7 @@
     <span class="nav-tab" data-tab="theme">Aparen&ccedil;a</span>
     <span class="nav-tab" data-tab="guide">Guia</span>
     <span class="nav-tab" data-tab="settings">Configuraci&oacute;</span>
+    <span class="nav-tab" data-tab="monitor" data-t="nav_monitor">Monitor</span>
   </nav>
 
   <div class="tab-panel active" id="tab-config">
@@ -417,6 +421,39 @@
         <div style="display:flex;gap:8px;margin-top:10px">
           <button class="btn btn-sm" id="btn-cfg-disconnect" data-t="cfg_disconnect">Desconnectar</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MONITOR -->
+  <div class="tab-panel" id="tab-monitor">
+    <div style="max-width:900px;padding:20px;display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <div class="card-title" data-t="mon_title">Monitor en viu</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.65" data-th="mon_desc">Il&middot;lumina el dispositiu en temps real: en prémer una tecla f&iacute;sica veus quina &eacute;s i quina acci&oacute; fa, i pots seguir els canvis de capa. Cal activar el <strong>mode monitor</strong>, actualitzar el firmware i connectar el MIDI.</p>
+        <label class="cb" style="margin-bottom:10px;color:var(--text2)">
+          <input type="checkbox" id="mon-enable">
+          <span data-th="mon_enable_lbl">Activar <strong>mode monitor</strong> (afegeix un senyal MIDI ocult al canal 16 al proper firmware)</span>
+        </label>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn btn-sm btn-primary" id="mon-connect" data-t="mon_connect">Connectar MIDI</button>
+          <span class="fw-status-val fw-unk" id="mon-status" data-t="mon_status_off">No connectat</span>
+        </div>
+        <div class="guide-note" style="margin-top:10px" data-th="mon_note">El senyal va pel canal 16: si el filtres al teu DAW, no molesta. Nom&eacute;s cal Chrome o Edge (Web MIDI).</div>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <div class="card-title" style="margin:0" data-t="mon_device">Dispositiu</div>
+          <div style="font-size:12px;color:var(--text2)"><span data-t="mon_layer">Capa</span>: <span id="mon-layer" style="color:var(--accent);font-weight:600">1</span> · <span id="mon-action" style="color:var(--text)">—</span></div>
+        </div>
+        <div class="device-pane" style="padding:0">
+          <div class="pots-row" id="mon-pots"></div>
+          <div class="keys-grid" id="mon-keys" style="max-width:440px"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" data-t="mon_log">Registre</div>
+        <div id="mon-log" style="font-family:var(--mono);font-size:11.5px;color:var(--text2);max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:2px"></div>
       </div>
     </div>
   </div>
@@ -840,6 +877,27 @@
       return f;
     }
 
+    // Etiqueta curta de l'acció d'una tecla (reutilitzada pel dibuix i el monitor).
+    function _keyFuncShort(k) {
+      if (k.type === 'key' && k.keycode) {
+        const mods = (k.mods||[]).map(m=>m==='Ctrl'?'\u2303':m==='Shift'?'\u21e7':m==='Alt'?'\u2325':'\u2318').join('');
+        return mods + k.keycode.replace('Keycode.','');
+      }
+      if (k.type === 'string') return k.string ? `"${k.string.substring(0,5)}"` : 'Text';
+      if (k.type === 'consumer') {
+        const cc = {'PLAY_PAUSE':'Play','SCAN_NEXT_TRACK':'Next','SCAN_PREVIOUS_TRACK':'Prev','STOP':'Stop','MUTE':'Mut','VOLUME_INCREMENT':'Vol+','VOLUME_DECREMENT':'Vol-','FAST_FORWARD':'FWD','REWIND':'RWD','BRIGHTNESS_INCREMENT':'Bri+','BRIGHTNESS_DECREMENT':'Bri-'};
+        const key = k.consumer ? k.consumer.replace('ConsumerControlCode.','') : '';
+        return cc[key] || key.substring(0,8);
+      }
+      if (k.type === 'mouse') return ({'Mouse.LEFT_BUTTON':'L-CLK','Mouse.RIGHT_BUTTON':'R-CLK','Mouse.MIDDLE_BUTTON':'M-CLK'})[k.mouse] || 'Mouse';
+      if (k.type === 'layer_change') { const _stop=k.layer_mode==='clamp'; return k.layer_dir==='prev'?(_stop?'|\u2190 Capa':'\u2190 Capa'):(_stop?'Capa \u2192|':'Capa \u2192'); }
+      if (k.type === 'hold_mod') { const _ms={'Keycode.COMMAND':'\u2318','Keycode.CONTROL':'\u2303','Keycode.ALT':'\u2325','Keycode.SHIFT':'\u21e7','Keycode.LEFT_GUI':'\u229e'}; return (_ms[k.modifier]||'?')+' HOLD'; }
+      if (k.type === 'midi_note') { const _nn=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']; const n=k.midi_note??60; return _nn[n%12]+(Math.floor(n/12)-1); }
+      if (k.type === 'open_app') return k.app ? '\u25b6 '+k.app.substring(0,6) : 'App';
+      if (k.type === 'macro') { const n=(k.steps||[]).length; return '\u2699 '+n+(n===1?' pas':' passos'); }
+      return '';
+    }
+
     // Render del Dispositiu (Esquerra)
     function renderDevice() {
       // Pots
@@ -892,35 +950,7 @@
         if (k.type !== 'none') classes += ` key-type-${k.type} assigned`;
         if (currentSelection.type === 'key' && currentSelection.id === i) classes += ' active';
         btn.className = classes;
-        let funcShort = '';
-        if (k.type === 'key' && k.keycode) {
-          const mods = (k.mods||[]).map(m=>m==='Ctrl'?'⌃':m==='Shift'?'⇧':m==='Alt'?'⌥':'⌘').join('');
-          funcShort = mods + k.keycode.replace('Keycode.','');
-        } else if (k.type === 'string') {
-          funcShort = k.string ? `"${k.string.substring(0,5)}"` : 'Text';
-        } else if (k.type === 'consumer') {
-          const cc = {'PLAY_PAUSE':'Play','SCAN_NEXT_TRACK':'Next','SCAN_PREVIOUS_TRACK':'Prev','STOP':'Stop','MUTE':'Mut','VOLUME_INCREMENT':'Vol+','VOLUME_DECREMENT':'Vol-','FAST_FORWARD':'FWD','REWIND':'RWD','BRIGHTNESS_INCREMENT':'Bri+','BRIGHTNESS_DECREMENT':'Bri-'};
-          const key = k.consumer ? k.consumer.replace('ConsumerControlCode.','') : '';
-          funcShort = cc[key] || key.substring(0,8);
-        } else if (k.type === 'mouse') {
-          const mc = {'Mouse.LEFT_BUTTON':'L-CLK','Mouse.RIGHT_BUTTON':'R-CLK','Mouse.MIDDLE_BUTTON':'M-CLK'};
-          funcShort = mc[k.mouse] || 'Mouse';
-        } else if (k.type === 'layer_change') {
-          const _stop = k.layer_mode === 'clamp';
-          funcShort = k.layer_dir === 'prev' ? (_stop ? '|← Capa' : '← Capa') : (_stop ? 'Capa →|' : 'Capa →');
-        } else if (k.type === 'hold_mod') {
-          const _ms = {'Keycode.COMMAND':'⌘','Keycode.CONTROL':'⌃','Keycode.ALT':'⌥','Keycode.SHIFT':'⇧','Keycode.LEFT_GUI':'⊞'};
-          funcShort = (_ms[k.modifier] || '?') + ' HOLD';
-        } else if (k.type === 'midi_note') {
-          const _nn = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-          const n = k.midi_note ?? 60;
-          funcShort = _nn[n%12] + (Math.floor(n/12)-1);
-        } else if (k.type === 'open_app') {
-          funcShort = k.app ? '\u25B6 ' + k.app.substring(0,6) : 'App';
-        } else if (k.type === 'macro') {
-          const n = (k.steps || []).length;
-          funcShort = '\u2699 ' + n + (n === 1 ? ' pas' : ' passos');
-        }
+        const funcShort = _keyFuncShort(k);
         btn.innerHTML = `<div class="key-num">${i + 1}</div>${funcShort ? `<div class="key-label">${funcShort}</div>` : ''}`;
         btn.addEventListener('click', () => handleElementClick('key', i));
         keysGrid.appendChild(btn);
@@ -1418,6 +1448,9 @@ except Exception:
       // d'enviar per la seqüència d'entrada Unicode del sistema (type_text()).
       const _hasNonAscii = (t) => typeof t === 'string' && /[^\x00-\x7F]/.test(t);
       const _osTarget = (typeof _loadOS === 'function' ? _loadOS() : 'mac');
+      // Mode monitor: emet un "beacon" MIDI al canal 16 a cada pulsació i canvi
+      // de capa perquè l'app pugui il·luminar el dispositiu en viu (Web MIDI).
+      const _monitorOn = localStorage.getItem('tecla_monitor') === '1';
 
       // Passos de totes les macros (per detectar què necessiten: teclat, text, Unicode…).
       const _macroSteps = allKeys.flat().filter(k => k.type === 'macro').flatMap(k => k.steps || []);
@@ -1439,7 +1472,7 @@ except Exception:
       const needsKeycode = needsKeyboard || usesKeypad || usesUnicode;
       const needsConsumer = allKeys.flat().some(k => k.type === 'consumer') || allPots.flat().some(p => p.function === 'volume' || p.function === 'brightness');
       const needsMouse    = allKeys.flat().some(k => k.type === 'mouse') || allPots.flat().some(p => p.function.startsWith('mouse') || p.function.startsWith('scroll') || p.function === 'click_step');
-      const needsMidi     = allKeys.flat().some(k => k.type === 'midi_note') || allPots.flat().some(p => p.function === 'midi_cc');
+      const needsMidi     = allKeys.flat().some(k => k.type === 'midi_note') || allPots.flat().some(p => p.function === 'midi_cc') || _monitorOn;
 
       let code = `# TECLA MacroPad - Codi generat autom\u00e0ticament\nimport time\nimport board\nimport digitalio\nimport usb_hid\nimport analogio\n\n`;
       if (needsKeycode) code += `from adafruit_hid.keycode import Keycode\n`;
@@ -1498,13 +1531,14 @@ except Exception:
         if (k.type === 'hold_mod') return `${indent}keyboard.press(${k.modifier || 'Keycode.COMMAND'})\n`;
         if (k.type === 'layer_change') {
           const prev = k.layer_dir === 'prev';
+          const beacon = _monitorOn ? `${indent}usb_midi.ports[1].write(bytes([0xBF, 100, current_layer]))\n` : '';
           if (k.layer_mode === 'clamp') {
             // Topall: es queda a l'extrem en comptes de tornar a l'altre cap
             return prev
-              ? `${indent}current_layer = max(current_layer - 1, 0)\n`
-              : `${indent}current_layer = min(current_layer + 1, LAYER_COUNT - 1)\n`;
+              ? `${indent}current_layer = max(current_layer - 1, 0)\n` + beacon
+              : `${indent}current_layer = min(current_layer + 1, LAYER_COUNT - 1)\n` + beacon;
           }
-          return `${indent}current_layer = (current_layer + ${prev ? '-1' : '1'}) % LAYER_COUNT\n`;
+          return `${indent}current_layer = (current_layer + ${prev ? '-1' : '1'}) % LAYER_COUNT\n` + beacon;
         }
         if (k.type === 'key') {
           const pmods = (k.mods||[]).map(m => ({'Ctrl':'Keycode.CONTROL','Shift':'Keycode.SHIFT','Alt':'Keycode.ALT','Cmd':'Keycode.COMMAND'})[m]||'').filter(Boolean);
@@ -1562,8 +1596,10 @@ except Exception:
         let c = `${baseIndent}if btns[${i}].value != last_btn_states[${i}]:\n`;
         if (k.type === 'hold_mod') c += `${baseIndent}    time.sleep(DEBOUNCE_TIME)\n`;
         c += `${baseIndent}    if btns[${i}].value:\n`;
+        if (_monitorOn) c += `${baseIndent}        usb_midi.ports[1].write(bytes([0x9F, ${i}, 127]))\n`;
         c += _keyAction(k, baseIndent + '        ');
         c += `${baseIndent}    else:\n`;
+        if (_monitorOn) c += `${baseIndent}        usb_midi.ports[1].write(bytes([0x8F, ${i}, 0]))\n`;
         c += _keyRelease(k, baseIndent + '        ');
         c += `${baseIndent}    last_btn_states[${i}] = btns[${i}].value\n`;
         return c;
@@ -1940,6 +1976,7 @@ except Exception:
         if (tab.dataset.tab === 'profiles') { renderProfiles(); _renderDeviceLayers(); }
         if (tab.dataset.tab === 'firmware' && _deviceDir) _fwRefreshStatus();
         if (tab.dataset.tab === 'settings') _buildSettingsTab();
+        if (tab.dataset.tab === 'monitor') { const c = document.getElementById('mon-enable'); if (c) c.checked = localStorage.getItem('tecla_monitor') === '1'; _monLayer = 0; _renderMonDevice(); }
       });
     });
 
@@ -2447,7 +2484,11 @@ except Exception:
     };
     const _DICT = {
       ca: {
-        nav_config:'Dispositiu', nav_profiles:'Capes', nav_settings:'Configuració', nav_fw:'Firmware', nav_guide:'Guia', nav_theme:'Aparença',
+        nav_config:'Dispositiu', nav_profiles:'Capes', nav_settings:'Configuració', nav_fw:'Firmware', nav_guide:'Guia', nav_theme:'Aparença', nav_monitor:'Monitor',
+        mon_title:'Monitor en viu', mon_desc:'Il·lumina el dispositiu en temps real: en prémer una tecla física veus quina és i quina acció fa, i pots seguir els canvis de capa. Cal activar el <strong>mode monitor</strong>, actualitzar el firmware i connectar el MIDI.',
+        mon_enable_lbl:'Activar <strong>mode monitor</strong> (afegeix un senyal MIDI ocult al canal 16 al proper firmware)', mon_connect:'Connectar MIDI', mon_status_off:'No connectat',
+        mon_note:'El senyal va pel canal 16: si el filtres al teu DAW, no molesta. Només cal Chrome o Edge (Web MIDI).', mon_device:'Dispositiu', mon_layer:'Capa', mon_log:'Registre',
+        mon_inputs:'entrades', mon_key_lbl:'Tecla', mon_no_webmidi:'Cal Chrome o Edge per al Web MIDI.', mon_on_toast:'Mode monitor activat. Actualitza el firmware.', mon_off_toast:'Mode monitor desactivat.',
         cfg_midi_title:'Canal MIDI', cfg_midi_desc:"Canal MIDI per defecte que s'aplicarà a les tecles i potenciòmetres MIDI nous.", cfg_midi_ch:'Canal:', cfg_save:'Guardar',
         cfg_os_title:'Sistema operatiu', cfg_os_desc:"Sistema de l'ordinador on connectes el TECLA. S'usa per enviar símbols que no són al teclat (φ, π, €, emojis…) amb la seqüència d'entrada Unicode correcta.", cfg_os_lbl:'Sistema:', cfg_os_saved:'Sistema operatiu desat:',
         cfg_os_note:"Per als símbols Unicode cal un ajust únic al sistema de destí: a <strong>macOS</strong>, activa la font d'entrada <strong>Unicode Hex Input</strong>; a <strong>Windows</strong>, la clau de registre <strong>EnableHexNumpad=1</strong>. A <strong>Linux</strong> (IBus/GTK) funciona directament.",
@@ -2536,7 +2577,11 @@ except Exception:
         lang_title:'Idioma',
       },
       es: {
-        nav_config:'Dispositivo', nav_profiles:'Capas', nav_settings:'Configuración', nav_fw:'Firmware', nav_guide:'Guía', nav_theme:'Apariencia',
+        nav_config:'Dispositivo', nav_profiles:'Capas', nav_settings:'Configuración', nav_fw:'Firmware', nav_guide:'Guía', nav_theme:'Apariencia', nav_monitor:'Monitor',
+        mon_title:'Monitor en vivo', mon_desc:'Ilumina el dispositivo en tiempo real: al pulsar una tecla física ves cuál es y qué acción hace, y puedes seguir los cambios de capa. Hay que activar el <strong>modo monitor</strong>, actualizar el firmware y conectar el MIDI.',
+        mon_enable_lbl:'Activar <strong>modo monitor</strong> (añade una señal MIDI oculta en el canal 16 al próximo firmware)', mon_connect:'Conectar MIDI', mon_status_off:'No conectado',
+        mon_note:'La señal va por el canal 16: si lo filtras en tu DAW, no molesta. Solo Chrome o Edge (Web MIDI).', mon_device:'Dispositivo', mon_layer:'Capa', mon_log:'Registro',
+        mon_inputs:'entradas', mon_key_lbl:'Tecla', mon_no_webmidi:'Se necesita Chrome o Edge para Web MIDI.', mon_on_toast:'Modo monitor activado. Actualiza el firmware.', mon_off_toast:'Modo monitor desactivado.',
         cfg_midi_title:'Canal MIDI', cfg_midi_desc:'Canal MIDI por defecto que se aplicará a las teclas y potenciómetros MIDI nuevos.', cfg_midi_ch:'Canal:', cfg_save:'Guardar',
         cfg_os_title:'Sistema operativo', cfg_os_desc:'Sistema del ordenador donde conectas el TECLA. Se usa para enviar símbolos que no están en el teclado (φ, π, €, emojis…) con la secuencia de entrada Unicode correcta.', cfg_os_lbl:'Sistema:', cfg_os_saved:'Sistema operativo guardado:',
         cfg_os_note:'Para los símbolos Unicode hace falta un ajuste único en el sistema de destino: en <strong>macOS</strong>, activa la fuente de entrada <strong>Unicode Hex Input</strong>; en <strong>Windows</strong>, la clave de registro <strong>EnableHexNumpad=1</strong>. En <strong>Linux</strong> (IBus/GTK) funciona directamente.',
@@ -2625,7 +2670,11 @@ except Exception:
         lang_title:'Idioma',
       },
       en: {
-        nav_config:'Device', nav_profiles:'Layers', nav_settings:'Configuration', nav_fw:'Firmware', nav_guide:'Guide', nav_theme:'Appearance',
+        nav_config:'Device', nav_profiles:'Layers', nav_settings:'Configuration', nav_fw:'Firmware', nav_guide:'Guide', nav_theme:'Appearance', nav_monitor:'Monitor',
+        mon_title:'Live monitor', mon_desc:'Lights up the device in real time: pressing a physical key shows which one it is and what it does, and you can follow layer changes. You need to enable <strong>monitor mode</strong>, update the firmware and connect MIDI.',
+        mon_enable_lbl:'Enable <strong>monitor mode</strong> (adds a hidden MIDI signal on channel 16 to the next firmware)', mon_connect:'Connect MIDI', mon_status_off:'Not connected',
+        mon_note:'The signal goes on channel 16: filter it in your DAW and it stays out of the way. Chrome or Edge only (Web MIDI).', mon_device:'Device', mon_layer:'Layer', mon_log:'Log',
+        mon_inputs:'inputs', mon_key_lbl:'Key', mon_no_webmidi:'Chrome or Edge is required for Web MIDI.', mon_on_toast:'Monitor mode enabled. Update the firmware.', mon_off_toast:'Monitor mode disabled.',
         cfg_midi_title:'MIDI Channel', cfg_midi_desc:'Default MIDI channel applied to new MIDI keys and potentiometers.', cfg_midi_ch:'Channel:', cfg_save:'Save',
         cfg_os_title:'Operating system', cfg_os_desc:'The system of the computer where you plug the TECLA. Used to send symbols not on the keyboard (φ, π, €, emojis…) with the correct Unicode input sequence.', cfg_os_lbl:'System:', cfg_os_saved:'Operating system saved:',
         cfg_os_note:'Unicode symbols need a one-time setting on the target system: on <strong>macOS</strong>, enable the <strong>Unicode Hex Input</strong> source; on <strong>Windows</strong>, the registry key <strong>EnableHexNumpad=1</strong>. On <strong>Linux</strong> (IBus/GTK) it works directly.',
@@ -2889,6 +2938,71 @@ except Exception:
         const ov = document.getElementById('cmd-palette');
         if (ov.style.display === 'none') _openPalette(); else _closePalette();
       }
+    });
+
+    // ══ MONITOR EN VIU (Web MIDI) ══════════════════════════════════════
+    let _monLayer = 0, _monAccess = null;
+    function _monLog(html) {
+      const el = document.getElementById('mon-log'); if (!el) return;
+      const d = document.createElement('div');
+      d.innerHTML = `<span style="color:var(--text3)">${new Date().toLocaleTimeString()}</span> ${html}`;
+      el.prepend(d);
+      while (el.children.length > 60) el.lastChild.remove();
+    }
+    function _renderMonDevice() {
+      const L = layers[_monLayer] || layers[0]; if (!L) return;
+      const keys = document.getElementById('mon-keys'), pots = document.getElementById('mon-pots');
+      if (!keys) return;
+      keys.innerHTML = '';
+      L.keys.forEach((k, i) => {
+        const btn = document.createElement('div');
+        btn.className = 'key-btn' + (k.type !== 'none' ? ` key-type-${k.type} assigned` : '');
+        btn.id = 'mon-key-' + i;
+        const fs = _keyFuncShort(k);
+        btn.innerHTML = `<div class="key-num">${i + 1}</div>${fs ? `<div class="key-label">${fs}</div>` : ''}`;
+        keys.appendChild(btn);
+      });
+      pots.innerHTML = '';
+      L.pots.forEach((p, i) => {
+        const div = document.createElement('div'); div.className = 'pot-wrapper'; div.id = 'mon-pot-' + i;
+        div.innerHTML = `<div class="pot-label">${POT_NAMES[i]}</div><div class="pot-knob"><div class="pot-indicator"></div></div><div style="font-size:9px;color:var(--text3);font-family:var(--mono)">${_potShort(p)}</div>`;
+        pots.appendChild(div);
+      });
+      const ml = document.getElementById('mon-layer'); if (ml) ml.textContent = (_monLayer + 1) + (L.name ? ` (${L.name})` : '');
+    }
+    function _onMidi(e) {
+      const [status, d1, d2] = e.data;
+      if (status === 0x9F && d1 < 16) {           // tecla premuda (beacon)
+        const el = document.getElementById('mon-key-' + d1); if (el) el.classList.add('mon-hit');
+        const k = (layers[_monLayer] || layers[0]).keys[d1];
+        const label = k && k.type !== 'none' ? _keyFuncShort(k) : '—';
+        const a = document.getElementById('mon-action'); if (a) a.textContent = `${_i('mon_key_lbl')} ${d1 + 1}: ${label}`;
+        _monLog(`<span style="color:var(--accent)">●</span> ${_i('mon_key_lbl')} ${d1 + 1} → ${_esc(label)}`);
+      } else if (status === 0x8F && d1 < 16) {     // tecla deixada anar
+        const el = document.getElementById('mon-key-' + d1); if (el) el.classList.remove('mon-hit');
+      } else if (status === 0xBF && d1 === 100) {  // canvi de capa (beacon)
+        _monLayer = Math.max(0, Math.min(layers.length - 1, d2));
+        _renderMonDevice();
+        _monLog(`<span style="color:var(--accent)">▤</span> ${_i('mon_layer')} ${_monLayer + 1}`);
+      }
+    }
+    async function _monConnect() {
+      if (!navigator.requestMIDIAccess) { showToast(_i('mon_no_webmidi'), 'err'); return; }
+      try {
+        _monAccess = await navigator.requestMIDIAccess();
+        const bind = () => { let n = 0; _monAccess.inputs.forEach(inp => { inp.onmidimessage = _onMidi; n++; }); return n; };
+        const n = bind();
+        _monAccess.onstatechange = bind;
+        const st = document.getElementById('mon-status');
+        st.textContent = `✓ ${n} ${_i('mon_inputs')}`; st.className = 'fw-status-val fw-ok';
+        showToast(`✓ MIDI: ${n} ${_i('mon_inputs')}`, 'ok');
+        _monLog(`✓ ${n} ${_i('mon_inputs')}`);
+      } catch (err) { showToast('Error: ' + err.message, 'err'); }
+    }
+    document.getElementById('mon-connect')?.addEventListener('click', _monConnect);
+    document.getElementById('mon-enable')?.addEventListener('change', function () {
+      localStorage.setItem('tecla_monitor', this.checked ? '1' : '0');
+      showToast(this.checked ? _i('mon_on_toast') : _i('mon_off_toast'), 'ok');
     });
 
     // Inicialitzar selector de notes MIDI
