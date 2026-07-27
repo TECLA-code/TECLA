@@ -1,0 +1,4 @@
+{
+  "_comment": "Marca els .js d'aquesta carpeta com a mòduls ES per a node (els tests hi criden el generador de modes). El navegador se'n desentén: la mena de mòdul li ve del <script type=module>.",
+  "type": "module"
+}
