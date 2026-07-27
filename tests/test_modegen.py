@@ -132,6 +132,41 @@ CASOS_RIT = {
 }
 
 
+# ── Especificacions de drone ──────────────────────────────────────────────
+
+def _specd(**canvis):
+    base = {
+        'cat': 'drone', 'nom': 'El meu drone', 'tonalitat': 0, 'octava': 3,
+        'brillantor': 80, 'acords': [[0, 7], [0, 4, 7], [0, 3, 7], [0, 4, 7, 11]],
+        'moviment': 'Arc', 'movCC': 11, 'movPeriode': 2,
+        'movProfunditat': 100, 'movDuty': 50,
+        'pots': {'x': 'Moviment (velocitat)', 'y': "Tipus d'acord", 'z': 'Octava'},
+    }
+    base.update(canvis)
+    return base
+
+
+CASOS_DRONE = {
+    'arc': _specd(),
+    'gate': _specd(nom='Gate drone', moviment='Gate', movDuty=25),
+    'respiracio': _specd(nom='Respira', moviment='Respiració', movPeriode=6),
+    'sense_moviment': _specd(nom='Quiet', moviment='Cap'),
+    'una_veu': _specd(nom='Pedal', acords=[[0]]),
+    'moltes_veus': _specd(nom='Catedral', acords=[[0, 7, 12, 16, 19, 24]]),
+    'veus_repetides': _specd(nom='Repetit', acords=[[0, 0, 7, 7, 7]]),   # s'han de fondre
+    'veus_desordenades': _specd(nom='Desordre', acords=[[19, 0, 7, 4]]),
+    'acord_buit': _specd(nom='Buit drone', acords=[[]]),                 # cau a la fonamental
+    'greu_extrem': _specd(nom='Abisme', octava=0, acords=[[0, 7]]),
+    'agut_extrem': _specd(nom='Cim', octava=7, acords=[[0, 12, 24, 36]]),
+    'profunditat_zero': _specd(nom='Pla', movProfunditat=0),
+    'periode_curt': _specd(nom='Tremolo', movPeriode=0.05),
+    'cc_brillantor': _specd(nom='Cap al filtre', movCC=74),
+    'pots_alternatius_drone': _specd(nom='Potes drone',
+                                     pots={'x': 'Brillantor', 'y': 'Profunditat', 'z': 'Tonalitat'}),
+    'pots_buits_drone': _specd(nom='Sense potes drone', pots={'x': '—', 'y': '—', 'z': '—'}),
+}
+
+
 def _genera(specs):
     """Crida el generador amb node i torna {clau: {file, cls, source}}."""
     # Les especificacions entren per stdin: amb -e els arguments de node no són
@@ -155,7 +190,7 @@ def _genera(specs):
     return json.loads(res.stdout)
 
 
-TOTS = dict(CASOS, **CASOS_RIT)
+TOTS = dict(CASOS, **CASOS_RIT, **CASOS_DRONE)
 
 
 @pytest.fixture(scope='module')
@@ -252,14 +287,14 @@ def test_una_familia_no_implementada_avisa_clarament():
     res = subprocess.run(
         [shutil.which('node'), '--input-type=module', '-e',
          f'import {{ generateMode }} from {json.dumps(GEN_JS)};'
-         'try { generateMode({cat:"drone"}); } catch (e) { process.stdout.write(e.message); }'],
+         'try { generateMode({cat:"textura"}); } catch (e) { process.stdout.write(e.message); }'],
         capture_output=True, text=True)
-    assert 'drone' in res.stdout and 'implementada' in res.stdout
+    assert 'textura' in res.stdout and 'implementada' in res.stdout
 
 
 # ── Els modes, corrent ────────────────────────────────────────────────────
 
-def _fes_sonar(cls, potes=(64, 64, 64), voltes=800, dt=0.01):
+def _fes_sonar(cls, potes=(64, 64, 64), voltes=800, dt=0.01, neteja=True):
     """Fa córrer un mode com el bucle del dispositiu, amb rellotge simulat."""
     import time as _t
     midi = FakeMidiOut()
@@ -272,7 +307,8 @@ def _fes_sonar(cls, potes=(64, 64, 64), voltes=800, dt=0.01):
         for _ in range(voltes):
             rellotge[0] += dt
             mode.update(list(potes), [False] * 16)
-        mode.cleanup()
+        if neteja:
+            mode.cleanup()
     finally:
         _t.monotonic = real
     return midi, mode
@@ -493,6 +529,156 @@ def test_el_ritme_no_deixa_percussio_sonant(modes_importats):
     for clau in CASOS_RIT:
         midi, _ = _fes_sonar(modes_importats[clau], voltes=200)
         assert not _balanc(midi), f'{clau}: cops oberts'
+
+
+# ── Família drone ─────────────────────────────────────────────────────────
+
+def _ccs(midi, cc=None):
+    """Valors enviats d'un CC (o de tots)."""
+    out = []
+    for m in midi.sent:
+        if type(m).__name__.endswith('ControlChange'):
+            num = getattr(m, 'control', getattr(m, 'cc', None))
+            if cc is None or num == cc:
+                out.append((num, m.value))
+    return out
+
+
+def test_el_drone_sosté_l_acord(modes_importats):
+    """Un drone toca les seves veus i les manté: cap note-off durant la marxa."""
+    import time as _t
+    midi = FakeMidiOut()
+    mode = modes_importats['arc'](midi)
+    mode.setup()
+    real = _t.monotonic
+    rellotge = [real()]
+    _t.monotonic = lambda: rellotge[0]
+    try:
+        # Potes quiets a la posició que ja té el mode (banc 0, octava 3): així
+        # no hi ha el remuntatge inicial amb què el drone es fa seu el pot.
+        for _ in range(300):
+            rellotge[0] += 0.01
+            mode.update([0, 64, 64], [False] * 16)
+        ons = [m.note for m in midi.sent if type(m).__name__.endswith('NoteOn') and m.velocity > 0]
+        offs = [m.note for m in midi.sent if type(m).__name__.endswith('NoteOff')]
+        assert len(ons) == 2, f'C i la seva quinta: {ons}'
+        assert not offs, 'el drone no ha de tallar les notes mentre sona'
+    finally:
+        _t.monotonic = real
+        mode.cleanup()
+
+
+def test_les_veus_son_els_intervals_configurats(modes_importats):
+    """Octava 3, C, intervals 0 i 7 → notes 36 i 43."""
+    midi, _ = _fes_sonar(modes_importats['arc'], potes=(0, 64, 64), voltes=50)
+    ons = {m.note for m in midi.sent if type(m).__name__.endswith('NoteOn') and m.velocity > 0}
+    assert ons == {36, 43}, ons
+
+
+def test_les_veus_repetides_es_fonen(modes_importats):
+    """[0,0,7,7,7] és un acord de dues veus, no de cinc."""
+    midi, _ = _fes_sonar(modes_importats['veus_repetides'], voltes=50)
+    ons = [m.note for m in midi.sent if type(m).__name__.endswith('NoteOn') and m.velocity > 0]
+    assert len(ons) == 2, ons
+
+
+def test_un_acord_buit_cau_a_la_fonamental(modes_importats):
+    midi, _ = _fes_sonar(modes_importats['acord_buit'], voltes=50)
+    ons = [m.note for m in midi.sent if type(m).__name__.endswith('NoteOn') and m.velocity > 0]
+    assert len(ons) == 1
+
+
+def test_les_veus_que_no_caben_no_s_envien(modes_importats):
+    """A l'octava 7 amb intervals fins a 36 semitons, les que passen de 108
+    s'han de quedar fora en lloc de sortir com a notes absurdes."""
+    midi, mode = _fes_sonar(modes_importats['agut_extrem'], voltes=50)
+    ons = [m.note for m in midi.sent if type(m).__name__.endswith('NoteOn') and m.velocity > 0]
+    assert ons, 'alguna veu hi ha de cabre'
+    assert all(n <= 108 for n in ons), ons
+
+
+def test_el_gate_es_una_ona_quadrada(modes_importats):
+    """Amb gate i profunditat a fons, el CC només ha de valer 127 o 0."""
+    midi, _ = _fes_sonar(modes_importats['gate'], voltes=1200)
+    vals = {v for _, v in _ccs(midi, 11)}
+    assert vals <= {0, 127}, vals
+    assert vals == {0, 127}, 'el gate ha de bategar amunt i avall'
+
+
+def test_l_arc_recorre_tot_el_camí(modes_importats):
+    """El triangle passa per valors intermedis, no només pels extrems."""
+    midi, _ = _fes_sonar(modes_importats['arc'], voltes=1200)
+    vals = sorted({v for _, v in _ccs(midi, 11)})
+    mitjans = [v for v in vals if 20 < v < 107]
+    assert len(mitjans) > 10, f'el triangle no gradua: {vals[:20]}'
+    assert max(vals) > 115 and min(vals) < 12
+
+
+def test_la_respiracio_es_mes_suau_que_l_arc(modes_importats):
+    """El suavitzat fa que passi més temps a prop dels extrems: hi ha d'haver
+    menys valors distints al mig del recorregut que amb el triangle."""
+    def mitjans(clau):
+        midi, _ = _fes_sonar(modes_importats[clau], voltes=1500)
+        return len([v for _, v in _ccs(midi, 11) if 50 < v < 78])
+    assert mitjans('respiracio') < mitjans('arc')
+
+
+def test_sense_moviment_no_s_envia_cap_cc_de_moviment(modes_importats):
+    midi, _ = _fes_sonar(modes_importats['sense_moviment'], voltes=600, neteja=False)
+    assert not _ccs(midi, 11), 'amb el moviment a Cap no s\'ha d\'enviar cap CC'
+
+
+def test_la_profunditat_limita_fins_on_baixa(modes_importats):
+    """Profunditat 0 = el moviment no s'aparta del màxim."""
+    midi, _ = _fes_sonar(modes_importats['profunditat_zero'], voltes=800)
+    vals = {v for _, v in _ccs(midi, 11)}
+    assert vals <= {127}, vals
+
+
+def test_el_moviment_pot_anar_a_un_altre_cc(modes_importats):
+    midi, _ = _fes_sonar(modes_importats['cc_brillantor'], voltes=800)
+    assert _ccs(midi, 74), 'no ha arribat res al CC74'
+
+
+def test_el_pot_de_velocitat_del_moviment_el_canvia(modes_importats):
+    cls = modes_importats['arc']
+    _, lent = _fes_sonar(cls, potes=(64, 0, 64), voltes=30)
+    _, rapid = _fes_sonar(cls, potes=(64, 127, 64), voltes=30)
+    assert rapid.mov_per < lent.mov_per
+
+
+def test_el_pot_de_tipus_d_acord_canvia_les_veus(modes_importats):
+    cls = modes_importats['arc']
+    a, ma = _fes_sonar(cls, potes=(0, 64, 64), voltes=40)
+    b, mb = _fes_sonar(cls, potes=(127, 64, 64), voltes=40)
+    veus = lambda midi: {m.note for m in midi.sent
+                         if type(m).__name__.endswith('NoteOn') and m.velocity > 0}
+    assert ma.acord != mb.acord
+    assert veus(a) != veus(b)
+
+
+def test_el_pot_d_octava_transporta_el_drone(modes_importats):
+    cls = modes_importats['arc']
+    greu, _ = _fes_sonar(cls, potes=(64, 64, 0), voltes=40)
+    agut, _ = _fes_sonar(cls, potes=(64, 64, 127), voltes=40)
+    baix = lambda midi: min(m.note for m in midi.sent
+                            if type(m).__name__.endswith('NoteOn') and m.velocity > 0)
+    assert baix(agut) > baix(greu)
+
+
+def test_el_drone_no_te_pols_per_a_la_pantalla(modes_importats):
+    """Un drone no té tempo de notes: la pantalla no li ha de treure cap BPM
+    del període del moviment (per això el camp no es diu 'speed')."""
+    from modes.mm_update import mode_tempo
+    for clau in ('arc', 'gate', 'sense_moviment'):
+        _, mode = _fes_sonar(modes_importats[clau], voltes=40)
+        assert mode_tempo(mode) is None, clau
+
+
+def test_el_drone_calla_del_tot_en_marxar(modes_importats):
+    for clau in CASOS_DRONE:
+        midi, _ = _fes_sonar(modes_importats[clau], voltes=200)
+        assert not _balanc(midi), f'{clau}: veus obertes'
 
 
 def test_el_doble_clic_canvia_la_tonalitat(modes_importats):

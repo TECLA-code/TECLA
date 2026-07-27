@@ -2172,6 +2172,21 @@
     .mg-dyn-cell[data-lv="1"] { color: var(--mg); border-color: color-mix(in srgb, var(--mg) 40%, transparent) }
     .mg-dyn-cell[data-lv="2"] { color: var(--mg); border-color: color-mix(in srgb, var(--mg) 75%, transparent);
       background: color-mix(in srgb, var(--mg) 16%, transparent) }
+    /* Veus de l'acord (família drone): dues octaves de semitons */
+    .mg-veus { display: grid; gap: 3px; min-width: 620px }
+    .mg-veu {
+      cursor: pointer; height: 30px; border-radius: 5px; font-size: 8.5px;
+      display: flex; align-items: center; justify-content: center; color: var(--text3);
+      border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+      background: color-mix(in srgb, var(--surface) 45%, transparent);
+      transition: background .15s, border-color .15s, color .15s;
+    }
+    .mg-veu.oct { border-color: color-mix(in srgb, var(--mg) 30%, transparent); color: var(--text2) }
+    .mg-veu:hover { color: var(--text) }
+    .mg-veu.on {
+      background: var(--mg); border-color: var(--mg); color: #fff; font-weight: 700;
+      box-shadow: 0 0 10px color-mix(in srgb, var(--mg) 45%, transparent);
+    }
     /* Pistes de percussió de la família rítmica */
     .mg-pistes { display: flex; flex-direction: column; gap: 5px }
     .mg-pista {
@@ -3149,7 +3164,7 @@
 <div class="guide-h1">6. La capa Modes</div><p class="guide-li">S’hi arriba ciclant amb la <strong>tecla 13</strong>. Les tecles <strong>1–12</strong> activen els modes generatius assignats a la capa actual.</p><p class="guide-li"><strong>Tecla 13</strong>: toc curt → capa següent · mantinguda ≈1 s → capa anterior.</p><p class="guide-li"><strong>Tecles 14 i 15</strong>: efectes temporals (mantenir premuda: sustain, pausa, gate…) · doble clic → canviar l’efecte assignat.</p><p class="guide-li"><strong>Tecla 16</strong>: STOP total + neteja de memòria.</p><p class="guide-li">Els modes es trien i s’assignen a la pestanya <em>Modes</em>; els potenciòmetres modulen paràmetres propis de cada mode.</p>
 </div>
 <div id="gca-6">
-<div class="guide-h1">7. Configurar des de l’app</div><div class="guide-h2">Pestanya Teclat</div><p class="guide-li">Arrossega funcions a les tecles, tria escales, tonalitats, tipus d’acord, patrons d’arpegiador, progressions i funcions dels potenciòmetres.</p><div class="guide-h2">Pestanya Modes</div><p class="guide-li">Crea bancs (capes) de modes i assigna un mode a cada tecla 1–12. Tria els efectes temporals de les tecles 14–15.</p><div class="guide-h2">✦ Crear els teus propis modes</div><p class="guide-li">El botó <strong>✦ Crear</strong> obre el <strong>constructor de modes</strong>. Els 64 modes del firmware es reparteixen en sis famílies segons com estan fets per dins, i cada família té les seves variables: <strong>melòdic</strong> (seqüència de graus sobre una escala), <strong>rítmic</strong> (graella de passos amb bateria), <strong>drone</strong> (acord sostingut amb gate), <strong>textura</strong> (atzar amb densitat), <strong>ona</strong> (un oscil·lador lent) i <strong>algorísmic</strong> (una regla que genera el patró).</p><p class="guide-li">A la família <strong>melòdica</strong> hi dibuixes la melodia per <em>graus de l’escala</em> en una graella, amb la <strong>dinàmica</strong> de cada pas, l’<strong>articulació</strong> (de picada a lligada), una <strong>veu secundària</strong> a l’interval que vulguis —el contrapunt de Bach, el tintinnabuli de Pärt— i el rang de tempo. També hi assignes què fa cada un dels tres potes.</p><p class="guide-li">A la família <strong>rítmica</strong> hi tens una <strong>graella de passos</strong> (8, 16 o 32; cada pas és una semicorxera, o sigui que 16 són un compàs de 4/4) amb cinc pistes de percussió i una <strong>línia de baix per graus</strong>. De cada pista en tries la <strong>nota MIDI</strong>, la força i la <strong>capa de breakdown</strong> —l’ordre en què les pistes es retiren amb el pot, el recurs de tot el techno—, i del conjunt, el rang de BPM i el <strong>swing</strong>. La percussió surt pel canal MIDI 10 (bateria General MIDI) i el baix pel canal 1, per posar-hi instruments diferents al DAW.</p><p class="guide-li">Prem <strong>▶ Escoltar</strong> per provar-lo a l’instant (corre el mateix Python que correrà al dispositiu), <strong>Desar mode</strong> per afegir-lo a la teva llista —i al dispositiu, si el tens endollat— o <strong>Exportar .py</strong> per quedar-te el fitxer. El mode generat és un fitxer de Python normal que pots obrir i modificar: l’especificació hi queda desada a dins, així que sempre el pots tornar a obrir al constructor.</p><div class="guide-h2">Pestanya Simulador</div><p class="guide-li">Prova-ho tot <em>sense dispositiu</em>: el teclat i els modes corren al navegador i envien MIDI via WebMIDI al teu DAW.</p><p class="guide-li">Amb el dispositiu endollat, prem <strong>🔌 Sync dispositiu</strong>: les tecles i potes físics controlen el simulador (el port es detecta sol; el so local del TECLA es pausa mentre dura).</p><div class="guide-h2">La Pantalla</div><p class="guide-li">El botó <strong>Pantalla</strong> (capçalera) obre la pantalla virtual del dispositiu: mostra en gran i en directe què toques — <strong>acords amb nomenclatura professional</strong> (C, Am7, F/A…), notes, funcions amb el seu color, canvis de capa — amb una <strong>animació reactiva als potes</strong> pròpia de cada família de modes.</p><p class="guide-li">El <strong>tempo hi surt en BPM</strong> — negres per minut, el mateix número que poses al DAW o al metrònom — per poder <em>sincronitzar amb la peça que estàs tocant</em>. L’etiqueta hi afegeix la <strong>subdivisió</strong> quan cal: «Tempo · 1/16» vol dir que el que sona són semicorxeres d’aquest tempo. L’animació batega al mateix pols.</p><p class="guide-li">El <strong>pot de BPM de l’arpegiador</strong> va de <strong>40 a 240</strong> negres per minut i l’arp trepitja semicorxeres: posa el mateix número que el teu projecte i ja hi encaixa.</p><p class="guide-li">Es connecta sola al port sèrie correcte, es pot <strong>arrossegar i redimensionar</strong>, i amb <strong>⇱</strong> es desancora en una finestra flotant fora de l'app (Chrome 116+).</p><div class="guide-h2">Pestanya Firmware</div><p class="guide-li">Instal·la CircuitPython (Pas 1) i el firmware TECLA (Pas 2). Cal repetir el Pas 2 després de canviar els modes assignats.</p><div class="guide-h2">Pestanya Aparença</div><p class="guide-li">Temes de color de l’app i editor de temes personalitzats.</p><div class="guide-note">Flux de treball: edita → <strong>Guardar configuració</strong> → si has canviat modes, <em>Firmware</em> → <strong>Instal·lar / Actualitzar</strong> → reset del dispositiu.</div>
+<div class="guide-h1">7. Configurar des de l’app</div><div class="guide-h2">Pestanya Teclat</div><p class="guide-li">Arrossega funcions a les tecles, tria escales, tonalitats, tipus d’acord, patrons d’arpegiador, progressions i funcions dels potenciòmetres.</p><div class="guide-h2">Pestanya Modes</div><p class="guide-li">Crea bancs (capes) de modes i assigna un mode a cada tecla 1–12. Tria els efectes temporals de les tecles 14–15.</p><div class="guide-h2">✦ Crear els teus propis modes</div><p class="guide-li">El botó <strong>✦ Crear</strong> obre el <strong>constructor de modes</strong>. Els 64 modes del firmware es reparteixen en sis famílies segons com estan fets per dins, i cada família té les seves variables: <strong>melòdic</strong> (seqüència de graus sobre una escala), <strong>rítmic</strong> (graella de passos amb bateria), <strong>drone</strong> (acord sostingut amb gate), <strong>textura</strong> (atzar amb densitat), <strong>ona</strong> (un oscil·lador lent) i <strong>algorísmic</strong> (una regla que genera el patró).</p><p class="guide-li">A la família <strong>melòdica</strong> hi dibuixes la melodia per <em>graus de l’escala</em> en una graella, amb la <strong>dinàmica</strong> de cada pas, l’<strong>articulació</strong> (de picada a lligada), una <strong>veu secundària</strong> a l’interval que vulguis —el contrapunt de Bach, el tintinnabuli de Pärt— i el rang de tempo. També hi assignes què fa cada un dels tres potes.</p><p class="guide-li">A la família <strong>rítmica</strong> hi tens una <strong>graella de passos</strong> (8, 16 o 32; cada pas és una semicorxera, o sigui que 16 són un compàs de 4/4) amb cinc pistes de percussió i una <strong>línia de baix per graus</strong>. De cada pista en tries la <strong>nota MIDI</strong>, la força i la <strong>capa de breakdown</strong> —l’ordre en què les pistes es retiren amb el pot, el recurs de tot el techno—, i del conjunt, el rang de BPM i el <strong>swing</strong>. La percussió surt pel canal MIDI 10 (bateria General MIDI) i el baix pel canal 1, per posar-hi instruments diferents al DAW.</p><p class="guide-li">A la família <strong>drone</strong> hi munta les <strong>veus de l’acord</strong> triant-les casella a casella sobre dues octaves de semitons (o d’un clic amb les preses: quinta, major, menor, Dom7, Maj7, sus, dim, obert), amb quatre bancs que el pot cicla. I hi tries el <strong>moviment</strong>: <em>Gate</em> és una ona quadrada i el drone batega, <em>Arc</em> un triangle com un ale d’arquet i <em>Respiració</em> el mateix triangle suavitzat. El moviment pot anar a l’expressió, a la brillantor, al volum o a la modulació, amb el període i la profunditat que vulguis — al 100% el drone arriba a callar del tot a cada cicle.</p><p class="guide-li">Prem <strong>▶ Escoltar</strong> per provar-lo a l’instant (corre el mateix Python que correrà al dispositiu), <strong>Desar mode</strong> per afegir-lo a la teva llista —i al dispositiu, si el tens endollat— o <strong>Exportar .py</strong> per quedar-te el fitxer. El mode generat és un fitxer de Python normal que pots obrir i modificar: l’especificació hi queda desada a dins, així que sempre el pots tornar a obrir al constructor.</p><div class="guide-h2">Pestanya Simulador</div><p class="guide-li">Prova-ho tot <em>sense dispositiu</em>: el teclat i els modes corren al navegador i envien MIDI via WebMIDI al teu DAW.</p><p class="guide-li">Amb el dispositiu endollat, prem <strong>🔌 Sync dispositiu</strong>: les tecles i potes físics controlen el simulador (el port es detecta sol; el so local del TECLA es pausa mentre dura).</p><div class="guide-h2">La Pantalla</div><p class="guide-li">El botó <strong>Pantalla</strong> (capçalera) obre la pantalla virtual del dispositiu: mostra en gran i en directe què toques — <strong>acords amb nomenclatura professional</strong> (C, Am7, F/A…), notes, funcions amb el seu color, canvis de capa — amb una <strong>animació reactiva als potes</strong> pròpia de cada família de modes.</p><p class="guide-li">El <strong>tempo hi surt en BPM</strong> — negres per minut, el mateix número que poses al DAW o al metrònom — per poder <em>sincronitzar amb la peça que estàs tocant</em>. L’etiqueta hi afegeix la <strong>subdivisió</strong> quan cal: «Tempo · 1/16» vol dir que el que sona són semicorxeres d’aquest tempo. L’animació batega al mateix pols.</p><p class="guide-li">El <strong>pot de BPM de l’arpegiador</strong> va de <strong>40 a 240</strong> negres per minut i l’arp trepitja semicorxeres: posa el mateix número que el teu projecte i ja hi encaixa.</p><p class="guide-li">Es connecta sola al port sèrie correcte, es pot <strong>arrossegar i redimensionar</strong>, i amb <strong>⇱</strong> es desancora en una finestra flotant fora de l'app (Chrome 116+).</p><div class="guide-h2">Pestanya Firmware</div><p class="guide-li">Instal·la CircuitPython (Pas 1) i el firmware TECLA (Pas 2). Cal repetir el Pas 2 després de canviar els modes assignats.</p><div class="guide-h2">Pestanya Aparença</div><p class="guide-li">Temes de color de l’app i editor de temes personalitzats.</p><div class="guide-note">Flux de treball: edita → <strong>Guardar configuració</strong> → si has canviat modes, <em>Firmware</em> → <strong>Instal·lar / Actualitzar</strong> → reset del dispositiu.</div>
 </div>
 <div id="gca-7">
 <div class="guide-h1">8. Recomanacions</div><p class="guide-li">Guarda sempre la configuració després de fer canvis.</p><p class="guide-li">Fins a <strong>3 bancs de modes</strong> funcionen amb total comoditat (validat amb mesures de memòria reals).</p><p class="guide-li">Prova els modes nous al simulador abans d’instal·lar-los.</p><p class="guide-li">Si una nota es queda penjada o el so descontrola: <strong>tecla 16</strong> (STOP).</p><p class="guide-li">Si el dispositiu no respon: reset físic (botó del Pico) — el watchdog també el reinicia sol si es penja durant una actuació.</p><p class="guide-li">Si l’app no veu el dispositiu: comprova que el disc CIRCUITPY/TECLA està muntat i que fas servir Chrome o Edge.</p>
@@ -3279,7 +3294,7 @@
     import { TECLASimulator } from './js/tecla-simulator.js';
     import { WebMidiManager } from './js/tecla-webmidi.js';
     import { ALL_KEYS, KEYBOARD_SCALES, ARP_PATTERNS, AVAILABLE_EFFECTS, DEVICE_EFFECTS, MODE_POT_LAYERS_DEFAULT, MODE_POT_FNS, modePotFnToCC, AUDIO_FX_PRESETS, AUDIO_FX_DEFAULTS, AUDIO_CFG_POT_FNS, audioFnToCC, KB_BTN_FN_META, KB_BTN_FN_DRAGGABLE, NEG_HARMONY_TYPES, DIATONIC_FNS, VL_TYPES, ACCOMP_PATTERN_IDS, ACCOMP_PATTERN_NAMES, ACCOMP_CHANNEL, applyHarmonicFn, SCALES_JS, SCALE_NAMES_JS, KEY_CIRCLE_JS, KEY_OFFSETS_JS, NOTES_JS, ARP_NAMES_JS, CHORDS_JS, _getChordIntervals, _sysVolTimer, _setSysVol } from './js/tecla-music-data.js';
-    import { generateMode, specFromSource } from './js/tecla-modegen.js';
+    import { generateMode, specFromSource, POT_FNS as MG_POT_FNS } from './js/tecla-modegen.js';
     import { TeclaThinLink } from './js/tecla-thinlink.js';
     import { Accompaniment } from './js/tecla-accompaniment.js';
     import { TeclaSynth, PRESETS } from './js/tecla-synth.js';
@@ -5114,6 +5129,24 @@
       pots: { x: 'Tempo', y: 'Patró', z: 'Capes (breakdown)' },
     };
 
+    // Estat del formulari drone. Els quatre acords de sortida són els que fa
+    // servir ToAcord; el pot en cicla el banc en directe.
+    const _MG_DRONE_PRESETS = [
+      ['Quinta', [0, 7]], ['Major', [0, 4, 7]], ['Menor', [0, 3, 7]],
+      ['Dom7', [0, 4, 7, 10]], ['Maj7', [0, 4, 7, 11]], ['Sus2', [0, 2, 7]],
+      ['Sus4', [0, 5, 7]], ['Dim', [0, 3, 6]], ['Obert', [0, 7, 12, 19]],
+    ];
+    const _mgDrone = {
+      nom: 'El meu drone', tonalitat: 0, octava: 3, brillantor: 80,
+      acords: [[0, 7], [0, 4, 7], [0, 3, 7], [0, 4, 7, 11]],
+      acordIdx: 0,
+      moviment: 'Arc', movCC: 11, movPeriode: 2, movProfunditat: 100, movDuty: 50,
+      pots: { x: 'Moviment (velocitat)', y: "Tipus d'acord", z: 'Octava' },
+    };
+    // Nom musical de cada interval, per etiquetar les caselles de l'acord
+    const _MG_IV_NOMS = ['fon', '2m', '2M', '3m', '3M', '4a', '4#', '5a', '6m', '6M', '7m', '7M',
+      '8a', '9m', '9M', '10m', '10M', '11a', '11#', '12a', '13m', '13M', '14m', '14M', '15a'];
+
     let _mgCat = MODEGEN_CATS[0];
 
     function _mgFrame() { return document.querySelector('.modegen-frame'); }
@@ -5349,6 +5382,109 @@
       on('mg-rit-oct', 'change', e => { _mgRit.baixOctava = +e.target.value; _mgSync(); });
     }
 
+    // Veus de l'acord: dues octaves de semitons, i cada casella encesa és una
+    // veu del drone. Amb les preses de sortida s'omple d'un clic.
+    function _mgRenderVeus() {
+      const grid = document.getElementById('mg-veus');
+      if (!grid) return;
+      const ivs = _mgDrone.acords[_mgDrone.acordIdx];
+      grid.style.gridTemplateColumns = `repeat(25, 1fr)`;
+      grid.innerHTML = _MG_IV_NOMS.map((nom, iv) =>
+        `<div class="mg-veu ${ivs.includes(iv) ? 'on' : ''} ${iv % 12 === 0 ? 'oct' : ''}"
+              data-iv="${iv}" title="${iv} semitons">${nom}</div>`).join('');
+      grid.querySelectorAll('.mg-veu').forEach(c => c.addEventListener('click', () => {
+        const iv = +c.dataset.iv;
+        const i = ivs.indexOf(iv);
+        if (i >= 0) { if (ivs.length > 1) ivs.splice(i, 1); }   // sempre hi ha d'haver una veu
+        else ivs.push(iv);
+        ivs.sort((a, b) => a - b);
+        _mgRenderVeus(); _mgSync();
+      }));
+    }
+
+    function _mgFormDrone(box) {
+      const tons = (typeof KEY_CIRCLE_JS !== 'undefined' ? KEY_CIRCLE_JS : ['C']);
+      const ccs = [[11, 'Expressió (CC11)'], [74, 'Brillantor (CC74)'], [7, 'Volum (CC7)'], [1, 'Modulació (CC1)']];
+      box.innerHTML = `
+        <div class="mg-sec">
+          <p class="mg-lab">Veus de l'acord</p>
+          <div class="mg-tabs" id="mg-drone-tabs">
+            ${_mgDrone.acords.map((_, i) => `<button class="mg-tab ${i === _mgDrone.acordIdx ? 'on' : ''}" data-i="${i}">Acord ${i + 1}</button>`).join('')}
+          </div>
+          <div style="overflow-x:auto;padding-bottom:6px">
+            <div class="mg-veus" id="mg-veus"></div>
+          </div>
+          <div class="mg-row" style="margin-top:9px">
+            <span style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--text3)">preses</span>
+            ${_MG_DRONE_PRESETS.map(([n], i) => `<button class="mg-tab" data-preset="${i}">${n}</button>`).join('')}
+          </div>
+          <p class="mg-hint">Cada casella és una veu, en semitons des de la fonamental (dues octaves).
+            El pot de <strong>tipus d'acord</strong> cicla els quatre bancs en directe.</p>
+        </div>
+
+        <div class="mg-sec">
+          <p class="mg-lab">Moviment</p>
+          <div class="mg-tabs">
+            ${['Cap', 'Gate', 'Arc', 'Respiració'].map(f =>
+              `<button class="mg-tab ${f === _mgDrone.moviment ? 'on' : ''}" data-forma="${f}">${f}</button>`).join('')}
+          </div>
+          <div class="mg-row" style="margin-top:4px">
+            <label>Cap a
+              <select id="mg-drone-cc">${ccs.map(([v, n]) => `<option value="${v}" ${v === _mgDrone.movCC ? 'selected' : ''}>${n}</option>`).join('')}</select>
+            </label>
+            <label>Període <input type="number" id="mg-drone-per" min="0.05" max="12" step="0.05" value="${_mgDrone.movPeriode}" style="width:64px"> s</label>
+            ${_mgDrone.moviment === 'Gate' ? `<label>Duty <input type="number" id="mg-drone-duty" min="5" max="95" value="${_mgDrone.movDuty}" style="width:56px"> %</label>` : ''}
+          </div>
+          <div class="mg-slider" style="margin-top:10px">
+            <span>subtil</span>
+            <input type="range" id="mg-drone-prof" min="0" max="100" value="${_mgDrone.movProfunditat}">
+            <span>a fons</span>
+            <span class="val" id="mg-drone-prof-val">${_mgDrone.movProfunditat}%</span>
+          </div>
+          <p class="mg-hint"><strong>Gate</strong> és una ona quadrada (el drone batega), <strong>Arc</strong> un triangle
+            (com un ale d'arquet) i <strong>Respiració</strong> el mateix triangle suavitzat. La
+            <strong>profunditat</strong> és fins on baixa: al 100% arriba al silenci.</p>
+        </div>
+
+        <div class="mg-sec">
+          <p class="mg-lab">Tonalitat i registre</p>
+          <div class="mg-row">
+            <label>Tonalitat
+              <select id="mg-drone-ton" style="width:64px">${tons.map((t, i) => `<option value="${i}" ${i === _mgDrone.tonalitat ? 'selected' : ''}>${t}</option>`).join('')}</select>
+            </label>
+            <label>Octava
+              <select id="mg-drone-oct" style="width:56px">${[1, 2, 3, 4, 5].map(o => `<option value="${o}" ${o === _mgDrone.octava ? 'selected' : ''}>${o}</option>`).join('')}</select>
+            </label>
+            <label>Brillantor <input type="number" id="mg-drone-vel" min="1" max="127" value="${_mgDrone.brillantor}" style="width:58px"></label>
+          </div>
+          <p class="mg-hint">Un drone greu (octava 1–2) fa de pedal; a l'octava 4–5 es converteix en un pad.</p>
+        </div>`;
+
+      _mgRenderVeus();
+      const on = (id, ev, fn) => document.getElementById(id)?.addEventListener(ev, fn);
+      document.querySelectorAll('#mg-drone-tabs .mg-tab').forEach(t => t.addEventListener('click', () => {
+        _mgDrone.acordIdx = +t.dataset.i; _mgRenderForm(); _mgSync();
+      }));
+      box.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => {
+        _mgDrone.acords[_mgDrone.acordIdx] = [..._MG_DRONE_PRESETS[+b.dataset.preset][1]];
+        _mgRenderVeus(); _mgSync();
+      }));
+      box.querySelectorAll('[data-forma]').forEach(b => b.addEventListener('click', () => {
+        _mgDrone.moviment = b.dataset.forma; _mgRenderForm(); _mgSync();
+      }));
+      on('mg-drone-cc', 'change', e => { _mgDrone.movCC = +e.target.value; _mgSync(); });
+      on('mg-drone-per', 'input', e => { _mgDrone.movPeriode = +e.target.value || 2; _mgSync(); });
+      on('mg-drone-duty', 'input', e => { _mgDrone.movDuty = +e.target.value; _mgSync(); });
+      on('mg-drone-prof', 'input', e => {
+        _mgDrone.movProfunditat = +e.target.value;
+        document.getElementById('mg-drone-prof-val').textContent = _mgDrone.movProfunditat + '%';
+        _mgSync();
+      });
+      on('mg-drone-ton', 'change', e => { _mgDrone.tonalitat = +e.target.value; _mgSync(); });
+      on('mg-drone-oct', 'change', e => { _mgDrone.octava = +e.target.value; _mgSync(); });
+      on('mg-drone-vel', 'input', e => { _mgDrone.brillantor = +e.target.value; _mgSync(); });
+    }
+
     function _mgRenderForm() {
       const box = document.getElementById('modegen-form');
       const frame = _mgFrame();
@@ -5357,11 +5493,13 @@
       if (frame) frame.style.setProperty('--mg', col);
       // El camp del nom segueix la família que s'edita
       const inNom = document.getElementById('modegen-nom');
-      if (inNom) inNom.value = _mgCat.id === 'ritmic' ? _mgRit.nom : _mgMel.nom;
+      if (inNom) inNom.value = _mgCat.id === 'ritmic' ? _mgRit.nom
+                             : _mgCat.id === 'drone' ? _mgDrone.nom : _mgMel.nom;
       document.getElementById('modegen-crumb').textContent = `${_mgCat.ico}  ${_mgCat.nom}`;
       document.getElementById('modegen-crumb').style.color = col;
 
       if (_mgCat.id === 'ritmic') { _mgFormRitmic(box); return; }
+      if (_mgCat.id === 'drone') { _mgFormDrone(box); return; }
       if (_mgCat.id !== 'melodic') {
         box.innerHTML = `
           <div class="mg-sec">
@@ -5469,6 +5607,7 @@
     // El nom va a la família que s'està editant
     document.getElementById('modegen-nom')?.addEventListener('input', e => {
       if (_mgCat.id === 'ritmic') _mgRit.nom = e.target.value;
+      else if (_mgCat.id === 'drone') _mgDrone.nom = e.target.value;
       else _mgMel.nom = e.target.value;
     });
 
@@ -5476,15 +5615,20 @@
       const box = document.getElementById('modegen-pots');
       if (!box) return;
       const def = _mgCat.id === 'melodic' ? _mgMel.pots
-                : _mgCat.id === 'ritmic' ? _mgRit.pots : _mgCat.potsDef;
+                : _mgCat.id === 'ritmic' ? _mgRit.pots
+                : _mgCat.id === 'drone' ? _mgDrone.pots : _mgCat.potsDef;
+      // Les famílies implementades prenen la llista del GENERADOR (única font
+      // de veritat); les que encara són maqueta, la del catàleg.
+      const fns = MG_POT_FNS[_mgCat.id] || _mgCat.potFns;
       box.innerHTML = ['x', 'y', 'z'].map(k => `
         <div class="modegen-pot">
           <div class="nom">${k}</div>
-          <select data-k="${k}">${_mgCat.potFns.map(f => `<option ${f === def[k] ? 'selected' : ''}>${f}</option>`).join('')}</select>
+          <select data-k="${k}">${fns.map(f => `<option ${f === def[k] ? 'selected' : ''}>${f}</option>`).join('')}</select>
         </div>`).join('');
       box.querySelectorAll('select').forEach(s => s.addEventListener('change', () => {
         if (_mgCat.id === 'melodic') _mgMel.pots[s.dataset.k] = s.value;
         else if (_mgCat.id === 'ritmic') _mgRit.pots[s.dataset.k] = s.value;
+        else if (_mgCat.id === 'drone') _mgDrone.pots[s.dataset.k] = s.value;
         _mgSync();
       }));
     }
@@ -5644,6 +5788,13 @@
         amp = .2 + Math.min(1, cops / (_mgRit.passos * 1.6)) * .8;
         tag = `patró ${_mgRit.patIdx + 1} · ${cops} cops`;
         main = `${Math.round(bpm)} BPM`;
+      } else if (_mgCat.id === 'drone') {
+        const veus = _mgDrone.acords[_mgDrone.acordIdx].length;
+        // El halo respira al ritme del moviment i s'obre amb la profunditat
+        bpm = _mgDrone.moviment === 'Cap' ? 40 : 110 * (2 / Math.max(.1, _mgDrone.movPeriode));
+        amp = .15 + (_mgDrone.movProfunditat / 100) * .85;
+        tag = `${_mgDrone.moviment.toLowerCase()} · ${veus} ${veus === 1 ? 'veu' : 'veus'}`;
+        main = `${tons[_mgDrone.tonalitat]}${_mgDrone.octava}`;
       } else {
         tag = _mgCat.sub.toLowerCase();
         main = _mgCat.nom;
@@ -5696,6 +5847,17 @@
           baixOn: _mgRit.baixOn, baixOctava: _mgRit.baixOctava,
           bpmMin: _mgRit.bpmMin, bpmMax: _mgRit.bpmMax, swing: _mgRit.swing,
           pots: { ..._mgRit.pots },
+        };
+      }
+      if (_mgCat.id === 'drone') {
+        return {
+          cat: 'drone', nom: _mgDrone.nom || 'El meu drone',
+          tonalitat: _mgDrone.tonalitat, octava: _mgDrone.octava,
+          brillantor: _mgDrone.brillantor,
+          acords: _mgDrone.acords.map(a => [...a]),
+          moviment: _mgDrone.moviment, movCC: _mgDrone.movCC,
+          movPeriode: _mgDrone.movPeriode, movProfunditat: _mgDrone.movProfunditat,
+          movDuty: _mgDrone.movDuty, pots: { ..._mgDrone.pots },
         };
       }
       if (_mgCat.id !== 'melodic') return null;

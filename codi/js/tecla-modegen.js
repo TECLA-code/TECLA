@@ -510,9 +510,239 @@ ${potCodeRitmic(potZ, spec, capaMax)}
 `;
 }
 
+// ── Família DRONE ─────────────────────────────────────────────────────────
+// Els nou drones del firmware fan tots el mateix: mantenen un acord i li posen
+// MOVIMENT amb un CC. El que canvia és la forma d'aquest moviment — el gate de
+// ToDrone és una ona quadrada i l'ale d'arquet de ToArc és un triangle — i per
+// això aquí és una sola cosa amb la forma triable.
+
+/** Formes de moviment que el drone sap fer. */
+export const DRONE_FORMES = ['Cap', 'Gate', 'Arc', 'Respiració'];
+
+/** Els potes que la família drone sap fer servir. */
+export const DRONE_POT_FNS = ['Moviment (velocitat)', 'Tipus d\'acord', 'Octava',
+  'Brillantor', 'Profunditat', 'Modulació (CC1)', 'Tonalitat', '—'];
+
+function potCodeDrone(fn, spec, nAcords, indent = '        ') {
+  const i = indent;
+  switch (fn) {
+    case 'Moviment (velocitat)': {
+      const lo = clamp(spec.movPeriode ?? 2, .05, 12);
+      return `${i}# Període del moviment: de lent (${py.f(lo * 4)}s) a ràpid (0.06s)\n`
+           + `${i}self.mov_per = ${py.f(lo * 4)} - (v / 127.0) * ${py.f(lo * 4 - .06)}`;
+    }
+    case "Tipus d'acord":
+      return `${i}a = min(${nAcords - 1}, int((v / 128.0) * ${nAcords}))\n`
+           + `${i}if a != self.acord:\n${i}    self.acord = a\n${i}    self._arrenca()`;
+    case 'Octava':
+      return `${i}o = _OCT - 1 + int((v / 127.0) * 2.99)\n`
+           + `${i}if o != self.octave:\n${i}    self.octave = o\n${i}    self._arrenca()`;
+    case 'Brillantor':
+      return `${i}b = 30 + int((v / 127.0) * 97)\n`
+           + `${i}if b < self.vel - 4 or b > self.vel + 4:\n`
+           + `${i}    self.vel = b\n${i}    self._arrenca()`;
+    case 'Profunditat':
+      return `${i}self.baix = int(127 - (v / 127.0) * 127)`;
+    case 'Modulació (CC1)':
+      return `${i}self._cc_once(1, v)`;
+    case 'Tonalitat':
+      return `${i}k = int((v / 127.0) * 11.99)\n`
+           + `${i}if k != self.key:\n${i}    self.key = k\n${i}    self._arrenca()`;
+    default:
+      return `${i}pass`;
+  }
+}
+
+function generateDrone(spec) {
+  const cls = className(spec.nom);
+  const nom = modeName(spec.nom);
+  const key = clamp(spec.tonalitat | 0, 0, 11);
+  const oct = clamp(spec.octava | 0, 0, 7);
+  const vel = clamp(spec.brillantor ?? 80, 1, 127);
+  const forma = DRONE_FORMES.includes(spec.moviment) ? spec.moviment : 'Cap';
+  const cc = clamp(spec.movCC ?? 11, 0, 127);
+  const per = clamp(spec.movPeriode ?? 2, .05, 12);
+  const prof = clamp(spec.movProfunditat ?? 100, 0, 100);
+  const duty = clamp(spec.movDuty ?? 50, 5, 95) / 100;
+  const potX = spec.pots?.x || 'Moviment (velocitat)';
+  const potY = spec.pots?.y || "Tipus d'acord";
+  const potZ = spec.pots?.z || 'Octava';
+
+  // Acords: cada banc és una llista d'intervals en semitons des de la
+  // fonamental. Sense cap veu, un drone no és res: cau a la fonamental.
+  let acords = (spec.acords && spec.acords.length ? spec.acords : [[0, 7]])
+    .map(a => {
+      const ivs = [...new Set((a || []).map(x => clamp(x | 0, 0, 36)))].sort((p, q) => p - q);
+      return ivs.length ? ivs : [0];
+    });
+  const spec4json = JSON.stringify({ ...spec, cat: 'drone' });
+
+  // El valor del CC segons la forma. Es fa sense math: el triangle surt de la
+  // fase i la respiració n'és el suavitzat (smoothstep), que en una Pico
+  // costa molt menys que un cosinus.
+  const formaCode = {
+    'Cap': '        return -1',
+    'Gate': `        return _ALT if self.fase < ${py.f(duty)} else self.baix`,
+    'Arc': `        t = 1.0 - abs(2.0 * self.fase - 1.0)
+        return self.baix + int((_ALT - self.baix) * t)`,
+    'Respiració': `        t = 1.0 - abs(2.0 * self.fase - 1.0)
+        t = t * t * (3.0 - 2.0 * t)
+        return self.baix + int((_ALT - self.baix) * t)`,
+  }[forma];
+
+  return `"""${nom} — drone fet amb el constructor de TECLA.
+X: ${potX}  Y: ${potY}  Z: ${potZ}
+Moviment: ${forma}${forma === 'Cap' ? '' : ` sobre CC${cc}`}
+Doble clic a qualsevol tecla: canvi de tonalitat.
+Mantenir premut el botó 16: harmonia negativa.
+"""
+# TECLA-SPEC ${spec4json}
+import time
+from modes.base_mode import BaseMode
+from adafruit_midi.control_change import ControlChange
+
+_ACORDS = ${py.tuples(acords)}
+_KEYS = ('C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B')
+_OCT = ${oct}
+_MOV_CC = ${cc}
+_ALT = 127          # cim del moviment
+_MIN_NOTA = 12
+_MAX_NOTA = 108
+
+
+class ${cls}(BaseMode):
+    def __init__(self, midi_out, config=None):
+        super().__init__(midi_out, config)
+        self.name = "${nom}"
+        self.key = ${key}
+        self.octave = _OCT
+        self.acord = 0
+        self.vel = ${vel}
+        # Moviment: el període NO es diu 'speed' a propòsit — un drone no té
+        # pols de notes i la pantalla no li ha de treure cap BPM.
+        self.mov_per = ${py.f(per)}
+        self.baix = ${127 - Math.round(127 * prof / 100)}
+        self.fase = 0.0
+        self.ultim_cc = -1
+        self.sonant = []
+        self.t = 0.0
+        self.last_rel = [0.0] * 16
+        self.last_btn = [False] * 16
+        self._cc_cache = {}
+
+    def setup(self):
+        self.initialized = True
+        self.t = time.monotonic()
+        self.fase = 0.0
+        self.ultim_cc = -1
+        self.last_rel = [0.0] * 16
+        self.last_btn = [False] * 16
+        self._cc_cache = {}
+        self._arrenca()
+
+    def _cc_once(self, cc, v):
+        v = 0 if v < 0 else (127 if v > 127 else int(v))
+        if self._cc_cache.get(cc) == v:
+            return
+        self._cc_cache[cc] = v
+        try:
+            self.midi_out.send(ControlChange(cc, v))
+        except Exception:
+            pass
+
+    def _calla(self):
+        for n in self.sonant:
+            self.send_note_off(n, 0)
+        self.sonant = []
+
+    def _arrenca(self):
+        """Torna a muntar l'acord sostingut (en canviar octava, acord o to)."""
+        self._calla()
+        arrel = self.octave * 12 + self.key
+        for iv in _ACORDS[self.acord]:
+            n = arrel + iv
+            n = self.negharm(n, arrel % 12)
+            if _MIN_NOTA <= n <= _MAX_NOTA:
+                self.send_note_on(n, self.vel)
+                self.sonant.append(n)
+        print("${nom}: %s%d (%d veus)" % (_KEYS[self.key], self.octave, len(self.sonant)))
+
+    def _valor_mov(self):
+${formaCode}
+
+    def update(self, pot_values, button_states):
+        # Potes FÍSICS: X=pot_values[1], Y=pot_values[0], Z=pot_values[2]
+        py_, px, pz = pot_values
+        now = time.monotonic()
+        dt = now - self.t
+        self.t = now
+        neg_abans = self.neg_active
+        self.poll_negharm(button_states, pz)
+        if self.neg_active != neg_abans:
+            self._arrenca()          # el reflex canvia les alçades de l'acord
+
+        # ── Els tres potes, tal com s'han assignat ──
+        v = px
+${potCodeDrone(potX, spec, acords.length)}
+        v = py_
+${potCodeDrone(potY, spec, acords.length)}
+        if not self.neg_active:      # Z congelada mentre tria l'eix d'harmonia
+            v = pz
+${potCodeDrone(potZ, spec, acords.length, '            ')}
+
+        # ── Moviment sobre el CC ──
+        if self.mov_per > 0.01:
+            self.fase = (self.fase + dt / self.mov_per) % 1.0
+        val = self._valor_mov()
+        if val >= 0 and (val < self.ultim_cc - 1 or val > self.ultim_cc + 1):
+            self.ultim_cc = val
+            try:
+                self.midi_out.send(ControlChange(_MOV_CC, val))
+            except Exception:
+                pass
+
+        # Doble clic a qualsevol tecla: tonalitat següent
+        for i in range(min(len(button_states), 16)):
+            if i == 15:
+                continue
+            cur = bool(button_states[i])
+            if self.last_btn[i] and not cur:
+                if 0.05 < (now - self.last_rel[i]) < 0.4:
+                    self.last_rel[i] = 0.0
+                    self.key = (self.key + 1) % 12
+                    self._arrenca()
+                else:
+                    self.last_rel[i] = now
+            self.last_btn[i] = cur
+
+        return {'key': _KEYS[self.key], 'oct': self.octave,
+                'acord': self.acord + 1, 'veus': len(self.sonant)}
+
+    def cleanup(self):
+        self._calla()
+        self.stop_tracked_notes()
+        for c, val in ${(() => {
+          // Els CC que es restauren en marxar, sense repeticions: l'expressió i
+          // el volum tornen a ple i la resta a zero.
+          const vist = new Set();
+          const parells = [];
+          for (const c of [cc, 1, 11, 64, 123, 120]) {
+            if (vist.has(c)) continue;
+            vist.add(c);
+            parells.push(`(${c}, ${c === 11 || c === 7 ? 127 : 0})`);
+          }
+          return `(${parells.join(', ')})`;
+        })()}:
+            try:
+                self.midi_out.send(ControlChange(c, val))
+            except Exception:
+                pass
+`;
+}
+
 // ── Punt d'entrada ────────────────────────────────────────────────────────
 
-const GENERADORS = { melodic: generateMelodic, ritmic: generateRhythmic };
+const GENERADORS = { melodic: generateMelodic, ritmic: generateRhythmic, drone: generateDrone };
 
 /**
  * Genera un mode a partir de l'especificació.
@@ -540,3 +770,14 @@ export function specFromSource(source) {
 export function famíliesImplementades() {
   return Object.keys(GENERADORS);
 }
+
+/**
+ * Funcions de pot de cada família. ÚNICA font de veritat: el formulari les
+ * llegeix d'aquí, perquè un nom que el generador no sàpiga fer no pugui
+ * arribar a aparèixer al desplegable.
+ */
+export const POT_FNS = {
+  melodic: MELODIC_POT_FNS,
+  ritmic: RITMIC_POT_FNS,
+  drone: DRONE_POT_FNS,
+};
