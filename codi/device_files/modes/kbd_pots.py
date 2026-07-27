@@ -75,6 +75,31 @@ def _report(kbd, nom, valor):
         pass
 
 
+def _report_bpm(kbd, bpm):
+    """Testimoni de TEMPO per a la PANTALLA: "♩ 214 BPM". El pols de
+    l'arpegiador es diu en BPM (passos per minut) i no en valor cru de pot:
+    així es pot sincronitzar amb la peça que s'està tocant. Mateixes regles
+    que _report (primera lectura en silenci, llindar, i mai llança)."""
+    try:
+        from modes.kbd_notes import _console_on
+        if not _console_on():
+            return
+        c = getattr(kbd, '_pot_report_cache', None)
+        if c is None:
+            c = {}
+            kbd._pot_report_cache = c
+        v = int(bpm)
+        if '_bpm' not in c:
+            c['_bpm'] = v
+            return
+        if -2 < (v - c['_bpm']) < 2:
+            return
+        c['_bpm'] = v
+        print("♩ %d BPM" % v)
+    except Exception:
+        pass
+
+
 def _apply_audio_cfg_pots(kbd, pot_values, force_update):
     """Config àudio activa: els 3 potes editen el so segons el mapatge de la tecla
     activa. Mateix mapeig físic que la resta (X=pot[1], Y=pot[0], Z=pot[2])."""
@@ -129,6 +154,7 @@ def apply_pot_function(kbd, pot_name, pot_value, force_update=False):
         if kbd.arp_mode_active:
             speed_value = max(0, min(127, pot_value))
             kbd.arp_speed = 0.5 - (speed_value / 127.0) * 0.49
+            _report_bpm(kbd, 60.0 / kbd.arp_speed)
 
     elif function in ('Modulació', 'Modulation', 'Modulation (CC1)'):
         kbd._send_cc_if_changed(1, pot_value, threshold=threshold)
@@ -225,7 +251,7 @@ def apply_arp_pot_function(kbd, pot_name, pot_value, force_update=False):
     if function in ('Velocitat (BPM)', 'Arp Speed (BPM)'):
         bpm = 30 + (pot_value / 127.0) * 1970
         kbd.arp_speed = 60.0 / bpm
-        _report(kbd, 'Velocitat', int(bpm))
+        _report_bpm(kbd, bpm)
 
     elif function in ('Patró De Direcció', 'Arp Pattern Selector'):
         if len(kbd.available_arp_modes) > 0:

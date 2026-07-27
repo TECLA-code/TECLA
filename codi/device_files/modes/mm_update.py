@@ -90,7 +90,9 @@ def _modeloop(mgr):
 
 def _report_mode_pots(mgr, pot_values):
     """Testimoni de potes per a la PANTALLA (animacions dels modes): "Pot X: 64".
-    Primera lectura en silenci (sync), llindar 3, i mai no llança."""
+    Primera lectura en silenci (sync), llindar 3, i mai no llança.
+    Els noms són els FÍSICS del dispositiu (X=pots[1], Y=pots[0], Z=pots[2]),
+    els mateixos que fa servir la capa de teclat: girar el pot X ha de dir "X"."""
     try:
         from modes.kbd_notes import _console_on
         if not _console_on():
@@ -99,7 +101,7 @@ def _report_mode_pots(mgr, pot_values):
         if c is None:
             c = {}
             mgr._pot_report_cache = c
-        for i, nom in ((0, 'X'), (1, 'Y'), (2, 'Z')):
+        for i, nom in ((1, 'X'), (0, 'Y'), (2, 'Z')):
             if i >= len(pot_values):
                 break
             v = int(pot_values[i])
@@ -110,6 +112,49 @@ def _report_mode_pots(mgr, pot_values):
                 continue
             c[nom] = v
             print("Pot %s: %d" % (nom, v))
+    except Exception:
+        pass
+
+
+def mode_bpm(mode):
+    """Pols del mode en BPM, o None si el mode no en té.
+    Tres famílies, totes tres exactes: els modes de patró (techno, acid,
+    euclid…) porten 'bpm' que JA és el tempo musical de negra; els melòdics
+    porten 'speed' i els de directe 'interval', tots dos en segons per
+    esdeveniment → 60/s dona els esdeveniments per minut. Es llegeix el
+    paràmetre que el mode acaba de calcular, no el valor cru del pot: el
+    número que es veu és el que sona."""
+    v = getattr(mode, 'bpm', None)
+    if v:
+        return int(v + 0.5)
+    for a in ('speed', 'interval'):
+        v = getattr(mode, a, None)
+        if v and v > 0:
+            return int(60.0 / v + 0.5)
+    return None
+
+
+def _report_mode_bpm(mgr):
+    """Testimoni de TEMPO del mode per a la PANTALLA: "♩ 96 BPM". Es dispara
+    amb el canvi de tempo (no amb el moviment del pot), així el número queda
+    exacte quan es deixa el pot quiet. Primer valor de cada mode en silenci:
+    no ha de tapar el nom del mode que s'acaba d'activar."""
+    try:
+        from modes.kbd_notes import _console_on
+        if not _console_on():
+            return
+        bpm = mode_bpm(mgr.current_mode)
+        if bpm is None:
+            return
+        last = getattr(mgr, '_bpm_report_last', None)
+        if last is None or getattr(mgr, '_bpm_report_mode', None) != mgr.current_mode_name:
+            mgr._bpm_report_mode = mgr.current_mode_name
+            mgr._bpm_report_last = bpm
+            return
+        if -2 < (bpm - last) < 2:
+            return
+        mgr._bpm_report_last = bpm
+        print("♩ %d BPM" % bpm)
     except Exception:
         pass
 
@@ -272,6 +317,7 @@ def mm_update(mgr, pot_values, button_states):
                     mgr._frozen_pots = None
                     pots_for_mode = pot_values
                 mode_status = mgr.current_mode.update(pots_for_mode, filtered)
+                _report_mode_bpm(mgr)   # el tempo ja és el d'aquest gir de pot
                 if isinstance(mode_status, dict):
                     status.update(mode_status)
                     if mode_status.get('change_mode'):

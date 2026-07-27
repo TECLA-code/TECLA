@@ -2978,7 +2978,7 @@
 <div class="guide-h1">6. La capa Modes</div><p class="guide-li">S’hi arriba ciclant amb la <strong>tecla 13</strong>. Les tecles <strong>1–12</strong> activen els modes generatius assignats a la capa actual.</p><p class="guide-li"><strong>Tecla 13</strong>: toc curt → capa següent · mantinguda ≈1 s → capa anterior.</p><p class="guide-li"><strong>Tecles 14 i 15</strong>: efectes temporals (mantenir premuda: sustain, pausa, gate…) · doble clic → canviar l’efecte assignat.</p><p class="guide-li"><strong>Tecla 16</strong>: STOP total + neteja de memòria.</p><p class="guide-li">Els modes es trien i s’assignen a la pestanya <em>Modes</em>; els potenciòmetres modulen paràmetres propis de cada mode.</p>
 </div>
 <div id="gca-6">
-<div class="guide-h1">7. Configurar des de l’app</div><div class="guide-h2">Pestanya Teclat</div><p class="guide-li">Arrossega funcions a les tecles, tria escales, tonalitats, tipus d’acord, patrons d’arpegiador, progressions i funcions dels potenciòmetres.</p><div class="guide-h2">Pestanya Modes</div><p class="guide-li">Crea bancs (capes) de modes i assigna un mode a cada tecla 1–12. Tria els efectes temporals de les tecles 14–15.</p><div class="guide-h2">Pestanya Simulador</div><p class="guide-li">Prova-ho tot <em>sense dispositiu</em>: el teclat i els modes corren al navegador i envien MIDI via WebMIDI al teu DAW.</p><p class="guide-li">Amb el dispositiu endollat, prem <strong>🔌 Sync dispositiu</strong>: les tecles i potes físics controlen el simulador (el port es detecta sol; el so local del TECLA es pausa mentre dura).</p><div class="guide-h2">La Pantalla</div><p class="guide-li">El botó <strong>Pantalla</strong> (capçalera) obre la pantalla virtual del dispositiu: mostra en gran i en directe què toques — <strong>acords amb nomenclatura professional</strong> (C, Am7, F/A…), notes, funcions amb el seu color, canvis de capa — amb una <strong>animació reactiva als potes</strong> pròpia de cada família de modes.</p><p class="guide-li">Es connecta sola al port sèrie correcte, es pot <strong>arrossegar i redimensionar</strong>, i amb <strong>⇱</strong> es desancora en una finestra flotant fora de l'app (Chrome 116+).</p><div class="guide-h2">Pestanya Firmware</div><p class="guide-li">Instal·la CircuitPython (Pas 1) i el firmware TECLA (Pas 2). Cal repetir el Pas 2 després de canviar els modes assignats.</p><div class="guide-h2">Pestanya Aparença</div><p class="guide-li">Temes de color de l’app i editor de temes personalitzats.</p><div class="guide-note">Flux de treball: edita → <strong>Guardar configuració</strong> → si has canviat modes, <em>Firmware</em> → <strong>Instal·lar / Actualitzar</strong> → reset del dispositiu.</div>
+<div class="guide-h1">7. Configurar des de l’app</div><div class="guide-h2">Pestanya Teclat</div><p class="guide-li">Arrossega funcions a les tecles, tria escales, tonalitats, tipus d’acord, patrons d’arpegiador, progressions i funcions dels potenciòmetres.</p><div class="guide-h2">Pestanya Modes</div><p class="guide-li">Crea bancs (capes) de modes i assigna un mode a cada tecla 1–12. Tria els efectes temporals de les tecles 14–15.</p><div class="guide-h2">Pestanya Simulador</div><p class="guide-li">Prova-ho tot <em>sense dispositiu</em>: el teclat i els modes corren al navegador i envien MIDI via WebMIDI al teu DAW.</p><p class="guide-li">Amb el dispositiu endollat, prem <strong>🔌 Sync dispositiu</strong>: les tecles i potes físics controlen el simulador (el port es detecta sol; el so local del TECLA es pausa mentre dura).</p><div class="guide-h2">La Pantalla</div><p class="guide-li">El botó <strong>Pantalla</strong> (capçalera) obre la pantalla virtual del dispositiu: mostra en gran i en directe què toques — <strong>acords amb nomenclatura professional</strong> (C, Am7, F/A…), notes, funcions amb el seu color, canvis de capa — amb una <strong>animació reactiva als potes</strong> pròpia de cada família de modes.</p><p class="guide-li">El <strong>tempo hi surt en BPM</strong>, tant el de l’arpegiador com el dels modes amb pols propi, per poder-lo <em>sincronitzar amb la peça que estàs tocant</em>. Als modes de patró (techno, acid, euclid…) és el tempo musical de negra; als melòdics i de directe, les notes per minut (divideix-lo per la subdivisió que toquis: 480 en semicorxeres = 120 de negra). L’animació batega al mateix pols.</p><p class="guide-li">Es connecta sola al port sèrie correcte, es pot <strong>arrossegar i redimensionar</strong>, i amb <strong>⇱</strong> es desancora en una finestra flotant fora de l'app (Chrome 116+).</p><div class="guide-h2">Pestanya Firmware</div><p class="guide-li">Instal·la CircuitPython (Pas 1) i el firmware TECLA (Pas 2). Cal repetir el Pas 2 després de canviar els modes assignats.</p><div class="guide-h2">Pestanya Aparença</div><p class="guide-li">Temes de color de l’app i editor de temes personalitzats.</p><div class="guide-note">Flux de treball: edita → <strong>Guardar configuració</strong> → si has canviat modes, <em>Firmware</em> → <strong>Instal·lar / Actualitzar</strong> → reset del dispositiu.</div>
 </div>
 <div id="gca-7">
 <div class="guide-h1">8. Recomanacions</div><p class="guide-li">Guarda sempre la configuració després de fer canvis.</p><p class="guide-li">Fins a <strong>3 bancs de modes</strong> funcionen amb total comoditat (validat amb mesures de memòria reals).</p><p class="guide-li">Prova els modes nous al simulador abans d’instal·lar-los.</p><p class="guide-li">Si una nota es queda penjada o el so descontrola: <strong>tecla 16</strong> (STOP).</p><p class="guide-li">Si el dispositiu no respon: reset físic (botó del Pico) — el watchdog també el reinicia sol si es penja durant una actuació.</p><p class="guide-li">Si l’app no veu el dispositiu: comprova que el disc CIRCUITPY/TECLA està muntat i que fas servir Chrome o Edge.</p>
@@ -4231,12 +4231,20 @@
       if ((m = line.match(/^Capa actual: (.+)/))) return { tag: 'Capa', main: m[1], cls: 'capa' };
       if ((m = line.match(/^Sustain: (.+)/))) return { tag: 'Sustain', main: m[1], cls: 'fn' };
       if ((m = line.match(/^🎚 Pots→(?:mode: )?(.+)/))) return { tag: 'Config Modes', main: m[1], cls: 'fn' };
-      if ((m = line.match(/^Pot (.+?): (-?\d+)/))) return { tag: m[1], main: m[2], cls: 'fn', pot: true };
+      if ((m = line.match(/^Pot (.+?): (-?\d+)/))) {
+        // Compatibilitat amb firmware anterior a v3.3.5, que deia el tempo de
+        // l'arpegiador com un pot qualsevol: aquí també es llegeix en BPM.
+        if (/^Velocitat/.test(m[1])) return { tag: 'Tempo', main: m[2] + ' BPM', cls: 'fn', bpm: +m[2] };
+        return { tag: m[1], main: m[2], cls: 'fn', pot: true };
+      }
       if ((m = line.match(/^🎚 (.+?): (.+)/))) return { tag: m[1], main: m[2], cls: 'fn' };
       if ((m = line.match(/^Base: (.+)/))) return { tag: 'Acompanyament', main: m[1], cls: 'fn' };
       if (/^Base OFF/.test(line)) return { tag: 'Acompanyament', main: 'OFF', cls: 'fn' };
       if ((m = line.match(/^Mode: (.+)/))) return { tag: 'Mode', main: m[1], cls: 'fn' };
       if ((m = line.match(/^Octava(?: modes)?:\s*(-?\d+)/))) return { tag: 'Octava', main: m[1], cls: 'fn' };
+      // Tempo en BPM (arpegiador i modes amb pols propi): el número que sona,
+      // per poder sincronitzar amb la peça que s'està tocant.
+      if ((m = line.match(/^♩\s*(\d+)\s*BPM/))) return { tag: 'Tempo', main: m[1] + ' BPM', cls: 'fn', bpm: +m[1] };
       // Efectes temporals de la capa MODES (el configurador altera els potes):
       // ha de veure's per pantalla per tenir referència del que passa.
       if ((m = line.match(/^\[EFECTE\]\s*Bot[óo]\s*\d+:\s*.+?->\s*(.+)/))) return { tag: 'Efecte', main: _monFix(m[1]), cls: 'fn' };
@@ -4302,8 +4310,9 @@
       'Looper': KB_BTN_FN_META.looper?.color, 'Overdub': KB_BTN_FN_META.looper_dub?.color,
       'Loop': KB_BTN_FN_META.looper?.color, 'Acompanyament': KB_BTN_FN_META.accomp?.color,
       'Sustain': '#38bdf8', 'Modulació': '#e09020', 'Brillantor': '#fbbf24',
-      'Volum': '#2eb87e', 'Gate': '#e74c3c', 'Pitch Bend': '#9b59b6', 'Velocitat': '#e74c3c',
+      'Volum': '#2eb87e', 'Gate': '#e74c3c', 'Pitch Bend': '#9b59b6',
       'Config Modes': '#8e6cff', 'Mode': '#8e6cff', 'Efecte': '#8e6cff',
+      'Tempo': KB_BTN_FN_META.arp?.color || '#e74c3c',
       'Octava': KB_BTN_FN_META.octave_up?.color || '#2eb87e',
     };
     // To de color per classe d'altura (C=0 → vermellós, cercle cromàtic complet)
@@ -4417,7 +4426,6 @@
         'Brillantor': v => st.bright = v / 127,
         'Volum': v => st.vol = .25 + (v / 127) * .75,
         'Expressió': v => st.vol = .25 + (v / 127) * .75,
-        'Velocitat': v => st.speed = .4 + Math.min(1, v / 400) * 2.4,
         'Pitch Bend': v => st.amp = .12 + (v / 127) * .8,
         'Gate': v => st.speed = .4 + (v / 127) * 2,
         'X': v => st.amp = .12 + (v / 127) * .8,
@@ -4447,6 +4455,9 @@
           if (/modes/.test(ev.tag)) st.engine = 'field';
           st.color = null;
         }
+        // Tempo real del dispositiu: l'animació batega al mateix pols que sona
+        // (120 BPM = velocitat 1). Molt més fidel que el valor cru del pot.
+        if (ev.bpm) st.speed = Math.max(.3, Math.min(3.2, ev.bpm / 120));
         if (ev.pot) {
           const v = parseInt(ev.main, 10) || 0;
           (POT_MAP[ev.tag] || (() => st.energy = Math.min(1.6, st.energy + .25)))(v);
@@ -5299,30 +5310,6 @@
     // s'han retirat dels menús: la configuració d'àudio està abandonada).
     const KB_POT_FNS    = ['Brillantor','Modulació','Sustain','Pitch Bend','Volum','Gate','Octava'];
     const ARP_POT_FNS   = ['Velocitat (BPM)','Patró De Direcció','Brillantor','Volum','Modulació','Pitch Bend','Gate','Octava'];
-
-    // Rang de control de cada funció de pot (Pot → Funció → Rang, llegible per
-    // l'usuari sota cada knob del diagrama).
-    const _POT_FN_RANGES = {
-      'Brillantor': 'velocity 20–127',
-      'Modulació': 'CC1 · 0–127',
-      'Sustain': 'trams: OFF·0.5·1.2·2.5·5·8s·∞',
-      'Pitch Bend': '0 → +8191',
-      'Volum': 'CC7 · 0–127',
-      'Gate': 'OFF / període 0.05–0.5s',
-      'Octava': '0–8',
-      'Velocitat (BPM)': '30–2000 passos/min',
-      'Patró De Direcció': 'cicla els patrons actius',
-      "Tipologia d'Acords": 'cicla els tipus actius',
-      "Eix d'Harmonia": 'cicla els eixos actius',
-      "Forma d'ona": 'CC70 · 4 formes',
-      'Filtre tipus': 'CC86 · LP/HP/BP',
-    };
-    function _potRangeFor(fn) {
-      if (!fn || fn === '—') return '';
-      if (_POT_FN_RANGES[fn] !== undefined) return _POT_FN_RANGES[fn];
-      const cc = audioFnToCC(fn);
-      return cc != null ? `CC${cc} · 0–127` : '0–127';
-    }
 
     // Reconstrueix la barra de modes del diagrama: 4 estàtics + una pestanya "Àudio"
     // per cada tecla amb 'synth_cfg' (cada una és un preset configurable a part).
