@@ -75,11 +75,11 @@ def _report(kbd, nom, valor):
         pass
 
 
-def _report_bpm(kbd, bpm):
-    """Testimoni de TEMPO per a la PANTALLA: "♩ 214 BPM". El pols de
-    l'arpegiador es diu en BPM (passos per minut) i no en valor cru de pot:
-    així es pot sincronitzar amb la peça que s'està tocant. Mateixes regles
-    que _report (primera lectura en silenci, llindar, i mai llança)."""
+def _report_bpm(kbd, bpm, sub=1):
+    """Testimoni de TEMPO per a la PANTALLA: "♩ 120 BPM 1/16". El tempo es diu
+    en NEGRES per minut, com un metrònom o un DAW, i la fracció diu què s'hi
+    trepitja (sub=4 → semicorxeres). Mateixes regles que _report (primera
+    lectura en silenci, llindar, i mai llança)."""
     try:
         from modes.kbd_notes import _console_on
         if not _console_on():
@@ -88,14 +88,17 @@ def _report_bpm(kbd, bpm):
         if c is None:
             c = {}
             kbd._pot_report_cache = c
-        v = int(bpm)
+        v = int(bpm + 0.5)
         if '_bpm' not in c:
             c['_bpm'] = v
             return
         if -2 < (v - c['_bpm']) < 2:
             return
         c['_bpm'] = v
-        print("♩ %d BPM" % v)
+        if sub > 1:
+            print("♩ %d BPM 1/%d" % (v, sub * 4))
+        else:
+            print("♩ %d BPM" % v)
     except Exception:
         pass
 
@@ -152,9 +155,11 @@ def apply_pot_function(kbd, pot_name, pot_value, force_update=False):
         kbd.velocity = max(20, min(127, pot_value))
         _report(kbd, 'Brillantor', kbd.velocity)
         if kbd.arp_mode_active:
-            speed_value = max(0, min(127, pot_value))
-            kbd.arp_speed = 0.5 - (speed_value / 127.0) * 0.49
-            _report_bpm(kbd, 60.0 / kbd.arp_speed)
+            # Mateix tempo musical que el pot de BPM de la capa d'arpegiador
+            # (abans: 0.5–0.01 s per pas, fins a 100 notes per segon).
+            bpm = 40 + (max(0, min(127, pot_value)) / 127.0) * 200
+            kbd.arp_speed = 15.0 / bpm
+            _report_bpm(kbd, bpm, 4)
 
     elif function in ('Modulació', 'Modulation', 'Modulation (CC1)'):
         kbd._send_cc_if_changed(1, pot_value, threshold=threshold)
@@ -249,9 +254,14 @@ def apply_arp_pot_function(kbd, pot_name, pot_value, force_update=False):
     threshold = 0 if force_update else 2
 
     if function in ('Velocitat (BPM)', 'Arp Speed (BPM)'):
-        bpm = 30 + (pot_value / 127.0) * 1970
-        kbd.arp_speed = 60.0 / bpm
-        _report_bpm(kbd, bpm)
+        # Tempo MUSICAL de negra (40–240, el rang d'un metrònom o d'un DAW) i
+        # l'arpegiador trepitja SEMICORXERES d'aquest tempo. Abans el pot donava
+        # 30–2000 passos/min: 33 notes per segon a dalt (un brunzit, no un tempo)
+        # i mig segon per nota a baix, o sigui que la meitat del recorregut era
+        # inservible. Ara el número que es veu és el que es posa al DAW.
+        bpm = 40 + (pot_value / 127.0) * 200
+        kbd.arp_speed = 15.0 / bpm            # 60/bpm/4 = una semicorxera
+        _report_bpm(kbd, bpm, 4)
 
     elif function in ('Patró De Direcció', 'Arp Pattern Selector'):
         if len(kbd.available_arp_modes) > 0:

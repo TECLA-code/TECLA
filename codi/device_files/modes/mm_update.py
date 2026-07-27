@@ -116,21 +116,31 @@ def _report_mode_pots(mgr, pot_values):
         pass
 
 
-def mode_bpm(mode):
-    """Pols del mode en BPM, o None si el mode no en té.
-    Tres famílies, totes tres exactes: els modes de patró (techno, acid,
-    euclid…) porten 'bpm' que JA és el tempo musical de negra; els melòdics
-    porten 'speed' i els de directe 'interval', tots dos en segons per
-    esdeveniment → 60/s dona els esdeveniments per minut. Es llegeix el
-    paràmetre que el mode acaba de calcular, no el valor cru del pot: el
-    número que es veu és el que sona."""
+def mode_tempo(mode):
+    """Pols del mode com (BPM de negra, subdivisió), o None si no en té.
+    Es llegeix el paràmetre que el mode acaba de calcular, no el valor cru del
+    pot: el número que es veu és el que sona.
+
+    Tres famílies. Els modes de PATRÓ (techno, acid, euclid…) porten 'bpm', que
+    ja és el tempo musical de negra (60–180): es diu tal com és. Els MELÒDICS
+    porten 'speed' i els de DIRECTE 'interval', tots dos en segons per nota, o
+    sigui una cadència de notes (fins a 1500/min als més ràpids). Dir "1500
+    BPM" no és cap tempo: la cadència es plega a l'octava de tempo útil
+    dividint per 2 fins a caure sota 240, i la subdivisió resultant diu què
+    s'hi toca. La conversió és exacta, no una estimació: 856 notes/min són
+    exactament semicorxeres a 214."""
     v = getattr(mode, 'bpm', None)
     if v:
-        return int(v + 0.5)
+        return (int(v + 0.5), 1)
     for a in ('speed', 'interval'):
         v = getattr(mode, a, None)
         if v and v > 0:
-            return int(60.0 / v + 0.5)
+            rate = 60.0 / v          # notes per minut
+            sub = 1
+            while rate > 240 and sub < 8:
+                rate *= 0.5
+                sub *= 2
+            return (int(rate + 0.5), sub)
     return None
 
 
@@ -143,18 +153,22 @@ def _report_mode_bpm(mgr):
         from modes.kbd_notes import _console_on
         if not _console_on():
             return
-        bpm = mode_bpm(mgr.current_mode)
-        if bpm is None:
+        t = mode_tempo(mgr.current_mode)
+        if t is None:
             return
+        bpm, sub = t
         last = getattr(mgr, '_bpm_report_last', None)
         if last is None or getattr(mgr, '_bpm_report_mode', None) != mgr.current_mode_name:
             mgr._bpm_report_mode = mgr.current_mode_name
-            mgr._bpm_report_last = bpm
+            mgr._bpm_report_last = (bpm, sub)
             return
-        if -2 < (bpm - last) < 2:
+        if sub == last[1] and -2 < (bpm - last[0]) < 2:
             return
-        mgr._bpm_report_last = bpm
-        print("♩ %d BPM" % bpm)
+        mgr._bpm_report_last = (bpm, sub)
+        if sub > 1:
+            print("♩ %d BPM 1/%d" % (bpm, sub * 4))
+        else:
+            print("♩ %d BPM" % bpm)
     except Exception:
         pass
 
