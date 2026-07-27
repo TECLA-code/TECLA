@@ -64,6 +64,74 @@ CASOS = {
 }
 
 
+# ── Especificacions rítmiques ─────────────────────────────────────────────
+
+_PISTES = [
+    {'id': 'bombo', 'nom': 'Bombo', 'nota': 36, 'capa': 0, 'vel': 105},
+    {'id': 'caixa', 'nom': 'Caixa', 'nota': 38, 'capa': 1, 'vel': 92},
+    {'id': 'charles', 'nom': 'Charles', 'nota': 42, 'capa': 2, 'vel': 70},
+    {'id': 'obert', 'nom': 'Obert', 'nota': 46, 'capa': 2, 'vel': 78},
+    {'id': 'perc', 'nom': 'Percussió', 'nota': 39, 'capa': 3, 'vel': 85},
+]
+
+
+def _patro(bombo, caixa, charles, obert, perc, baix):
+    return {'graella': {'bombo': bombo, 'caixa': caixa, 'charles': charles,
+                        'obert': obert, 'perc': perc}, 'baix': baix}
+
+
+_QUATRE = _patro(
+    [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+    [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+    [0, -1, -1, -1, 0, -1, -1, -1, 4, -1, -1, -1, 0, -1, -1, -1])
+_BUIT = _patro(*([[0] * 16] * 5), [-1] * 16)
+
+
+def _specr(**canvis):
+    base = {
+        'cat': 'ritmic', 'nom': 'El meu ritme', 'passos': 16,
+        'escalaIntervals': [0, 2, 4, 5, 7, 9, 11], 'tonalitat': 0,
+        'pistes': [dict(p) for p in _PISTES], 'patrons': [_QUATRE],
+        'baixOn': True, 'baixOctava': 2,
+        'bpmMin': 110, 'bpmMax': 150, 'swing': 0,
+        'pots': {'x': 'Tempo', 'y': 'Patró', 'z': 'Capes (breakdown)'},
+    }
+    base.update(canvis)
+    return base
+
+
+CASOS_RIT = {
+    'quatre_per_quatre': _specr(),
+    'sense_baix': _specr(nom='Sec', baixOn=False),
+    'buit': _specr(nom='Buit', patrons=[_BUIT]),
+    'swing': _specr(nom='Swing', swing=30),
+    'vuit_passos': _specr(nom='Vuit', passos=8,
+                          patrons=[_patro([1, 0, 0, 0, 1, 0, 0, 0], [0, 0, 1, 0, 0, 0, 1, 0],
+                                          [1, 1, 1, 1, 1, 1, 1, 1], [0] * 8, [0] * 8,
+                                          [0, -1, 4, -1, 0, -1, 2, -1])]),
+    'trenta_dos': _specr(nom='Trenta-dos', passos=32,
+                         patrons=[_patro(*([[1] * 32] * 5), list(range(8)) * 4)]),
+    'tot_ple': _specr(nom='Ple', patrons=[_patro(*([[1] * 16] * 5), [0] * 16)]),
+    'una_pista': _specr(nom='Nomes bombo', pistes=[dict(_PISTES[0])],
+                        patrons=[{'graella': {'bombo': [1, 0, 0, 0] * 4}, 'baix': [-1] * 16}]),
+    'dos_patrons': _specr(nom='Dos', patrons=[_QUATRE, _BUIT]),
+    'baix_greu': _specr(nom='Baix greu', baixOctava=0, patrons=[_patro(*([[0] * 16] * 5), [0] * 16)]),
+    'baix_agut': _specr(nom='Baix agut', baixOctava=4,
+                        patrons=[_patro(*([[0] * 16] * 5), [7] * 16)]),
+    'bpm_invertit': _specr(nom='Bpm invers', bpmMin=200, bpmMax=60),
+    'notes_extremes': _specr(nom='Extrems',
+                             pistes=[{'id': 'bombo', 'nom': 'B', 'nota': 0, 'capa': 0, 'vel': 1},
+                                     {'id': 'caixa', 'nom': 'C', 'nota': 127, 'capa': 0, 'vel': 127}],
+                             patrons=[{'graella': {'bombo': [1] * 16, 'caixa': [1] * 16}, 'baix': [-1] * 16}]),
+    'pots_alternatius': _specr(nom='Altres potes',
+                               pots={'x': 'Swing', 'y': 'Octava del baix', 'z': 'Brillantor (CC74)'}),
+    'pots_buits_rit': _specr(nom='Sense potes rit', pots={'x': '—', 'y': '—', 'z': '—'}),
+}
+
+
 def _genera(specs):
     """Crida el generador amb node i torna {clau: {file, cls, source}}."""
     # Les especificacions entren per stdin: amb -e els arguments de node no són
@@ -87,9 +155,12 @@ def _genera(specs):
     return json.loads(res.stdout)
 
 
+TOTS = dict(CASOS, **CASOS_RIT)
+
+
 @pytest.fixture(scope='module')
 def generats():
-    return _genera(CASOS)
+    return _genera(TOTS)
 
 
 @pytest.fixture(scope='module')
@@ -164,8 +235,8 @@ def test_l_especificacio_viatja_dins_del_fitxer(generats):
         linia = [l for l in g['source'].splitlines() if l.startswith('# TECLA-SPEC ')]
         assert linia, clau
         spec = json.loads(linia[0][len('# TECLA-SPEC '):])
-        assert spec['cat'] == 'melodic'
-        assert spec['nom'] == CASOS[clau]['nom']
+        assert spec['cat'] == TOTS[clau]['cat']
+        assert spec['nom'] == TOTS[clau]['nom']
 
 
 def test_el_mode_passa_la_validacio_de_l_instal_lador(generats):
@@ -181,9 +252,9 @@ def test_una_familia_no_implementada_avisa_clarament():
     res = subprocess.run(
         [shutil.which('node'), '--input-type=module', '-e',
          f'import {{ generateMode }} from {json.dumps(GEN_JS)};'
-         'try { generateMode({cat:"ritmic"}); } catch (e) { process.stdout.write(e.message); }'],
+         'try { generateMode({cat:"drone"}); } catch (e) { process.stdout.write(e.message); }'],
         capture_output=True, text=True)
-    assert 'ritmic' in res.stdout and 'implementada' in res.stdout
+    assert 'drone' in res.stdout and 'implementada' in res.stdout
 
 
 # ── Els modes, corrent ────────────────────────────────────────────────────
@@ -219,20 +290,20 @@ def _balanc(midi):
     return {n: c for n, c in vives.items() if c > 0}
 
 
-@pytest.mark.parametrize('clau', list(CASOS))
+@pytest.mark.parametrize('clau', list(TOTS))
 def test_el_mode_generat_corre_sense_petar(modes_importats, clau):
     midi, mode = _fes_sonar(modes_importats[clau])
     assert mode.initialized
 
 
-@pytest.mark.parametrize('clau', list(CASOS))
+@pytest.mark.parametrize('clau', list(TOTS))
 def test_el_mode_generat_no_deixa_notes_penjades(modes_importats, clau):
     """El pecat capital d'un mode: quedar-se sonant en marxar-ne."""
     midi, mode = _fes_sonar(modes_importats[clau])
     assert not _balanc(midi), f'{clau}: notes vives després de cleanup'
 
 
-@pytest.mark.parametrize('clau', list(CASOS))
+@pytest.mark.parametrize('clau', list(TOTS))
 def test_les_notes_queden_dins_del_rang_midi(modes_importats, clau):
     midi, mode = _fes_sonar(modes_importats[clau])
     for m in midi.sent:
@@ -241,7 +312,7 @@ def test_les_notes_queden_dins_del_rang_midi(modes_importats, clau):
             assert 0 <= m.velocity <= 127, f'{clau}: velocity {m.velocity}'
 
 
-@pytest.mark.parametrize('clau', list(CASOS))
+@pytest.mark.parametrize('clau', list(TOTS))
 def test_el_mode_sobreviu_a_qualsevol_posicio_dels_potes(modes_importats, clau):
     for potes in ((0, 0, 0), (127, 127, 127), (0, 127, 64), (127, 0, 13)):
         midi, mode = _fes_sonar(modes_importats[clau], potes=potes, voltes=120)
@@ -290,6 +361,138 @@ def test_el_pot_de_patro_canvia_de_patro(modes_importats):
     _, a = _fes_sonar(cls, potes=(0, 64, 64), voltes=20)
     _, b = _fes_sonar(cls, potes=(127, 64, 64), voltes=20)
     assert a.pat != b.pat
+
+
+# ── Família rítmica ───────────────────────────────────────────────────────
+
+def _canals(midi):
+    """Canal de cada NoteOn enviat."""
+    return {getattr(m, 'channel', 0) for m in midi.sent
+            if type(m).__name__.endswith('NoteOn') and m.velocity > 0}
+
+
+def test_la_percussio_va_al_canal_de_bateria(modes_importats):
+    """Percussió al canal 10 (índex 9, General MIDI) i baix al canal 1."""
+    midi, _ = _fes_sonar(modes_importats['quatre_per_quatre'])
+    assert 9 in _canals(midi), 'cap cop de percussió al canal de bateria'
+    assert 0 in _canals(midi), 'el baix no ha sonat al canal 1'
+
+
+def test_sense_baix_nomes_sona_la_percussio(modes_importats):
+    midi, _ = _fes_sonar(modes_importats['sense_baix'])
+    assert _canals(midi) == {9}
+
+
+def test_un_patro_buit_no_envia_res(modes_importats):
+    midi, _ = _fes_sonar(modes_importats['buit'])
+    assert not [m for m in midi.sent if type(m).__name__.endswith('NoteOn') and m.velocity > 0]
+
+
+def test_les_notes_de_percussio_son_les_configurades(modes_importats):
+    midi, _ = _fes_sonar(modes_importats['quatre_per_quatre'])
+    notes = {m.note for m in midi.sent
+             if type(m).__name__.endswith('NoteOn') and m.velocity > 0 and getattr(m, 'channel', 0) == 9}
+    assert notes <= {36, 38, 42, 46, 39}, notes
+    assert 36 in notes, 'el bombo hi ha de ser a totes les negres'
+
+
+def test_la_dinamica_de_cada_pista_es_respecta(modes_importats):
+    midi, _ = _fes_sonar(modes_importats['quatre_per_quatre'])
+    vels = {}
+    for m in midi.sent:
+        if type(m).__name__.endswith('NoteOn') and m.velocity > 0 and getattr(m, 'channel', 0) == 9:
+            vels[m.note] = m.velocity
+    assert vels.get(36) == 105 and vels.get(42) == 70
+
+
+def test_el_pot_de_capes_retira_pistes(modes_importats):
+    """Amb el breakdown al mínim només ha de quedar la capa 0 (el bombo)."""
+    cls = modes_importats['quatre_per_quatre']
+    ple, _ = _fes_sonar(cls, potes=(64, 64, 127))
+    nu, mode = _fes_sonar(cls, potes=(64, 64, 0))
+    perc = lambda midi: {m.note for m in midi.sent
+                         if type(m).__name__.endswith('NoteOn') and m.velocity > 0
+                         and getattr(m, 'channel', 0) == 9}
+    assert mode.capa == 0
+    assert perc(nu) == {36}, perc(nu)
+    assert len(perc(ple)) > 1
+
+
+def test_el_pot_de_tempo_ritmic_canvia_els_bpm(modes_importats):
+    cls = modes_importats['quatre_per_quatre']
+    _, lent = _fes_sonar(cls, potes=(64, 0, 64), voltes=30)
+    _, rapid = _fes_sonar(cls, potes=(64, 127, 64), voltes=30)
+    assert rapid.bpm > lent.bpm
+    assert rapid.step_dur < lent.step_dur
+
+
+def test_el_tempo_ritmic_es_el_que_diu_el_formulari(modes_importats):
+    """El pot al màxim ha de donar exactament el BPM de dalt del rang."""
+    _, mode = _fes_sonar(modes_importats['quatre_per_quatre'], potes=(64, 127, 64), voltes=30)
+    assert round(mode.bpm) == 150
+    _, mode = _fes_sonar(modes_importats['quatre_per_quatre'], potes=(64, 0, 64), voltes=30)
+    assert round(mode.bpm) == 110
+
+
+def test_el_swing_desplaça_els_passos_senars(modes_importats):
+    """Amb swing, els passos parells duren més que els senars (i el compàs,
+    en total, el mateix)."""
+    import time as _t
+    cls = modes_importats['swing']
+    midi = FakeMidiOut()
+    mode = cls(midi)
+    mode.setup()
+    real = _t.monotonic
+    rellotge = [real()]
+    _t.monotonic = lambda: rellotge[0]
+    try:
+        durades = []
+        anterior = None
+        for _ in range(4000):
+            rellotge[0] += 0.001
+            abans = mode.step
+            mode.update([64, 64, 64], [False] * 16)
+            if mode.step != abans:
+                if anterior is not None:
+                    durades.append(rellotge[0] - anterior)
+                anterior = rellotge[0]
+        parells = durades[0::2]
+        senars = durades[1::2]
+        assert sum(parells) / len(parells) > sum(senars) / len(senars)
+    finally:
+        _t.monotonic = real
+        mode.cleanup()
+
+
+def test_sense_swing_tots_els_passos_duren_igual(modes_importats):
+    _, mode = _fes_sonar(modes_importats['quatre_per_quatre'], voltes=30)
+    assert mode.swing == 0
+
+
+def test_el_baix_segueix_l_escala_i_la_tonalitat(modes_importats):
+    """Graus 0 i 4 de la major sobre C a l'octava 2 → C2 i G2 (24 i 31)."""
+    midi, _ = _fes_sonar(modes_importats['quatre_per_quatre'])
+    baix = {m.note for m in midi.sent
+            if type(m).__name__.endswith('NoteOn') and m.velocity > 0 and getattr(m, 'channel', 0) == 0}
+    assert 24 in baix and 31 in baix, baix
+
+
+def test_el_pot_d_octava_del_baix_transporta(modes_importats):
+    cls = modes_importats['pots_alternatius']
+    greu, _ = _fes_sonar(cls, potes=(0, 64, 64))
+    agut, _ = _fes_sonar(cls, potes=(127, 64, 64))
+    b = lambda midi: min((m.note for m in midi.sent
+                          if type(m).__name__.endswith('NoteOn') and m.velocity > 0
+                          and getattr(m, 'channel', 0) == 0), default=None)
+    assert b(greu) is not None and b(agut) is not None
+    assert b(agut) > b(greu)
+
+
+def test_el_ritme_no_deixa_percussio_sonant(modes_importats):
+    """Els cops són curts: cap no pot quedar-se obert en marxar del mode."""
+    for clau in CASOS_RIT:
+        midi, _ = _fes_sonar(modes_importats[clau], voltes=200)
+        assert not _balanc(midi), f'{clau}: cops oberts'
 
 
 def test_el_doble_clic_canvia_la_tonalitat(modes_importats):

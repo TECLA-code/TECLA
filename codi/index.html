@@ -2158,6 +2158,12 @@
     }
     .mg-tab.on { color: var(--text); border-color: color-mix(in srgb, var(--mg) 60%, transparent);
       background: color-mix(in srgb, var(--mg) 14%, transparent) }
+    /* Dins del constructor, les caselles enceses porten el color de la FAMÍLIA
+       (a fora, la matriu d'arpegis fa servir l'accent de l'app) */
+    .modegen .arp-matrix-cell.active {
+      background: var(--mg); border-color: var(--mg);
+      box-shadow: 0 0 10px color-mix(in srgb, var(--mg) 45%, transparent);
+    }
     .mg-dyn-cell {
       cursor: pointer; height: 22px; border-radius: 5px; display: flex; align-items: center; justify-content: center;
       font-size: 12px; color: var(--text3); border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
@@ -2166,6 +2172,18 @@
     .mg-dyn-cell[data-lv="1"] { color: var(--mg); border-color: color-mix(in srgb, var(--mg) 40%, transparent) }
     .mg-dyn-cell[data-lv="2"] { color: var(--mg); border-color: color-mix(in srgb, var(--mg) 75%, transparent);
       background: color-mix(in srgb, var(--mg) 16%, transparent) }
+    /* Pistes de percussió de la família rítmica */
+    .mg-pistes { display: flex; flex-direction: column; gap: 5px }
+    .mg-pista {
+      display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--text2);
+      padding: 5px 9px; border-radius: 8px;
+      border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+      background: color-mix(in srgb, var(--surface) 45%, transparent);
+    }
+    .mg-pista .nom { flex: 1; color: var(--text); font-weight: 600; letter-spacing: .02em }
+    .mg-pista label { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text3) }
+    .mg-pista input { width: 52px; font-family: inherit; font-size: 11px }
+    .mg-pista select { width: 46px; font-family: inherit; font-size: 11px }
     .mg-slider { display: flex; align-items: center; gap: 10px; font-size: 11.5px; color: var(--text2) }
     .mg-slider input[type=range] { flex: 1; min-width: 120px; accent-color: var(--mg) }
     .mg-slider .val { font-weight: 700; color: var(--text); min-width: 62px; text-align: right }
@@ -3131,7 +3149,7 @@
 <div class="guide-h1">6. La capa Modes</div><p class="guide-li">S’hi arriba ciclant amb la <strong>tecla 13</strong>. Les tecles <strong>1–12</strong> activen els modes generatius assignats a la capa actual.</p><p class="guide-li"><strong>Tecla 13</strong>: toc curt → capa següent · mantinguda ≈1 s → capa anterior.</p><p class="guide-li"><strong>Tecles 14 i 15</strong>: efectes temporals (mantenir premuda: sustain, pausa, gate…) · doble clic → canviar l’efecte assignat.</p><p class="guide-li"><strong>Tecla 16</strong>: STOP total + neteja de memòria.</p><p class="guide-li">Els modes es trien i s’assignen a la pestanya <em>Modes</em>; els potenciòmetres modulen paràmetres propis de cada mode.</p>
 </div>
 <div id="gca-6">
-<div class="guide-h1">7. Configurar des de l’app</div><div class="guide-h2">Pestanya Teclat</div><p class="guide-li">Arrossega funcions a les tecles, tria escales, tonalitats, tipus d’acord, patrons d’arpegiador, progressions i funcions dels potenciòmetres.</p><div class="guide-h2">Pestanya Modes</div><p class="guide-li">Crea bancs (capes) de modes i assigna un mode a cada tecla 1–12. Tria els efectes temporals de les tecles 14–15.</p><div class="guide-h2">✦ Crear els teus propis modes</div><p class="guide-li">El botó <strong>✦ Crear</strong> obre el <strong>constructor de modes</strong>. Els 64 modes del firmware es reparteixen en sis famílies segons com estan fets per dins, i cada família té les seves variables: <strong>melòdic</strong> (seqüència de graus sobre una escala), <strong>rítmic</strong> (graella de passos amb bateria), <strong>drone</strong> (acord sostingut amb gate), <strong>textura</strong> (atzar amb densitat), <strong>ona</strong> (un oscil·lador lent) i <strong>algorísmic</strong> (una regla que genera el patró).</p><p class="guide-li">A la família <strong>melòdica</strong> hi dibuixes la melodia per <em>graus de l’escala</em> en una graella, amb la <strong>dinàmica</strong> de cada pas, l’<strong>articulació</strong> (de picada a lligada), una <strong>veu secundària</strong> a l’interval que vulguis —el contrapunt de Bach, el tintinnabuli de Pärt— i el rang de tempo. També hi assignes què fa cada un dels tres potes.</p><p class="guide-li">Prem <strong>▶ Escoltar</strong> per provar-lo a l’instant (corre el mateix Python que correrà al dispositiu), <strong>Desar mode</strong> per afegir-lo a la teva llista —i al dispositiu, si el tens endollat— o <strong>Exportar .py</strong> per quedar-te el fitxer. El mode generat és un fitxer de Python normal que pots obrir i modificar: l’especificació hi queda desada a dins, així que sempre el pots tornar a obrir al constructor.</p><div class="guide-h2">Pestanya Simulador</div><p class="guide-li">Prova-ho tot <em>sense dispositiu</em>: el teclat i els modes corren al navegador i envien MIDI via WebMIDI al teu DAW.</p><p class="guide-li">Amb el dispositiu endollat, prem <strong>🔌 Sync dispositiu</strong>: les tecles i potes físics controlen el simulador (el port es detecta sol; el so local del TECLA es pausa mentre dura).</p><div class="guide-h2">La Pantalla</div><p class="guide-li">El botó <strong>Pantalla</strong> (capçalera) obre la pantalla virtual del dispositiu: mostra en gran i en directe què toques — <strong>acords amb nomenclatura professional</strong> (C, Am7, F/A…), notes, funcions amb el seu color, canvis de capa — amb una <strong>animació reactiva als potes</strong> pròpia de cada família de modes.</p><p class="guide-li">El <strong>tempo hi surt en BPM</strong> — negres per minut, el mateix número que poses al DAW o al metrònom — per poder <em>sincronitzar amb la peça que estàs tocant</em>. L’etiqueta hi afegeix la <strong>subdivisió</strong> quan cal: «Tempo · 1/16» vol dir que el que sona són semicorxeres d’aquest tempo. L’animació batega al mateix pols.</p><p class="guide-li">El <strong>pot de BPM de l’arpegiador</strong> va de <strong>40 a 240</strong> negres per minut i l’arp trepitja semicorxeres: posa el mateix número que el teu projecte i ja hi encaixa.</p><p class="guide-li">Es connecta sola al port sèrie correcte, es pot <strong>arrossegar i redimensionar</strong>, i amb <strong>⇱</strong> es desancora en una finestra flotant fora de l'app (Chrome 116+).</p><div class="guide-h2">Pestanya Firmware</div><p class="guide-li">Instal·la CircuitPython (Pas 1) i el firmware TECLA (Pas 2). Cal repetir el Pas 2 després de canviar els modes assignats.</p><div class="guide-h2">Pestanya Aparença</div><p class="guide-li">Temes de color de l’app i editor de temes personalitzats.</p><div class="guide-note">Flux de treball: edita → <strong>Guardar configuració</strong> → si has canviat modes, <em>Firmware</em> → <strong>Instal·lar / Actualitzar</strong> → reset del dispositiu.</div>
+<div class="guide-h1">7. Configurar des de l’app</div><div class="guide-h2">Pestanya Teclat</div><p class="guide-li">Arrossega funcions a les tecles, tria escales, tonalitats, tipus d’acord, patrons d’arpegiador, progressions i funcions dels potenciòmetres.</p><div class="guide-h2">Pestanya Modes</div><p class="guide-li">Crea bancs (capes) de modes i assigna un mode a cada tecla 1–12. Tria els efectes temporals de les tecles 14–15.</p><div class="guide-h2">✦ Crear els teus propis modes</div><p class="guide-li">El botó <strong>✦ Crear</strong> obre el <strong>constructor de modes</strong>. Els 64 modes del firmware es reparteixen en sis famílies segons com estan fets per dins, i cada família té les seves variables: <strong>melòdic</strong> (seqüència de graus sobre una escala), <strong>rítmic</strong> (graella de passos amb bateria), <strong>drone</strong> (acord sostingut amb gate), <strong>textura</strong> (atzar amb densitat), <strong>ona</strong> (un oscil·lador lent) i <strong>algorísmic</strong> (una regla que genera el patró).</p><p class="guide-li">A la família <strong>melòdica</strong> hi dibuixes la melodia per <em>graus de l’escala</em> en una graella, amb la <strong>dinàmica</strong> de cada pas, l’<strong>articulació</strong> (de picada a lligada), una <strong>veu secundària</strong> a l’interval que vulguis —el contrapunt de Bach, el tintinnabuli de Pärt— i el rang de tempo. També hi assignes què fa cada un dels tres potes.</p><p class="guide-li">A la família <strong>rítmica</strong> hi tens una <strong>graella de passos</strong> (8, 16 o 32; cada pas és una semicorxera, o sigui que 16 són un compàs de 4/4) amb cinc pistes de percussió i una <strong>línia de baix per graus</strong>. De cada pista en tries la <strong>nota MIDI</strong>, la força i la <strong>capa de breakdown</strong> —l’ordre en què les pistes es retiren amb el pot, el recurs de tot el techno—, i del conjunt, el rang de BPM i el <strong>swing</strong>. La percussió surt pel canal MIDI 10 (bateria General MIDI) i el baix pel canal 1, per posar-hi instruments diferents al DAW.</p><p class="guide-li">Prem <strong>▶ Escoltar</strong> per provar-lo a l’instant (corre el mateix Python que correrà al dispositiu), <strong>Desar mode</strong> per afegir-lo a la teva llista —i al dispositiu, si el tens endollat— o <strong>Exportar .py</strong> per quedar-te el fitxer. El mode generat és un fitxer de Python normal que pots obrir i modificar: l’especificació hi queda desada a dins, així que sempre el pots tornar a obrir al constructor.</p><div class="guide-h2">Pestanya Simulador</div><p class="guide-li">Prova-ho tot <em>sense dispositiu</em>: el teclat i els modes corren al navegador i envien MIDI via WebMIDI al teu DAW.</p><p class="guide-li">Amb el dispositiu endollat, prem <strong>🔌 Sync dispositiu</strong>: les tecles i potes físics controlen el simulador (el port es detecta sol; el so local del TECLA es pausa mentre dura).</p><div class="guide-h2">La Pantalla</div><p class="guide-li">El botó <strong>Pantalla</strong> (capçalera) obre la pantalla virtual del dispositiu: mostra en gran i en directe què toques — <strong>acords amb nomenclatura professional</strong> (C, Am7, F/A…), notes, funcions amb el seu color, canvis de capa — amb una <strong>animació reactiva als potes</strong> pròpia de cada família de modes.</p><p class="guide-li">El <strong>tempo hi surt en BPM</strong> — negres per minut, el mateix número que poses al DAW o al metrònom — per poder <em>sincronitzar amb la peça que estàs tocant</em>. L’etiqueta hi afegeix la <strong>subdivisió</strong> quan cal: «Tempo · 1/16» vol dir que el que sona són semicorxeres d’aquest tempo. L’animació batega al mateix pols.</p><p class="guide-li">El <strong>pot de BPM de l’arpegiador</strong> va de <strong>40 a 240</strong> negres per minut i l’arp trepitja semicorxeres: posa el mateix número que el teu projecte i ja hi encaixa.</p><p class="guide-li">Es connecta sola al port sèrie correcte, es pot <strong>arrossegar i redimensionar</strong>, i amb <strong>⇱</strong> es desancora en una finestra flotant fora de l'app (Chrome 116+).</p><div class="guide-h2">Pestanya Firmware</div><p class="guide-li">Instal·la CircuitPython (Pas 1) i el firmware TECLA (Pas 2). Cal repetir el Pas 2 després de canviar els modes assignats.</p><div class="guide-h2">Pestanya Aparença</div><p class="guide-li">Temes de color de l’app i editor de temes personalitzats.</p><div class="guide-note">Flux de treball: edita → <strong>Guardar configuració</strong> → si has canviat modes, <em>Firmware</em> → <strong>Instal·lar / Actualitzar</strong> → reset del dispositiu.</div>
 </div>
 <div id="gca-7">
 <div class="guide-h1">8. Recomanacions</div><p class="guide-li">Guarda sempre la configuració després de fer canvis.</p><p class="guide-li">Fins a <strong>3 bancs de modes</strong> funcionen amb total comoditat (validat amb mesures de memòria reals).</p><p class="guide-li">Prova els modes nous al simulador abans d’instal·lar-los.</p><p class="guide-li">Si una nota es queda penjada o el so descontrola: <strong>tecla 16</strong> (STOP).</p><p class="guide-li">Si el dispositiu no respon: reset físic (botó del Pico) — el watchdog també el reinicia sol si es penja durant una actuació.</p><p class="guide-li">Si l’app no veu el dispositiu: comprova que el disc CIRCUITPY/TECLA està muntat i que fas servir Chrome o Edge.</p>
@@ -5054,6 +5072,48 @@
       veu2: { on: false, interval: -12, cada: 3, retard: 45 },
       pots: { x: 'Tempo', y: 'Patró', z: 'Octava' },
     };
+    // Estat del formulari rítmic. Els tres patrons de sortida són ritmes de
+    // debò (quatre per quatre, trencat i mig temps) per tenir d'on estirar.
+    const _MG_RIT_PISTES = [
+      { id: 'bombo', nom: 'Bombo', nota: 36, capa: 0, vel: 105 },
+      { id: 'caixa', nom: 'Caixa', nota: 38, capa: 1, vel: 92 },
+      { id: 'charles', nom: 'Charles', nota: 42, capa: 2, vel: 70 },
+      { id: 'obert', nom: 'Obert', nota: 46, capa: 2, vel: 78 },
+      { id: 'perc', nom: 'Percussió', nota: 39, capa: 3, vel: 85 },
+    ];
+    const _mgRitPat = (bombo, caixa, charles, obert, perc, baix) =>
+      ({ graella: { bombo, caixa, charles, obert, perc }, baix });
+    const _mgRit = {
+      nom: 'El meu ritme', passos: 16, patIdx: 0,
+      pistes: _MG_RIT_PISTES.map(p => ({ ...p })),
+      patrons: [
+        _mgRitPat(
+          [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+          [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+          [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+          [0, -1, -1, -1, 0, -1, -1, -1, 4, -1, -1, -1, 0, -1, -1, -1]),
+        _mgRitPat(
+          [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+          [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+          [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+          [0, -1, -1, 0, -1, -1, 2, -1, -1, 0, -1, -1, 4, -1, -1, -1]),
+        _mgRitPat(
+          [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+          [0, -1, -1, -1, -1, -1, -1, -1, 5, -1, -1, -1, -1, -1, -1, -1]),
+      ],
+      baixOn: true, baixOctava: 2, escala: 0, tonalitat: 0,
+      bpmMin: 110, bpmMax: 150, swing: 0,
+      pots: { x: 'Tempo', y: 'Patró', z: 'Capes (breakdown)' },
+    };
+
     let _mgCat = MODEGEN_CATS[0];
 
     function _mgFrame() { return document.querySelector('.modegen-frame'); }
@@ -5157,15 +5217,151 @@
       }));
     }
 
+    // Graella rítmica: percussió a dalt (encès/apagat) i el baix a sota, on
+    // cada casella cicla el grau de l'escala. Tot dins d'una sola graella
+    // perquè les columnes quedin alineades.
+    function _mgRenderGridRit() {
+      const grid = document.getElementById('mg-grid-rit');
+      if (!grid) return;
+      const p = _mgRit.patrons[_mgRit.patIdx];
+      const n = _mgRit.passos;
+      grid.style.gridTemplateColumns = `auto repeat(${n}, 1fr)`;
+      const graus = ['—', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
+      let h = '<div></div>' + Array.from({ length: n }, (_, c) =>
+        `<div class="arp-matrix-header"${c % 4 === 0 ? ' style="color:var(--mg)"' : ''}>${c + 1}</div>`).join('');
+      _mgRit.pistes.forEach(pi => {
+        const fila = p.graella[pi.id] || (p.graella[pi.id] = []);
+        while (fila.length < n) fila.push(0);
+        h += `<div class="arp-matrix-row-label">${pi.nom}</div>`;
+        for (let c = 0; c < n; c++) {
+          h += `<div class="arp-matrix-cell ${fila[c] ? 'active' : ''}" data-p="${pi.id}" data-c="${c}"></div>`;
+        }
+      });
+      if (_mgRit.baixOn) {
+        while (p.baix.length < n) p.baix.push(-1);
+        h += `<div class="arp-matrix-row-label">Baix</div>`;
+        for (let c = 0; c < n; c++) {
+          const g = p.baix[c];
+          h += `<div class="mg-dyn-cell" data-baix="${c}" data-lv="${g < 0 ? 0 : 2}">${graus[g + 1] || '—'}</div>`;
+        }
+      }
+      grid.innerHTML = h;
+      grid.querySelectorAll('.arp-matrix-cell').forEach(cell => cell.addEventListener('click', () => {
+        const fila = p.graella[cell.dataset.p];
+        const c = +cell.dataset.c;
+        fila[c] = fila[c] ? 0 : 1;
+        _mgRenderGridRit(); _mgSync();
+      }));
+      grid.querySelectorAll('.mg-dyn-cell').forEach(cell => cell.addEventListener('click', () => {
+        const c = +cell.dataset.baix;
+        p.baix[c] = p.baix[c] >= 7 ? -1 : p.baix[c] + 1;   // —, I…VIII, i torna
+        _mgRenderGridRit(); _mgSync();
+      }));
+    }
+
+    function _mgFormRitmic(box) {
+      const escales = (typeof SCALE_NAMES_JS !== 'undefined' ? SCALE_NAMES_JS : ['Major']);
+      const tons = (typeof KEY_CIRCLE_JS !== 'undefined' ? KEY_CIRCLE_JS : ['C']);
+      box.innerHTML = `
+        <div class="mg-sec">
+          <p class="mg-lab">Graella · percussió i baix</p>
+          <div class="mg-tabs" id="mg-rit-tabs">
+            ${_mgRit.patrons.map((_, i) => `<button class="mg-tab ${i === _mgRit.patIdx ? 'on' : ''}" data-i="${i}">Patró ${i + 1}</button>`).join('')}
+            <label style="margin-left:auto;font-size:11px;color:var(--text2);display:flex;align-items:center;gap:6px">Passos
+              <select id="mg-rit-passos" style="width:58px">${[8, 16, 32].map(s => `<option value="${s}" ${s === _mgRit.passos ? 'selected' : ''}>${s}</option>`).join('')}</select>
+            </label>
+          </div>
+          <div class="arp-matrix-container" style="overflow-x:auto;padding-bottom:6px">
+            <div class="arp-matrix" id="mg-grid-rit" style="display:grid;gap:4px"></div>
+          </div>
+          <p class="mg-hint">Cada pas és una <strong>semicorxera</strong>: 16 passos són un compàs de 4/4.
+            A la fila del <strong>baix</strong>, cada clic avança el grau de l'escala (— I II III…).</p>
+        </div>
+
+        <div class="mg-sec">
+          <p class="mg-lab">Pistes · nota MIDI i capa de breakdown</p>
+          <div class="mg-pistes" id="mg-rit-pistes">
+            ${_mgRit.pistes.map((pi, i) => `
+              <div class="mg-pista">
+                <span class="nom">${pi.nom}</span>
+                <label>nota <input type="number" data-i="${i}" data-k="nota" min="0" max="127" value="${pi.nota}"></label>
+                <label>capa <select data-i="${i}" data-k="capa">${[0, 1, 2, 3].map(c => `<option value="${c}" ${c === pi.capa ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
+                <label>força <input type="number" data-i="${i}" data-k="vel" min="1" max="127" value="${pi.vel}"></label>
+              </div>`).join('')}
+          </div>
+          <p class="mg-hint">La <strong>capa</strong> és l'ordre en què les pistes es retiren amb el pot de breakdown:
+            la 0 no marxa mai, la 3 és la primera que cau. És el recurs de tot el techno.</p>
+        </div>
+
+        <div class="mg-sec">
+          <p class="mg-lab">Tempo i swing</p>
+          <div class="mg-row">
+            <label>De <input type="number" id="mg-rit-bmin" min="40" max="240" value="${_mgRit.bpmMin}" style="width:60px"> BPM</label>
+            <label>a <input type="number" id="mg-rit-bmax" min="40" max="240" value="${_mgRit.bpmMax}" style="width:60px"> BPM</label>
+          </div>
+          <div class="mg-slider" style="margin-top:10px">
+            <span>recte</span>
+            <input type="range" id="mg-rit-swing" min="0" max="34" value="${_mgRit.swing}">
+            <span>swing</span>
+            <span class="val" id="mg-rit-swing-val">${_mgRit.swing}%</span>
+          </div>
+        </div>
+
+        <div class="mg-sec">
+          <p class="mg-lab">Línia de baix</p>
+          <div class="mg-row">
+            <label><input type="checkbox" id="mg-rit-baix" ${_mgRit.baixOn ? 'checked' : ''}> Activada</label>
+            <label>Escala
+              <select id="mg-rit-escala">${escales.map((e, i) => `<option value="${i}" ${i === _mgRit.escala ? 'selected' : ''}>${e}</option>`).join('')}</select>
+            </label>
+            <label>Tonalitat
+              <select id="mg-rit-tonalitat" style="width:64px">${tons.map((t, i) => `<option value="${i}" ${i === _mgRit.tonalitat ? 'selected' : ''}>${t}</option>`).join('')}</select>
+            </label>
+            <label>Octava
+              <select id="mg-rit-oct" style="width:56px">${[0, 1, 2, 3, 4].map(o => `<option value="${o}" ${o === _mgRit.baixOctava ? 'selected' : ''}>${o}</option>`).join('')}</select>
+            </label>
+          </div>
+          <p class="mg-hint">El baix va pel canal MIDI 1 i la percussió pel 10 (el de bateria General MIDI),
+            així al DAW pots posar-hi instruments diferents.</p>
+        </div>`;
+
+      _mgRenderGridRit();
+      const on = (id, ev, fn) => document.getElementById(id)?.addEventListener(ev, fn);
+      document.querySelectorAll('#mg-rit-tabs .mg-tab').forEach(t => t.addEventListener('click', () => {
+        _mgRit.patIdx = +t.dataset.i; _mgRenderForm(); _mgSync();
+      }));
+      on('mg-rit-passos', 'change', e => { _mgRit.passos = +e.target.value; _mgRenderGridRit(); _mgSync(); });
+      document.querySelectorAll('#mg-rit-pistes input, #mg-rit-pistes select').forEach(el =>
+        el.addEventListener('input', () => {
+          _mgRit.pistes[+el.dataset.i][el.dataset.k] = +el.value;
+          _mgSync();
+        }));
+      on('mg-rit-bmin', 'input', e => { _mgRit.bpmMin = +e.target.value; _mgSync(); });
+      on('mg-rit-bmax', 'input', e => { _mgRit.bpmMax = +e.target.value; _mgSync(); });
+      on('mg-rit-swing', 'input', e => {
+        _mgRit.swing = +e.target.value;
+        document.getElementById('mg-rit-swing-val').textContent = _mgRit.swing + '%';
+        _mgSync();
+      });
+      on('mg-rit-baix', 'change', e => { _mgRit.baixOn = e.target.checked; _mgRenderForm(); _mgSync(); });
+      on('mg-rit-escala', 'change', e => { _mgRit.escala = +e.target.value; _mgSync(); });
+      on('mg-rit-tonalitat', 'change', e => { _mgRit.tonalitat = +e.target.value; _mgSync(); });
+      on('mg-rit-oct', 'change', e => { _mgRit.baixOctava = +e.target.value; _mgSync(); });
+    }
+
     function _mgRenderForm() {
       const box = document.getElementById('modegen-form');
       const frame = _mgFrame();
       if (!box) return;
       const col = _mgColor(_mgCat);
       if (frame) frame.style.setProperty('--mg', col);
+      // El camp del nom segueix la família que s'edita
+      const inNom = document.getElementById('modegen-nom');
+      if (inNom) inNom.value = _mgCat.id === 'ritmic' ? _mgRit.nom : _mgMel.nom;
       document.getElementById('modegen-crumb').textContent = `${_mgCat.ico}  ${_mgCat.nom}`;
       document.getElementById('modegen-crumb').style.color = col;
 
+      if (_mgCat.id === 'ritmic') { _mgFormRitmic(box); return; }
       if (_mgCat.id !== 'melodic') {
         box.innerHTML = `
           <div class="mg-sec">
@@ -5270,14 +5466,17 @@
       on('mg-tmax', 'input', e => { _mgMel.tempoMax = +e.target.value; _mgSync(); });
     }
 
+    // El nom va a la família que s'està editant
     document.getElementById('modegen-nom')?.addEventListener('input', e => {
-      _mgMel.nom = e.target.value;
+      if (_mgCat.id === 'ritmic') _mgRit.nom = e.target.value;
+      else _mgMel.nom = e.target.value;
     });
 
     function _mgRenderPots() {
       const box = document.getElementById('modegen-pots');
       if (!box) return;
-      const def = _mgCat.id === 'melodic' ? _mgMel.pots : _mgCat.potsDef;
+      const def = _mgCat.id === 'melodic' ? _mgMel.pots
+                : _mgCat.id === 'ritmic' ? _mgRit.pots : _mgCat.potsDef;
       box.innerHTML = ['x', 'y', 'z'].map(k => `
         <div class="modegen-pot">
           <div class="nom">${k}</div>
@@ -5285,6 +5484,7 @@
         </div>`).join('');
       box.querySelectorAll('select').forEach(s => s.addEventListener('change', () => {
         if (_mgCat.id === 'melodic') _mgMel.pots[s.dataset.k] = s.value;
+        else if (_mgCat.id === 'ritmic') _mgRit.pots[s.dataset.k] = s.value;
         _mgSync();
       }));
     }
@@ -5431,10 +5631,19 @@
         bpm = (_mgMel.tempoMin + _mgMel.tempoMax) / 2;
         amp = .2 + (notes / Math.max(1, _mgMel.passos)) * .7;
         tag = `patró ${_mgMel.patIdx + 1} · ${notes} notes`;
+        // (el nom de l'escala i la tonalitat es componen just a sota)
         // Nom d'escala sense el parèntesi: la columna és estreta i el número
         // ha de quedar gran i llegible, com a la pantalla.
         const esc = (escales[_mgMel.escala] || '').replace(/\s*\(.*\)\s*/, '');
         main = `${tons[_mgMel.tonalitat]} ${esc}`.trim();
+      } else if (_mgCat.id === 'ritmic') {
+        const p = _mgRit.patrons[_mgRit.patIdx];
+        const cops = _mgRit.pistes.reduce((a, pi) =>
+          a + (p.graella[pi.id] || []).slice(0, _mgRit.passos).filter(Boolean).length, 0);
+        bpm = (_mgRit.bpmMin + _mgRit.bpmMax) / 2;
+        amp = .2 + Math.min(1, cops / (_mgRit.passos * 1.6)) * .8;
+        tag = `patró ${_mgRit.patIdx + 1} · ${cops} cops`;
+        main = `${Math.round(bpm)} BPM`;
       } else {
         tag = _mgCat.sub.toLowerCase();
         main = _mgCat.nom;
@@ -5468,10 +5677,30 @@
     // Python de debò. A partir d'aquí es reaprofita tota la canonada que ja hi
     // havia per als modes propis: el simulador per escoltar-los i installMode
     // per instal·lar-los al dispositiu.
+    const _mgEscala = i => (typeof SCALES_JS !== 'undefined' && SCALES_JS[i]) || [0, 2, 4, 5, 7, 9, 11];
+    const _mgEscalaNom = i => (typeof SCALE_NAMES_JS !== 'undefined' && SCALE_NAMES_JS[i]) || 'Major';
+
     function _mgSpec() {
+      if (_mgCat.id === 'ritmic') {
+        const n = _mgRit.passos;
+        return {
+          cat: 'ritmic', nom: _mgRit.nom || 'El meu ritme', passos: n,
+          escala: _mgRit.escala, escalaNom: _mgEscalaNom(_mgRit.escala),
+          escalaIntervals: _mgEscala(_mgRit.escala), tonalitat: _mgRit.tonalitat,
+          pistes: _mgRit.pistes.map(p => ({ ...p })),
+          patrons: _mgRit.patrons.map(p => ({
+            graella: Object.fromEntries(_mgRit.pistes.map(pi =>
+              [pi.id, (p.graella[pi.id] || []).slice(0, n)])),
+            baix: p.baix.slice(0, n),
+          })),
+          baixOn: _mgRit.baixOn, baixOctava: _mgRit.baixOctava,
+          bpmMin: _mgRit.bpmMin, bpmMax: _mgRit.bpmMax, swing: _mgRit.swing,
+          pots: { ..._mgRit.pots },
+        };
+      }
       if (_mgCat.id !== 'melodic') return null;
-      const esc = (typeof SCALES_JS !== 'undefined' && SCALES_JS[_mgMel.escala]) || [0, 2, 4, 5, 7, 9, 11];
-      const escNom = (typeof SCALE_NAMES_JS !== 'undefined' && SCALE_NAMES_JS[_mgMel.escala]) || 'Major';
+      const esc = _mgEscala(_mgMel.escala);
+      const escNom = _mgEscalaNom(_mgMel.escala);
       return {
         cat: 'melodic', nom: _mgMel.nom || 'El meu mode',
         escala: _mgMel.escala, escalaNom: escNom, escalaIntervals: esc,

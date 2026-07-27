@@ -299,9 +299,220 @@ ${v2on ? `        if self.v2_note >= 0:
 `;
 }
 
+// ── Família RÍTMICA ───────────────────────────────────────────────────────
+// Els nou modes rítmics del firmware són tots la mateixa cosa: una graella de
+// 16 passos amb unes quantes pistes de percussió, una línia de baix per graus,
+// un pas que dura 60/bpm/4 (semicorxeres) i un pot que va tirant capes enrere
+// per fer el breakdown. Això és exactament el que es genera aquí.
+
+function potCodeRitmic(fn, spec, capes, indent = '        ') {
+  const i = indent;
+  switch (fn) {
+    case 'Tempo': {
+      const lo = clamp(spec.bpmMin, 40, 240), hi = clamp(spec.bpmMax, 40, 240);
+      const min = Math.min(lo, hi), max = Math.max(lo, hi);
+      return `${i}# Tempo de negra (${min}-${max}); cada pas és una semicorxera\n`
+           + `${i}b = ${py.f(min)} + (v / 127.0) * ${py.f(max - min)}\n`
+           + `${i}if b < self.bpm - 0.3 or b > self.bpm + 0.3:\n`
+           + `${i}    self.bpm = b\n${i}    self._calc()`;
+    }
+    case 'Patró':
+      return `${i}p = min(len(_GRAELLES) - 1, int((v / 128.0) * len(_GRAELLES)))\n`
+           + `${i}if p != self.pat:\n${i}    self.pat = p\n${i}    self.step = 0\n`
+           + `${i}    print("${'%'}s: patro ${'%'}d" % (self.name, p + 1))`;
+    case 'Capes (breakdown)':
+      return `${i}c = min(${capes}, int((v / 127.0) * ${py.f(capes + .99, 2)}))\n`
+           + `${i}if c != self.capa:\n${i}    self.capa = c\n`
+           + `${i}    print("${'%'}s: capa ${'%'}d/${capes}" % (self.name, c))`;
+    case 'Swing':
+      return `${i}self.swing = (v / 127.0) * 0.34`;
+    case 'Octava del baix':
+      return `${i}o = _OCT_BAIX - 1 + int((v / 127.0) * 2.99)\n`
+           + `${i}if o != self.oct_baix:\n${i}    self.oct_baix = o`;
+    case 'Brillantor (CC74)':
+      return `${i}self._cc_once(74, v)`;
+    default:
+      return `${i}pass`;
+  }
+}
+
+/** Els potes que la família rítmica sap fer servir. */
+export const RITMIC_POT_FNS = ['Tempo', 'Patró', 'Capes (breakdown)', 'Swing',
+  'Octava del baix', 'Brillantor (CC74)', '—'];
+
+function generateRhythmic(spec) {
+  const cls = className(spec.nom);
+  const nom = modeName(spec.nom);
+  const n = clamp(spec.passos | 0, 4, 32);
+  const escala = (spec.escalaIntervals && spec.escalaIntervals.length ? spec.escalaIntervals : [0, 2, 4, 5, 7, 9, 11]).map(x => x | 0);
+  const key = clamp(spec.tonalitat | 0, 0, 11);
+  const octBaix = clamp(spec.baixOctava | 0, 0, 6);
+  const swing0 = clamp((spec.swing ?? 0) / 100, 0, .34);
+  const potX = spec.pots?.x || 'Tempo', potY = spec.pots?.y || 'Patró', potZ = spec.pots?.z || 'Capes (breakdown)';
+
+  // Pistes de percussió: nota MIDI, nivell de breakdown i dinàmica pròpies
+  const pistes = (spec.pistes && spec.pistes.length ? spec.pistes : [{ id: 'bombo', nota: 36, capa: 0, vel: 105 }]);
+  const notes = pistes.map(p => clamp(p.nota | 0, 0, 127));
+  const capesPista = pistes.map(p => clamp(p.capa | 0, 0, 3));
+  const velsPista = pistes.map(p => clamp(p.vel | 0, 1, 127));
+  const capaMax = Math.max(0, ...capesPista);
+
+  const patrons = (spec.patrons && spec.patrons.length ? spec.patrons : [{ graella: {}, baix: [] }]);
+  // Una fila de bytes per pista i patró: 1 = sona. És com ho desen els modes
+  // de la casa (bytes en lloc de llistes) per no cruixir la RAM de la Pico.
+  const graelles = patrons.map(pat => pistes.map(p => {
+    const fila = (pat.graella && pat.graella[p.id]) || [];
+    return Array.from({ length: n }, (_, c) => (fila[c] ? 1 : 0));
+  }));
+  const baixos = patrons.map(pat => Array.from({ length: n }, (_, c) => ((pat.baix && pat.baix[c] != null ? pat.baix[c] : -1) | 0)));
+  const teBaix = !!spec.baixOn && baixos.some(b => b.some(g => g >= 0));
+
+  const bpm0 = Math.round((clamp(spec.bpmMin, 40, 240) + clamp(spec.bpmMax, 40, 240)) / 2);
+  const spec4json = JSON.stringify({ ...spec, cat: 'ritmic' });
+
+  const filesBytes = graelles.map(g =>
+    `    (\n${g.map(f => `        bytes(${py.tuple(f)}),`).join('\n')}\n    ),`).join('\n');
+
+  return `"""${nom} — mode rítmic fet amb el constructor de TECLA.
+X: ${potX}  Y: ${potY}  Z: ${potZ}
+${n} passos · ${pistes.length} pistes de percussió${teBaix ? ' · línia de baix' : ''}
+"""
+# TECLA-SPEC ${spec4json}
+import time
+from modes.base_mode import BaseMode
+from adafruit_midi.control_change import ControlChange
+
+_ESCALA = ${py.tuple(escala)}
+_NOTES = ${py.tuple(notes)}          # nota MIDI de cada pista
+_CAPES = ${py.tuple(capesPista)}     # a quin nivell de breakdown entra cada pista
+_VELS = ${py.tuple(velsPista)}       # dinàmica de cada pista
+_GRAELLES = (
+${filesBytes}
+)
+_BAIX = ${py.tuples(baixos)}
+_KEYS = ('C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B')
+_OCT_BAIX = ${octBaix}
+_PERC_CH = 9        # canal 10 (percussió General MIDI)
+_BAIX_CH = 0
+_GATE = 0.055       # què dura un cop de percussió
+_GATE_BAIX = 0.45   # el baix dura una fracció del pas
+
+
+class ${cls}(BaseMode):
+    def __init__(self, midi_out, config=None):
+        super().__init__(midi_out, config)
+        self.name = "${nom}"
+        self.bpm = ${py.f(bpm0)}
+        self.step = 0
+        self.pat = 0
+        self.capa = ${capaMax}
+        self.swing = ${py.f(swing0)}
+        self.key = ${key}
+        self.oct_baix = _OCT_BAIX
+        self.step_dur = 0.0
+        self.next_step = 0.0
+        self.pend = []          # note-offs pendents: [nota, canal, quan]
+        self._cc_cache = {}
+
+    def setup(self):
+        self.initialized = True
+        self.step = 0
+        self._calc()
+        self.next_step = time.monotonic()
+        self.pend = []
+        self._cc_cache = {}
+        self._panic()
+        print("${nom}: %d BPM (capa %d/${capaMax})" % (int(self.bpm), self.capa))
+
+    def _calc(self):
+        self.step_dur = 60.0 / self.bpm / 4.0      # una semicorxera
+
+    def _cc_once(self, cc, v):
+        v = 0 if v < 0 else (127 if v > 127 else int(v))
+        if self._cc_cache.get(cc) == v:
+            return
+        self._cc_cache[cc] = v
+        try:
+            self.midi_out.send(ControlChange(cc, v))
+        except Exception:
+            pass
+
+    def _panic(self):
+        for ch in (_PERC_CH, _BAIX_CH):
+            try:
+                m = ControlChange(123, 0)
+                m.channel = ch
+                self.midi_out.send(m)
+            except Exception:
+                pass
+
+    def _allibera(self, now, totes=False):
+        """Tanca els cops que ja han fet el seu temps."""
+        if not self.pend:
+            return
+        queden = []
+        for p in self.pend:
+            if totes or now >= p[2]:
+                self.send_note_off(p[0], 0, p[1])
+            else:
+                queden.append(p)
+        self.pend = queden
+
+    def _cop(self, nota, vel, canal, dura, now):
+        self.send_note_on(nota, vel, canal)
+        self.pend.append([nota, canal, now + dura])
+
+    def _fire(self, now):
+        graella = _GRAELLES[self.pat]
+        i = self.step
+        for t in range(len(_NOTES)):
+            if _CAPES[t] > self.capa:      # capa retirada: aquesta pista calla
+                continue
+            if graella[t][i]:
+                self._cop(_NOTES[t], _VELS[t], _PERC_CH, _GATE, now)
+${teBaix ? `        g = _BAIX[self.pat][i]
+        if g >= 0:
+            ln = len(_ESCALA)
+            nota = self.oct_baix * 12 + self.key + _ESCALA[g % ln] + 12 * (g // ln)
+            if 0 <= nota <= 127:
+                self._cop(nota, 96, _BAIX_CH, self.step_dur * _GATE_BAIX, now)
+` : ''}
+    def update(self, pot_values, button_states):
+        # Potes FÍSICS: X=pot_values[1], Y=pot_values[0], Z=pot_values[2]
+        py_, px, pz = pot_values
+        now = time.monotonic()
+
+        self._allibera(now)
+
+        # ── Els tres potes, tal com s'han assignat ──
+        v = px
+${potCodeRitmic(potX, spec, capaMax)}
+        v = py_
+${potCodeRitmic(potY, spec, capaMax)}
+        v = pz
+${potCodeRitmic(potZ, spec, capaMax)}
+
+        if now >= self.next_step:
+            self._fire(now)
+            # Swing: els passos parells s'allarguen i els senars s'escurcen, i
+            # el compàs continua durant el mateix
+            k = 1.0 + (self.swing if (self.step % 2) == 0 else -self.swing)
+            self.step = (self.step + 1) % ${n}
+            self.next_step = now + self.step_dur * k
+
+        return {'bpm': int(self.bpm), 'pat': self.pat + 1, 'capa': self.capa,
+                'key': _KEYS[self.key]}
+
+    def cleanup(self):
+        self._allibera(0.0, totes=True)
+        self.stop_tracked_notes()
+        self._panic()
+`;
+}
+
 // ── Punt d'entrada ────────────────────────────────────────────────────────
 
-const GENERADORS = { melodic: generateMelodic };
+const GENERADORS = { melodic: generateMelodic, ritmic: generateRhythmic };
 
 /**
  * Genera un mode a partir de l'especificació.
