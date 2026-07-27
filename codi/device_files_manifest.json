@@ -1,6 +1,6 @@
 {
-  "version": "3.3.6",
-  "generated": "2026-07-27 13:50",
+  "version": "3.3.7",
+  "generated": "2026-07-28 00:30",
   "files": [
     "boot.py",
     "config/__init__.py",

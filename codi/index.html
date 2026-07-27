@@ -2018,9 +2018,9 @@
     .devmon {
       position: fixed; right: 24px; bottom: 24px; z-index: 350;
       width: 400px; display: flex; flex-direction: column;
-      background: color-mix(in srgb, var(--bg2) 82%, transparent);
+      background: color-mix(in srgb, var(--surface2) 82%, transparent);
       backdrop-filter: blur(18px) saturate(1.15); -webkit-backdrop-filter: blur(18px) saturate(1.15);
-      border: 1px solid var(--line); border-radius: 16px;
+      border: 1px solid var(--border); border-radius: 16px;
       box-shadow: 0 18px 60px rgba(0,0,0,.5); overflow: hidden;
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       resize: both; min-width: 320px; min-height: 260px; max-width: 92vw; max-height: 88vh;
@@ -2028,7 +2028,7 @@
     .devmon.hidden { display: none }
     .devmon-head {
       display: flex; align-items: center; gap: 8px; padding: 9px 12px;
-      border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
       font-size: 11px; color: var(--text2); cursor: grab; user-select: none;
     }
     .devmon-head:active { cursor: grabbing }
@@ -2076,16 +2076,132 @@
     .devmon.pip { position: static; width: 100%; height: 100%; border: 0; border-radius: 0;
       box-shadow: none; resize: none;
       background: radial-gradient(130% 100% at 50% 0%,
-        color-mix(in srgb, var(--bg2) 90%, var(--accent) 10%) 0%,
-        var(--bg2) 48%,
-        color-mix(in srgb, var(--bg2) 85%, black) 100%) }
+        color-mix(in srgb, var(--surface2) 90%, var(--accent) 10%) 0%,
+        var(--surface2) 48%,
+        color-mix(in srgb, var(--surface2) 85%, black) 100%) }
     .devmon.pip .devmon-body { flex: 1; padding: 0 }
     .devmon.pip .devmon-head {
       position: absolute; top: 0; left: 0; right: 0; z-index: 2; opacity: 0;
-      transition: opacity .25s ease; background: color-mix(in srgb, var(--bg2) 80%, transparent);
+      transition: opacity .25s ease; background: color-mix(in srgb, var(--surface2) 80%, transparent);
       backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
     }
     .devmon.pip:hover .devmon-head { opacity: 1 }
+
+    /* ══ CONSTRUCTOR DE MODES ═══════════════════════════════════════════════
+       Mini-app per crear modes propis. Duu el mateix llenguatge que la pantalla
+       virtual: vidre, logo de marca d'aigua al fons, etiquetes en majúscules
+       molt espaiades i el valor que importa, en gran. */
+    .modegen {
+      position: fixed; inset: 0; z-index: 400; display: flex;
+      align-items: center; justify-content: center; padding: 22px;
+      background: rgba(0, 0, 0, .5); backdrop-filter: blur(7px);
+    }
+    .modegen.hidden { display: none }
+    .modegen-frame {
+      position: relative; width: 100%; max-width: 1200px; height: 100%; max-height: 880px;
+      display: flex; flex-direction: column; overflow: hidden;
+      background: color-mix(in srgb, var(--surface2) 88%, transparent);
+      backdrop-filter: blur(18px) saturate(1.15); -webkit-backdrop-filter: blur(18px) saturate(1.15);
+      border: 1px solid var(--border); border-radius: 18px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .55);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .modegen-logo-bg {
+      position: absolute; inset: 0; margin: auto; width: min(58%, 500px); height: 58%;
+      background-color: var(--text); opacity: .03; pointer-events: none;
+      -webkit-mask: url('./logo_tecla.svg') no-repeat center / contain;
+      mask: url('./logo_tecla.svg') no-repeat center / contain;
+    }
+    .modegen-head {
+      position: relative; display: flex; align-items: center; gap: 14px; padding: 14px 18px;
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+    }
+    .modegen-title { font-size: 10px; letter-spacing: .35em; text-transform: uppercase; color: var(--text3) }
+    .modegen-crumb { font-size: 12.5px; font-weight: 700; letter-spacing: .04em; flex: 1 }
+    .modegen-head .btn { padding: 3px 10px; font-size: 11px }
+    .modegen-body {
+      position: relative; flex: 1; min-height: 0;
+      display: grid; grid-template-columns: 210px minmax(0, 1fr) 236px;
+    }
+    /* ── Columna 1: les categories ── */
+    .modegen-cats { overflow-y: auto; padding: 14px 10px 14px 14px; display: flex; flex-direction: column; gap: 7px }
+    .modegen-cat {
+      position: relative; text-align: left; cursor: pointer; padding: 9px 11px;
+      border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); border-radius: 11px;
+      background: color-mix(in srgb, var(--surface) 55%, transparent); color: var(--text2);
+      transition: border-color .15s, background .15s, color .15s;
+    }
+    .modegen-cat:hover { color: var(--text); border-color: var(--border) }
+    .modegen-cat.on {
+      color: var(--text);
+      border-color: color-mix(in srgb, var(--mg) 65%, transparent);
+      background: color-mix(in srgb, var(--mg) 13%, transparent);
+      box-shadow: 0 0 22px color-mix(in srgb, var(--mg) 16%, transparent);
+    }
+    .modegen-cat-top { display: flex; align-items: center; gap: 8px }
+    .modegen-cat-ico { font-size: 15px; color: var(--mg); width: 18px; text-align: center }
+    .modegen-cat-nom { font-size: 12.5px; font-weight: 700; letter-spacing: .03em; flex: 1 }
+    .modegen-cat-n { font-size: 9.5px; color: var(--text3); letter-spacing: .1em }
+    .modegen-cat-sub { font-size: 10px; color: var(--text3); line-height: 1.45; margin-top: 4px }
+    /* ── Columna 2: el formulari ── */
+    .modegen-form { overflow-y: auto; padding: 16px 18px 18px; border-left: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+      border-right: 1px solid color-mix(in srgb, var(--border) 40%, transparent) }
+    .mg-lab { font-size: 9.5px; letter-spacing: .3em; text-transform: uppercase; color: var(--text3); margin: 0 0 8px }
+    .mg-sec + .mg-sec { margin-top: 18px; padding-top: 16px; border-top: 1px solid color-mix(in srgb, var(--border) 35%, transparent) }
+    .mg-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center }
+    .mg-row label { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text2) }
+    .mg-row input[type=text], .mg-row input[type=number], .mg-row select { font-family: inherit; font-size: 11.5px }
+    .mg-tabs { display: flex; gap: 5px; margin-bottom: 9px }
+    .mg-tab {
+      cursor: pointer; font-size: 11px; padding: 3px 11px; border-radius: 8px; color: var(--text3);
+      border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); background: transparent;
+    }
+    .mg-tab.on { color: var(--text); border-color: color-mix(in srgb, var(--mg) 60%, transparent);
+      background: color-mix(in srgb, var(--mg) 14%, transparent) }
+    .mg-dyn-cell {
+      cursor: pointer; height: 22px; border-radius: 5px; display: flex; align-items: center; justify-content: center;
+      font-size: 12px; color: var(--text3); border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+      background: color-mix(in srgb, var(--surface) 45%, transparent);
+    }
+    .mg-dyn-cell[data-lv="1"] { color: var(--mg); border-color: color-mix(in srgb, var(--mg) 40%, transparent) }
+    .mg-dyn-cell[data-lv="2"] { color: var(--mg); border-color: color-mix(in srgb, var(--mg) 75%, transparent);
+      background: color-mix(in srgb, var(--mg) 16%, transparent) }
+    .mg-slider { display: flex; align-items: center; gap: 10px; font-size: 11.5px; color: var(--text2) }
+    .mg-slider input[type=range] { flex: 1; min-width: 120px; accent-color: var(--mg) }
+    .mg-slider .val { font-weight: 700; color: var(--text); min-width: 62px; text-align: right }
+    /* Els consells expliquen coses: van amb --text2 (--text3 és per a les
+       etiquetes petites en majúscules, i amb aparences clares no es llegiria) */
+    .mg-hint { font-size: 10.5px; color: var(--text2); line-height: 1.55; margin-top: 7px }
+    .mg-todo { padding: 4px 0 0 }
+    .mg-todo li { font-size: 11.5px; color: var(--text2); line-height: 1.9; list-style: none; padding-left: 16px; position: relative }
+    .mg-todo li::before { content: '·'; position: absolute; left: 4px; color: var(--mg); font-weight: 700 }
+    /* ── Columna 3: la previsualització, com la pantalla ── */
+    .modegen-prev { position: relative; display: flex; flex-direction: column; padding: 14px }
+    .modegen-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none }
+    .modegen-prev-now { position: relative; text-align: center; margin: auto 0 }
+    .modegen-prev-now .tag { font-size: 9.5px; letter-spacing: .3em; text-transform: uppercase; color: var(--text3); margin-bottom: 8px }
+    .modegen-prev-now .main { font-size: 27px; font-weight: 700; letter-spacing: .03em; color: var(--mg);
+      text-shadow: 0 0 26px color-mix(in srgb, var(--mg) 45%, transparent) }
+    /* Els tres potes, un per línia: els noms de funció són llargs i en tres
+       columnes es tallaven ("Brillantor (CC74)" → "Brilla…"). */
+    .modegen-pots { position: relative; display: flex; flex-direction: column; gap: 6px }
+    .modegen-pot { display: flex; align-items: center; gap: 9px; font-size: 9.5px; color: var(--text3) }
+    .modegen-pot select { flex: 1; min-width: 0; font-family: inherit; font-size: 10.5px }
+    .modegen-pot .nom { width: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--mg); font-weight: 700 }
+    .modegen-foot {
+      display: flex; align-items: center; gap: 10px; padding: 12px 18px; flex-wrap: wrap;
+      border-top: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+    }
+    .modegen-foot .grow { flex: 1 }
+    .modegen-badge { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--text3);
+      border: 1px dashed color-mix(in srgb, var(--border) 80%, transparent); border-radius: 20px; padding: 3px 11px }
+    @media (max-width: 900px) {
+      .modegen-body { grid-template-columns: 1fr; overflow-y: auto }
+      .modegen-cats { flex-direction: row; overflow-x: auto; padding: 12px }
+      .modegen-cat { min-width: 168px }
+      .modegen-form { border: 0 }
+      .modegen-prev { min-height: 240px; border-top: 1px solid color-mix(in srgb, var(--border) 40%, transparent) }
+    }
 </style>
 </head>
 
@@ -2151,6 +2267,7 @@
           <div class="modes-panel-title" data-i18n="modes_disponibles">Modes</div>
           <div id="modes-panel-list"><div class="empty" style="font-size:11px" data-i18n="carregant_2">Carregant...</div></div>
           <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+            <button class="btn btn-sm" id="btn-modegen" title="Crea un mode teu des de zero">✦ Crear</button>
             <button class="btn btn-sm" id="btn-import-modes" data-i18n="afegir">+ Afegir</button>
             <button class="btn btn-sm btn-danger" id="btn-del-mode" disabled data-i18n="eliminar_2">Eliminar</button>
           </div>
@@ -2658,6 +2775,42 @@
         <div style="display:flex;gap:8px;justify-content:flex-end">
           <button class="btn btn-sm" id="btn-arp-editor-cancel" data-i18n="cancellar_3">Cancel·lar</button>
           <button class="btn btn-sm btn-primary" id="btn-arp-editor-save" data-i18n="guardar_12">Guardar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CONSTRUCTOR DE MODES (mini-app) ═════════════════════════
+         MAQUETA (fase 0): la categoria Melòdica és operativa com a formulari;
+         la resta ensenyen què tindran. Encara no genera codi Python. -->
+    <div class="modegen hidden" id="modegen">
+      <div class="modegen-frame">
+        <div class="modegen-logo-bg"></div>
+        <div class="modegen-head">
+          <span class="modegen-title">Constructor de modes</span>
+          <span class="modegen-crumb" id="modegen-crumb">—</span>
+          <span class="modegen-badge">maqueta</span>
+          <button class="btn" id="modegen-close" title="Tancar">✕</button>
+        </div>
+        <div class="modegen-body">
+          <div class="modegen-cats" id="modegen-cats"></div>
+          <div class="modegen-form" id="modegen-form"></div>
+          <div class="modegen-prev">
+            <canvas class="modegen-canvas" id="modegen-canvas"></canvas>
+            <div class="modegen-prev-now" id="modegen-prev-now">
+              <div class="tag">previsualització</div>
+              <div class="main">—</div>
+            </div>
+            <div class="modegen-pots" id="modegen-pots"></div>
+          </div>
+        </div>
+        <div class="modegen-foot">
+          <label style="display:flex;align-items:center;gap:8px;font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--text3)">nom
+            <input type="text" id="modegen-nom" value="El meu mode" style="width:160px;font-family:inherit;font-size:12px;letter-spacing:0;text-transform:none">
+          </label>
+          <span class="grow" id="modegen-msg" style="font-size:11px;color:var(--text3)"></span>
+          <button class="btn btn-sm" id="modegen-listen" disabled title="Fase 1: generarà el mode i el farà sonar al simulador">▶ Escoltar</button>
+          <button class="btn btn-sm" id="modegen-export" disabled title="Fase 1: exportarà el mode com a fitxer .py">Exportar .py</button>
+          <button class="btn btn-sm btn-primary" id="modegen-save" disabled title="Fase 1: desarà el mode i l'instal·larà al dispositiu">Desar mode</button>
         </div>
       </div>
     </div>
@@ -4824,6 +4977,403 @@
     });
 
 
+    // ══ CONSTRUCTOR DE MODES (mini-app) ══════════════════════════════════════
+    // MAQUETA (fase 0). Les sis categories surten d'analitzar l'anatomia dels 64
+    // modes del firmware, no els seus noms: cada família comparteix columna
+    // vertebral, i per això es pot generar. La categoria Melòdica ja és un
+    // formulari operatiu; la resta declaren què tindran. La generació de Python
+    // (codi/js/tecla-modegen.js) és la fase següent.
+    const MODEGEN_CATS = [
+      {
+        id: 'melodic', ico: '♪', nom: 'Melòdic', color: '#5b8cff', n: 18, anim: 'ring',
+        sub: 'Seqüència de graus sobre una escala',
+        exemples: 'Bach · Satie · Glass · Pärt · Frahm · Chopin',
+        potFns: ['Tempo', 'Patró', 'Octava', 'Dinàmica', 'Articulació', 'Tonalitat', 'Brillantor (CC74)', 'Modulació (CC1)', '—'],
+        potsDef: { x: 'Tempo', y: 'Patró', z: 'Octava' },
+        vars: ['Escala i tonalitat', 'Melodia per graus, fins a 4 patrons', 'Dinàmica de cada pas',
+               'Articulació: de picada a lligada', 'Veu secundària (contrapunt o tintinnabuli)', 'Rang d’octaves i de tempo'],
+      },
+      {
+        id: 'ritmic', ico: '▦', nom: 'Rítmic', color: '#e74c3c', n: 9, anim: 'bars',
+        sub: 'Graella de passos amb bateria i baix',
+        exemples: 'Techno · Acid · Dub · HardGroove · Makina',
+        potFns: ['Tempo', 'Patró', 'Capes (breakdown)', 'Swing', 'Octava del baix', 'Brillantor (CC74)', '—'],
+        potsDef: { x: 'Tempo', y: 'Patró', z: 'Capes (breakdown)' },
+        vars: ['Graella de 8/16/32 passos × pistes', 'Nota MIDI de cada pista (bateria GM)',
+               'Rang de BPM i swing', 'Capes de breakdown per nivell de pot', 'Línia de baix per graus'],
+      },
+      {
+        id: 'drone', ico: '◉', nom: 'Drone', color: '#2eb87e', n: 9, anim: 'ring',
+        sub: 'Acord sostingut amb gate i moviment',
+        exemples: 'ToDrone · ToAcord · ToArc · PedalJazz · Dinamo',
+        potFns: ['Gate', 'Brillantor (CC74)', 'Octava', 'Tipus d’acord', 'Moviment', 'Modulació (CC1)', '—'],
+        potsDef: { x: 'Gate', y: 'Brillantor (CC74)', z: 'Octava' },
+        vars: ['Intervals de l’acord i nombre de veus', 'Obertura de les veus',
+               'Gate: període, duty i mínim d’expressió', 'Moviment lent d’un CC', 'Arc automàtic per veu'],
+      },
+      {
+        id: 'textura', ico: '░', nom: 'Textura', color: '#e09020', n: 11, anim: 'dots',
+        sub: 'Esdeveniments d’atzar amb densitat',
+        exemples: 'Noise · Crackle · Grana · Brasa · Tempesta',
+        potFns: ['Densitat', 'Fons greu', 'Filtre (CC74)', 'Rang de notes', 'Ràfegues', '—'],
+        potsDef: { x: 'Densitat', y: 'Fons greu', z: 'Filtre (CC74)' },
+        vars: ['Densitat d’esdeveniments', 'Rang de notes i de dinàmica', 'Durada de les notes',
+               'Fons greu amb entrada progressiva', 'Continu o per ràfegues', 'Filtre fix o en escombrada'],
+      },
+      {
+        id: 'ona', ico: '∿', nom: 'Ona', color: '#9b59b6', n: 8, anim: 'wave',
+        sub: 'Un oscil·lador lent cap a nota o CC',
+        exemples: 'Sinusoidal · Quadrada · Serra · Respiració',
+        potFns: ['Freqüència', 'Nota base', 'Amplitud', 'Duty', 'Destinació', '—'],
+        potsDef: { x: 'Freqüència', y: 'Nota base', z: 'Amplitud' },
+        vars: ['Forma d’ona', 'Freqüència en Hz', 'Destinació: nota MIDI o número de CC',
+               'Nota base i amplitud en semitons', 'Quantització a escala'],
+      },
+      {
+        id: 'algoritmic', ico: '⬡', nom: 'Algorísmic', color: '#38bdf8', n: 7, anim: 'bars',
+        sub: 'Una regla que genera el patró',
+        exemples: 'Euclid · Wolfram · Mandelbrot · Markov · Vida',
+        potFns: ['Tempo', 'Paràmetre de la regla', 'Densitat', 'Octava', 'Llavor', '—'],
+        potsDef: { x: 'Tempo', y: 'Paràmetre de la regla', z: 'Densitat' },
+        vars: ['Algorisme: euclidià, autòmat cel·lular, mapa logístic, Markov, joc de la vida',
+               'Paràmetres propis de la regla', 'Com es mapeja a notes: escala o percussió', 'Tempo i llavor'],
+      },
+    ];
+
+    // Estat del formulari melòdic (l'única categoria operativa a la maqueta)
+    const _mgMel = {
+      nom: 'El meu mode', escala: 0, tonalitat: 0, passos: 8, patIdx: 0,
+      patrons: [
+        { graus: [0, 4, 7, 11, 7, 4, 0, 7], din: [2, 1, 1, 2, 1, 1, 0, 1] },
+        { graus: [0, 2, 4, 2, 0, -1, 4, 2], din: [2, 1, 1, 1, 2, 0, 1, 1] },
+        { graus: [0, 7, 4, 7, 0, 7, 4, 7], din: [2, 0, 1, 0, 2, 0, 1, 0] },
+        { graus: [0, 1, 5, 7, 1, 5, 7, 10], din: [1, 1, 1, 1, 1, 1, 1, 1] },
+      ],
+      articulacio: 55, octava: 4, tempoMin: 40, tempoMax: 150,
+      veu2: { on: false, interval: -12, cada: 3, retard: 45 },
+      pots: { x: 'Tempo', y: 'Patró', z: 'Octava' },
+    };
+    let _mgCat = MODEGEN_CATS[0];
+
+    function _mgFrame() { return document.querySelector('.modegen-frame'); }
+
+    function _mgRenderCats() {
+      const box = document.getElementById('modegen-cats');
+      if (!box) return;
+      box.innerHTML = MODEGEN_CATS.map(c => `
+        <button class="modegen-cat ${c.id === _mgCat.id ? 'on' : ''}" data-id="${c.id}" style="--mg:${c.color}">
+          <div class="modegen-cat-top">
+            <span class="modegen-cat-ico">${c.ico}</span>
+            <span class="modegen-cat-nom">${c.nom}</span>
+            <span class="modegen-cat-n">${c.n}</span>
+          </div>
+          <div class="modegen-cat-sub">${c.sub}</div>
+        </button>`).join('');
+      box.querySelectorAll('.modegen-cat').forEach(el => el.addEventListener('click', () => {
+        _mgCat = MODEGEN_CATS.find(c => c.id === el.dataset.id);
+        _mgRenderCats(); _mgRenderForm(); _mgRenderPots(); _mgSync();
+      }));
+    }
+
+    // Graella de graus: mateixa mecànica que l'editor d'arpegis (una casella
+    // encesa per columna), amb una fila de dinàmica a sota.
+    function _mgRenderGrid() {
+      const p = _mgMel.patrons[_mgMel.patIdx];
+      const n = _mgMel.passos;
+      while (p.graus.length < n) { p.graus.push(-1); p.din.push(1); }
+      const grid = document.getElementById('mg-grid');
+      if (!grid) return;
+      // Graus i dinàmica van a la MATEIXA graella: si són dues, les columnes no
+      // s'alineen (la matriu creix amb l'amplada mínima de les caselles i la
+      // fila de sota s'ajustava al contenidor).
+      grid.style.gridTemplateColumns = `auto repeat(${n}, 1fr)`;
+      const graus = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
+      let h = '<div></div>' + Array.from({ length: n }, (_, c) => `<div class="arp-matrix-header">${c + 1}</div>`).join('');
+      for (let r = 0; r < 8; r++) {
+        h += `<div class="arp-matrix-row-label">${graus[r]}</div>`;
+        for (let c = 0; c < n; c++) {
+          h += `<div class="arp-matrix-cell ${p.graus[c] === r ? 'active' : ''}" data-c="${c}" data-v="${r}"></div>`;
+        }
+      }
+      h += `<div class="arp-matrix-row-label">silenci</div>`;
+      for (let c = 0; c < n; c++) h += `<div class="arp-matrix-cell ${p.graus[c] === -1 ? 'active' : ''}" data-c="${c}" data-v="-1"></div>`;
+      // Última fila: la dinàmica de cada pas (clic = pianíssim → mig → forte)
+      const glif = ['·', '▪', '■'];
+      h += `<div class="arp-matrix-row-label">dinàmica</div>`;
+      for (let c = 0; c < n; c++) h += `<div class="mg-dyn-cell" data-c="${c}" data-lv="${p.din[c]}">${glif[p.din[c]]}</div>`;
+      grid.innerHTML = h;
+      grid.querySelectorAll('.arp-matrix-cell').forEach(cell => cell.addEventListener('click', () => {
+        p.graus[+cell.dataset.c] = +cell.dataset.v;
+        _mgRenderGrid(); _mgSync();
+      }));
+      grid.querySelectorAll('.mg-dyn-cell').forEach(cell => cell.addEventListener('click', () => {
+        const c = +cell.dataset.c;
+        p.din[c] = (p.din[c] + 1) % 3;
+        _mgRenderGrid(); _mgSync();
+      }));
+    }
+
+    function _mgRenderForm() {
+      const box = document.getElementById('modegen-form');
+      const frame = _mgFrame();
+      if (!box) return;
+      if (frame) frame.style.setProperty('--mg', _mgCat.color);
+      document.getElementById('modegen-crumb').textContent = `${_mgCat.ico}  ${_mgCat.nom}`;
+      document.getElementById('modegen-crumb').style.color = _mgCat.color;
+
+      if (_mgCat.id !== 'melodic') {
+        box.innerHTML = `
+          <div class="mg-sec">
+            <p class="mg-lab">Què hi haurà</p>
+            <ul class="mg-todo">${_mgCat.vars.map(v => `<li>${v}</li>`).join('')}</ul>
+            <p class="mg-hint">Els <strong>${_mgCat.n}</strong> modes d’aquesta família del firmware
+              (${_mgCat.exemples}) comparteixen la mateixa columna vertebral: per això es poden generar.
+              El formulari arriba a la fase següent — a la maqueta només hi ha el melòdic.</p>
+          </div>`;
+        return;
+      }
+
+      const escales = (typeof SCALE_NAMES_JS !== 'undefined' ? SCALE_NAMES_JS : ['Major']);
+      const tons = (typeof KEY_CIRCLE_JS !== 'undefined' ? KEY_CIRCLE_JS : ['C']);
+      const iv = [[-12, 'Octava baixa'], [-7, 'Quinta baixa'], [-5, 'Quarta baixa'], [-3, 'Terça menor baixa'],
+                  [3, 'Terça menor alta'], [4, 'Terça major alta'], [7, 'Quinta alta'], [12, 'Octava alta']];
+      box.innerHTML = `
+        <div class="mg-sec">
+          <p class="mg-lab">Escala i tonalitat</p>
+          <div class="mg-row">
+            <label>Escala
+              <select id="mg-escala">${escales.map((e, i) => `<option value="${i}" ${i === _mgMel.escala ? 'selected' : ''}>${e}</option>`).join('')}</select>
+            </label>
+            <label>Tonalitat
+              <select id="mg-tonalitat" style="width:64px">${tons.map((t, i) => `<option value="${i}" ${i === _mgMel.tonalitat ? 'selected' : ''}>${t}</option>`).join('')}</select>
+            </label>
+            <label>Octava
+              <select id="mg-octava" style="width:56px">${[2, 3, 4, 5, 6].map(o => `<option value="${o}" ${o === _mgMel.octava ? 'selected' : ''}>${o}</option>`).join('')}</select>
+            </label>
+          </div>
+        </div>
+
+        <div class="mg-sec">
+          <p class="mg-lab">Melodia · graus de l’escala</p>
+          <div class="mg-tabs" id="mg-tabs">
+            ${_mgMel.patrons.map((_, i) => `<button class="mg-tab ${i === _mgMel.patIdx ? 'on' : ''}" data-i="${i}">Patró ${i + 1}</button>`).join('')}
+            <label style="margin-left:auto;font-size:11px;color:var(--text2);display:flex;align-items:center;gap:6px">Passos
+              <select id="mg-passos" style="width:58px">${[4, 8, 12, 16].map(s => `<option value="${s}" ${s === _mgMel.passos ? 'selected' : ''}>${s}</option>`).join('')}</select>
+            </label>
+          </div>
+          <div class="arp-matrix-container" style="overflow-x:auto;padding-bottom:6px">
+            <div class="arp-matrix" id="mg-grid" style="display:grid;gap:4px"></div>
+          </div>
+          <p class="mg-hint">El pot assignat a <strong>Patró</strong> cicla els quatre en directe. La fila de sota
+            és la <strong>dinàmica</strong> de cada pas: clica-la per pujar de pianíssim a forte.</p>
+        </div>
+
+        <div class="mg-sec">
+          <p class="mg-lab">Articulació</p>
+          <div class="mg-slider">
+            <span>picada</span>
+            <input type="range" id="mg-artic" min="15" max="100" value="${_mgMel.articulacio}">
+            <span>lligada</span>
+            <span class="val" id="mg-artic-val">${_mgMel.articulacio}%</span>
+          </div>
+          <p class="mg-hint">Quina part del pas sona la nota. El silenci entremig és el que fa que un Satie
+            respiri i un Glass corri.</p>
+        </div>
+
+        <div class="mg-sec">
+          <p class="mg-lab">Veu secundària</p>
+          <div class="mg-row">
+            <label><input type="checkbox" id="mg-v2" ${_mgMel.veu2.on ? 'checked' : ''}> Activada</label>
+            <label>Interval
+              <select id="mg-v2-iv">${iv.map(([v, n]) => `<option value="${v}" ${v === _mgMel.veu2.interval ? 'selected' : ''}>${n}</option>`).join('')}</select>
+            </label>
+            <label>Cada <input type="number" id="mg-v2-cada" min="1" max="8" value="${_mgMel.veu2.cada}" style="width:52px"> notes</label>
+            <label>Retard <input type="number" id="mg-v2-ret" min="0" max="100" value="${_mgMel.veu2.retard}" style="width:56px"> %</label>
+          </div>
+          <p class="mg-hint">És el contrapunt de Bach i el tintinnabuli de Pärt: una segona veu que segueix
+            la primera a un interval fix.</p>
+        </div>
+
+        <div class="mg-sec">
+          <p class="mg-lab">Rang de tempo</p>
+          <div class="mg-row">
+            <label>De <input type="number" id="mg-tmin" min="20" max="240" value="${_mgMel.tempoMin}" style="width:60px"> BPM</label>
+            <label>a <input type="number" id="mg-tmax" min="20" max="240" value="${_mgMel.tempoMax}" style="width:60px"> BPM</label>
+          </div>
+          <p class="mg-hint">El recorregut del pot de tempo. En negres per minut, com al DAW.</p>
+        </div>`;
+
+      _mgRenderGrid();
+      const on = (id, ev, fn) => document.getElementById(id)?.addEventListener(ev, fn);
+      document.querySelectorAll('#mg-tabs .mg-tab').forEach(t => t.addEventListener('click', () => {
+        _mgMel.patIdx = +t.dataset.i; _mgRenderForm(); _mgSync();
+      }));
+      on('mg-passos', 'change', e => { _mgMel.passos = +e.target.value; _mgRenderGrid(); _mgSync(); });
+      on('mg-escala', 'change', e => { _mgMel.escala = +e.target.value; _mgSync(); });
+      on('mg-tonalitat', 'change', e => { _mgMel.tonalitat = +e.target.value; _mgSync(); });
+      on('mg-octava', 'change', e => { _mgMel.octava = +e.target.value; _mgSync(); });
+      on('mg-artic', 'input', e => {
+        _mgMel.articulacio = +e.target.value;
+        document.getElementById('mg-artic-val').textContent = _mgMel.articulacio + '%';
+        _mgSync();
+      });
+      on('mg-v2', 'change', e => { _mgMel.veu2.on = e.target.checked; _mgSync(); });
+      on('mg-v2-iv', 'change', e => { _mgMel.veu2.interval = +e.target.value; _mgSync(); });
+      on('mg-v2-cada', 'input', e => { _mgMel.veu2.cada = +e.target.value; _mgSync(); });
+      on('mg-v2-ret', 'input', e => { _mgMel.veu2.retard = +e.target.value; _mgSync(); });
+      on('mg-tmin', 'input', e => { _mgMel.tempoMin = +e.target.value; _mgSync(); });
+      on('mg-tmax', 'input', e => { _mgMel.tempoMax = +e.target.value; _mgSync(); });
+    }
+
+    document.getElementById('modegen-nom')?.addEventListener('input', e => {
+      _mgMel.nom = e.target.value;
+    });
+
+    function _mgRenderPots() {
+      const box = document.getElementById('modegen-pots');
+      if (!box) return;
+      const def = _mgCat.id === 'melodic' ? _mgMel.pots : _mgCat.potsDef;
+      box.innerHTML = ['x', 'y', 'z'].map(k => `
+        <div class="modegen-pot">
+          <div class="nom">${k}</div>
+          <select data-k="${k}">${_mgCat.potFns.map(f => `<option ${f === def[k] ? 'selected' : ''}>${f}</option>`).join('')}</select>
+        </div>`).join('');
+      box.querySelectorAll('select').forEach(s => s.addEventListener('change', () => {
+        if (_mgCat.id === 'melodic') _mgMel.pots[s.dataset.k] = s.value;
+        _mgSync();
+      }));
+    }
+
+    // Previsualització: el mateix llenguatge que la pantalla virtual — una
+    // animació per família, que ja respira segons el que hi ha al formulari.
+    const _mgAnim = (() => {
+      const cv = document.getElementById('modegen-canvas');
+      if (!cv) return { start() { }, stop() { }, set() { } };
+      const ctx = cv.getContext('2d');
+      const st = { speed: 1, amp: .35, kind: 'ring', color: '#5b8cff', t: 0, run: false, seeds: [] };
+      for (let i = 0; i < 40; i++) st.seeds.push({ x: Math.random(), y: Math.random(), p: Math.random() * 6.3 });
+      function draw() {
+        if (!st.run) return;
+        requestAnimationFrame(draw);
+        try {
+          const w = cv.clientWidth, h = cv.clientHeight;
+          if (!w || !h) return;
+          const dpr = Math.min(2, window.devicePixelRatio || 1);
+          if (cv.width !== w * dpr) { cv.width = w * dpr; cv.height = h * dpr; }
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          ctx.clearRect(0, 0, w, h);
+          ctx.strokeStyle = st.color; ctx.fillStyle = st.color;
+          st.t += .016 * st.speed;
+          const cx = w / 2, cy = h / 2;
+          if (st.kind === 'bars') {
+            const n = 14, bw = w / (n * 1.7);
+            for (let i = 0; i < n; i++) {
+              const v = (Math.sin(st.t * 3 + i * .7) + 1) / 2 * st.amp + .08;
+              const bh = v * h * .6;
+              ctx.globalAlpha = .18 + v * .5;
+              ctx.fillRect(w * .12 + i * bw * 1.7, cy + h * .28 - bh, bw, bh);
+            }
+          } else if (st.kind === 'wave') {
+            ctx.globalAlpha = .5; ctx.lineWidth = 1.6;
+            for (let k = 0; k < 3; k++) {
+              ctx.beginPath();
+              for (let i = 0; i <= 80; i++) {
+                const x = (i / 80) * w;
+                const y = cy + (k - 1) * h * .14 + Math.sin(i * .18 + st.t * 2.4 + k) * h * .13 * st.amp * 2;
+                i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+              }
+              ctx.stroke();
+            }
+          } else if (st.kind === 'dots') {
+            for (const s of st.seeds) {
+              const tw = (Math.sin(s.p + st.t * 4) + 1) / 2;
+              ctx.globalAlpha = tw * .55 * (st.amp + .3);
+              ctx.beginPath();
+              ctx.arc(s.x * w, s.y * h, 1 + tw * 2.2, 0, 6.3);
+              ctx.fill();
+            }
+          } else {
+            const base = Math.min(w, h) * .3;
+            for (let ring = 0; ring < 2; ring++) {
+              ctx.beginPath();
+              for (let i = 0; i <= 96; i++) {
+                const a = (i / 96) * Math.PI * 2;
+                const wob = Math.sin(a * (3 + ring * 2) + st.t * 2.2) * st.amp;
+                const r = base * (1 + wob * .3);
+                const x = cx + Math.cos(a + st.t * .3) * r, y = cy + Math.sin(a + st.t * .3) * r * .92;
+                i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+              }
+              ctx.closePath();
+              ctx.globalAlpha = ring ? .18 : .4; ctx.lineWidth = 1.5;
+              ctx.stroke();
+            }
+          }
+          ctx.globalAlpha = 1;
+        } catch { }
+      }
+      return {
+        set(kind, color, speed, amp) {
+          st.kind = kind; st.color = color;
+          st.speed = Math.max(.25, Math.min(3, speed)); st.amp = Math.max(.1, Math.min(1, amp));
+        },
+        start() { if (!st.run) { st.run = true; requestAnimationFrame(draw); } },
+        stop() { st.run = false; },
+      };
+    })();
+
+    // Posa al dia la previsualització amb el que diu el formulari
+    function _mgSync() {
+      const now = document.getElementById('modegen-prev-now');
+      const tons = (typeof KEY_CIRCLE_JS !== 'undefined' ? KEY_CIRCLE_JS : ['C']);
+      const escales = (typeof SCALE_NAMES_JS !== 'undefined' ? SCALE_NAMES_JS : ['Major']);
+      let tag = _mgCat.nom, main = _mgCat.ico, bpm = 110, amp = .4;
+      if (_mgCat.id === 'melodic') {
+        const p = _mgMel.patrons[_mgMel.patIdx];
+        const notes = p.graus.slice(0, _mgMel.passos).filter(g => g >= 0).length;
+        bpm = (_mgMel.tempoMin + _mgMel.tempoMax) / 2;
+        amp = .2 + (notes / Math.max(1, _mgMel.passos)) * .7;
+        tag = `patró ${_mgMel.patIdx + 1} · ${notes} notes`;
+        // Nom d'escala sense el parèntesi: la columna és estreta i el número
+        // ha de quedar gran i llegible, com a la pantalla.
+        const esc = (escales[_mgMel.escala] || '').replace(/\s*\(.*\)\s*/, '');
+        main = `${tons[_mgMel.tonalitat]} ${esc}`.trim();
+      } else {
+        tag = _mgCat.sub.toLowerCase();
+        main = _mgCat.nom;
+      }
+      if (now) {
+        now.querySelector('.tag').textContent = tag;
+        const mn = now.querySelector('.main');
+        mn.textContent = main;
+        mn.style.fontSize = main.length <= 9 ? '' : main.length <= 14 ? '21px' : '17px';
+      }
+      _mgAnim.set(_mgCat.anim, _mgCat.color, bpm / 110, amp);
+      const msg = document.getElementById('modegen-msg');
+      if (msg) {
+        msg.textContent = _mgCat.id === 'melodic'
+          ? 'Maqueta: el formulari ja és el definitiu. Escoltar, exportar i desar arriben amb el generador.'
+          : `${_mgCat.nom}: formulari pendent (fase següent).`;
+      }
+    }
+
+    function _mgOpen() {
+      document.getElementById('modegen')?.classList.remove('hidden');
+      _mgRenderCats(); _mgRenderForm(); _mgRenderPots(); _mgSync();
+      _mgAnim.start();
+    }
+    function _mgClose() {
+      document.getElementById('modegen')?.classList.add('hidden');
+      _mgAnim.stop();
+    }
+    document.getElementById('btn-modegen')?.addEventListener('click', _mgOpen);
+    document.getElementById('modegen-close')?.addEventListener('click', _mgClose);
+    document.getElementById('modegen')?.addEventListener('click', e => {
+      if (e.target.id === 'modegen') _mgClose();
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && !document.getElementById('modegen')?.classList.contains('hidden')) _mgClose();
+    });
+
     function _getAssignedModes() {
       const assigned = new Set();
       (_keysConfig.banks || []).forEach(bank => {
@@ -5572,7 +6122,7 @@
       const current = isAudio ? (() => { const [, i, ax] = potId.split(':'); return _audioMapFor(+i)[ax]; })() : currentFns?.[potId];
       const menu = document.createElement('div');
       menu.id = 'kb-pot-menu';
-      menu.style.cssText = 'position:fixed;z-index:9999;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:6px;min-width:160px;box-shadow:0 10px 30px rgba(0,0,0,.45)';
+      menu.style.cssText = 'position:fixed;z-index:9999;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px;min-width:160px;box-shadow:0 10px 30px rgba(0,0,0,.45)';
       const rect = anchorEl.getBoundingClientRect();
       menu.style.top = Math.min(rect.bottom + 4, window.innerHeight - 320) + 'px';
       menu.style.left = Math.min(rect.left, window.innerWidth - 180) + 'px';
@@ -5996,7 +6546,7 @@
         row.className = 'keys-sort-row';
         row.draggable = true;
         row.dataset.key = key;
-        row.style.cssText = `display:flex;align-items:center;padding:5px 10px;border:1px solid var(--border);border-radius:5px;background:var(--bg2);gap:8px;opacity:${active ? '1' : '0.5'};transition:opacity .15s`;
+        row.style.cssText = `display:flex;align-items:center;padding:5px 10px;border:1px solid var(--border);border-radius:5px;background:var(--surface2);gap:8px;opacity:${active ? '1' : '0.5'};transition:opacity .15s`;
         row.innerHTML = `<span style="cursor:grab;color:var(--text3);font-size:18px;line-height:1">&#8801;</span><label style="display:flex;align-items:center;gap:6px;flex:1;cursor:pointer;margin:0"><input type="checkbox" class="kb-key-chk" value="${key}" ${active ? 'checked' : ''}><span style="font-weight:600;min-width:28px">${key}</span></label>`;
         cont.appendChild(row);
       }
