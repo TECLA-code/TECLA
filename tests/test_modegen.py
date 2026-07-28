@@ -200,7 +200,7 @@ CASOS_TEX = {
     'filtre_gate': _spect(nom='Filtre gate', moviment='Gate', movPeriode=0.5),
     'forca_plana': _spect(nom='Forca plana', velMin=90, velMax=90),
     'pots_alternatius_tex': _spect(nom='Potes textura',
-                                   pots={'x': 'Dispersió', 'y': 'Volum', 'z': 'Fons greu'}),
+                                   pots={'x': 'Dispersió', 'y': 'Atenuació', 'z': 'Fons greu'}),
     'pots_buits_tex': _spect(nom='Sense potes tex', pots={'x': '—', 'y': '—', 'z': '—'}),
 }
 
@@ -569,7 +569,8 @@ def test_les_notes_de_percussio_son_les_configurades(modes_importats):
 
 
 def test_la_dinamica_de_cada_pista_es_respecta(modes_importats):
-    midi, _ = _fes_sonar(modes_importats['quatre_per_quatre'])
+    # Pot de capes en repòs = hi són totes les pistes
+    midi, _ = _fes_sonar(modes_importats['quatre_per_quatre'], potes=(64, 64, 0))
     vels = {}
     for m in midi.sent:
         if type(m).__name__.endswith('NoteOn') and m.velocity > 0 and getattr(m, 'channel', 0) == 9:
@@ -580,8 +581,8 @@ def test_la_dinamica_de_cada_pista_es_respecta(modes_importats):
 def test_el_pot_de_capes_retira_pistes(modes_importats):
     """Amb el breakdown al mínim només ha de quedar la capa 0 (el bombo)."""
     cls = modes_importats['quatre_per_quatre']
-    ple, _ = _fes_sonar(cls, potes=(64, 64, 127))
-    nu, mode = _fes_sonar(cls, potes=(64, 64, 0))
+    ple, _ = _fes_sonar(cls, potes=(64, 64, 0))
+    nu, mode = _fes_sonar(cls, potes=(64, 64, 127))
     perc = lambda midi: {m.note for m in midi.sent
                          if type(m).__name__.endswith('NoteOn') and m.velocity > 0
                          and getattr(m, 'channel', 0) == 9}
@@ -694,7 +695,7 @@ def test_el_drone_sosté_l_acord(modes_importats):
         # no hi ha el remuntatge inicial amb què el drone es fa seu el pot.
         for _ in range(300):
             rellotge[0] += 0.01
-            mode.update([0, 64, 64], [False] * 16)
+            mode.update([0, 64, 0], [False] * 16)
         ons = [m.note for m in midi.sent if type(m).__name__.endswith('NoteOn') and m.velocity > 0]
         offs = [m.note for m in midi.sent if type(m).__name__.endswith('NoteOff')]
         assert len(ons) == 2, f'C i la seva quinta: {ons}'
@@ -706,20 +707,20 @@ def test_el_drone_sosté_l_acord(modes_importats):
 
 def test_les_veus_son_els_intervals_configurats(modes_importats):
     """Octava 3, C, intervals 0 i 7 → notes 36 i 43."""
-    midi, _ = _fes_sonar(modes_importats['arc'], potes=(0, 64, 64), voltes=50)
+    midi, _ = _fes_sonar(modes_importats['arc'], potes=(0, 64, 0), voltes=50)
     ons = {m.note for m in midi.sent if type(m).__name__.endswith('NoteOn') and m.velocity > 0}
     assert ons == {36, 43}, ons
 
 
 def test_les_veus_repetides_es_fonen(modes_importats):
     """[0,0,7,7,7] és un acord de dues veus, no de cinc."""
-    midi, _ = _fes_sonar(modes_importats['veus_repetides'], voltes=50)
+    midi, _ = _fes_sonar(modes_importats['veus_repetides'], potes=(64, 64, 0), voltes=50)
     ons = [m.note for m in midi.sent if type(m).__name__.endswith('NoteOn') and m.velocity > 0]
     assert len(ons) == 2, ons
 
 
 def test_un_acord_buit_cau_a_la_fonamental(modes_importats):
-    midi, _ = _fes_sonar(modes_importats['acord_buit'], voltes=50)
+    midi, _ = _fes_sonar(modes_importats['acord_buit'], potes=(64, 64, 0), voltes=50)
     ons = [m.note for m in midi.sent if type(m).__name__.endswith('NoteOn') and m.velocity > 0]
     assert len(ons) == 1
 
@@ -795,11 +796,13 @@ def test_el_pot_de_tipus_d_acord_canvia_les_veus(modes_importats):
 
 def test_el_pot_d_octava_transporta_el_drone(modes_importats):
     cls = modes_importats['arc']
-    greu, _ = _fes_sonar(cls, potes=(64, 64, 0), voltes=40)
-    agut, _ = _fes_sonar(cls, potes=(64, 64, 127), voltes=40)
-    baix = lambda midi: min(m.note for m in midi.sent
-                            if type(m).__name__.endswith('NoteOn') and m.velocity > 0)
-    assert baix(agut) > baix(greu)
+    greu, mg = _fes_sonar(cls, potes=(64, 64, 0), voltes=40)
+    agut, ma = _fes_sonar(cls, potes=(64, 64, 127), voltes=40)
+    alt = lambda midi: max(m.note for m in midi.sent
+                           if type(m).__name__.endswith('NoteOn') and m.velocity > 0)
+    assert mg.octave == 3, 'el pot en repòs ha de donar l\'octava configurada'
+    assert ma.octave > mg.octave
+    assert alt(agut) > alt(greu)
 
 
 def test_el_drone_no_te_pols_per_a_la_pantalla(modes_importats):
@@ -966,7 +969,8 @@ def test_el_pot_de_densitat_la_canvia(modes_importats):
     cls = modes_importats['gra']
     _, poc = _fes_sonar(cls, potes=(64, 0, 64), voltes=30)
     _, molt = _fes_sonar(cls, potes=(64, 127, 64), voltes=30)
-    assert molt.dens > poc.dens * 5
+    assert poc.dens == 8.0, 'el pot en repòs ha de donar la densitat configurada'
+    assert molt.dens > poc.dens * 2
 
 
 def test_el_pot_de_zona_mou_les_notes(modes_importats):
@@ -1098,7 +1102,8 @@ def test_el_pot_de_frequencia_la_canvia(modes_importats):
     cls = modes_importats['sinus']
     _, lenta = _fes_sonar(cls, potes=(64, 0, 64), voltes=30)
     _, rapida = _fes_sonar(cls, potes=(64, 127, 64), voltes=30)
-    assert rapida.freq > lenta.freq * 10
+    assert lenta.freq == 2.0, 'el pot en repòs ha de donar la freqüència configurada'
+    assert rapida.freq > lenta.freq * 3
 
 
 def test_el_pot_d_amplitud_estreny_el_recorregut(modes_importats):
@@ -1465,6 +1470,39 @@ def test_amb_el_pot_de_densitat_al_minim_l_euclidia_toca_el_que_has_posat(tmp_pa
         except ValueError:
             pass
         sys.modules.pop('modes.' + g['file'][:-3], None)
+
+
+def test_amb_els_potes_en_repos_els_modes_sonen_com_els_has_fet(modes_importats):
+    """LA propietat del constructor: si dissenyes una cosa i la fas sonar, has
+    de sentir ALLÒ. Els potes exploren a partir del que has configurat, no li
+    imposen la seva posició.
+
+    Trobat exportant modes de debò: el ritme sonava pelat (el breakdown en
+    repòs retirava totes les pistes menys el bombo) i els drones sonaven una
+    octava per sota de la triada.
+    """
+    ref = {
+        # família        atribut      el que diu el formulari
+        'senzill':      [('speed', 60 / 40), ('artic', 0.55), ('vel_k', 1.0), ('pat', 0)],
+        'quatre_per_quatre': [('capa', 3), ('swing', 0.0), ('oct_baix', 2)],
+        'arc':          [('octave', 3), ('acord', 0), ('vel', 80), ('mov_per', 2.0)],
+        'gra':          [('dens', 8.0), ('centre', 78), ('disp', 18), ('vol', 1.0),
+                         ('fons_vel', 45), ('mov_per', 4.0)],
+        'sinus':        [('freq', 2.0), ('base', 48), ('amp', 1.0), ('duty', 0.5), ('vel', 80)],
+        'euclid':       [('rot', 0), ('dens', 0.0), ('octave', 4)],
+        'markov':       [('atzar', 0.0), ('abast', 2), ('octave', 4)],
+    }
+    dolents = []
+    for clau, camps in ref.items():
+        _, mode = _fes_sonar(modes_importats[clau], potes=(0, 0, 0), voltes=60)
+        for camp, esperat in camps:
+            real = getattr(mode, camp, '(no hi és)')
+            if isinstance(esperat, float):
+                if abs(real - esperat) > 1e-6:
+                    dolents.append(f'{clau}.{camp}: {real} en lloc de {esperat}')
+            elif real != esperat:
+                dolents.append(f'{clau}.{camp}: {real} en lloc de {esperat}')
+    assert not dolents, 'els potes en repòs canvien el disseny:\n  ' + '\n  '.join(dolents)
 
 
 def test_tots_els_algorismes_toquen_alguna_cosa(modes_importats):

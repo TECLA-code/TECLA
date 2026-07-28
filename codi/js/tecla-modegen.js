@@ -84,12 +84,12 @@ function potCode(fn, spec, indent = '        ') {
            + `${i}if p != self.pat:\n${i}    self.pat = p\n${i}    self.step = 0\n`
            + `${i}    print("${'%'}s: patro ${'%'}d" % (self.name, p + 1))`;
     case 'Octava':
-      return `${i}o = _OCT - 1 + int((v / 127.0) * 2.99)\n`
+      return `${i}o = _OCT + int((v / 127.0) * 2.99)\n`
            + `${i}if o != self.octave:\n${i}    self.octave = o`;
     case 'Dinàmica':
-      return `${i}self.vel_k = 0.45 + (v / 127.0) * 0.9`;
+      return `${i}self.vel_k = 1.0 + (v / 127.0) * 0.6`;
     case 'Articulació':
-      return `${i}self.artic = 0.15 + (v / 127.0) * 0.85`;
+      return `${i}self.artic = _ARTIC + (v / 127.0) * (1.0 - _ARTIC)`;
     case 'Tonalitat':
       return `${i}k = int((v / 127.0) * 11.99)\n`
            + `${i}if k != self.key:\n${i}    self.key = k\n`
@@ -151,6 +151,7 @@ _GRAUS = ${py.tuples(graus)}
 _VELS = ${py.tuples(vels)}
 _KEYS = ('C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B')
 _OCT = ${oct}
+_ARTIC = ${py.f(artic)}
 _PATRONS = _GRAUS
 
 
@@ -163,7 +164,7 @@ class ${cls}(BaseMode):
         self.pat = 0
         self.step = 0
         self.speed = ${py.f(60 / bpm0)}
-        self.artic = ${py.f(artic)}
+        self.artic = _ARTIC
         self.vel_k = 1.0
         self.next_t = 0.0
         self.off_t = 0.0
@@ -321,13 +322,17 @@ function potCodeRitmic(fn, spec, capes, indent = '        ') {
            + `${i}if p != self.pat:\n${i}    self.pat = p\n${i}    self.step = 0\n`
            + `${i}    print("${'%'}s: patro ${'%'}d" % (self.name, p + 1))`;
     case 'Capes (breakdown)':
-      return `${i}c = min(${capes}, int((v / 127.0) * ${py.f(capes + .99, 2)}))\n`
+      // Al mínim hi són totes (el ritme tal com el vas fer) i girant el pot
+      // se'n van retirant: abans el pot en repòs deixava només la capa 0 i el
+      // ritme sonava pelat només d'engegar.
+      return `${i}c = ${capes} - int((v / 127.0) * ${py.f(capes + .99, 2)})\n`
+           + `${i}c = 0 if c < 0 else c\n`
            + `${i}if c != self.capa:\n${i}    self.capa = c\n`
            + `${i}    print("${'%'}s: capa ${'%'}d/${capes}" % (self.name, c))`;
     case 'Swing':
-      return `${i}self.swing = (v / 127.0) * 0.34`;
+      return `${i}self.swing = _SWING + (v / 127.0) * (0.34 - _SWING)`;
     case 'Octava del baix':
-      return `${i}o = _OCT_BAIX - 1 + int((v / 127.0) * 2.99)\n`
+      return `${i}o = _OCT_BAIX + int((v / 127.0) * 2.99)\n`
            + `${i}if o != self.oct_baix:\n${i}    self.oct_baix = o`;
     case 'Brillantor (CC74)':
       return `${i}self._cc_once(74, v)`;
@@ -392,6 +397,7 @@ ${filesBytes}
 _BAIX = ${py.tuples(baixos)}
 _KEYS = ('C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B')
 _OCT_BAIX = ${octBaix}
+_SWING = ${py.f(swing0)}
 _PERC_CH = 9        # canal 10 (percussió General MIDI)
 _BAIX_CH = 0
 _GATE = 0.055       # què dura un cop de percussió
@@ -406,7 +412,7 @@ class ${cls}(BaseMode):
         self.step = 0
         self.pat = 0
         self.capa = ${capaMax}
-        self.swing = ${py.f(swing0)}
+        self.swing = _SWING
         self.key = ${key}
         self.oct_baix = _OCT_BAIX
         self.step_dur = 0.0
@@ -528,21 +534,21 @@ function potCodeDrone(fn, spec, nAcords, indent = '        ') {
   switch (fn) {
     case 'Moviment (velocitat)': {
       const lo = clamp(spec.movPeriode ?? 2, .05, 12);
-      return `${i}# Període del moviment: de lent (${py.f(lo * 4)}s) a ràpid (0.06s)\n`
-           + `${i}self.mov_per = ${py.f(lo * 4)} - (v / 127.0) * ${py.f(lo * 4 - .06)}`;
+      return `${i}# Del període que has posat cap a més ràpid (fins a 0.06 s)\n`
+           + `${i}self.mov_per = _PER - (v / 127.0) * ${py.f(Math.max(.01, lo - .06))}`;
     }
     case "Tipus d'acord":
       return `${i}a = min(${nAcords - 1}, int((v / 128.0) * ${nAcords}))\n`
            + `${i}if a != self.acord:\n${i}    self.acord = a\n${i}    self._arrenca()`;
     case 'Octava':
-      return `${i}o = _OCT - 1 + int((v / 127.0) * 2.99)\n`
+      return `${i}o = _OCT + int((v / 127.0) * 2.99)\n`
            + `${i}if o != self.octave:\n${i}    self.octave = o\n${i}    self._arrenca()`;
     case 'Brillantor':
-      return `${i}b = 30 + int((v / 127.0) * 97)\n`
+      return `${i}b = _VEL + int((v / 127.0) * (127 - _VEL))\n`
            + `${i}if b < self.vel - 4 or b > self.vel + 4:\n`
            + `${i}    self.vel = b\n${i}    self._arrenca()`;
     case 'Profunditat':
-      return `${i}self.baix = int(127 - (v / 127.0) * 127)`;
+      return `${i}self.baix = _BAIX - int((v / 127.0) * _BAIX)`;
     case 'Modulació (CC1)':
       return `${i}self._cc_once(1, v)`;
     case 'Tonalitat':
@@ -605,6 +611,9 @@ _ACORDS = ${py.tuples(acords)}
 _KEYS = ('C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B')
 _OCT = ${oct}
 _MOV_CC = ${cc}
+_VEL = ${vel}
+_PER = ${py.f(per)}
+_BAIX = ${127 - Math.round(127 * prof / 100)}
 _ALT = 127          # cim del moviment
 _MIN_NOTA = 12
 _MAX_NOTA = 108
@@ -617,11 +626,11 @@ class ${cls}(BaseMode):
         self.key = ${key}
         self.octave = _OCT
         self.acord = 0
-        self.vel = ${vel}
+        self.vel = _VEL
         # Moviment: el període NO es diu 'speed' a propòsit — un drone no té
         # pols de notes i la pantalla no li ha de treure cap BPM.
-        self.mov_per = ${py.f(per)}
-        self.baix = ${127 - Math.round(127 * prof / 100)}
+        self.mov_per = _PER
+        self.baix = _BAIX
         self.fase = 0.0
         self.ultim_cc = -1
         self.sonant = []
@@ -747,7 +756,7 @@ ${potCodeDrone(potZ, spec, acords.length, '            ')}
 // que escombra. El que els distingeix és on cauen els números.
 
 /** Els potes que la família textura sap fer servir. */
-export const TEXTURA_POT_FNS = ['Densitat', 'Zona de notes', 'Dispersió', 'Volum',
+export const TEXTURA_POT_FNS = ['Densitat', 'Zona de notes', 'Dispersió', 'Atenuació',
   'Filtre (velocitat)', 'Fons greu', 'Modulació (CC1)', '—'];
 
 function potCodeTextura(fn, spec, indent = '        ') {
@@ -755,19 +764,19 @@ function potCodeTextura(fn, spec, indent = '        ') {
   switch (fn) {
     case 'Densitat': {
       const d = clamp(spec.densitat ?? 8, .2, 40);
-      return `${i}# Densitat: d'un esdeveniment cada 5 s fins a ${py.f(d * 3, 1)}/s\n`
-           + `${i}self.dens = 0.2 + (v / 127.0) * ${py.f(d * 3 - .2)}`;
+      return `${i}# De la densitat que has posat cap amunt (fins a ${py.f(d * 3, 1)}/s)\n`
+           + `${i}self.dens = _DENS + (v / 127.0) * ${py.f(Math.max(.1, d * 3 - d))}`;
     }
     case 'Zona de notes':
-      return `${i}self.centre = 24 + int((v / 127.0) * 84)`;
+      return `${i}self.centre = _CENTRE + int((v / 127.0) * 36)`;
     case 'Dispersió':
-      return `${i}self.disp = int((v / 127.0) * 36)`;
-    case 'Volum':
-      return `${i}self.vol = 0.25 + (v / 127.0) * 0.75`;
+      return `${i}self.disp = _DISP + int((v / 127.0) * 24)`;
+    case 'Atenuació':
+      return `${i}self.vol = 1.0 - (v / 127.0) * 0.75`;
     case 'Filtre (velocitat)':
-      return `${i}self.mov_per = 12.0 - (v / 127.0) * 11.9`;
+      return `${i}self.mov_per = _PER - (v / 127.0) * (_PER - 0.1)`;
     case 'Fons greu':
-      return `${i}f = int((v / 127.0) * 100)\n`
+      return `${i}f = _FONS_VEL + int((v / 127.0) * (127 - _FONS_VEL))\n`
            + `${i}if f < self.fons_vel - 4 or f > self.fons_vel + 4:\n`
            + `${i}    self.fons_vel = f\n${i}    self._fons()`;
     case 'Modulació (CC1)':
@@ -829,7 +838,12 @@ _VEL_MAX = ${velMax}
 _DUR_MIN = ${py.f(durMin / 1000)}
 _DUR_MAX = ${py.f(durMax / 1000)}
 _JITTER = ${py.f(jitter)}
+_DENS = ${py.f(dens)}
+_CENTRE = ${centre}
+_DISP = ${disp}
 _FONS_IVS = ${py.tuple(fonsIvs)}
+_FONS_VEL = ${fonsOn ? fonsVel : 0}
+_PER = ${py.f(per)}
 _MOV_CC = ${cc}
 _ALT = 127
 _MIN_NOTA = 0
@@ -844,11 +858,11 @@ class ${cls}(BaseMode):
         self.centre = ${centre}
         self.disp = ${disp}
         self.vol = 1.0
-        self.mov_per = ${py.f(per)}
+        self.mov_per = _PER
         self.baix = ${127 - Math.round(127 * prof / 100)}
         self.fase = 0.0
         self.ultim_cc = -1
-        self.fons_vel = ${fonsOn ? fonsVel : 0}
+        self.fons_vel = _FONS_VEL
         self.fons_notes = []
         self.pend = []          # note-offs pendents: [nota, quan]
         self.seguent = 0.0
@@ -999,20 +1013,20 @@ function potCodeOna(fn, spec, indent = '        ') {
   switch (fn) {
     case 'Freqüència': {
       const f = clamp(spec.freq ?? 2, .02, 20);
-      return `${i}# Freqüència de l'ona: 0.05 Hz (molt lenta) a ${py.f(f * 5, 1)} Hz\n`
-           + `${i}self.freq = 0.05 + (v / 127.0) * ${py.f(f * 5 - .05)}`;
+      return `${i}# De la freqüència que has posat cap amunt (fins a ${py.f(f * 5, 1)} Hz)\n`
+           + `${i}self.freq = _FREQ + (v / 127.0) * ${py.f(Math.max(.01, f * 5 - f))}`;
     }
     case 'Nota base':
-      return `${i}b = 12 + int((v / 127.0) * 84)\n`
+      return `${i}b = _BASE + int((v / 127.0) * 36)\n`
            + `${i}if b != self.base:\n${i}    self.base = b`;
     case 'Amplitud':
-      return `${i}self.amp = (v / 127.0)`;
+      return `${i}self.amp = 1.0 + (v / 127.0) * 0.6`;
     case 'Duty':
-      return `${i}self.duty = 0.05 + (v / 127.0) * 0.9`;
+      return `${i}self.duty = _DUTY + (v / 127.0) * (0.95 - _DUTY)`;
     case 'Força':
-      return `${i}self.vel = 20 + int((v / 127.0) * 107)`;
+      return `${i}self.vel = _VEL + int((v / 127.0) * (127 - _VEL))`;
     case 'Paràmetre del caos':
-      return `${i}self.r = 3.5 + (v / 127.0) * 0.5`;
+      return `${i}self.r = _R + (v / 127.0) * (4.0 - _R)`;
     case 'Modulació (CC1)':
       return `${i}self._cc_once(1, v)`;
     default:
@@ -1096,6 +1110,10 @@ from adafruit_midi.control_change import ControlChange
 
 _BASE = ${base}
 _AMPLITUD = ${amplitud}
+_FREQ = ${py.f(freq)}
+_DUTY = ${py.f(duty)}
+_VEL = ${vel}
+_R = ${py.f(rCaos)}
 ${quant ? `_SNAP = ${py.tuple(snap)}   # semitons a baixar per caure a l'escala\n` : ''}_DESTI_CC = ${cc}
 _DURADA = ${py.f(durada / 1000)}
 
@@ -1104,12 +1122,12 @@ class ${cls}(BaseMode):
     def __init__(self, midi_out, config=None):
         super().__init__(midi_out, config)
         self.name = "${nom}"
-        self.freq = ${py.f(freq)}
-        self.duty = ${py.f(duty)}
+        self.freq = _FREQ
+        self.duty = _DUTY
         self.base = _BASE
         self.amp = 1.0
-        self.vel = ${vel}
-        self.r = ${py.f(rCaos)}
+        self.vel = _VEL
+        self.r = _R
         self.fase = 0.0
         self.val = 0.5
         self.sonant = -1
@@ -1335,9 +1353,9 @@ function potCodeAlg(fn, spec, indent = '        ') {
            + `${i}if r != self.regla:\n${i}    self.regla = r\n`
            + `${i}    print("${'%'}s: regla ${'%'}d" % (self.name, r))`;
     case 'Octava':
-      return `${i}o = _OCT - 1 + int((v / 127.0) * 2.99)\n${i}if o != self.octave:\n${i}    self.octave = o`;
+      return `${i}o = _OCT + int((v / 127.0) * 2.99)\n${i}if o != self.octave:\n${i}    self.octave = o`;
     case 'Registre':
-      return `${i}self.abast = 1 + int((v / 127.0) * 2.99)`;
+      return `${i}self.abast = _ABAST + int((v / 127.0) * 2.99)`;
     case 'Atzar':
       return `${i}self.atzar = (v / 127.0)`;
     case 'Torna a sembrar':
@@ -1493,11 +1511,12 @@ _REGLES = ${py.tuple(llistaRegles)}   # la primera és la que has triat`;
       ? spec.matriu.map(f => Array.from({ length: g }, (_, j) => clamp((f[j] ?? 0) | 0, 0, 3)))
       : Array.from({ length: g }, (_, i) => Array.from({ length: g }, (_, j) => (Math.abs(i - j) <= 1 ? 2 : 1)));
     consts = `_GRAUS = ${g}
+_ABAST = ${clamp(spec.mkAbast ?? 2, 1, 4)}
 _MATRIU = ${py.tuples(m)}
 # de la fila (grau actual) a la columna (grau següent): pes 0-3`;
     estat = `        self.grau = 0
         self.atzar = 0.0
-        self.abast = 2`;
+        self.abast = _ABAST`;
     metodes = `    def _tria(self):
         """Cadena de Markov: la fila del grau actual dona els pesos d'anar a
         cada grau. Amb 'atzar' al màxim, la matriu es dilueix cap a l'atzar
