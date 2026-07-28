@@ -1,5 +1,43 @@
 # Canvis pendents al dispositiu TECLA
 
+## 0. v3.5.0 — CONSTRUCTOR DE MODES complet (sis famílies) — 2026-07-28
+
+✅ NOMÉS APP-WEB (cap canvi de firmware).
+
+Una mini-app dins de la capa de modes que converteix un formulari en un mode de
+CircuitPython de debò. El fitxer generat és Python normal, obrible i
+modificable, i porta l'especificació incrustada (`# TECLA-SPEC`) perquè es
+pugui tornar a obrir al constructor i viatgi amb el fitxer quan es comparteix.
+Es reaprofita tota la canonada que ja existia per als modes propis: escoltar-lo
+al motor Pyodide, desar-lo a la llista i instal·lar-lo al dispositiu.
+
+Les sis famílies surten d'analitzar l'ANATOMIA dels 64 modes del firmware:
+
+| Família | Modes del firmware | El que hi aporta el constructor |
+|---|---|---|
+| Melòdic | 18 | melodia per graus amb dinàmica, veu secundària |
+| Rítmic | 9 | graella amb capes de breakdown i swing |
+| Drone | 9 | gate i arc unificats en una forma triable |
+| Textura | 11 | irregularitat com a paràmetre propi |
+| Ona | 8 | QUANTITZACIÓ A ESCALA (als originals hi faltava) |
+| Algorísmic | 7 | l'algorisme viu dins del mode, no el seu resultat |
+
+L'algorísmica té cinc algorismes amb editor visual propi: euclidià (collarets),
+autòmat de Wolfram (les 8 caselles de la regla + l'evolució), Markov (matriu de
+transicions), joc de la vida (llavor dibuixable) i Mandelbrot (el conjunt amb
+l'òrbita del punt). Els dibuixos surten del mateix algorisme que s'escriu al
+mode: no són il·lustracions.
+
+Verificació: 786 tests, 490 dels quals criden el generador REAL amb node i fan
+córrer els modes que en surten amb els mocks de maquinari — que no petin, que
+no deixin cap nota penjada ni surtin del rang MIDI amb els potes a qualsevol
+posició, i que cada algorisme faci el que diu (E(3,8) és el tresillo, la regla
+90 dona Sierpinski, el planador es mou, l'òrbita de dins del conjunt no
+s'escapa). Els mateixos algorismes en Python i en JS es comparen entre ells.
+
+PENDENT (fora d'aquesta feina): traducció ES/EN del constructor (ara en
+català), i reobrir un mode ja desat per tornar-lo a editar.
+
 ## 0. v3.3.3 — Pantalla: recuperació fiable del port ("fals ocupat") — 2026-07-21
 
 ✅ NOMÉS APP-WEB (cap canvi de firmware).

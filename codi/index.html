@@ -2172,6 +2172,109 @@
     .mg-dyn-cell[data-lv="1"] { color: var(--mg); border-color: color-mix(in srgb, var(--mg) 40%, transparent) }
     .mg-dyn-cell[data-lv="2"] { color: var(--mg); border-color: color-mix(in srgb, var(--mg) 75%, transparent);
       background: color-mix(in srgb, var(--mg) 16%, transparent) }
+    /* ── Família algorísmica ─────────────────────────────────────────────── */
+    /* Tria d'algorisme */
+    .mg-algs { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 6px }
+    .mg-alg {
+      cursor: pointer; text-align: left; padding: 8px 10px; border-radius: 9px; color: var(--text2);
+      border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+      background: color-mix(in srgb, var(--surface) 45%, transparent);
+      transition: border-color .15s, background .15s, color .15s;
+    }
+    .mg-alg:hover { color: var(--text) }
+    .mg-alg.on {
+      color: var(--text); border-color: color-mix(in srgb, var(--mg) 65%, transparent);
+      background: color-mix(in srgb, var(--mg) 13%, transparent);
+    }
+    .mg-alg .nom { display: block; font-size: 12px; font-weight: 700; letter-spacing: .02em }
+    .mg-alg .sub { display: block; font-size: 9.5px; color: var(--text3); margin-top: 2px }
+    /* Euclidià: collarets */
+    .mg-collarets { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start }
+    .mg-collaret-box {
+      cursor: pointer; padding: 6px; border-radius: 10px; text-align: center;
+      border: 1px solid transparent; transition: border-color .15s, background .15s;
+    }
+    .mg-collaret-box.on {
+      border-color: color-mix(in srgb, var(--mg) 55%, transparent);
+      background: color-mix(in srgb, var(--mg) 10%, transparent);
+    }
+    .mg-collaret { width: 104px; height: 104px; display: block }
+    .mg-collaret-box .et { font-size: 10px; color: var(--text2); margin-top: 2px; letter-spacing: .06em }
+    /* Autòmat: diagrama de la regla */
+    .mg-regla { display: flex; gap: 6px; flex-wrap: wrap }
+    .mg-regla-col {
+      cursor: pointer; padding: 5px; border-radius: 7px;
+      border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+      background: color-mix(in srgb, var(--surface) 40%, transparent);
+    }
+    .mg-regla-col:hover { border-color: var(--mg) }
+    .mg-regla-col .tres { display: flex; gap: 2px }
+    .mg-regla-col .tres span, .mg-regla-col .sortida {
+      width: 11px; height: 11px; border-radius: 2px; display: block;
+      background: color-mix(in srgb, var(--text3) 28%, transparent);
+    }
+    .mg-regla-col .tres span.viu, .mg-regla-col .sortida.viu { background: var(--mg) }
+    .mg-regla-col .sortida { margin: 4px auto 0; width: 11px }
+    /* Autòmat: evolució */
+    /* L'evolució es queda compacta: interessa veure'n la FORMA sencera */
+    .mg-evolucio { display: grid; gap: 1px; margin-top: 4px; max-width: 264px }
+    .mg-evolucio span {
+      aspect-ratio: 1; border-radius: 1px;
+      background: color-mix(in srgb, var(--text3) 14%, transparent);
+    }
+    .mg-evolucio span.viu { background: var(--mg) }
+    /* Markov: matriu i tast */
+    /* Acotades: una matriu de probabilitats es llegeix millor compacta */
+    .mg-matriu { display: grid; gap: 3px; max-width: 320px }
+    .mg-matriu .cap {
+      font-size: 9.5px; color: var(--text3); display: flex; align-items: center;
+      justify-content: center; letter-spacing: .1em;
+    }
+    .mg-matriu .cap.fila { padding-right: 6px; justify-content: flex-end }
+    .mg-mx-cel {
+      cursor: pointer; aspect-ratio: 1; min-height: 22px; max-height: 40px; border-radius: 4px; font-size: 10px;
+      display: flex; align-items: center; justify-content: center; color: var(--text3);
+      border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+      background: color-mix(in srgb, var(--surface) 40%, transparent);
+      transition: background .12s, color .12s;
+    }
+    .mg-mx-cel[data-w="1"] { background: color-mix(in srgb, var(--mg) 20%, transparent); color: var(--text2) }
+    .mg-mx-cel[data-w="2"] { background: color-mix(in srgb, var(--mg) 45%, transparent); color: var(--text) }
+    .mg-mx-cel[data-w="3"] { background: var(--mg); color: #fff; font-weight: 700 }
+    .mg-tast { display: flex; gap: 3px; flex-wrap: wrap }
+    .mg-tast span {
+      font-size: 9.5px; padding: 2px 6px; border-radius: 4px; color: var(--text2);
+      background: color-mix(in srgb, var(--mg) 14%, transparent);
+    }
+    /* Joc de la vida */
+    .mg-vida { display: grid; gap: 2px; max-width: 300px }
+    .mg-vida-cel {
+      cursor: pointer; aspect-ratio: 1; border-radius: 3px;
+      border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+      background: color-mix(in srgb, var(--surface) 40%, transparent);
+      transition: background .12s;
+    }
+    .mg-vida-cel:hover { border-color: var(--mg) }
+    .mg-vida-cel.viu { background: var(--mg); border-color: var(--mg) }
+    .mg-vida-passes { display: flex; gap: 12px; flex-wrap: wrap }
+    .mg-vida-mini { display: grid; gap: 1px; width: 104px }
+    .mg-vida-mini span {
+      aspect-ratio: 1; border-radius: 1px;
+      background: color-mix(in srgb, var(--text3) 14%, transparent);
+    }
+    .mg-vida-mini span.viu { background: var(--mg) }
+    /* Mandelbrot */
+    .mg-mandel-wrap { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap }
+    .mg-mandel-wrap canvas {
+      border-radius: 9px; border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+      max-width: 100%;
+    }
+    .mg-mandel-info { display: flex; flex-direction: column; gap: 8px }
+    .mg-mandel-info .v { font-size: 9.5px; color: var(--text3); letter-spacing: .18em; text-transform: uppercase }
+    .mg-mandel-info .v strong {
+      display: block; font-size: 13px; color: var(--mg); letter-spacing: 0;
+      text-transform: none; margin-top: 2px;
+    }
     /* Veus de l'acord (família drone): dues octaves de semitons */
     .mg-veus { display: grid; gap: 3px; min-width: 620px }
     .mg-veu {
@@ -3164,7 +3267,7 @@
 <div class="guide-h1">6. La capa Modes</div><p class="guide-li">S’hi arriba ciclant amb la <strong>tecla 13</strong>. Les tecles <strong>1–12</strong> activen els modes generatius assignats a la capa actual.</p><p class="guide-li"><strong>Tecla 13</strong>: toc curt → capa següent · mantinguda ≈1 s → capa anterior.</p><p class="guide-li"><strong>Tecles 14 i 15</strong>: efectes temporals (mantenir premuda: sustain, pausa, gate…) · doble clic → canviar l’efecte assignat.</p><p class="guide-li"><strong>Tecla 16</strong>: STOP total + neteja de memòria.</p><p class="guide-li">Els modes es trien i s’assignen a la pestanya <em>Modes</em>; els potenciòmetres modulen paràmetres propis de cada mode.</p>
 </div>
 <div id="gca-6">
-<div class="guide-h1">7. Configurar des de l’app</div><div class="guide-h2">Pestanya Teclat</div><p class="guide-li">Arrossega funcions a les tecles, tria escales, tonalitats, tipus d’acord, patrons d’arpegiador, progressions i funcions dels potenciòmetres.</p><div class="guide-h2">Pestanya Modes</div><p class="guide-li">Crea bancs (capes) de modes i assigna un mode a cada tecla 1–12. Tria els efectes temporals de les tecles 14–15.</p><div class="guide-h2">✦ Crear els teus propis modes</div><p class="guide-li">El botó <strong>✦ Crear</strong> obre el <strong>constructor de modes</strong>. Els 64 modes del firmware es reparteixen en sis famílies segons com estan fets per dins, i cada família té les seves variables: <strong>melòdic</strong> (seqüència de graus sobre una escala), <strong>rítmic</strong> (graella de passos amb bateria), <strong>drone</strong> (acord sostingut amb gate), <strong>textura</strong> (atzar amb densitat), <strong>ona</strong> (un oscil·lador lent) i <strong>algorísmic</strong> (una regla que genera el patró).</p><p class="guide-li">A la família <strong>melòdica</strong> hi dibuixes la melodia per <em>graus de l’escala</em> en una graella, amb la <strong>dinàmica</strong> de cada pas, l’<strong>articulació</strong> (de picada a lligada), una <strong>veu secundària</strong> a l’interval que vulguis —el contrapunt de Bach, el tintinnabuli de Pärt— i el rang de tempo. També hi assignes què fa cada un dels tres potes.</p><p class="guide-li">A la família <strong>rítmica</strong> hi tens una <strong>graella de passos</strong> (8, 16 o 32; cada pas és una semicorxera, o sigui que 16 són un compàs de 4/4) amb cinc pistes de percussió i una <strong>línia de baix per graus</strong>. De cada pista en tries la <strong>nota MIDI</strong>, la força i la <strong>capa de breakdown</strong> —l’ordre en què les pistes es retiren amb el pot, el recurs de tot el techno—, i del conjunt, el rang de BPM i el <strong>swing</strong>. La percussió surt pel canal MIDI 10 (bateria General MIDI) i el baix pel canal 1, per posar-hi instruments diferents al DAW.</p><p class="guide-li">A la família <strong>drone</strong> hi munta les <strong>veus de l’acord</strong> triant-les casella a casella sobre dues octaves de semitons (o d’un clic amb les preses: quinta, major, menor, Dom7, Maj7, sus, dim, obert), amb quatre bancs que el pot cicla. I hi tries el <strong>moviment</strong>: <em>Gate</em> és una ona quadrada i el drone batega, <em>Arc</em> un triangle com un ale d’arquet i <em>Respiració</em> el mateix triangle suavitzat. El moviment pot anar a l’expressió, a la brillantor, al volum o a la modulació, amb el període i la profunditat que vulguis — al 100% el drone arriba a callar del tot a cada cicle.</p><p class="guide-li">A la família <strong>textura</strong> mana la <strong>densitat</strong> (d’un esdeveniment cada cinc segons fins a quaranta per segon) i la seva <strong>irregularitat</strong> — que és el que separa una textura d’un metrònom: al 0% els esdeveniments cauen clavats i sona a màquina. Les notes salten a l’atzar dins d’una <strong>zona</strong> (un centre i una dispersió), amb la força i la durada que hi posis: de 20–120 ms en surten grans i espurnes, i a partir d’un segon la cosa es converteix en un núvol. Hi pots afegir un <strong>fons greu</strong> sostingut —el que fa que el soroll tingui terra i no floti—, disparar-ho <strong>per ràfegues</strong> i posar-hi el mateix filtre en moviment que als drones.</p><p class="guide-li">A la família <strong>ona</strong> hi ha un valor que evoluciona i que es mapeja a notes o a un CC. Set formes: <em>sinus</em>, <em>quadrada</em> (amb duty), <em>triangle</em>, <em>serra</em>, <em>respiració</em>, <em>atzar</em> (un passeig aleatori que rebota als extrems) i <em>caos</em> (el mapa logístic x = r·x·(1−x), que entre r=3,57 i 4 no es repeteix mai). La peça clau és la <strong>quantització</strong>: sense ella l’ona passa per tots els semitons i sona a sirena; ajustada a una escala <strong>salta de grau en grau</strong> i es converteix en música — que és el que als modes d’ona originals els faltava.</p><p class="guide-li">Prem <strong>▶ Escoltar</strong> per provar-lo a l’instant (corre el mateix Python que correrà al dispositiu), <strong>Desar mode</strong> per afegir-lo a la teva llista —i al dispositiu, si el tens endollat— o <strong>Exportar .py</strong> per quedar-te el fitxer. El mode generat és un fitxer de Python normal que pots obrir i modificar: l’especificació hi queda desada a dins, així que sempre el pots tornar a obrir al constructor.</p><div class="guide-h2">Pestanya Simulador</div><p class="guide-li">Prova-ho tot <em>sense dispositiu</em>: el teclat i els modes corren al navegador i envien MIDI via WebMIDI al teu DAW.</p><p class="guide-li">Amb el dispositiu endollat, prem <strong>🔌 Sync dispositiu</strong>: les tecles i potes físics controlen el simulador (el port es detecta sol; el so local del TECLA es pausa mentre dura).</p><div class="guide-h2">La Pantalla</div><p class="guide-li">El botó <strong>Pantalla</strong> (capçalera) obre la pantalla virtual del dispositiu: mostra en gran i en directe què toques — <strong>acords amb nomenclatura professional</strong> (C, Am7, F/A…), notes, funcions amb el seu color, canvis de capa — amb una <strong>animació reactiva als potes</strong> pròpia de cada família de modes.</p><p class="guide-li">El <strong>tempo hi surt en BPM</strong> — negres per minut, el mateix número que poses al DAW o al metrònom — per poder <em>sincronitzar amb la peça que estàs tocant</em>. L’etiqueta hi afegeix la <strong>subdivisió</strong> quan cal: «Tempo · 1/16» vol dir que el que sona són semicorxeres d’aquest tempo. L’animació batega al mateix pols.</p><p class="guide-li">El <strong>pot de BPM de l’arpegiador</strong> va de <strong>40 a 240</strong> negres per minut i l’arp trepitja semicorxeres: posa el mateix número que el teu projecte i ja hi encaixa.</p><p class="guide-li">Es connecta sola al port sèrie correcte, es pot <strong>arrossegar i redimensionar</strong>, i amb <strong>⇱</strong> es desancora en una finestra flotant fora de l'app (Chrome 116+).</p><div class="guide-h2">Pestanya Firmware</div><p class="guide-li">Instal·la CircuitPython (Pas 1) i el firmware TECLA (Pas 2). Cal repetir el Pas 2 després de canviar els modes assignats.</p><div class="guide-h2">Pestanya Aparença</div><p class="guide-li">Temes de color de l’app i editor de temes personalitzats.</p><div class="guide-note">Flux de treball: edita → <strong>Guardar configuració</strong> → si has canviat modes, <em>Firmware</em> → <strong>Instal·lar / Actualitzar</strong> → reset del dispositiu.</div>
+<div class="guide-h1">7. Configurar des de l’app</div><div class="guide-h2">Pestanya Teclat</div><p class="guide-li">Arrossega funcions a les tecles, tria escales, tonalitats, tipus d’acord, patrons d’arpegiador, progressions i funcions dels potenciòmetres.</p><div class="guide-h2">Pestanya Modes</div><p class="guide-li">Crea bancs (capes) de modes i assigna un mode a cada tecla 1–12. Tria els efectes temporals de les tecles 14–15.</p><div class="guide-h2">✦ Crear els teus propis modes</div><p class="guide-li">El botó <strong>✦ Crear</strong> obre el <strong>constructor de modes</strong>. Els 64 modes del firmware es reparteixen en sis famílies segons com estan fets per dins, i cada família té les seves variables: <strong>melòdic</strong> (seqüència de graus sobre una escala), <strong>rítmic</strong> (graella de passos amb bateria), <strong>drone</strong> (acord sostingut amb gate), <strong>textura</strong> (atzar amb densitat), <strong>ona</strong> (un oscil·lador lent) i <strong>algorísmic</strong> (una regla que genera el patró).</p><p class="guide-li">A la família <strong>melòdica</strong> hi dibuixes la melodia per <em>graus de l’escala</em> en una graella, amb la <strong>dinàmica</strong> de cada pas, l’<strong>articulació</strong> (de picada a lligada), una <strong>veu secundària</strong> a l’interval que vulguis —el contrapunt de Bach, el tintinnabuli de Pärt— i el rang de tempo. També hi assignes què fa cada un dels tres potes.</p><p class="guide-li">A la família <strong>rítmica</strong> hi tens una <strong>graella de passos</strong> (8, 16 o 32; cada pas és una semicorxera, o sigui que 16 són un compàs de 4/4) amb cinc pistes de percussió i una <strong>línia de baix per graus</strong>. De cada pista en tries la <strong>nota MIDI</strong>, la força i la <strong>capa de breakdown</strong> —l’ordre en què les pistes es retiren amb el pot, el recurs de tot el techno—, i del conjunt, el rang de BPM i el <strong>swing</strong>. La percussió surt pel canal MIDI 10 (bateria General MIDI) i el baix pel canal 1, per posar-hi instruments diferents al DAW.</p><p class="guide-li">A la família <strong>drone</strong> hi munta les <strong>veus de l’acord</strong> triant-les casella a casella sobre dues octaves de semitons (o d’un clic amb les preses: quinta, major, menor, Dom7, Maj7, sus, dim, obert), amb quatre bancs que el pot cicla. I hi tries el <strong>moviment</strong>: <em>Gate</em> és una ona quadrada i el drone batega, <em>Arc</em> un triangle com un ale d’arquet i <em>Respiració</em> el mateix triangle suavitzat. El moviment pot anar a l’expressió, a la brillantor, al volum o a la modulació, amb el període i la profunditat que vulguis — al 100% el drone arriba a callar del tot a cada cicle.</p><p class="guide-li">A la família <strong>textura</strong> mana la <strong>densitat</strong> (d’un esdeveniment cada cinc segons fins a quaranta per segon) i la seva <strong>irregularitat</strong> — que és el que separa una textura d’un metrònom: al 0% els esdeveniments cauen clavats i sona a màquina. Les notes salten a l’atzar dins d’una <strong>zona</strong> (un centre i una dispersió), amb la força i la durada que hi posis: de 20–120 ms en surten grans i espurnes, i a partir d’un segon la cosa es converteix en un núvol. Hi pots afegir un <strong>fons greu</strong> sostingut —el que fa que el soroll tingui terra i no floti—, disparar-ho <strong>per ràfegues</strong> i posar-hi el mateix filtre en moviment que als drones.</p><p class="guide-li">A la família <strong>ona</strong> hi ha un valor que evoluciona i que es mapeja a notes o a un CC. Set formes: <em>sinus</em>, <em>quadrada</em> (amb duty), <em>triangle</em>, <em>serra</em>, <em>respiració</em>, <em>atzar</em> (un passeig aleatori que rebota als extrems) i <em>caos</em> (el mapa logístic x = r·x·(1−x), que entre r=3,57 i 4 no es repeteix mai). La peça clau és la <strong>quantització</strong>: sense ella l’ona passa per tots els semitons i sona a sirena; ajustada a una escala <strong>salta de grau en grau</strong> i es converteix en música — que és el que als modes d’ona originals els faltava.</p><p class="guide-li">A la família <strong>algorísmica</strong> no s’hi escriu un patró: s’hi escriu una <strong>regla</strong>, i el patró en surt. És l’única família on el que viatja al mode generat no és el resultat de l’algorisme sinó <em>l’algorisme mateix</em>, i per això els potes el fan mutar mentre sona. N’hi ha cinc, i cadascun té el seu editor:</p><p class="guide-li"><strong>Euclidià</strong> — K pulsacions repartides el més uniformement possible sobre S passos, que és l’algorisme de Bjorklund. Es dibuixa com un <em>collaret</em>: el polígon que uneix les pulsacions <em>és</em> el ritme, i hi reconeixeràs el tresillo cubà (3/8), el cinquillo (5/8) o el bossa-nova (5/16). Amb llargades diferents a cada veu en surten <strong>polirítmies</strong> que triguen compassos a tornar a coincidir.</p><p class="guide-li"><strong>Autòmat</strong> — les 256 regles elementals de Wolfram. Les vuit caselles de l’editor <em>són</em> la regla: cada una diu què surt d’un veïnat de tres cèl·lules, i clicant-les el número canvia sol. La <strong>90</strong> dibuixa el triangle de Sierpinski, la <strong>30</strong> fa caos i la <strong>110</strong> és Turing-completa.</p><p class="guide-li"><strong>Markov</strong> — una matriu de probabilitats entre graus: de la fila on ets a la columna on vas. La matriu no dicta la melodia, en dicta el <em>caràcter</em>.</p><p class="guide-li"><strong>Joc de la vida</strong> — Conway sobre una graella toroidal, amb la llavor dibuixable i els patrons clàssics (planador, sapo, R-pentòmino). Cada columna és un grau i com més poblada, més fort sona.</p><p class="guide-li"><strong>Mandelbrot</strong> — l’òrbita d’un punt del pla complex: z = z² + c iterat. Clica el conjunt per triar c i veuràs l’òrbita dibuixada; els punts de dins no s’escapen mai i donen seqüències quasi-periòdiques, ni repetitives ni aleatòries.</p><p class="guide-li">Prem <strong>▶ Escoltar</strong> per provar-lo a l’instant (corre el mateix Python que correrà al dispositiu), <strong>Desar mode</strong> per afegir-lo a la teva llista —i al dispositiu, si el tens endollat— o <strong>Exportar .py</strong> per quedar-te el fitxer. El mode generat és un fitxer de Python normal que pots obrir i modificar: l’especificació hi queda desada a dins, així que sempre el pots tornar a obrir al constructor.</p><div class="guide-h2">Pestanya Simulador</div><p class="guide-li">Prova-ho tot <em>sense dispositiu</em>: el teclat i els modes corren al navegador i envien MIDI via WebMIDI al teu DAW.</p><p class="guide-li">Amb el dispositiu endollat, prem <strong>🔌 Sync dispositiu</strong>: les tecles i potes físics controlen el simulador (el port es detecta sol; el so local del TECLA es pausa mentre dura).</p><div class="guide-h2">La Pantalla</div><p class="guide-li">El botó <strong>Pantalla</strong> (capçalera) obre la pantalla virtual del dispositiu: mostra en gran i en directe què toques — <strong>acords amb nomenclatura professional</strong> (C, Am7, F/A…), notes, funcions amb el seu color, canvis de capa — amb una <strong>animació reactiva als potes</strong> pròpia de cada família de modes.</p><p class="guide-li">El <strong>tempo hi surt en BPM</strong> — negres per minut, el mateix número que poses al DAW o al metrònom — per poder <em>sincronitzar amb la peça que estàs tocant</em>. L’etiqueta hi afegeix la <strong>subdivisió</strong> quan cal: «Tempo · 1/16» vol dir que el que sona són semicorxeres d’aquest tempo. L’animació batega al mateix pols.</p><p class="guide-li">El <strong>pot de BPM de l’arpegiador</strong> va de <strong>40 a 240</strong> negres per minut i l’arp trepitja semicorxeres: posa el mateix número que el teu projecte i ja hi encaixa.</p><p class="guide-li">Es connecta sola al port sèrie correcte, es pot <strong>arrossegar i redimensionar</strong>, i amb <strong>⇱</strong> es desancora en una finestra flotant fora de l'app (Chrome 116+).</p><div class="guide-h2">Pestanya Firmware</div><p class="guide-li">Instal·la CircuitPython (Pas 1) i el firmware TECLA (Pas 2). Cal repetir el Pas 2 després de canviar els modes assignats.</p><div class="guide-h2">Pestanya Aparença</div><p class="guide-li">Temes de color de l’app i editor de temes personalitzats.</p><div class="guide-note">Flux de treball: edita → <strong>Guardar configuració</strong> → si has canviat modes, <em>Firmware</em> → <strong>Instal·lar / Actualitzar</strong> → reset del dispositiu.</div>
 </div>
 <div id="gca-7">
 <div class="guide-h1">8. Recomanacions</div><p class="guide-li">Guarda sempre la configuració després de fer canvis.</p><p class="guide-li">Fins a <strong>3 bancs de modes</strong> funcionen amb total comoditat (validat amb mesures de memòria reals).</p><p class="guide-li">Prova els modes nous al simulador abans d’instal·lar-los.</p><p class="guide-li">Si una nota es queda penjada o el so descontrola: <strong>tecla 16</strong> (STOP).</p><p class="guide-li">Si el dispositiu no respon: reset físic (botó del Pico) — el watchdog també el reinicia sol si es penja durant una actuació.</p><p class="guide-li">Si l’app no veu el dispositiu: comprova que el disc CIRCUITPY/TECLA està muntat i que fas servir Chrome o Edge.</p>
@@ -3294,7 +3397,9 @@
     import { TECLASimulator } from './js/tecla-simulator.js';
     import { WebMidiManager } from './js/tecla-webmidi.js';
     import { ALL_KEYS, KEYBOARD_SCALES, ARP_PATTERNS, AVAILABLE_EFFECTS, DEVICE_EFFECTS, MODE_POT_LAYERS_DEFAULT, MODE_POT_FNS, modePotFnToCC, AUDIO_FX_PRESETS, AUDIO_FX_DEFAULTS, AUDIO_CFG_POT_FNS, audioFnToCC, KB_BTN_FN_META, KB_BTN_FN_DRAGGABLE, NEG_HARMONY_TYPES, DIATONIC_FNS, VL_TYPES, ACCOMP_PATTERN_IDS, ACCOMP_PATTERN_NAMES, ACCOMP_CHANNEL, applyHarmonicFn, SCALES_JS, SCALE_NAMES_JS, KEY_CIRCLE_JS, KEY_OFFSETS_JS, NOTES_JS, ARP_NAMES_JS, CHORDS_JS, _getChordIntervals, _sysVolTimer, _setSysVol } from './js/tecla-music-data.js';
-    import { generateMode, specFromSource, POT_FNS as MG_POT_FNS } from './js/tecla-modegen.js';
+    import { generateMode, specFromSource, POT_FNS as MG_POT_FNS, potFnsFor as mgPotFnsFor,
+             ALG_NOMS as MG_ALG_NOMS, euclid as mgEuclid, rota as mgRota,
+             wolfram as mgWolfram, vida as mgVida } from './js/tecla-modegen.js';
     import { TeclaThinLink } from './js/tecla-thinlink.js';
     import { Accompaniment } from './js/tecla-accompaniment.js';
     import { TeclaSynth, PRESETS } from './js/tecla-synth.js';
@@ -5166,6 +5271,50 @@
       rCaos: 3.7, pasAtzar: 3,
       pots: { x: 'Freqüència', y: 'Nota base', z: 'Amplitud' },
     };
+    // Estat del formulari algorísmic. Cada algorisme té els seus paràmetres i
+    // la seva assignació de potes: canviar d'algorisme no ha de perdre el que
+    // tenies muntat a l'anterior.
+    const _MG_VIDA_PRESETS = [
+      ['Planador', [[0, 1, 0], [0, 0, 1], [1, 1, 1]]],
+      ['Blinker', [[1, 1, 1]]],
+      ['Sapo', [[0, 1, 1, 1], [1, 1, 1, 0]]],
+      ['R-pentòmino', [[0, 1, 1], [1, 1, 0], [0, 1, 0]]],
+      ['Nau lleugera', [[1, 0, 0, 1, 0], [0, 0, 0, 0, 1], [1, 0, 0, 0, 1], [0, 1, 1, 1, 1]]],
+    ];
+    const _MG_ALG_REGLES = [[90, 'Sierpinski'], [30, 'Caos'], [110, 'Turing-completa'],
+      [150, 'XOR triple'], [54, 'Trames'], [60, 'Triangles'], [126, 'Dens'], [22, 'Fractal prim']];
+    const _mgAlg = {
+      nom: 'El meu algorisme', algoritme: 'Euclidià',
+      escala: 7, tonalitat: 0, octava: 4, vel: 92, gate: 60, bpmMin: 80, bpmMax: 160,
+      veus: [
+        { n: 16, k: 4, rot: 0, perc: true, nota: 36, grau: 0, vel: 105 },
+        { n: 8, k: 3, rot: 2, perc: true, nota: 38, grau: 0, vel: 92 },
+        { n: 12, k: 5, rot: 0, perc: false, nota: 42, grau: 0, vel: 80 },
+      ],
+      veuIdx: 0,
+      regla: 90, autN: 16, maxVeus: 5, llavorAut: null,
+      mkGraus: 5, matriu: null,
+      vidaW: 12, vidaH: 8, llavorVida: null,
+      cx: -0.4, cy: 0.6, iters: 1,
+      potsPer: {
+        'Euclidià': { x: 'Tempo', y: 'Densitat', z: 'Octava' },
+        'Autòmat': { x: 'Tempo', y: 'Regla', z: 'Octava' },
+        'Markov': { x: 'Tempo', y: 'Atzar', z: 'Octava' },
+        'Joc de la vida': { x: 'Tempo', y: 'Filtre de veus', z: 'Octava' },
+        'Mandelbrot': { x: 'Tempo', y: 'Part real de c', z: 'Octava' },
+      },
+    };
+    // Matriu de Markov per defecte: es pot anar a qualsevol grau, però els
+    // veïns pesen més — que és el que fa que una melodia soni a melodia.
+    function _mgMatriuPerDefecte(g) {
+      return Array.from({ length: g }, (_, i) =>
+        Array.from({ length: g }, (_, j) => (Math.abs(i - j) <= 1 ? 2 : (Math.abs(i - j) === 2 ? 1 : 0))));
+    }
+    function _mgLlavorVidaPerDefecte(w, h) {
+      const g = Array.from({ length: h }, () => new Array(w).fill(0));
+      [[1, 2], [2, 3], [3, 1], [3, 2], [3, 3]].forEach(([y, x]) => { if (g[y]) g[y][x] = 1; });
+      return g;
+    }
     const _MG_NOTES_NOM = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     const _mgNotaNom = n => `${_MG_NOTES_NOM[((n % 12) + 12) % 12]}${Math.floor(n / 12)}`;
 
@@ -5759,6 +5908,472 @@
       on('mg-ona-ton', 'change', e => { o.tonalitat = +e.target.value; _mgSync(); });
     }
 
+    // ══ ELS CINC EDITORS ALGORÍSMICS ═════════════════════════════════════════
+    // Cada un ensenya EL QUE SONARÀ, no una il·lustració: els dibuixos surten
+    // del mateix algorisme que s'escriurà al mode.
+
+    // ── Euclidià: el collaret ────────────────────────────────────────────────
+    // La representació canònica d'un ritme euclidià és un cercle amb els passos
+    // repartits i un polígon que uneix les pulsacions. La forma del polígon ÉS
+    // el ritme: el tresillo cubà, el bembé, el cinquillo… tots hi són.
+    function _mgCollaret(veu, i, color) {
+      const pat = mgRota(mgEuclid(veu.k, veu.n), veu.rot);
+      const R = 42, C = 52;
+      const pts = pat.map((_, s) => {
+        const a = (s / veu.n) * Math.PI * 2 - Math.PI / 2;
+        return [C + Math.cos(a) * R, C + Math.sin(a) * R];
+      });
+      const actius = pts.filter((_, s) => pat[s]);
+      const poli = actius.length > 1 ? `<polygon points="${actius.map(p => p.join(',')).join(' ')}"
+        fill="color-mix(in srgb, ${color} 16%, transparent)" stroke="${color}" stroke-width="1.2" stroke-linejoin="round"/>` : '';
+      const dots = pts.map((p, s) => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${pat[s] ? 5 : 2.6}"
+        fill="${pat[s] ? color : 'var(--text3)'}" data-veu="${i}" data-pas="${s}" style="cursor:pointer"/>`).join('');
+      return `<svg viewBox="0 0 104 104" class="mg-collaret" data-veu="${i}">
+        <circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="var(--border)" stroke-width="1"/>
+        ${poli}${dots}</svg>`;
+    }
+
+    function _mgAlgEuclid(color) {
+      const v = _mgAlg.veus[_mgAlg.veuIdx] || _mgAlg.veus[0];
+      const pat = mgRota(mgEuclid(v.k, v.n), v.rot);
+      const llargs = _mgAlg.veus.map(x => x.n);
+      const mcm = llargs.reduce((a, b) => { const g = (x, y) => y ? g(y, x % y) : x; return a * b / g(a, b); }, 1);
+      return `
+        <div class="mg-sec">
+          <p class="mg-lab">Veus · K pulsacions sobre S passos</p>
+          <div class="mg-collarets">
+            ${_mgAlg.veus.map((x, i) => `
+              <div class="mg-collaret-box ${i === _mgAlg.veuIdx ? 'on' : ''}" data-tria-veu="${i}">
+                ${_mgCollaret(x, i, color)}
+                <div class="et">${x.k}/${x.n}${x.rot ? ' gir ' + x.rot : ''}</div>
+              </div>`).join('')}
+            ${_mgAlg.veus.length < 4 ? '<button class="mg-tab" id="mg-alg-mes-veu" style="align-self:center">+ veu</button>' : ''}
+          </div>
+          <p class="mg-hint">Clica un pas del collaret per <strong>girar-hi</strong> el ritme.
+            ${_mgAlg.veus.length > 1 ? `Amb llargades diferents, el cicle sencer no torna fins d'aquí <strong>${mcm}</strong> passos.` : ''}</p>
+        </div>
+
+        <div class="mg-sec">
+          <p class="mg-lab">Veu ${_mgAlg.veuIdx + 1}</p>
+          <div class="mg-slider">
+            <span>passos</span>
+            <input type="range" id="mg-alg-n" min="2" max="32" value="${v.n}">
+            <span class="val">${v.n}</span>
+          </div>
+          <div class="mg-slider" style="margin-top:8px">
+            <span>pulsacions</span>
+            <input type="range" id="mg-alg-k" min="0" max="${v.n}" value="${v.k}">
+            <span class="val">${v.k}</span>
+          </div>
+          <div class="mg-slider" style="margin-top:8px">
+            <span>gir</span>
+            <input type="range" id="mg-alg-rot" min="0" max="${Math.max(0, v.n - 1)}" value="${v.rot}">
+            <span class="val">${v.rot}</span>
+          </div>
+          <div class="mg-row" style="margin-top:10px">
+            <label><input type="checkbox" id="mg-alg-perc" ${v.perc ? 'checked' : ''}> Percussió</label>
+            ${v.perc
+              ? `<label>Nota <input type="number" id="mg-alg-nota" min="0" max="127" value="${v.nota}" style="width:56px"></label>`
+              : `<label>Grau <input type="number" id="mg-alg-grau" min="0" max="14" value="${v.grau}" style="width:56px"></label>`}
+            <label>Força <input type="number" id="mg-alg-vel" min="1" max="127" value="${v.vel}" style="width:56px"></label>
+            ${_mgAlg.veus.length > 1 ? '<button class="mg-tab" id="mg-alg-menys-veu">Treure la veu</button>' : ''}
+          </div>
+          <p class="mg-hint">Aquesta veu toca <strong>${pat.filter(Boolean).length}</strong> cops
+            cada ${v.n} passos: ${pat.map(x => x ? '●' : '·').join('')}</p>
+        </div>`;
+    }
+
+    // ── Autòmat: el diagrama de la regla i l'evolució ────────────────────────
+    // Les vuit caselles de sota són LA regla: cada una diu què surt d'un veïnat
+    // de tres cèl·lules. Clicant-les es reescriu el número (0–255).
+    function _mgAlgAutomat(color) {
+      const n = _mgAlg.autN;
+      const llavor = _mgAlg.llavorAut && _mgAlg.llavorAut.length === n
+        ? _mgAlg.llavorAut : Array.from({ length: n }, (_, i) => (i === n >> 1 ? 1 : 0));
+      // Evolució de debò, amb el mateix codi que anirà al mode
+      let fila = llavor.slice();
+      const gens = [fila.slice()];
+      for (let g = 0; g < 23; g++) {
+        fila = mgWolfram(fila, _mgAlg.regla);
+        if (!fila.some(Boolean)) fila = llavor.slice();
+        gens.push(fila.slice());
+      }
+      const veinats = [7, 6, 5, 4, 3, 2, 1, 0];   // 111, 110, 101, 100, 011, 010, 001, 000
+      return `
+        <div class="mg-sec">
+          <p class="mg-lab">La regla · ${_mgAlg.regla}</p>
+          <div class="mg-regla">
+            ${veinats.map(idx => {
+              const bit = (_mgAlg.regla >> idx) & 1;
+              const tres = [(idx >> 2) & 1, (idx >> 1) & 1, idx & 1];
+              return `<div class="mg-regla-col" data-bit="${idx}">
+                <div class="tres">${tres.map(b => `<span class="${b ? 'viu' : ''}"></span>`).join('')}</div>
+                <div class="sortida ${bit ? 'viu' : ''}"></div>
+              </div>`;
+            }).join('')}
+          </div>
+          <div class="mg-row" style="margin-top:10px">
+            <label>Número <input type="number" id="mg-alg-regla" min="0" max="255" value="${_mgAlg.regla}" style="width:64px"></label>
+            ${_MG_ALG_REGLES.map(([r, nm]) => `<button class="mg-tab ${r === _mgAlg.regla ? 'on' : ''}" data-regla="${r}" title="${nm}">${r}</button>`).join('')}
+          </div>
+          <p class="mg-hint">Cada columna és un veïnat de tres cèl·lules i la casella de sota diu
+            què n'ha de sortir. <strong>Clica-les</strong> i el número canvia sol: això és tot
+            l'autòmat elemental de Wolfram.</p>
+        </div>
+
+        <div class="mg-sec">
+          <p class="mg-lab">Com evoluciona</p>
+          <div class="mg-evolucio" style="grid-template-columns:repeat(${n}, 1fr)">
+            ${gens.map((f, g) => f.map(c =>
+              `<span class="${c ? 'viu' : ''}" style="opacity:${.35 + (g / gens.length) * .65}"></span>`).join('')).join('')}
+          </div>
+          <div class="mg-row" style="margin-top:10px">
+            <label>Amplada <input type="number" id="mg-alg-autn" min="4" max="24" value="${n}" style="width:56px"></label>
+            <label>Veus alhora <input type="number" id="mg-alg-maxveus" min="1" max="8" value="${_mgAlg.maxVeus}" style="width:56px"></label>
+          </div>
+          <p class="mg-hint">Cada fila és una generació i cada cèl·lula viva, una nota de l'escala.
+            La <strong>90</strong> dibuixa el triangle de Sierpinski; la <strong>30</strong> fa caos;
+            la <strong>110</strong> és Turing-completa.</p>
+        </div>`;
+    }
+
+    // ── Markov: la matriu de transicions ────────────────────────────────────
+    const _MG_ROM = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
+    function _mgAlgMarkov() {
+      const g = _mgAlg.mkGraus;
+      if (!_mgAlg.matriu || _mgAlg.matriu.length !== g) _mgAlg.matriu = _mgMatriuPerDefecte(g);
+      const m = _mgAlg.matriu;
+      // Un tast de la seqüència que en sortiria, amb els mateixos pesos
+      const tast = [];
+      let cur = 0;
+      for (let i = 0; i < 28; i++) {
+        tast.push(cur);
+        const fila = m[cur];
+        const tot = fila.reduce((a, b) => a + b, 0);
+        if (!tot) { cur = Math.floor(Math.random() * g); continue; }
+        let r = Math.random() * tot, acc = 0, tria = g - 1;
+        for (let j = 0; j < g; j++) { acc += fila[j]; if (r <= acc) { tria = j; break; } }
+        cur = tria;
+      }
+      return `
+        <div class="mg-sec">
+          <p class="mg-lab">Matriu de transicions</p>
+          <div class="mg-matriu" style="grid-template-columns:auto repeat(${g}, 1fr)">
+            <div></div>${Array.from({ length: g }, (_, j) => `<div class="cap">${_MG_ROM[j]}</div>`).join('')}
+            ${m.map((fila, i) => `<div class="cap fila">${_MG_ROM[i]}</div>` +
+              fila.map((w, j) => `<div class="mg-mx-cel" data-i="${i}" data-j="${j}" data-w="${w}">${w || ''}</div>`).join('')).join('')}
+          </div>
+          <p class="mg-hint">De la fila (grau on ets) a la columna (on vas). Cada clic puja el
+            <strong>pes</strong> de 0 a 3: com més pes, més sovint agafa aquell camí.</p>
+          <div class="mg-row" style="margin-top:10px">
+            <label>Graus <input type="number" id="mg-alg-mkg" min="2" max="8" value="${g}" style="width:52px"></label>
+            <button class="mg-tab" data-mk="veins">Veïnatge</button>
+            <button class="mg-tab" data-mk="gravetat">Gravetat tonal</button>
+            <button class="mg-tab" data-mk="salts">Salts</button>
+            <button class="mg-tab" data-mk="cicle">Cicle</button>
+            <button class="mg-tab" data-mk="pla">Tot igual</button>
+          </div>
+        </div>
+
+        <div class="mg-sec">
+          <p class="mg-lab">Un tast</p>
+          <div class="mg-tast">${tast.map(d => `<span>${_MG_ROM[d]}</span>`).join('')}</div>
+          <p class="mg-hint">Una seqüència treta d'aquesta matriu ara mateix. Torna-hi i en sortirà
+            una altra: la matriu no dicta la melodia, en dicta el <em>caràcter</em>.</p>
+        </div>`;
+    }
+
+    // ── Joc de la vida: la graella que es dibuixa ───────────────────────────
+    function _mgAlgVida(color) {
+      const w = _mgAlg.vidaW, h = _mgAlg.vidaH;
+      if (!_mgAlg.llavorVida || _mgAlg.llavorVida.length !== h || _mgAlg.llavorVida[0].length !== w) {
+        _mgAlg.llavorVida = _mgLlavorVidaPerDefecte(w, h);
+      }
+      const g0 = _mgAlg.llavorVida;
+      // Tres generacions endavant, amb el mateix codi que anirà al mode
+      let g = g0.map(f => f.slice());
+      const passes = [];
+      for (let i = 0; i < 3; i++) { g = mgVida(g); passes.push(g.map(f => f.slice())); }
+      const mini = gr => `<div class="mg-vida-mini" style="grid-template-columns:repeat(${w},1fr)">` +
+        gr.flat().map(c => `<span class="${c ? 'viu' : ''}"></span>`).join('') + '</div>';
+      return `
+        <div class="mg-sec">
+          <p class="mg-lab">Llavor · dibuixa-la</p>
+          <div class="mg-vida" style="grid-template-columns:repeat(${w}, 1fr)">
+            ${g0.map((fila, y) => fila.map((c, x) =>
+              `<div class="mg-vida-cel ${c ? 'viu' : ''}" data-x="${x}" data-y="${y}"></div>`).join('')).join('')}
+          </div>
+          <div class="mg-row" style="margin-top:10px">
+            ${_MG_VIDA_PRESETS.map(([n], i) => `<button class="mg-tab" data-vida="${i}">${n}</button>`).join('')}
+            <button class="mg-tab" data-vida="buida">Buidar</button>
+            <button class="mg-tab" data-vida="atzar">A l'atzar</button>
+          </div>
+          <p class="mg-hint">Regla de Conway sobre una graella <strong>toroidal</strong> (les vores
+            s'enganxen): viu amb 2 o 3 veïnes, neix amb exactament 3. Cada <strong>columna</strong>
+            és un grau de l'escala i com més poblada, més fort sona.</p>
+        </div>
+
+        <div class="mg-sec">
+          <p class="mg-lab">Les tres generacions següents</p>
+          <div class="mg-vida-passes">${passes.map(mini).join('')}</div>
+          <div class="mg-row" style="margin-top:10px">
+            <label>Amplada <input type="number" id="mg-alg-vw" min="4" max="16" value="${w}" style="width:52px"></label>
+            <label>Alçada <input type="number" id="mg-alg-vh" min="4" max="16" value="${h}" style="width:52px"></label>
+          </div>
+        </div>`;
+    }
+
+    // ── Mandelbrot: el conjunt, i on hi ets ─────────────────────────────────
+    function _mgAlgMandel() {
+      return `
+        <div class="mg-sec">
+          <p class="mg-lab">El punt c</p>
+          <div class="mg-mandel-wrap">
+            <canvas id="mg-mandel" width="260" height="200"></canvas>
+            <div class="mg-mandel-info">
+              <div class="v"><span>Re(c)</span><strong id="mg-cx">${_mgAlg.cx.toFixed(4)}</strong></div>
+              <div class="v"><span>Im(c)</span><strong id="mg-cy">${_mgAlg.cy.toFixed(4)}</strong></div>
+              <div class="v"><span>òrbita</span><strong id="mg-orb">—</strong></div>
+            </div>
+          </div>
+          <p class="mg-hint"><strong>Clica el conjunt</strong> per triar c. La línia és l'òrbita:
+            z = z² + c iterat des de zero. Els punts de <em>dins</em> no s'escapen mai i donen
+            seqüències quasi-periòdiques; els de la vora, les més interessants.</p>
+        </div>
+
+        <div class="mg-sec">
+          <p class="mg-lab">Com es llegeix</p>
+          <div class="mg-row">
+            <label>Iteracions per pas <input type="number" id="mg-alg-iters" min="1" max="8" value="${_mgAlg.iters}" style="width:56px"></label>
+          </div>
+          <p class="mg-hint">A cada pas s'itera l'òrbita i la part real de z (de −2 a 2) tria el grau.
+            Amb més iteracions per pas, la melodia salta més lluny dins de l'òrbita.</p>
+        </div>`;
+    }
+
+    // Dibuixa el conjunt i l'òrbita del punt triat
+    function _mgPintaMandel(color) {
+      const cv = document.getElementById('mg-mandel');
+      if (!cv) return;
+      const ctx = cv.getContext('2d');
+      const W = cv.width, H = cv.height;
+      const X0 = -2.2, X1 = 0.8, Y0 = -1.2, Y1 = 1.2;
+      const img = ctx.createImageData(W, H);
+      const cs = getComputedStyle(document.body);
+      const clar = (cs.getPropertyValue('--bg').trim() || '#0c0c0c').match(/^#f|^#e/i);
+      for (let py = 0; py < H; py++) {
+        for (let px = 0; px < W; px++) {
+          const cx = X0 + (px / W) * (X1 - X0);
+          const cy = Y0 + (py / H) * (Y1 - Y0);
+          let zx = 0, zy = 0, i = 0;
+          while (zx * zx + zy * zy <= 4 && i < 48) {
+            const t = zx * zx - zy * zy + cx;
+            zy = 2 * zx * zy + cy; zx = t; i++;
+          }
+          const o = (py * W + px) * 4;
+          const dins = i >= 48;
+          const v = dins ? 0 : Math.round(255 * (i / 48) ** .45);
+          img.data[o] = img.data[o + 1] = img.data[o + 2] = clar ? 255 - v : v;
+          img.data[o + 3] = dins ? (clar ? 40 : 210) : 150;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+      // L'òrbita de c
+      const px = ((_mgAlg.cx - X0) / (X1 - X0)) * W;
+      const py = ((_mgAlg.cy - Y0) / (Y1 - Y0)) * H;
+      let zx = 0, zy = 0, n = 0;
+      ctx.beginPath();
+      ctx.moveTo(((0 - X0) / (X1 - X0)) * W, ((0 - Y0) / (Y1 - Y0)) * H);
+      for (let i = 0; i < 60; i++) {
+        const t = zx * zx - zy * zy + _mgAlg.cx;
+        zy = 2 * zx * zy + _mgAlg.cy; zx = t;
+        if (zx * zx + zy * zy > 4) break;
+        n++;
+        ctx.lineTo(((zx - X0) / (X1 - X0)) * W, ((zy - Y0) / (Y1 - Y0)) * H);
+      }
+      ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.globalAlpha = .85; ctx.stroke();
+      ctx.globalAlpha = 1;
+      ctx.beginPath(); ctx.arc(px, py, 4, 0, 6.3);
+      ctx.fillStyle = color; ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.4; ctx.stroke();
+      const orb = document.getElementById('mg-orb');
+      if (orb) orb.textContent = n >= 60 ? 'no s\'escapa' : `s'escapa a ${n}`;
+    }
+
+    function _mgFormAlgoritmic(box) {
+      const color = _mgColor(_mgCat);
+      const a = _mgAlg;
+      const escales = (typeof SCALE_NAMES_JS !== 'undefined' ? SCALE_NAMES_JS : ['Major']);
+      const tons = (typeof KEY_CIRCLE_JS !== 'undefined' ? KEY_CIRCLE_JS : ['C']);
+      const cos = a.algoritme === 'Euclidià' ? _mgAlgEuclid(color)
+                : a.algoritme === 'Autòmat' ? _mgAlgAutomat(color)
+                : a.algoritme === 'Markov' ? _mgAlgMarkov()
+                : a.algoritme === 'Joc de la vida' ? _mgAlgVida(color)
+                : _mgAlgMandel();
+      box.innerHTML = `
+        <div class="mg-sec">
+          <p class="mg-lab">L'algorisme</p>
+          <div class="mg-algs">
+            ${MG_ALG_NOMS.map(nm => `
+              <button class="mg-alg ${nm === a.algoritme ? 'on' : ''}" data-alg="${nm}">
+                <span class="nom">${nm}</span>
+                <span class="sub">${{
+                  'Euclidià': 'repartiment uniforme',
+                  'Autòmat': 'regles de Wolfram',
+                  'Markov': 'matriu de probabilitats',
+                  'Joc de la vida': 'Conway toroidal',
+                  'Mandelbrot': 'òrbita del fractal',
+                }[nm]}</span>
+              </button>`).join('')}
+          </div>
+        </div>
+        ${cos}
+        <div class="mg-sec">
+          <p class="mg-lab">Com sona</p>
+          <div class="mg-row">
+            <label>Escala
+              <select id="mg-alg-escala">${escales.map((e, i) => `<option value="${i}" ${i === a.escala ? 'selected' : ''}>${e}</option>`).join('')}</select>
+            </label>
+            <label>Tonalitat
+              <select id="mg-alg-ton" style="width:64px">${tons.map((t, i) => `<option value="${i}" ${i === a.tonalitat ? 'selected' : ''}>${t}</option>`).join('')}</select>
+            </label>
+            <label>Octava
+              <select id="mg-alg-oct" style="width:56px">${[1, 2, 3, 4, 5, 6].map(o => `<option value="${o}" ${o === a.octava ? 'selected' : ''}>${o}</option>`).join('')}</select>
+            </label>
+          </div>
+          <div class="mg-row" style="margin-top:8px">
+            <label>De <input type="number" id="mg-alg-bmin" min="20" max="300" value="${a.bpmMin}" style="width:60px">
+              a <input type="number" id="mg-alg-bmax" min="20" max="300" value="${a.bpmMax}" style="width:60px"> BPM</label>
+            <label>Força <input type="number" id="mg-alg-forca" min="1" max="127" value="${a.vel}" style="width:56px"></label>
+            <label>Durada <input type="number" id="mg-alg-gate" min="5" max="100" value="${a.gate}" style="width:56px"> %</label>
+          </div>
+          <p class="mg-hint">Cada pas és una semicorxera del tempo. La <strong>durada</strong> és quina
+            part del pas sona la nota.</p>
+        </div>`;
+
+      const on = (id, ev, fn) => document.getElementById(id)?.addEventListener(ev, fn);
+      const refresca = () => { _mgRenderForm(); _mgRenderPots(); _mgSync(); };
+
+      box.querySelectorAll('[data-alg]').forEach(b => b.addEventListener('click', () => {
+        a.algoritme = b.dataset.alg; refresca();
+      }));
+
+      // ── Euclidià ──
+      box.querySelectorAll('[data-tria-veu]').forEach(el => el.addEventListener('click', e => {
+        if (e.target.dataset.pas === undefined) { a.veuIdx = +el.dataset.triaVeu; refresca(); }
+      }));
+      box.querySelectorAll('.mg-collaret circle[data-pas]').forEach(c => c.addEventListener('click', e => {
+        e.stopPropagation();
+        const i = +c.dataset.veu, s = +c.dataset.pas;
+        const v = a.veus[i];
+        // Gira el ritme perquè hi caigui una pulsació al pas que has clicat
+        const base = mgEuclid(v.k, v.n);
+        const primera = base.indexOf(1);
+        if (primera >= 0) v.rot = ((s - primera) % v.n + v.n) % v.n;
+        a.veuIdx = i;
+        refresca();
+      }));
+      on('mg-alg-n', 'input', e => {
+        const v = a.veus[a.veuIdx]; v.n = +e.target.value;
+        if (v.k > v.n) v.k = v.n;
+        if (v.rot >= v.n) v.rot = 0;
+        refresca();
+      });
+      on('mg-alg-k', 'input', e => { a.veus[a.veuIdx].k = +e.target.value; refresca(); });
+      on('mg-alg-rot', 'input', e => { a.veus[a.veuIdx].rot = +e.target.value; refresca(); });
+      on('mg-alg-perc', 'change', e => { a.veus[a.veuIdx].perc = e.target.checked; refresca(); });
+      on('mg-alg-nota', 'input', e => { a.veus[a.veuIdx].nota = +e.target.value; _mgSync(); });
+      on('mg-alg-grau', 'input', e => { a.veus[a.veuIdx].grau = +e.target.value; _mgSync(); });
+      on('mg-alg-vel', 'input', e => { a.veus[a.veuIdx].vel = +e.target.value; _mgSync(); });
+      on('mg-alg-mes-veu', 'click', () => {
+        a.veus.push({ n: 16, k: 3, rot: 0, perc: false, nota: 42, grau: 2, vel: 85 });
+        a.veuIdx = a.veus.length - 1; refresca();
+      });
+      on('mg-alg-menys-veu', 'click', () => {
+        a.veus.splice(a.veuIdx, 1);
+        a.veuIdx = Math.max(0, a.veuIdx - 1); refresca();
+      });
+
+      // ── Autòmat ──
+      box.querySelectorAll('[data-bit]').forEach(el => el.addEventListener('click', () => {
+        a.regla ^= (1 << +el.dataset.bit); refresca();
+      }));
+      box.querySelectorAll('[data-regla]').forEach(b => b.addEventListener('click', () => {
+        a.regla = +b.dataset.regla; refresca();
+      }));
+      on('mg-alg-regla', 'input', e => {
+        a.regla = Math.max(0, Math.min(255, +e.target.value || 0)); refresca();
+      });
+      on('mg-alg-autn', 'input', e => { a.autN = +e.target.value; a.llavorAut = null; refresca(); });
+      on('mg-alg-maxveus', 'input', e => { a.maxVeus = +e.target.value; _mgSync(); });
+
+      // ── Markov ──
+      box.querySelectorAll('.mg-mx-cel').forEach(c => c.addEventListener('click', () => {
+        const i = +c.dataset.i, j = +c.dataset.j;
+        a.matriu[i][j] = (a.matriu[i][j] + 1) % 4;
+        refresca();
+      }));
+      on('mg-alg-mkg', 'input', e => { a.mkGraus = +e.target.value; a.matriu = null; refresca(); });
+      box.querySelectorAll('[data-mk]').forEach(b => b.addEventListener('click', () => {
+        const g = a.mkGraus, t = b.dataset.mk;
+        a.matriu = Array.from({ length: g }, (_, i) => Array.from({ length: g }, (_, j) => {
+          const d = Math.abs(i - j);
+          if (t === 'veins') return d <= 1 ? 2 : (d === 2 ? 1 : 0);
+          if (t === 'gravetat') return j === 0 ? 3 : (d <= 1 ? 2 : 1);       // tot cau cap a la tònica
+          if (t === 'salts') return d >= 2 ? 3 : (d === 1 ? 1 : 0);
+          if (t === 'cicle') return j === (i + 1) % g ? 3 : 0;               // recorregut fix
+          return 1;
+        }));
+        refresca();
+      }));
+
+      // ── Joc de la vida ──
+      box.querySelectorAll('.mg-vida-cel').forEach(c => c.addEventListener('click', () => {
+        const x = +c.dataset.x, y = +c.dataset.y;
+        a.llavorVida[y][x] = a.llavorVida[y][x] ? 0 : 1;
+        refresca();
+      }));
+      box.querySelectorAll('[data-vida]').forEach(b => b.addEventListener('click', () => {
+        const w = a.vidaW, h = a.vidaH, t = b.dataset.vida;
+        const g = Array.from({ length: h }, () => new Array(w).fill(0));
+        if (t === 'atzar') {
+          for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) g[y][x] = Math.random() < .32 ? 1 : 0;
+        } else if (t !== 'buida') {
+          const p = _MG_VIDA_PRESETS[+t][1];
+          const oy = Math.max(0, (h - p.length) >> 1), ox = Math.max(0, (w - p[0].length) >> 1);
+          p.forEach((fila, y) => fila.forEach((c, x) => { if (g[y + oy] && g[y + oy][x + ox] !== undefined) g[y + oy][x + ox] = c; }));
+        }
+        a.llavorVida = g; refresca();
+      }));
+      on('mg-alg-vw', 'input', e => { a.vidaW = +e.target.value; a.llavorVida = null; refresca(); });
+      on('mg-alg-vh', 'input', e => { a.vidaH = +e.target.value; a.llavorVida = null; refresca(); });
+
+      // ── Mandelbrot ──
+      const cv = document.getElementById('mg-mandel');
+      if (cv) {
+        _mgPintaMandel(color);
+        cv.style.cursor = 'crosshair';
+        cv.addEventListener('click', e => {
+          const r = cv.getBoundingClientRect();
+          a.cx = -2.2 + ((e.clientX - r.left) / r.width) * 3.0;
+          a.cy = -1.2 + ((e.clientY - r.top) / r.height) * 2.4;
+          document.getElementById('mg-cx').textContent = a.cx.toFixed(4);
+          document.getElementById('mg-cy').textContent = a.cy.toFixed(4);
+          _mgPintaMandel(color); _mgSync();
+        });
+      }
+      on('mg-alg-iters', 'input', e => { a.iters = +e.target.value; _mgSync(); });
+
+      // ── Comuns ──
+      on('mg-alg-escala', 'change', e => { a.escala = +e.target.value; _mgSync(); });
+      on('mg-alg-ton', 'change', e => { a.tonalitat = +e.target.value; _mgSync(); });
+      on('mg-alg-oct', 'change', e => { a.octava = +e.target.value; _mgSync(); });
+      on('mg-alg-bmin', 'input', e => { a.bpmMin = +e.target.value; _mgSync(); });
+      on('mg-alg-bmax', 'input', e => { a.bpmMax = +e.target.value; _mgSync(); });
+      on('mg-alg-forca', 'input', e => { a.vel = +e.target.value; _mgSync(); });
+      on('mg-alg-gate', 'input', e => { a.gate = +e.target.value; _mgSync(); });
+    }
+
     function _mgRenderForm() {
       const box = document.getElementById('modegen-form');
       const frame = _mgFrame();
@@ -5770,7 +6385,8 @@
       if (inNom) inNom.value = _mgCat.id === 'ritmic' ? _mgRit.nom
                              : _mgCat.id === 'drone' ? _mgDrone.nom
                              : _mgCat.id === 'textura' ? _mgTex.nom
-                             : _mgCat.id === 'ona' ? _mgOna.nom : _mgMel.nom;
+                             : _mgCat.id === 'ona' ? _mgOna.nom
+                             : _mgCat.id === 'algoritmic' ? _mgAlg.nom : _mgMel.nom;
       document.getElementById('modegen-crumb').textContent = `${_mgCat.ico}  ${_mgCat.nom}`;
       document.getElementById('modegen-crumb').style.color = col;
 
@@ -5778,6 +6394,7 @@
       if (_mgCat.id === 'drone') { _mgFormDrone(box); return; }
       if (_mgCat.id === 'textura') { _mgFormTextura(box); return; }
       if (_mgCat.id === 'ona') { _mgFormOna(box); return; }
+      if (_mgCat.id === 'algoritmic') { _mgFormAlgoritmic(box); return; }
       if (_mgCat.id !== 'melodic') {
         box.innerHTML = `
           <div class="mg-sec">
@@ -5888,6 +6505,7 @@
       else if (_mgCat.id === 'drone') _mgDrone.nom = e.target.value;
       else if (_mgCat.id === 'textura') _mgTex.nom = e.target.value;
       else if (_mgCat.id === 'ona') _mgOna.nom = e.target.value;
+      else if (_mgCat.id === 'algoritmic') _mgAlg.nom = e.target.value;
       else _mgMel.nom = e.target.value;
     });
 
@@ -5898,10 +6516,12 @@
                 : _mgCat.id === 'ritmic' ? _mgRit.pots
                 : _mgCat.id === 'drone' ? _mgDrone.pots
                 : _mgCat.id === 'textura' ? _mgTex.pots
-                : _mgCat.id === 'ona' ? _mgOna.pots : _mgCat.potsDef;
+                : _mgCat.id === 'ona' ? _mgOna.pots
+                : _mgCat.id === 'algoritmic' ? _mgAlg.potsPer[_mgAlg.algoritme] : _mgCat.potsDef;
       // Les famílies implementades prenen la llista del GENERADOR (única font
       // de veritat); les que encara són maqueta, la del catàleg.
-      const fns = MG_POT_FNS[_mgCat.id] || _mgCat.potFns;
+      const fns = mgPotFnsFor(_mgCat.id, _mgAlg.algoritme).length
+                ? mgPotFnsFor(_mgCat.id, _mgAlg.algoritme) : _mgCat.potFns;
       box.innerHTML = ['x', 'y', 'z'].map(k => `
         <div class="modegen-pot">
           <div class="nom">${k}</div>
@@ -5913,6 +6533,7 @@
         else if (_mgCat.id === 'drone') _mgDrone.pots[s.dataset.k] = s.value;
         else if (_mgCat.id === 'textura') _mgTex.pots[s.dataset.k] = s.value;
         else if (_mgCat.id === 'ona') _mgOna.pots[s.dataset.k] = s.value;
+        else if (_mgCat.id === 'algoritmic') _mgAlg.potsPer[_mgAlg.algoritme][s.dataset.k] = s.value;
         _mgSync();
       }));
     }
@@ -6091,6 +6712,27 @@
         amp = .15 + Math.min(1, _mgOna.amplitud / 36) * .85;
         tag = `${_mgOna.forma.toLowerCase()} · ${_mgOna.desti === 'CC' ? 'CC' + _mgOna.cc : (_mgOna.quantitza ? 'escala' : 'cromàtic')}`;
         main = `${_mgOna.freq.toFixed(2)} Hz`;
+      } else if (_mgCat.id === 'algoritmic') {
+        const a = _mgAlg;
+        bpm = (a.bpmMin + a.bpmMax) / 2;
+        // L'autòmat de la previsualització batega amb la densitat de l'algorisme
+        if (a.algoritme === 'Euclidià') {
+          const cops = a.veus.reduce((s, v) => s + v.k / Math.max(1, v.n), 0);
+          amp = .15 + Math.min(1, cops / 2) * .85;
+          tag = `euclidià · ${a.veus.length} ${a.veus.length === 1 ? 'veu' : 'veus'}`;
+          main = a.veus.map(v => `${v.k}/${v.n}`).join(' · ');
+        } else if (a.algoritme === 'Autòmat') {
+          amp = .4; tag = 'autòmat de Wolfram'; main = `regla ${a.regla}`;
+        } else if (a.algoritme === 'Markov') {
+          amp = .5; tag = 'cadena de Markov'; main = `${a.mkGraus} graus`;
+        } else if (a.algoritme === 'Joc de la vida') {
+          const vius = (a.llavorVida || []).flat().filter(Boolean).length;
+          amp = .2 + Math.min(1, vius / 20) * .8;
+          tag = 'joc de la vida'; main = `${vius} ${vius === 1 ? 'cèl·lula' : 'cèl·lules'}`;
+        } else {
+          amp = .45; tag = 'mandelbrot';
+          main = `${a.cx.toFixed(2)}${a.cy < 0 ? '−' : '+'}${Math.abs(a.cy).toFixed(2)}i`;
+        }
       } else {
         tag = _mgCat.sub.toLowerCase();
         main = _mgCat.nom;
@@ -6159,6 +6801,22 @@
       if (_mgCat.id === 'textura') {
         return { cat: 'textura', ..._mgTex, nom: _mgTex.nom || 'La meva textura',
                  fonsIntervals: [..._mgTex.fonsIntervals], pots: { ..._mgTex.pots } };
+      }
+      if (_mgCat.id === 'algoritmic') {
+        const a = _mgAlg;
+        return {
+          cat: 'algoritmic', nom: a.nom || 'El meu algorisme', algoritme: a.algoritme,
+          escala: a.escala, escalaNom: _mgEscalaNom(a.escala),
+          escalaIntervals: _mgEscala(a.escala), tonalitat: a.tonalitat, octava: a.octava,
+          vel: a.vel, gate: a.gate, bpmMin: a.bpmMin, bpmMax: a.bpmMax,
+          veus: a.veus.map(v => ({ ...v })),
+          regla: a.regla, autN: a.autN, maxVeus: a.maxVeus, llavorAut: a.llavorAut,
+          mkGraus: a.mkGraus, matriu: a.matriu ? a.matriu.map(f => [...f]) : null,
+          vidaW: a.vidaW, vidaH: a.vidaH,
+          llavorVida: a.llavorVida ? a.llavorVida.map(f => [...f]) : null,
+          cx: a.cx, cy: a.cy, iters: a.iters,
+          pots: { ...a.potsPer[a.algoritme] },
+        };
       }
       if (_mgCat.id === 'ona') {
         return { cat: 'ona', ..._mgOna, nom: _mgOna.nom || 'La meva ona',

@@ -243,6 +243,70 @@ CASOS_ONA = {
 }
 
 
+# ── Especificacions algorísmiques ─────────────────────────────────────────
+
+def _speca(**canvis):
+    base = {
+        'cat': 'algoritmic', 'nom': 'El meu algorisme', 'algoritme': 'Euclidià',
+        'escalaIntervals': [0, 2, 4, 7, 9], 'tonalitat': 0, 'octava': 4,
+        'vel': 92, 'gate': 60, 'bpmMin': 80, 'bpmMax': 160,
+        'veus': [
+            {'n': 16, 'k': 4, 'rot': 0, 'perc': True, 'nota': 36, 'grau': 0, 'vel': 105},
+            {'n': 8, 'k': 3, 'rot': 0, 'perc': True, 'nota': 38, 'grau': 0, 'vel': 92},
+        ],
+        'regla': 90, 'autN': 16, 'maxVeus': 5, 'llavorAut': None,
+        'mkGraus': 5, 'matriu': None,
+        'vidaW': 12, 'vidaH': 8, 'llavorVida': None,
+        'cx': -0.4, 'cy': 0.6, 'iters': 1,
+        'pots': {'x': 'Tempo', 'y': '—', 'z': 'Octava'},
+    }
+    base.update(canvis)
+    return base
+
+
+_CICLE5 = [[0, 1, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1], [1, 0, 0, 0, 0]]
+_GLIDER = [[0] * 12 for _ in range(8)]
+for _y, _x in ((1, 2), (2, 3), (3, 1), (3, 2), (3, 3)):
+    _GLIDER[_y][_x] = 1
+
+CASOS_ALG = {
+    'euclid': _speca(),
+    'euclid_tresillo': _speca(nom='Tresillo', veus=[
+        {'n': 8, 'k': 3, 'rot': 0, 'perc': True, 'nota': 36, 'grau': 0, 'vel': 100}]),
+    'euclid_melodic': _speca(nom='Euclid melodic', veus=[
+        {'n': 16, 'k': 5, 'rot': 0, 'perc': False, 'nota': 36, 'grau': 0, 'vel': 90},
+        {'n': 12, 'k': 7, 'rot': 3, 'perc': False, 'nota': 36, 'grau': 2, 'vel': 80}]),
+    'euclid_girat': _speca(nom='Euclid girat', veus=[
+        {'n': 16, 'k': 4, 'rot': 2, 'perc': True, 'nota': 36, 'grau': 0, 'vel': 100}]),
+    'euclid_buit': _speca(nom='Euclid buit', veus=[
+        {'n': 16, 'k': 0, 'rot': 0, 'perc': True, 'nota': 36, 'grau': 0, 'vel': 100}]),
+    'euclid_ple': _speca(nom='Euclid ple', veus=[
+        {'n': 8, 'k': 8, 'rot': 0, 'perc': True, 'nota': 36, 'grau': 0, 'vel': 100}]),
+    'euclid_quatre_veus': _speca(nom='Euclid quatre', veus=[
+        {'n': 16, 'k': 4, 'rot': 0, 'perc': True, 'nota': 36, 'grau': 0, 'vel': 105},
+        {'n': 12, 'k': 3, 'rot': 0, 'perc': True, 'nota': 38, 'grau': 0, 'vel': 92},
+        {'n': 9, 'k': 5, 'rot': 0, 'perc': True, 'nota': 42, 'grau': 0, 'vel': 70},
+        {'n': 7, 'k': 2, 'rot': 0, 'perc': False, 'nota': 36, 'grau': 4, 'vel': 80}]),
+    'aut90': _speca(nom='Aut 90', algoritme='Autòmat', regla=90),
+    'aut30': _speca(nom='Aut 30', algoritme='Autòmat', regla=30),
+    'aut110': _speca(nom='Aut 110', algoritme='Autòmat', regla=110),
+    'aut0': _speca(nom='Aut zero', algoritme='Autòmat', regla=0),      # s'extingeix sempre
+    'aut255': _speca(nom='Aut ple', algoritme='Autòmat', regla=255),   # s'omple sempre
+    'markov': _speca(nom='Markov prova', algoritme='Markov'),
+    'markov_cicle': _speca(nom='Markov cicle', algoritme='Markov', mkGraus=5, matriu=_CICLE5),
+    'markov_buit': _speca(nom='Markov buit', algoritme='Markov', mkGraus=4,
+                          matriu=[[0] * 4 for _ in range(4)]),
+    'vida': _speca(nom='Vida prova', algoritme='Joc de la vida', llavorVida=_GLIDER),
+    'vida_buida': _speca(nom='Vida buida', algoritme='Joc de la vida',
+                         llavorVida=[[0] * 12 for _ in range(8)]),
+    'mandel_dins': _speca(nom='Mandel dins', algoritme='Mandelbrot', cx=-0.4, cy=0.0),
+    'mandel_fora': _speca(nom='Mandel fora', algoritme='Mandelbrot', cx=1.5, cy=1.5),
+    'mandel_iters': _speca(nom='Mandel iters', algoritme='Mandelbrot', cx=-0.75, cy=0.1, iters=5),
+    'alg_pots': _speca(nom='Alg potes', pots={'x': 'Densitat', 'y': 'Rotació', 'z': 'Octava'}),
+    'alg_pots_buits': _speca(nom='Alg sense potes', pots={'x': '—', 'y': '—', 'z': '—'}),
+}
+
+
 def _genera(specs):
     """Crida el generador amb node i torna {clau: {file, cls, source}}."""
     # Les especificacions entren per stdin: amb -e els arguments de node no són
@@ -266,7 +330,7 @@ def _genera(specs):
     return json.loads(res.stdout)
 
 
-TOTS = dict(CASOS, **CASOS_RIT, **CASOS_DRONE, **CASOS_TEX, **CASOS_ONA)
+TOTS = dict(CASOS, **CASOS_RIT, **CASOS_DRONE, **CASOS_TEX, **CASOS_ONA, **CASOS_ALG)
 
 
 @pytest.fixture(scope='module')
@@ -276,41 +340,37 @@ def generats():
 
 @pytest.fixture(scope='module')
 def modes_importats(generats, tmp_path_factory):
-    """Escriu els modes generats a un paquet 'modes' temporal i els importa."""
-    dest = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
-                        'codi', 'device_files', 'modes')
-    dest = os.path.abspath(dest)
-    escrits = []
+    """Escriu els modes generats FORA de l'arbre de codi i els fa importables.
+
+    Un paquet de Python pot buscar a més d'un lloc: afegint el directori
+    temporal al __path__ de 'modes', els modes generats s'importen com si hi
+    fossin (i poden fer 'from modes.base_mode import BaseMode') sense deixar
+    ni un fitxer dins de codi/device_files. Abans s'hi escrivien i s'hi
+    esborraven ~90 fitxers a cada passada, i la sincronització del sistema
+    n'anava deixant còpies pel mig.
+    """
+    import modes as paquet_modes
+
+    tmp = tmp_path_factory.mktemp('modes_generats')
+    reals = set(os.listdir(os.path.dirname(paquet_modes.__file__)))
     classes = {}
+    paquet_modes.__path__.append(str(tmp))
     try:
         for clau, g in generats.items():
-            ruta = os.path.join(dest, g['file'])
-            assert not os.path.exists(ruta), f'{g["file"]} xocaria amb un mode existent'
-            with open(ruta, 'w') as f:
-                f.write(g['source'])
-            escrits.append(ruta)
+            assert g['file'] not in reals, f'{g["file"]} xocaria amb un mode del firmware'
+            (tmp / g['file']).write_text(g['source'])
+        importlib.invalidate_caches()
         for clau, g in generats.items():
             mod = importlib.import_module('modes.' + g['file'][:-3])
-            importlib.reload(mod)
             classes[clau] = getattr(mod, g['cls'])
         yield classes
     finally:
-        for r in escrits:
-            try:
-                os.remove(r)
-            except OSError:
-                pass
-            for c in (r + 'c', r.replace('.py', '.pyc')):
-                if os.path.exists(c):
-                    os.remove(c)
-        cache = os.path.join(dest, '__pycache__')
-        if os.path.isdir(cache):
-            for f in os.listdir(cache):
-                if any(os.path.basename(r)[:-3] in f for r in escrits):
-                    try:
-                        os.remove(os.path.join(cache, f))
-                    except OSError:
-                        pass
+        try:
+            paquet_modes.__path__.remove(str(tmp))
+        except ValueError:
+            pass
+        for clau, g in generats.items():
+            sys.modules.pop('modes.' + g['file'][:-3], None)
 
 
 # ── El codi generat ───────────────────────────────────────────────────────
@@ -363,9 +423,9 @@ def test_una_familia_no_implementada_avisa_clarament():
     res = subprocess.run(
         [shutil.which('node'), '--input-type=module', '-e',
          f'import {{ generateMode }} from {json.dumps(GEN_JS)};'
-         'try { generateMode({cat:"algoritmic"}); } catch (e) { process.stdout.write(e.message); }'],
+         'try { generateMode({cat:"inventada"}); } catch (e) { process.stdout.write(e.message); }'],
         capture_output=True, text=True)
-    assert 'algoritmic' in res.stdout and 'implementada' in res.stdout
+    assert 'inventada' in res.stdout and 'implementada' in res.stdout
 
 
 # ── Els modes, corrent ────────────────────────────────────────────────────
@@ -1058,6 +1118,367 @@ def test_l_ona_no_te_pols_per_a_la_pantalla(modes_importats):
 def test_l_ona_calla_del_tot_en_marxar(modes_importats):
     for clau in CASOS_ONA:
         midi, _ = _fes_sonar(modes_importats[clau], potes=(64, 64, 127), voltes=2000)
+        assert not _balanc(midi), f'{clau}: notes obertes'
+
+
+# ── Família algorísmica ───────────────────────────────────────────────────
+
+def _js(expr):
+    """Avalua una expressió amb el generador carregat i torna el JSON."""
+    driver = (f'import * as G from {json.dumps(GEN_JS)};'
+              f'process.stdout.write(JSON.stringify({expr}));')
+    res = subprocess.run([shutil.which('node'), '--input-type=module', '-e', driver],
+                         capture_output=True, text=True)
+    assert res.returncode == 0, res.stderr
+    return json.loads(res.stdout)
+
+
+def test_l_euclidia_reparteix_com_diu_la_teoria():
+    """Els repartiments euclidians clàssics: E(3,8) és el tresillo cubà,
+    E(5,8) el cinquillo i E(5,16) el bossa-nova."""
+    assert _js('G.euclid(3, 8)') == [0, 0, 1, 0, 0, 1, 0, 1]
+    assert sum(_js('G.euclid(5, 8)')) == 5
+    assert sum(_js('G.euclid(5, 16)')) == 5
+    assert _js('G.euclid(4, 16)') == [0, 0, 0, 1] * 4
+    assert _js('G.euclid(0, 8)') == [0] * 8
+    assert _js('G.euclid(8, 8)') == [1] * 8
+
+
+def test_l_euclidia_del_python_i_el_del_javascript_diuen_el_mateix(modes_importats):
+    """El dibuix del formulari surt del JS i el que sona, del Python: si
+    divergissin, el collaret ensenyaria un ritme i en sonaria un altre."""
+    midi = FakeMidiOut()
+    mode = modes_importats['euclid'](midi)
+    for k in range(0, 17):
+        for n in (8, 12, 16):
+            kk = min(k, n)
+            assert list(mode._euclid(kk, n)) == _js(f'G.euclid({kk}, {n})'), (kk, n)
+
+
+def test_el_tresillo_toca_on_toca(modes_importats):
+    """E(3,8) al bombo: tres cops per cada vuit passos, sempre als mateixos."""
+    midi, _ = _fes_sonar(modes_importats['euclid_tresillo'], potes=(64, 64, 64), voltes=2000)
+    ons = [m for m in midi.sent if type(m).__name__.endswith('NoteOn') and m.velocity > 0]
+    assert ons and all(m.note == 36 for m in ons)
+    assert all(getattr(m, 'channel', 0) == 9 for m in ons), 'ha d\'anar al canal de bateria'
+
+
+def test_les_veus_euclidianes_fan_polirítmia(modes_importats):
+    """Amb llargades diferents (16, 12, 9, 7) el conjunt no es repeteix fins
+    al mínim comú múltiple: això és el que fa que no soni a bucle."""
+    midi, mode = _fes_sonar(modes_importats['euclid_quatre_veus'], voltes=3000)
+    ons = [m.note for m in midi.sent if type(m).__name__.endswith('NoteOn') and m.velocity > 0]
+    assert len(set(ons)) >= 3, set(ons)
+    # Cada veu ha avançat pel seu compte
+    assert len(set(mode.pas_veu)) > 1, mode.pas_veu
+
+
+def test_una_veu_euclidiana_buida_no_toca(modes_importats):
+    midi, _ = _fes_sonar(modes_importats['euclid_buit'], voltes=1500)
+    assert not [m for m in midi.sent if type(m).__name__.endswith('NoteOn') and m.velocity > 0]
+
+
+def test_una_veu_euclidiana_plena_toca_cada_pas(modes_importats):
+    midi, mode = _fes_sonar(modes_importats['euclid_ple'], voltes=800, neteja=False)
+    ons = len([m for m in midi.sent if type(m).__name__.endswith('NoteOn') and m.velocity > 0])
+    assert ons == mode.step, (ons, mode.step)
+
+
+def test_el_gir_desplaça_el_ritme(modes_importats):
+    """El mateix K/N girat ha de caure en passos diferents."""
+    import time as _t
+
+    def quan(clau):
+        midi = FakeMidiOut()
+        mode = modes_importats[clau](midi)
+        mode.setup()
+        real = _t.monotonic
+        rell = [real()]
+        _t.monotonic = lambda: rell[0]
+        try:
+            passos = []
+            vist = 0
+            for _ in range(600):
+                rell[0] += 0.005
+                mode.update([64, 64, 64], [False] * 16)
+                ara = len([m for m in midi.sent
+                           if type(m).__name__.endswith('NoteOn') and m.velocity > 0])
+                if ara != vist:
+                    vist = ara
+                    passos.append(mode.step % 16)
+            return passos[:4]
+        finally:
+            _t.monotonic = real
+            mode.cleanup()
+
+    assert quan('euclid_girat') != quan('euclid'), 'el gir no ha canviat res'
+
+
+def test_la_veu_melodica_va_al_canal_de_notes(modes_importats):
+    midi, _ = _fes_sonar(modes_importats['euclid_melodic'], voltes=1500)
+    ons = [m for m in midi.sent if type(m).__name__.endswith('NoteOn') and m.velocity > 0]
+    assert ons and all(getattr(m, 'channel', 0) == 0 for m in ons)
+
+
+def test_l_automat_del_python_i_el_del_javascript_diuen_el_mateix(modes_importats):
+    """L'evolució que dibuixa el formulari ha de ser la que sonarà."""
+    midi = FakeMidiOut()
+    mode = modes_importats['aut90'](midi)
+    mode.setup()
+    fila = list(mode.fila)
+    for regla in (90, 30, 110, 150, 22):
+        mode.regla = regla
+        mode.fila = list(fila)
+        mode._generacio()
+        esperat = _js(f'G.wolfram({json.dumps(fila)}, {regla})')
+        assert list(mode.fila) == esperat, (regla, list(mode.fila), esperat)
+
+
+def test_la_regla_90_dibuixa_sierpinski(modes_importats):
+    """Des d'una sola cèl·lula, la regla 90 dona el triangle de Sierpinski:
+    la segona generació té exactament dues cèl·lules, i la tercera, dues."""
+    midi = FakeMidiOut()
+    mode = modes_importats['aut90'](midi)
+    mode.setup()
+    assert sum(mode.fila) == 1, 'la llavor és una sola cèl·lula'
+    mode._generacio()
+    assert sum(mode.fila) == 2
+    mode._generacio()
+    assert sum(mode.fila) == 2      # 1 0 1 amb el buit al mig… i els extrems
+
+
+def test_cada_regla_té_la_seva_densitat(modes_importats):
+    """Les regles clàssiques han de sonar diferent les unes de les altres."""
+    dens = {}
+    for clau in ('aut90', 'aut30', 'aut110'):
+        midi, _ = _fes_sonar(modes_importats[clau], voltes=2500)
+        dens[clau] = len([m for m in midi.sent
+                          if type(m).__name__.endswith('NoteOn') and m.velocity > 0])
+    assert len(set(dens.values())) == 3, dens
+    assert all(v > 0 for v in dens.values()), dens
+
+
+def test_un_automat_que_s_extingeix_torna_a_sembrar(modes_importats):
+    """La regla 0 mata tothom a la primera generació. En comptes de quedar-se
+    mut per sempre, el mode torna a sembrar."""
+    midi, mode = _fes_sonar(modes_importats['aut0'], voltes=2000)
+    assert sum(mode.fila) > 0, 'ha quedat tot mort'
+    assert [m for m in midi.sent if type(m).__name__.endswith('NoteOn') and m.velocity > 0]
+
+
+def test_l_automat_no_passa_del_maxim_de_veus(modes_importats):
+    """La regla 255 omple la fila sencera: sense el límit, sonarien 16 notes
+    de cop a cada generació."""
+    import time as _t
+    midi = FakeMidiOut()
+    mode = modes_importats['aut255'](midi)
+    mode.setup()
+    real = _t.monotonic
+    rell = [real()]
+    _t.monotonic = lambda: rell[0]
+    try:
+        abans = 0
+        maxim = 0
+        for _ in range(2000):
+            rell[0] += 0.005
+            mode.update([64, 64, 64], [False] * 16)
+            ara = len([m for m in midi.sent
+                       if type(m).__name__.endswith('NoteOn') and m.velocity > 0])
+            maxim = max(maxim, ara - abans)
+            abans = ara
+        assert maxim == 5, maxim
+    finally:
+        _t.monotonic = real
+        mode.cleanup()
+
+
+def test_markov_amb_una_matriu_de_cicle_fa_un_cicle(modes_importats):
+    """Si de cada grau només s'hi pot anar al següent, la seqüència ha de ser
+    exactament I-II-III-IV-V-I-… per molt atzar que hi hagi pel mig."""
+    midi = FakeMidiOut()
+    mode = modes_importats['markov_cicle'](midi)
+    mode.setup()
+    graus = [mode.grau]
+    for _ in range(30):
+        mode.grau = mode._tria()
+        graus.append(mode.grau)
+    esperat = [(graus[0] + i) % 5 for i in range(len(graus))]
+    assert graus == esperat, graus
+
+
+def test_markov_amb_una_matriu_buida_no_es_penja(modes_importats):
+    """Tots els pesos a zero: ha de triar a l'atzar en lloc de dividir per zero."""
+    midi = FakeMidiOut()
+    mode = modes_importats['markov_buit'](midi)
+    mode.setup()
+    tries = {mode._tria() for _ in range(60)}
+    assert len(tries) > 1
+    assert all(0 <= g < 4 for g in tries)
+
+
+def test_markov_es_queda_dins_dels_graus(modes_importats):
+    midi, _ = _fes_sonar(modes_importats['markov'], voltes=2000)
+    notes = [m.note for m in midi.sent
+             if type(m).__name__.endswith('NoteOn') and m.velocity > 0]
+    penta = {0, 2, 4, 7, 9}
+    assert notes and all(n % 12 in penta for n in notes), sorted({n % 12 for n in notes})
+
+
+def test_el_planador_es_mou(modes_importats):
+    """El planador de Conway s'ha de desplaçar per la graella, no quedar-se
+    quiet: quatre generacions després és el mateix dibuix però mogut."""
+    midi = FakeMidiOut()
+    mode = modes_importats['vida'](midi)
+    mode.setup()
+    inicial = [list(f) for f in mode.g]
+    for _ in range(4):
+        mode._generacio()
+    assert mode.g != inicial, 'el planador no s\'ha mogut'
+    assert mode._viva() == 5, 'un planador sempre té cinc cèl·lules'
+
+
+def test_la_vida_del_python_i_la_del_javascript_diuen_el_mateix(modes_importats):
+    midi = FakeMidiOut()
+    mode = modes_importats['vida'](midi)
+    mode.setup()
+    g0 = [list(f) for f in mode.g]
+    mode._generacio()
+    assert [list(f) for f in mode.g] == _js(f'G.vida({json.dumps(g0)})')
+
+
+def test_una_vida_extingida_torna_a_sembrar(modes_importats):
+    midi, mode = _fes_sonar(modes_importats['vida_buida'], voltes=1500)
+    assert mode._viva() > 0, 'ha quedat buida per sempre'
+
+
+def test_la_vida_reparteix_la_forca_per_poblacio(modes_importats):
+    """Com més poblada la columna, més fort sona: no totes les notes poden
+    tenir la mateixa força."""
+    midi, _ = _fes_sonar(modes_importats['vida'], voltes=2500)
+    vels = {m.velocity for m in midi.sent
+            if type(m).__name__.endswith('NoteOn') and m.velocity > 0}
+    assert len(vels) > 1, vels
+
+
+def test_l_orbita_de_mandelbrot_no_s_escapa_dins_del_conjunt(modes_importats):
+    """c = −0,4 és dins del conjunt: l'òrbita no ha de fugir mai, i per tant
+    el mode no s'ha de reiniciar."""
+    midi = FakeMidiOut()
+    mode = modes_importats['mandel_dins'](midi)
+    mode.setup()
+    for _ in range(400):
+        mode._orbita()
+        assert mode.zx * mode.zx + mode.zy * mode.zy <= 4.0
+
+
+def test_l_orbita_de_fora_del_conjunt_es_reinicia(modes_importats):
+    """c = 1,5 + 1,5i s'escapa de seguida: el mode ha de tornar a l'origen en
+    lloc de desbordar amb números infinits."""
+    midi, mode = _fes_sonar(modes_importats['mandel_fora'], voltes=1500)
+    assert abs(mode.zx) < 1e6 and abs(mode.zy) < 1e6
+    notes = [m.note for m in midi.sent
+             if type(m).__name__.endswith('NoteOn') and m.velocity > 0]
+    assert notes and all(0 <= n <= 127 for n in notes)
+
+
+def test_mandelbrot_dona_una_seqüencia_que_no_es_repeteix_de_seguida(modes_importats):
+    midi, _ = _fes_sonar(modes_importats['mandel_iters'], voltes=2500)
+    notes = [m.note for m in midi.sent
+             if type(m).__name__.endswith('NoteOn') and m.velocity > 0]
+    assert len(set(notes)) >= 3, set(notes)
+
+
+def test_el_pot_de_densitat_omple_l_euclidia(modes_importats):
+    cls = modes_importats['alg_pots']
+    poc, _ = _fes_sonar(cls, potes=(64, 0, 64), voltes=1500)
+    molt, _ = _fes_sonar(cls, potes=(64, 127, 64), voltes=1500)
+    n = lambda midi: len([m for m in midi.sent
+                          if type(m).__name__.endswith('NoteOn') and m.velocity > 0])
+    assert n(molt) > n(poc), (n(poc), n(molt))
+
+
+def test_el_pot_de_regla_canvia_l_automat(modes_importats):
+    cls = modes_importats['aut90']
+    # amb la regla al pot Y (que aquí és '—'), la provem directament
+    midi = FakeMidiOut()
+    mode = cls(midi)
+    mode.setup()
+    mode.regla = 30
+    mode._generacio()
+    assert mode.regla == 30
+
+
+def test_amb_els_potes_en_repos_l_automat_manté_la_regla_que_has_triat(modes_importats):
+    """Regressió: amb el pot de regla mapejat a 0–255 en cru, un pot a zero
+    et posava la regla 0 i la que havies configurat es perdia només d'engegar.
+    La llista de regles comença per la teva."""
+    spec = _speca(nom='Regla mantinguda', algoritme='Autòmat', regla=110,
+                  pots={'x': 'Tempo', 'y': 'Regla', 'z': 'Octava'})
+    g = _genera({'r': spec})['r']
+    assert '_REGLES = (110,' in g['source'], g['source'][:400]
+
+
+def test_amb_els_potes_en_repos_mandelbrot_manté_el_punt_que_has_triat(modes_importats):
+    """Els potes de c hi SUMEN: el punt que has clicat es respecta."""
+    spec = _speca(nom='Punt mantingut', algoritme='Mandelbrot', cx=-0.75, cy=0.1,
+                  pots={'x': 'Part real de c', 'y': 'Part imaginària de c', 'z': 'Octava'})
+    g = _genera({'m': spec})['m']
+    assert '_CX = -0.75' in g['source']
+    assert 'self.cx = _CX + (v / 127.0)' in g['source']
+
+
+def test_amb_el_pot_de_densitat_al_minim_l_euclidia_toca_el_que_has_posat(tmp_path_factory):
+    """Amb K=3 sobre 8 i el pot de densitat a zero han de sonar tres cops per
+    compàs, no cap (abans el mapatge portava el mínim cap al silenci)."""
+    import time as _t
+    spec = _speca(nom='Densitat minima', veus=[
+        {'n': 8, 'k': 3, 'rot': 0, 'perc': True, 'nota': 36, 'grau': 0, 'vel': 100}],
+        pots={'x': 'Densitat', 'y': '—', 'z': '—'})
+    g = _genera({'d': spec})['d']
+    import modes as paquet_modes
+    tmp = tmp_path_factory.mktemp('densitat')
+    (tmp / g['file']).write_text(g['source'])
+    paquet_modes.__path__.append(str(tmp))
+    try:
+        importlib.invalidate_caches()
+        mod = importlib.import_module('modes.' + g['file'][:-3])
+        midi = FakeMidiOut()
+        mode = getattr(mod, g['cls'])(midi)
+        mode.setup()
+        real = _t.monotonic
+        rell = [real()]
+        _t.monotonic = lambda: rell[0]
+        try:
+            for _ in range(200):
+                rell[0] += 0.01
+                mode.update([0, 0, 0], [False] * 16)     # tots els potes al mínim
+        finally:
+            _t.monotonic = real
+            mode.cleanup()
+        assert sum(mode.patrons[0]) == 3, list(mode.patrons[0])
+        ons = len([m for m in midi.sent
+                   if type(m).__name__.endswith('NoteOn') and m.velocity > 0])
+        assert ons > 0
+    finally:
+        try:
+            paquet_modes.__path__.remove(str(tmp))
+        except ValueError:
+            pass
+        sys.modules.pop('modes.' + g['file'][:-3], None)
+
+
+def test_tots_els_algorismes_toquen_alguna_cosa(modes_importats):
+    for clau in CASOS_ALG:
+        if clau in ('euclid_buit',):
+            continue
+        midi, _ = _fes_sonar(modes_importats[clau], voltes=1500)
+        ons = [m for m in midi.sent if type(m).__name__.endswith('NoteOn') and m.velocity > 0]
+        assert ons, f'{clau}: no ha sonat res'
+
+
+def test_cap_algorisme_deixa_notes_penjades(modes_importats):
+    for clau in CASOS_ALG:
+        midi, _ = _fes_sonar(modes_importats[clau], voltes=1500)
         assert not _balanc(midi), f'{clau}: notes obertes'
 
 

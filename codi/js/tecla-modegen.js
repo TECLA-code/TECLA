@@ -1218,11 +1218,550 @@ ${lligat ? '' : `        elif self.sonant >= 0 and now >= self.off_t:
 `;
 }
 
+// ── Família ALGORÍSMICA ───────────────────────────────────────────────────
+// Aquí no s'hi escriu un patró: s'hi escriu una REGLA, i el patró en surt. És
+// la diferència entre copiar un ritme i entendre d'on ve. A diferència de les
+// altres famílies, el que viatja al mode generat no és el resultat de
+// l'algorisme sinó l'algorisme mateix, així els potes el fan mutar en directe.
+//
+//   · Euclidià       — K pulsacions repartides el més uniformement possible
+//                      sobre S passos (Bjorklund). Amb S diferents per veu en
+//                      surten polirítmies que triguen compassos a tornar a
+//                      coincidir.
+//   · Autòmat        — les 256 regles elementals de Wolfram. La 90 fa el
+//                      triangle de Sierpinski; la 30, caos; la 110 és
+//                      Turing-completa.
+//   · Markov         — una matriu de probabilitats entre graus de l'escala.
+//   · Joc de la vida — Conway sobre una graella toroidal.
+//   · Mandelbrot     — l'òrbita d'un punt del pla complex.
+
+export const ALG_NOMS = ['Euclidià', 'Autòmat', 'Markov', 'Joc de la vida', 'Mandelbrot'];
+
+const ALG_POT_FNS = {
+  'Euclidià': ['Tempo', 'Densitat', 'Rotació', 'Octava', 'Brillantor (CC74)', '—'],
+  'Autòmat': ['Tempo', 'Regla', 'Octava', 'Torna a sembrar', 'Brillantor (CC74)', '—'],
+  'Markov': ['Tempo', 'Atzar', 'Octava', 'Registre', 'Brillantor (CC74)', '—'],
+  'Joc de la vida': ['Tempo', 'Filtre de veus', 'Octava', 'Torna a sembrar', 'Brillantor (CC74)', '—'],
+  'Mandelbrot': ['Tempo', 'Part real de c', 'Part imaginària de c', 'Octava', 'Brillantor (CC74)', '—'],
+};
+
+/** Funcions de pot d'una família (l'algorísmica depèn de l'algorisme triat). */
+export function potFnsFor(cat, alg) {
+  if (cat === 'algoritmic') return ALG_POT_FNS[alg] || ALG_POT_FNS['Euclidià'];
+  return POT_FNS[cat] || [];
+}
+
+// ── Els algorismes, també en JS ───────────────────────────────────────────
+// Mirall exacte del que s'escriu al Python. El formulari els fa servir per
+// ensenyar EL QUE SONARÀ mentre mous els controls: el dibuix no és una
+// il·lustració, és el patró de debò.
+
+/** Reparteix k pulsacions sobre n passos, el més uniformement possible. */
+export function euclid(k, n) {
+  n = Math.max(1, n | 0);
+  k = Math.max(0, Math.min(n, k | 0));
+  if (k === 0) return new Array(n).fill(0);
+  if (k === n) return new Array(n).fill(1);
+  const pat = [];
+  let cub = 0;
+  for (let i = 0; i < n; i++) {
+    cub += k;
+    if (cub >= n) { cub -= n; pat.push(1); } else pat.push(0);
+  }
+  return pat;
+}
+
+/** Gira un patró r posicions cap a la dreta. */
+export function rota(pat, r) {
+  const n = pat.length;
+  if (!n) return pat;
+  r = ((r % n) + n) % n;
+  return r ? pat.slice(n - r).concat(pat.slice(0, n - r)) : pat.slice();
+}
+
+/** Una generació de l'autòmat elemental de Wolfram (vora toroidal). */
+export function wolfram(fila, regla) {
+  const n = fila.length;
+  const out = new Array(n);
+  for (let i = 0; i < n; i++) {
+    const idx = (fila[(i - 1 + n) % n] << 2) | (fila[i] << 1) | fila[(i + 1) % n];
+    out[i] = (regla >> idx) & 1;
+  }
+  return out;
+}
+
+/** Una generació del joc de la vida sobre una graella toroidal. */
+export function vida(g) {
+  const h = g.length, w = g[0].length;
+  const out = g.map(f => f.slice());
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let n = 0;
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (dx || dy) n += g[(y + dy + h) % h][(x + dx + w) % w];
+        }
+      }
+      out[y][x] = g[y][x] ? (n === 2 || n === 3 ? 1 : 0) : (n === 3 ? 1 : 0);
+    }
+  }
+  return out;
+}
+
+function potCodeAlg(fn, spec, indent = '        ') {
+  const i = indent;
+  switch (fn) {
+    case 'Tempo': {
+      const lo = clamp(spec.bpmMin ?? 80, 20, 300), hi = clamp(spec.bpmMax ?? 160, 20, 300);
+      const min = Math.min(lo, hi), max = Math.max(lo, hi);
+      return `${i}b = ${py.f(min)} + (v / 127.0) * ${py.f(max - min)}\n`
+           + `${i}if b < self.bpm - 0.3 or b > self.bpm + 0.3:\n`
+           + `${i}    self.bpm = b\n${i}    self._calc()`;
+    }
+    case 'Densitat':
+      return `${i}d = (v / 127.0)\n${i}if d < self.dens - 0.02 or d > self.dens + 0.02:\n`
+           + `${i}    self.dens = d\n${i}    self._recalc()`;
+    case 'Filtre de veus':
+      return `${i}self.llindar = 1 + int((v / 127.0) * 2.99)`;
+    case 'Rotació':
+      return `${i}r = int((v / 127.0) * 15.99)\n${i}if r != self.rot:\n`
+           + `${i}    self.rot = r\n${i}    self._recalc()`;
+    case 'Regla':
+      // La primera de _REGLES és la que has triat: amb el pot al mínim sona
+      // el mode tal com el vas configurar, i girant-lo n'explores d'altres.
+      // (Amb el mapatge cru 0–255, el pot a zero et posava la regla 0, que no
+      // fa res, i la teva configuració es perdia només d'engegar.)
+      return `${i}r = _REGLES[min(len(_REGLES) - 1, int((v / 128.0) * len(_REGLES)))]\n`
+           + `${i}if r != self.regla:\n${i}    self.regla = r\n`
+           + `${i}    print("${'%'}s: regla ${'%'}d" % (self.name, r))`;
+    case 'Octava':
+      return `${i}o = _OCT - 1 + int((v / 127.0) * 2.99)\n${i}if o != self.octave:\n${i}    self.octave = o`;
+    case 'Registre':
+      return `${i}self.abast = 1 + int((v / 127.0) * 2.99)`;
+    case 'Atzar':
+      return `${i}self.atzar = (v / 127.0)`;
+    case 'Torna a sembrar':
+      return `${i}s = int((v / 127.0) * 7.99)\n${i}if s != self.llavor:\n`
+           + `${i}    self.llavor = s\n${i}    self._sembra()`;
+    case 'Part real de c':
+      return `${i}self.cx = _CX + (v / 127.0) * 0.6`;
+    case 'Part imaginària de c':
+      return `${i}self.cy = _CY + (v / 127.0) * 0.6`;
+    case 'Brillantor (CC74)':
+      return `${i}self._cc_once(74, v)`;
+    default:
+      return `${i}pass`;
+  }
+}
+
+function generateAlgorithmic(spec) {
+  const cls = className(spec.nom);
+  const nom = modeName(spec.nom);
+  const alg = ALG_NOMS.includes(spec.algoritme) ? spec.algoritme : 'Euclidià';
+  const escala = (spec.escalaIntervals && spec.escalaIntervals.length ? spec.escalaIntervals : [0, 2, 4, 7, 9]).map(x => x | 0);
+  const key = clamp(spec.tonalitat | 0, 0, 11);
+  const oct = clamp(spec.octava ?? 4, 0, 7);
+  const vel = clamp(spec.vel ?? 92, 1, 127);
+  const gate = clamp((spec.gate ?? 60) / 100, .05, 1);
+  const bpm0 = Math.round((clamp(spec.bpmMin ?? 80, 20, 300) + clamp(spec.bpmMax ?? 160, 20, 300)) / 2);
+  const potX = spec.pots?.x || 'Tempo';
+  const potY = spec.pots?.y || (ALG_POT_FNS[alg][1] || '—');
+  const potZ = spec.pots?.z || 'Octava';
+  const spec4json = JSON.stringify({ ...spec, cat: 'algoritmic' });
+
+  // ── Les peces que canvien segons l'algorisme ──
+  let consts = '', estat = '', metodes = '', pas = '', recalc = '        pass', sembra = '        pass';
+  let calRandom = false;
+
+  if (alg === 'Euclidià') {
+    const veus = (spec.veus && spec.veus.length ? spec.veus : [{ k: 4, n: 16, rot: 0, perc: true, nota: 36, grau: 0, vel: 105 }])
+      .slice(0, 4)
+      .map(v => ({
+        n: clamp(v.n | 0, 2, 32),
+        k: clamp(v.k | 0, 0, 32),
+        rot: clamp(v.rot | 0, 0, 31),
+        perc: v.perc !== false,
+        nota: clamp(v.nota ?? 36, 0, 127),
+        grau: clamp(v.grau | 0, 0, 14),
+        vel: clamp(v.vel ?? 100, 1, 127),
+      }));
+    consts = `_VEUS = ${py.tuples(veus.map(v => [v.n, v.k, v.rot, v.perc ? 1 : 0, v.perc ? v.nota : v.grau, v.vel]))}
+# per veu: (passos, pulsacions, rotació, és percussió, nota o grau, força)`;
+    estat = `        self.dens = 0.0
+        self.rot = 0
+        self.pas_veu = [0] * len(_VEUS)
+        self.patrons = []
+        self._recalc()`;
+    metodes = `    def _euclid(self, k, n):
+        """Reparteix k pulsacions sobre n passos el més uniformement possible.
+        És l'algorisme de Bjorklund escrit com un Bresenham: el mateix
+        repartiment que fan servir els ritmes tradicionals de mig món."""
+        if k <= 0:
+            return bytes(n)
+        if k >= n:
+            return bytes(b'\\x01' * n)
+        pat = bytearray(n)
+        cub = 0
+        for i in range(n):
+            cub += k
+            if cub >= n:
+                cub -= n
+                pat[i] = 1
+        return bytes(pat)
+
+    def _recalc(self):
+        """Els patrons només es tornen a calcular quan un pot els mou."""
+        self.patrons = []
+        for (n, k0, r0, es_perc, nota, vel) in _VEUS:
+            # Del que has configurat cap amunt: amb el pot al mínim sona el
+            # teu K, i girant-lo s'omple fins a totes les pulsacions.
+            k = int(k0 + (n - k0) * self.dens + 0.5)
+            k = 0 if k < 0 else (n if k > n else k)
+            self.patrons.append(self._euclid(k, n))
+`;
+    recalc = null;
+    pas = `        for i in range(len(_VEUS)):
+            n, k0, r0, es_perc, nota, vel = _VEUS[i]
+            pat = self.patrons[i]
+            p = self.pas_veu[i]
+            if pat[(p - r0 - self.rot) % n]:
+                if es_perc:
+                    self._cop(nota, vel, _DRUM_CH, _GATE_PERC, now)
+                else:
+                    self._cop(self._nota(nota), vel, 0, self.step_dur * _GATE, now)
+            # Cada veu té la seva llargada: per això en surten polirítmies
+            self.pas_veu[i] = (p + 1) % n`;
+  }
+
+  if (alg === 'Autòmat') {
+    const n = clamp(spec.autN ?? 16, 4, 24);
+    const regla = clamp(spec.regla ?? 90, 0, 255);
+    const maxVeus = clamp(spec.maxVeus ?? 5, 1, 8);
+    const llavor = (spec.llavorAut && spec.llavorAut.length === n)
+      ? spec.llavorAut.map(x => (x ? 1 : 0))
+      : Array.from({ length: n }, (_, i) => (i === n >> 1 ? 1 : 0));
+    const reglesInteressants = [90, 30, 110, 150, 54, 60, 126, 22, 182, 105];
+    const llistaRegles = [regla, ...reglesInteressants.filter(r => r !== regla)].slice(0, 10);
+    consts = `_N = ${n}
+_LLAVOR = ${py.tuple(llavor)}
+_MAX_VEUS = ${maxVeus}
+_REGLES = ${py.tuple(llistaRegles)}   # la primera és la que has triat`;
+    estat = `        self.regla = ${regla}
+        self.llavor = 0
+        self.fila = list(_LLAVOR)`;
+    metodes = `    def _sembra(self):
+        if self.llavor == 0:
+            self.fila = list(_LLAVOR)
+        else:
+            # Llavors alternatives: una cel·la desplaçada cap a la dreta
+            self.fila = [0] * _N
+            self.fila[(self.llavor * 3) % _N] = 1
+
+    def _generacio(self):
+        """Una generació de l'autòmat elemental: cada cel·la mira el seu veí
+        esquerre, ella mateixa i el dret, i la regla (0–255) diu què en surt.
+        La 90 dibuixa el triangle de Sierpinski; la 30 fa caos; la 110 és
+        Turing-completa."""
+        r = self.fila
+        out = [0] * _N
+        viu = 0
+        for i in range(_N):
+            idx = (r[i - 1] << 2) | (r[i] << 1) | r[(i + 1) % _N]
+            c = (self.regla >> idx) & 1
+            out[i] = c
+            viu += c
+        # Moltes regles s'extingeixen sobre un anell (la 90 amb una amplada
+        # potència de dos, per exemple): si passa, es torna a sembrar en lloc
+        # de quedar-se mut per sempre.
+        if viu == 0:
+            self._sembra()
+        else:
+            self.fila = out
+`;
+    sembra = null;
+    pas = `        self._generacio()
+        veus = 0
+        for i in range(_N):
+            if self.fila[i] and veus < _MAX_VEUS:
+                veus += 1
+                self._cop(self._nota(i), _VEL, 0, self.step_dur * _GATE, now)`;
+  }
+
+  if (alg === 'Markov') {
+    const g = clamp(spec.mkGraus ?? 7, 2, 8);
+    const m = (spec.matriu && spec.matriu.length === g)
+      ? spec.matriu.map(f => Array.from({ length: g }, (_, j) => clamp((f[j] ?? 0) | 0, 0, 3)))
+      : Array.from({ length: g }, (_, i) => Array.from({ length: g }, (_, j) => (Math.abs(i - j) <= 1 ? 2 : 1)));
+    consts = `_GRAUS = ${g}
+_MATRIU = ${py.tuples(m)}
+# de la fila (grau actual) a la columna (grau següent): pes 0-3`;
+    estat = `        self.grau = 0
+        self.atzar = 0.0
+        self.abast = 2`;
+    metodes = `    def _tria(self):
+        """Cadena de Markov: la fila del grau actual dona els pesos d'anar a
+        cada grau. Amb 'atzar' al màxim, la matriu es dilueix cap a l'atzar
+        pur — així se sent què hi aporta, la matriu."""
+        fila = _MATRIU[self.grau]
+        total = 0
+        for w in fila:
+            total += w + self.atzar * 3.0
+        if total <= 0:
+            return int(random.random() * _GRAUS)
+        r = random.random() * total
+        acum = 0.0
+        for j in range(_GRAUS):
+            acum += fila[j] + self.atzar * 3.0
+            if r <= acum:
+                return j
+        return _GRAUS - 1
+`;
+    calRandom = true;
+    pas = `        self.grau = self._tria()
+        # El registre reparteix els graus per unes quantes octaves
+        salt = int(random.random() * self.abast) * len(_ESCALA)
+        self._cop(self._nota(self.grau + salt), _VEL, 0, self.step_dur * _GATE, now)`;
+  }
+
+  if (alg === 'Joc de la vida') {
+    const w = clamp(spec.vidaW ?? 12, 4, 16);
+    const h = clamp(spec.vidaH ?? 8, 4, 16);
+    const llavor = (spec.llavorVida && spec.llavorVida.length === h && spec.llavorVida[0]?.length === w)
+      ? spec.llavorVida.map(f => f.map(x => (x ? 1 : 0)))
+      : Array.from({ length: h }, (_, y) => Array.from({ length: w }, (_, x) =>
+          ((y === 1 && x === 2) || (y === 2 && x === 3) || (y === 3 && x >= 1 && x <= 3) ? 1 : 0)));   // glider
+    consts = `_W = ${w}
+_H = ${h}
+_LLAVOR = ${py.tuples(llavor.map(f => f))}`;
+    estat = `        self.llindar = 1
+        self.llavor = 0
+        self.g = [list(f) for f in _LLAVOR]
+        self._sembra()          # garanteix que la graella no arrenqui buida`;
+    metodes = `    def _aleatoria(self, llavor):
+        """Sembra pseudoaleatòria i reproduïble (un LCG curt: no cal random)."""
+        s = (llavor + 1) * 7919
+        self.g = []
+        for y in range(_H):
+            fila = []
+            for x in range(_W):
+                s = (s * 1103515245 + 12345) & 0x7FFFFFFF
+                fila.append(1 if (s >> 16) % 100 < 30 else 0)
+            self.g.append(fila)
+
+    def _sembra(self):
+        if self.llavor == 0:
+            self.g = [list(f) for f in _LLAVOR]
+        else:
+            self._aleatoria(self.llavor)
+        if self._viva() == 0:
+            # Una llavor buida deixaria el mode mut per sempre: se'n posa una
+            # d'aleatòria, i si encara així no en surt res, una cèl·lula al mig.
+            self._aleatoria(self.llavor + 1)
+            if self._viva() == 0:
+                self.g[_H // 2][_W // 2] = 1
+
+    def _generacio(self):
+        """Conway sobre una graella TOROIDAL (les vores s'enganxen): una
+        cèl·lula viva segueix viva amb 2 o 3 veïnes, i una de morta neix amb
+        exactament 3."""
+        g = self.g
+        nou = []
+        for y in range(_H):
+            fila = []
+            dalt = g[y - 1]
+            mig = g[y]
+            baix = g[(y + 1) % _H]
+            for x in range(_W):
+                e = x - 1
+                d = (x + 1) % _W
+                n = (dalt[e] + dalt[x] + dalt[d] + mig[e] + mig[d]
+                     + baix[e] + baix[x] + baix[d])
+                if mig[x]:
+                    fila.append(1 if (n == 2 or n == 3) else 0)
+                else:
+                    fila.append(1 if n == 3 else 0)
+            nou.append(fila)
+        self.g = nou
+
+    def _viva(self):
+        t = 0
+        for f in self.g:
+            for c in f:
+                t += c
+        return t
+`;
+    sembra = null;
+    pas = `        self._generacio()
+        # Cada COLUMNA és un grau; com més poblada, més forta sona
+        for x in range(_W):
+            n = 0
+            for y in range(_H):
+                n += self.g[y][x]
+            if n >= self.llindar:
+                v = _VEL - 30 + n * 12
+                v = 1 if v < 1 else (127 if v > 127 else v)
+                self._cop(self._nota(x), v, 0, self.step_dur * _GATE, now)
+        if self._viva() == 0:
+            self._sembra()          # si s'extingeix, torna a començar`;
+  }
+
+  if (alg === 'Mandelbrot') {
+    const cx = spec.cx ?? -0.4;
+    const cy = spec.cy ?? 0.6;
+    const iters = clamp(spec.iters ?? 1, 1, 8);
+    consts = `_ITERS = ${iters}
+_CX = ${py.f(cx, 4)}
+_CY = ${py.f(cy, 4)}`;
+    estat = `        self.cx = _CX
+        self.cy = _CY
+        self.zx = 0.0
+        self.zy = 0.0`;
+    metodes = `    def _orbita(self):
+        """Itera z = z² + c i torna on ha anat a parar la part real (−2..2).
+        Els punts de dins del conjunt donen òrbites que no s'escapen mai: en
+        surten seqüències quasi-periòdiques, ni repetitives ni aleatòries."""
+        for _ in range(_ITERS):
+            zx = self.zx * self.zx - self.zy * self.zy + self.cx
+            zy = 2.0 * self.zx * self.zy + self.cy
+            self.zx = zx
+            self.zy = zy
+            if zx * zx + zy * zy > 4.0:     # s'ha escapat: torna a l'origen
+                self.zx = 0.0
+                self.zy = 0.0
+                return 0.0
+        v = (self.zx + 2.0) / 4.0
+        return 0.0 if v < 0.0 else (1.0 if v > 1.0 else v)
+`;
+    pas = `        v = self._orbita()
+        grau = int(v * (len(_ESCALA) * 2 - 1))
+        self._cop(self._nota(grau), _VEL, 0, self.step_dur * _GATE, now)`;
+  }
+
+  return `"""${nom} — mode algorísmic (${alg}) fet amb el constructor de TECLA.
+X: ${potX}  Y: ${potY}  Z: ${potZ}
+El patró no està escrit enlloc: el genera la regla, i els potes la fan mutar.
+"""
+# TECLA-SPEC ${spec4json}
+import time
+${calRandom ? 'import random\n' : ''}from modes.base_mode import BaseMode
+from adafruit_midi.control_change import ControlChange
+
+_ESCALA = ${py.tuple(escala)}
+_KEYS = ('C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B')
+_OCT = ${oct}
+_VEL = ${vel}
+_GATE = ${py.f(gate)}
+_GATE_PERC = 0.055
+_DRUM_CH = 9
+${consts}
+
+
+class ${cls}(BaseMode):
+    def __init__(self, midi_out, config=None):
+        super().__init__(midi_out, config)
+        self.name = "${nom}"
+        self.bpm = ${py.f(bpm0)}
+        self.key = ${key}
+        self.octave = _OCT
+        self.step = 0
+        self.step_dur = 0.0
+        self.next_t = 0.0
+        self.pend = []
+        self._cc_cache = {}
+${estat}
+
+    def setup(self):
+        self.initialized = True
+        self.step = 0
+        self._calc()
+        self.next_t = time.monotonic()
+        self.pend = []
+        self._cc_cache = {}
+        print("${nom}: ${alg} %d BPM" % int(self.bpm))
+
+    def _calc(self):
+        self.step_dur = 60.0 / self.bpm / 4.0
+
+    def _cc_once(self, cc, v):
+        v = 0 if v < 0 else (127 if v > 127 else int(v))
+        if self._cc_cache.get(cc) == v:
+            return
+        self._cc_cache[cc] = v
+        try:
+            self.midi_out.send(ControlChange(cc, v))
+        except Exception:
+            pass
+
+    def _nota(self, grau):
+        """Grau de l'escala → nota MIDI (els graus que en passen, pugen d'octava)."""
+        n = len(_ESCALA)
+        return self.octave * 12 + self.key + _ESCALA[grau % n] + 12 * (grau // n)
+
+    def _allibera(self, now, totes=False):
+        if not self.pend:
+            return
+        queden = []
+        for p in self.pend:
+            if totes or now >= p[2]:
+                self.send_note_off(p[0], 0, p[1])
+            else:
+                queden.append(p)
+        self.pend = queden
+
+    def _cop(self, nota, vel, canal, dura, now):
+        if nota < 0 or nota > 127:
+            return
+        self.send_note_on(nota, vel, canal)
+        self.pend.append([nota, canal, now + dura])
+
+${metodes ? metodes + '\n' : ''}${recalc === null ? '' : `    def _recalc(self):
+${recalc}
+
+`}${sembra === null ? '' : `    def _sembra(self):
+${sembra}
+
+`}    def _pas(self, now):
+${pas}
+
+    def update(self, pot_values, button_states):
+        # Potes FÍSICS: X=pot_values[1], Y=pot_values[0], Z=pot_values[2]
+        py_, px, pz = pot_values
+        now = time.monotonic()
+
+        self._allibera(now)
+
+        # ── Els tres potes, tal com s'han assignat ──
+        v = px
+${potCodeAlg(potX, spec)}
+        v = py_
+${potCodeAlg(potY, spec)}
+        v = pz
+${potCodeAlg(potZ, spec)}
+
+        if now >= self.next_t:
+            self._pas(now)
+            self.step += 1
+            self.next_t = now + self.step_dur
+
+        return {'alg': '${alg}', 'bpm': int(self.bpm), 'pas': self.step}
+
+    def cleanup(self):
+        self._allibera(0.0, totes=True)
+        self.stop_tracked_notes()
+        for c, val in ((74, 0), (1, 0), (11, 127), (123, 0), (120, 0)):
+            try:
+                self.midi_out.send(ControlChange(c, val))
+            except Exception:
+                pass
+`;
+}
+
 // ── Punt d'entrada ────────────────────────────────────────────────────────
 
 const GENERADORS = {
   melodic: generateMelodic, ritmic: generateRhythmic,
   drone: generateDrone, textura: generateTexture, ona: generateWave,
+  algoritmic: generateAlgorithmic,
 };
 
 /**
@@ -1263,4 +1802,5 @@ export const POT_FNS = {
   drone: DRONE_POT_FNS,
   textura: TEXTURA_POT_FNS,
   ona: ONA_POT_FNS,
+  algoritmic: ALG_POT_FNS['Euclidià'],
 };
