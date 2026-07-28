@@ -167,6 +167,44 @@ CASOS_DRONE = {
 }
 
 
+# ── Especificacions de textura ────────────────────────────────────────────
+
+def _spect(**canvis):
+    base = {
+        'cat': 'textura', 'nom': 'La meva textura',
+        'densitat': 8, 'jitter': 70, 'notaCentre': 78, 'notaDispersio': 18,
+        'velMin': 40, 'velMax': 100, 'duradaMin': 20, 'duradaMax': 120,
+        'rafegues': False, 'rafegaNotes': 4, 'rafegaPausa': 4,
+        'fonsOn': True, 'fonsNota': 28, 'fonsIntervals': [0, 7], 'fonsVel': 45,
+        'moviment': 'Arc', 'movCC': 74, 'movPeriode': 4, 'movProfunditat': 100,
+        'pots': {'x': 'Densitat', 'y': 'Zona de notes', 'z': 'Filtre (velocitat)'},
+    }
+    base.update(canvis)
+    return base
+
+
+CASOS_TEX = {
+    'gra': _spect(),
+    'sense_fons': _spect(nom='Sense terra', fonsOn=False),
+    'rafegues': _spect(nom='Rafegues', rafegues=True, rafegaNotes=6, rafegaPausa=8),
+    'regular': _spect(nom='Rellotge', jitter=0),
+    'clavat': _spect(nom='Clavat', notaDispersio=0),
+    'escampat': _spect(nom='Escampat', notaDispersio=48, notaCentre=60),
+    'zona_greu': _spect(nom='Zona greu', notaCentre=12, notaDispersio=24),   # no pot baixar de 0
+    'zona_aguda': _spect(nom='Zona aguda', notaCentre=108, notaDispersio=30),  # ni passar de 127
+    'densitat_alta': _spect(nom='Enxarxat', densitat=40),
+    'densitat_baixa': _spect(nom='Gota a gota', densitat=0.3),
+    'notes_llargues': _spect(nom='Nuvol', duradaMin=800, duradaMax=3000),
+    'notes_curtissimes': _spect(nom='Espurna', duradaMin=5, duradaMax=8),
+    'sense_filtre': _spect(nom='Sec textura', moviment='Cap'),
+    'filtre_gate': _spect(nom='Filtre gate', moviment='Gate', movPeriode=0.5),
+    'forca_plana': _spect(nom='Forca plana', velMin=90, velMax=90),
+    'pots_alternatius_tex': _spect(nom='Potes textura',
+                                   pots={'x': 'Dispersió', 'y': 'Volum', 'z': 'Fons greu'}),
+    'pots_buits_tex': _spect(nom='Sense potes tex', pots={'x': '—', 'y': '—', 'z': '—'}),
+}
+
+
 def _genera(specs):
     """Crida el generador amb node i torna {clau: {file, cls, source}}."""
     # Les especificacions entren per stdin: amb -e els arguments de node no són
@@ -190,7 +228,7 @@ def _genera(specs):
     return json.loads(res.stdout)
 
 
-TOTS = dict(CASOS, **CASOS_RIT, **CASOS_DRONE)
+TOTS = dict(CASOS, **CASOS_RIT, **CASOS_DRONE, **CASOS_TEX)
 
 
 @pytest.fixture(scope='module')
@@ -287,9 +325,9 @@ def test_una_familia_no_implementada_avisa_clarament():
     res = subprocess.run(
         [shutil.which('node'), '--input-type=module', '-e',
          f'import {{ generateMode }} from {json.dumps(GEN_JS)};'
-         'try { generateMode({cat:"textura"}); } catch (e) { process.stdout.write(e.message); }'],
+         'try { generateMode({cat:"ona"}); } catch (e) { process.stdout.write(e.message); }'],
         capture_output=True, text=True)
-    assert 'textura' in res.stdout and 'implementada' in res.stdout
+    assert 'ona' in res.stdout and 'implementada' in res.stdout
 
 
 # ── Els modes, corrent ────────────────────────────────────────────────────
@@ -679,6 +717,178 @@ def test_el_drone_calla_del_tot_en_marxar(modes_importats):
     for clau in CASOS_DRONE:
         midi, _ = _fes_sonar(modes_importats[clau], voltes=200)
         assert not _balanc(midi), f'{clau}: veus obertes'
+
+
+# ── Família textura ───────────────────────────────────────────────────────
+
+def _gra_notes(midi, fora=()):
+    """Notes dels esdeveniments (excloent-ne les del fons sostingut)."""
+    return [m.note for m in midi.sent
+            if type(m).__name__.endswith('NoteOn') and m.velocity > 0 and m.note not in fora]
+
+
+def test_la_textura_reparteix_les_notes_per_la_zona(modes_importats):
+    """Centre 78 amb dispersió 18: totes entre 60 i 96, i no sempre la mateixa."""
+    midi, mode = _fes_sonar(modes_importats['gra'], voltes=3000)
+    notes = _gra_notes(midi, fora={28, 35})
+    lo, hi = mode.centre - mode.disp, mode.centre + mode.disp
+    assert len(notes) > 20, len(notes)
+    assert all(lo <= n <= hi for n in notes), (lo, hi, min(notes), max(notes))
+    assert len(set(notes)) > 8, 'una textura no pot repetir sempre la mateixa nota'
+
+
+def test_sense_dispersio_totes_les_notes_son_la_mateixa(modes_importats):
+    midi, mode = _fes_sonar(modes_importats['clavat'], voltes=2000)
+    assert set(_gra_notes(midi, fora={28, 35})) == {mode.centre}
+
+
+def test_la_zona_mai_no_surt_del_rang_midi(modes_importats):
+    """Amb el centre als extrems i molta dispersió, res per sota de 0 ni per
+    sobre de 127 (i els que no hi caben, simplement no sonen)."""
+    for clau in ('zona_greu', 'zona_aguda'):
+        midi, _ = _fes_sonar(modes_importats[clau], voltes=2000)
+        for m in midi.sent:
+            if type(m).__name__.endswith(('NoteOn', 'NoteOff')):
+                assert 0 <= m.note <= 127, (clau, m.note)
+
+
+def test_el_fons_greu_es_sosté(modes_importats):
+    """El fons entra un cop i es queda: no s'ha de re-disparar cada volta."""
+    midi, _ = _fes_sonar(modes_importats['gra'], voltes=1500, neteja=False)
+    fons = [m for m in midi.sent
+            if type(m).__name__.endswith('NoteOn') and m.velocity > 0 and m.note in (28, 35)]
+    assert len(fons) == 2, f'el fons s\'ha re-disparat {len(fons)} cops'
+
+
+def test_sense_fons_nomes_hi_ha_els_grans(modes_importats):
+    midi, mode = _fes_sonar(modes_importats['sense_fons'], voltes=1500)
+    ons = [m.note for m in midi.sent if type(m).__name__.endswith('NoteOn') and m.velocity > 0]
+    assert ons and all(n >= mode.centre - mode.disp for n in ons), 'no hi ha d\'haver res sota la zona'
+
+
+def test_la_densitat_mana_quants_esdeveniments_hi_ha(modes_importats):
+    poc, _ = _fes_sonar(modes_importats['densitat_baixa'], voltes=2000)
+    molt, _ = _fes_sonar(modes_importats['densitat_alta'], voltes=2000)
+    assert len(_gra_notes(molt, fora={28, 35})) > len(_gra_notes(poc, fora={28, 35})) * 5
+
+
+def test_la_irregularitat_desiguala_els_intervals(modes_importats):
+    """Amb jitter 0 els esdeveniments cauen clavats; amb jitter, no."""
+    import time as _t
+
+    def intervals(clau):
+        midi = FakeMidiOut()
+        mode = modes_importats[clau](midi)
+        mode.setup()
+        real = _t.monotonic
+        rellotge = [real()]
+        _t.monotonic = lambda: rellotge[0]
+        try:
+            quan = []
+            vist = 0
+            for _ in range(4000):
+                rellotge[0] += 0.002
+                mode.update([64, 64, 64], [False] * 16)
+                ara = len([m for m in midi.sent
+                           if type(m).__name__.endswith('NoteOn') and m.velocity > 0])
+                if ara != vist:
+                    vist = ara
+                    quan.append(rellotge[0])
+            return [round(b - a, 4) for a, b in zip(quan, quan[1:])]
+        finally:
+            _t.monotonic = real
+            mode.cleanup()
+
+    regulars = intervals('regular')
+    irregulars = intervals('gra')
+    assert len(set(regulars)) <= 2, f'sense atzar han de caure clavats: {set(regulars)}'
+    assert len(set(irregulars)) > 4, f'amb atzar han de variar: {set(irregulars)}'
+
+
+def test_les_rafegues_disparen_diverses_notes_alhora(modes_importats):
+    """Cada dispar de la ràfega són 6 notes en el mateix instant."""
+    import time as _t
+    midi = FakeMidiOut()
+    mode = modes_importats['rafegues'](midi)
+    mode.setup()
+    real = _t.monotonic
+    rellotge = [real()]
+    _t.monotonic = lambda: rellotge[0]
+    try:
+        # Es compten NOMÉS els grans: el fons greu ja sona des del setup i
+        # entrava dins de la primera mesura.
+        fons = set(mode.fons_notes)
+        abans = 0
+        maxim = 0
+        for _ in range(3000):
+            rellotge[0] += 0.002
+            mode.update([64, 64, 64], [False] * 16)
+            ara = len([m for m in midi.sent
+                       if type(m).__name__.endswith('NoteOn') and m.velocity > 0
+                       and m.note not in fons])
+            maxim = max(maxim, ara - abans)
+            abans = ara
+        assert maxim == 6, f'la ràfega hauria de disparar 6 notes de cop, no {maxim}'
+    finally:
+        _t.monotonic = real
+        mode.cleanup()
+
+
+def test_la_forca_es_queda_dins_del_rang_demanat(modes_importats):
+    midi, _ = _fes_sonar(modes_importats['forca_plana'], voltes=2000)
+    vels = {m.velocity for m in midi.sent
+            if type(m).__name__.endswith('NoteOn') and m.velocity > 0 and m.note not in (28, 35)}
+    assert vels == {90}, vels
+
+
+def test_les_notes_llargues_duren_mes(modes_importats):
+    """La durada configurada mana quant triga a arribar el note-off."""
+    curta, _ = _fes_sonar(modes_importats['notes_curtissimes'], voltes=600, neteja=False)
+    llarga, _ = _fes_sonar(modes_importats['notes_llargues'], voltes=600, neteja=False)
+    parell = lambda midi: (len([m for m in midi.sent if type(m).__name__.endswith('NoteOff')]),
+                           len([m for m in midi.sent
+                                if type(m).__name__.endswith('NoteOn') and m.velocity > 0]))
+    offs_c, ons_c = parell(curta)
+    offs_l, ons_l = parell(llarga)
+    assert offs_c / max(1, ons_c) > offs_l / max(1, ons_l)
+
+
+def test_el_filtre_de_la_textura_escombra(modes_importats):
+    midi, _ = _fes_sonar(modes_importats['gra'], voltes=2000)
+    vals = sorted({v for _, v in _ccs(midi, 74)})
+    assert len([v for v in vals if 20 < v < 107]) > 8, vals[:20]
+
+
+def test_sense_filtre_la_textura_no_envia_cc(modes_importats):
+    midi, _ = _fes_sonar(modes_importats['sense_filtre'], voltes=800, neteja=False)
+    assert not _ccs(midi, 74)
+
+
+def test_el_pot_de_densitat_la_canvia(modes_importats):
+    cls = modes_importats['gra']
+    _, poc = _fes_sonar(cls, potes=(64, 0, 64), voltes=30)
+    _, molt = _fes_sonar(cls, potes=(64, 127, 64), voltes=30)
+    assert molt.dens > poc.dens * 5
+
+
+def test_el_pot_de_zona_mou_les_notes(modes_importats):
+    cls = modes_importats['clavat']
+    greu, _ = _fes_sonar(cls, potes=(0, 64, 64), voltes=600)
+    agut, _ = _fes_sonar(cls, potes=(127, 64, 64), voltes=600)
+    assert max(_gra_notes(agut, fora={28, 35})) > max(_gra_notes(greu, fora={28, 35}))
+
+
+def test_la_textura_no_te_pols_per_a_la_pantalla(modes_importats):
+    """Una textura és atzar, no un tempo: la pantalla no li ha de treure BPM."""
+    from modes.mm_update import mode_tempo
+    _, mode = _fes_sonar(modes_importats['gra'], voltes=40)
+    assert mode_tempo(mode) is None
+
+
+def test_la_textura_calla_del_tot_en_marxar(modes_importats):
+    for clau in CASOS_TEX:
+        midi, _ = _fes_sonar(modes_importats[clau], voltes=1500)
+        assert not _balanc(midi), f'{clau}: notes obertes'
 
 
 def test_el_doble_clic_canvia_la_tonalitat(modes_importats):

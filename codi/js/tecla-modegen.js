@@ -740,9 +740,253 @@ ${potCodeDrone(potZ, spec, acords.length, '            ')}
 `;
 }
 
+// ── Família TEXTURA ───────────────────────────────────────────────────────
+// Els onze modes de soroll i textura del firmware són tots la mateixa recepta:
+// esdeveniments curts que salten a l'atzar dins d'una zona de notes, amb una
+// densitat que mana, opcionalment un fons greu sostingut a sota i un filtre
+// que escombra. El que els distingeix és on cauen els números.
+
+/** Els potes que la família textura sap fer servir. */
+export const TEXTURA_POT_FNS = ['Densitat', 'Zona de notes', 'Dispersió', 'Volum',
+  'Filtre (velocitat)', 'Fons greu', 'Modulació (CC1)', '—'];
+
+function potCodeTextura(fn, spec, indent = '        ') {
+  const i = indent;
+  switch (fn) {
+    case 'Densitat': {
+      const d = clamp(spec.densitat ?? 8, .2, 40);
+      return `${i}# Densitat: d'un esdeveniment cada 5 s fins a ${py.f(d * 3, 1)}/s\n`
+           + `${i}self.dens = 0.2 + (v / 127.0) * ${py.f(d * 3 - .2)}`;
+    }
+    case 'Zona de notes':
+      return `${i}self.centre = 24 + int((v / 127.0) * 84)`;
+    case 'Dispersió':
+      return `${i}self.disp = int((v / 127.0) * 36)`;
+    case 'Volum':
+      return `${i}self.vol = 0.25 + (v / 127.0) * 0.75`;
+    case 'Filtre (velocitat)':
+      return `${i}self.mov_per = 12.0 - (v / 127.0) * 11.9`;
+    case 'Fons greu':
+      return `${i}f = int((v / 127.0) * 100)\n`
+           + `${i}if f < self.fons_vel - 4 or f > self.fons_vel + 4:\n`
+           + `${i}    self.fons_vel = f\n${i}    self._fons()`;
+    case 'Modulació (CC1)':
+      return `${i}self._cc_once(1, v)`;
+    default:
+      return `${i}pass`;
+  }
+}
+
+function generateTexture(spec) {
+  const cls = className(spec.nom);
+  const nom = modeName(spec.nom);
+  const dens = clamp(spec.densitat ?? 8, .2, 40);
+  const jitter = clamp((spec.jitter ?? 70) / 100, 0, 1);
+  const centre = clamp(spec.notaCentre ?? 78, 12, 108);
+  const disp = clamp(spec.notaDispersio ?? 18, 0, 48);
+  const velMin = clamp(spec.velMin ?? 40, 1, 127);
+  const velMax = Math.max(velMin, clamp(spec.velMax ?? 100, 1, 127));
+  const durMin = clamp(spec.duradaMin ?? 20, 5, 4000);
+  const durMax = Math.max(durMin, clamp(spec.duradaMax ?? 120, 5, 4000));
+  const raf = !!spec.rafegues;
+  const rafN = clamp(spec.rafegaNotes ?? 4, 2, 12);
+  const rafPausa = clamp(spec.rafegaPausa ?? 4, 1, 20);
+  const fonsOn = !!spec.fonsOn;
+  const fonsNota = clamp(spec.fonsNota ?? 28, 0, 96);
+  const fonsIvs = (spec.fonsIntervals && spec.fonsIntervals.length ? spec.fonsIntervals : [0, 7]).map(x => clamp(x | 0, 0, 36));
+  const fonsVel = clamp(spec.fonsVel ?? 45, 0, 127);
+  const forma = DRONE_FORMES.includes(spec.moviment) ? spec.moviment : 'Cap';
+  const cc = clamp(spec.movCC ?? 74, 0, 127);
+  const per = clamp(spec.movPeriode ?? 4, .05, 20);
+  const prof = clamp(spec.movProfunditat ?? 100, 0, 100);
+  const potX = spec.pots?.x || 'Densitat';
+  const potY = spec.pots?.y || 'Zona de notes';
+  const potZ = spec.pots?.z || 'Filtre (velocitat)';
+
+  const spec4json = JSON.stringify({ ...spec, cat: 'textura' });
+  const formaCode = {
+    'Cap': '        return -1',
+    'Gate': `        return _ALT if self.fase < 0.5 else self.baix`,
+    'Arc': `        t = 1.0 - abs(2.0 * self.fase - 1.0)
+        return self.baix + int((_ALT - self.baix) * t)`,
+    'Respiració': `        t = 1.0 - abs(2.0 * self.fase - 1.0)
+        t = t * t * (3.0 - 2.0 * t)
+        return self.baix + int((_ALT - self.baix) * t)`,
+  }[forma];
+
+  return `"""${nom} — textura feta amb el constructor de TECLA.
+X: ${potX}  Y: ${potY}  Z: ${potZ}
+${raf ? `Ràfegues de ${rafN}` : 'Continu'}${fonsOn ? ' · amb fons greu' : ''}${forma === 'Cap' ? '' : ` · filtre ${forma.toLowerCase()} sobre CC${cc}`}
+"""
+# TECLA-SPEC ${spec4json}
+import time
+import random
+from modes.base_mode import BaseMode
+from adafruit_midi.control_change import ControlChange
+
+_VEL_MIN = ${velMin}
+_VEL_MAX = ${velMax}
+_DUR_MIN = ${py.f(durMin / 1000)}
+_DUR_MAX = ${py.f(durMax / 1000)}
+_JITTER = ${py.f(jitter)}
+_FONS_IVS = ${py.tuple(fonsIvs)}
+_MOV_CC = ${cc}
+_ALT = 127
+_MIN_NOTA = 0
+_MAX_NOTA = 127
+
+
+class ${cls}(BaseMode):
+    def __init__(self, midi_out, config=None):
+        super().__init__(midi_out, config)
+        self.name = "${nom}"
+        self.dens = ${py.f(dens)}       # esdeveniments per segon
+        self.centre = ${centre}
+        self.disp = ${disp}
+        self.vol = 1.0
+        self.mov_per = ${py.f(per)}
+        self.baix = ${127 - Math.round(127 * prof / 100)}
+        self.fase = 0.0
+        self.ultim_cc = -1
+        self.fons_vel = ${fonsOn ? fonsVel : 0}
+        self.fons_notes = []
+        self.pend = []          # note-offs pendents: [nota, quan]
+        self.seguent = 0.0
+        self.t = 0.0
+        self._cc_cache = {}
+
+    def setup(self):
+        self.initialized = True
+        self.t = time.monotonic()
+        self.seguent = self.t
+        self.fase = 0.0
+        self.ultim_cc = -1
+        self.pend = []
+        self._cc_cache = {}
+${fonsOn ? '        self._fons()\n' : ''}        print("${nom}: %.1f/s" % self.dens)
+
+    def _cc_once(self, cc, v):
+        v = 0 if v < 0 else (127 if v > 127 else int(v))
+        if self._cc_cache.get(cc) == v:
+            return
+        self._cc_cache[cc] = v
+        try:
+            self.midi_out.send(ControlChange(cc, v))
+        except Exception:
+            pass
+
+    def _fons(self):
+        """Fons greu sostingut: es torna a muntar quan en canvia el volum."""
+        for n in self.fons_notes:
+            self.send_note_off(n, 0)
+        self.fons_notes = []
+        if self.fons_vel <= 0:
+            return
+        for iv in _FONS_IVS:
+            n = ${fonsNota} + iv
+            if _MIN_NOTA <= n <= _MAX_NOTA:
+                self.send_note_on(n, self.fons_vel)
+                self.fons_notes.append(n)
+
+    def _allibera(self, now, totes=False):
+        if not self.pend:
+            return
+        queden = []
+        for p in self.pend:
+            if totes or now >= p[1]:
+                self.send_note_off(p[0], 0)
+            else:
+                queden.append(p)
+        self.pend = queden
+
+    def _gra(self, now):
+        """Un esdeveniment: nota a l'atzar dins la zona, curta i amb la seva
+        pròpia força."""
+        d = self.disp
+        n = self.centre + (random.randint(-d, d) if d else 0)
+        if n < _MIN_NOTA or n > _MAX_NOTA:
+            return
+        vel = random.randint(_VEL_MIN, _VEL_MAX)
+        vel = int(vel * self.vol)
+        vel = 1 if vel < 1 else (127 if vel > 127 else vel)
+        dur = _DUR_MIN + random.random() * (_DUR_MAX - _DUR_MIN)
+        self.send_note_on(n, vel)
+        self.pend.append([n, now + dur])
+
+    def update(self, pot_values, button_states):
+        # Potes FÍSICS: X=pot_values[1], Y=pot_values[0], Z=pot_values[2]
+        py_, px, pz = pot_values
+        now = time.monotonic()
+        dt = now - self.t
+        self.t = now
+
+        self._allibera(now)
+
+        # ── Els tres potes, tal com s'han assignat ──
+        v = px
+${potCodeTextura(potX, spec)}
+        v = py_
+${potCodeTextura(potY, spec)}
+        v = pz
+${potCodeTextura(potZ, spec)}
+
+        # ── Esdeveniments ──
+        if now >= self.seguent and self.dens > 0.01:
+            interval = 1.0 / self.dens
+${raf ? `            for _ in range(${rafN}):
+                self._gra(now)
+            espera = interval * ${py.f(rafPausa)}` : `            self._gra(now)
+            espera = interval`}
+            # Atzar sobre l'espera: sense això, una textura sona a màquina
+            if _JITTER > 0:
+                espera = espera * (1.0 - _JITTER * 0.5 + random.random() * _JITTER)
+            self.seguent = now + espera
+
+        # ── Filtre en moviment ──
+        if self.mov_per > 0.01:
+            self.fase = (self.fase + dt / self.mov_per) % 1.0
+        val = self._valor_mov()
+        if val >= 0 and (val < self.ultim_cc - 1 or val > self.ultim_cc + 1):
+            self.ultim_cc = val
+            try:
+                self.midi_out.send(ControlChange(_MOV_CC, val))
+            except Exception:
+                pass
+
+        return {'dens': round(self.dens, 1), 'centre': self.centre, 'disp': self.disp}
+
+    def _valor_mov(self):
+${formaCode}
+
+    def cleanup(self):
+        self._allibera(0.0, totes=True)
+        for n in self.fons_notes:
+            self.send_note_off(n, 0)
+        self.fons_notes = []
+        self.stop_tracked_notes()
+        for c, val in ${(() => {
+          const vist = new Set();
+          const parells = [];
+          for (const c of [cc, 1, 11, 123, 120]) {
+            if (vist.has(c)) continue;
+            vist.add(c);
+            parells.push(`(${c}, ${c === 11 || c === 7 ? 127 : 0})`);
+          }
+          return `(${parells.join(', ')})`;
+        })()}:
+            try:
+                self.midi_out.send(ControlChange(c, val))
+            except Exception:
+                pass
+`;
+}
+
 // ── Punt d'entrada ────────────────────────────────────────────────────────
 
-const GENERADORS = { melodic: generateMelodic, ritmic: generateRhythmic, drone: generateDrone };
+const GENERADORS = {
+  melodic: generateMelodic, ritmic: generateRhythmic,
+  drone: generateDrone, textura: generateTexture,
+};
 
 /**
  * Genera un mode a partir de l'especificació.
@@ -780,4 +1024,5 @@ export const POT_FNS = {
   melodic: MELODIC_POT_FNS,
   ritmic: RITMIC_POT_FNS,
   drone: DRONE_POT_FNS,
+  textura: TEXTURA_POT_FNS,
 };
