@@ -205,6 +205,44 @@ CASOS_TEX = {
 }
 
 
+# ── Especificacions d'ona ─────────────────────────────────────────────────
+
+def _speco(**canvis):
+    base = {
+        'cat': 'ona', 'nom': 'Ona prova base', 'forma': 'Sinus', 'freq': 2, 'duty': 50,
+        'notaBase': 48, 'amplitud': 12, 'desti': 'Nota', 'cc': 74, 'vel': 80,
+        'lligat': True, 'durada': 150,
+        'quantitza': True, 'escalaIntervals': [0, 2, 4, 5, 7, 9, 11], 'tonalitat': 0,
+        'rCaos': 3.7, 'pasAtzar': 3,
+        'pots': {'x': 'Freqüència', 'y': 'Nota base', 'z': 'Amplitud'},
+    }
+    base.update(canvis)
+    return base
+
+
+CASOS_ONA = {
+    'sinus': _speco(),
+    'quadrada': _speco(nom='Ona prova quadrada', forma='Quadrada', duty=25),
+    'triangle': _speco(nom='Ona prova triangle', forma='Triangle'),
+    'serra': _speco(nom='Ona prova serra', forma='Serra'),
+    'respiracio_ona': _speco(nom='Ona prova respira', forma='Respiració'),
+    'atzar': _speco(nom='Ona prova atzar', forma='Atzar', pasAtzar=5),
+    'caos': _speco(nom='Ona prova caos', forma='Caos', rCaos=3.9),
+    'cromatica': _speco(nom='Cromatica', quantitza=False),
+    'pentatonica_ona': _speco(nom='Ona prova penta', escalaIntervals=[0, 2, 4, 7, 9]),
+    'cap_a_cc': _speco(nom='Ona prova cc', desti='CC', cc=74),
+    'picada': _speco(nom='Ona prova picada', lligat=False, durada=60),
+    'molt_lenta': _speco(nom='Ona prova lenta', freq=0.05),
+    'molt_rapida': _speco(nom='Ona prova rapida', freq=18),
+    'amplitud_1': _speco(nom='Ona prova plana', amplitud=1),
+    'amplitud_maxima': _speco(nom='Ona prova ampla', amplitud=48, notaBase=24),
+    'base_aguda': _speco(nom='Ona prova aguda', notaBase=108, amplitud=36),   # no pot passar de 127
+    'pots_alternatius_ona': _speco(nom='Potes ona',
+                                   pots={'x': 'Duty', 'y': 'Força', 'z': 'Paràmetre del caos'}),
+    'pots_buits_ona': _speco(nom='Sense potes ona', pots={'x': '—', 'y': '—', 'z': '—'}),
+}
+
+
 def _genera(specs):
     """Crida el generador amb node i torna {clau: {file, cls, source}}."""
     # Les especificacions entren per stdin: amb -e els arguments de node no són
@@ -228,7 +266,7 @@ def _genera(specs):
     return json.loads(res.stdout)
 
 
-TOTS = dict(CASOS, **CASOS_RIT, **CASOS_DRONE, **CASOS_TEX)
+TOTS = dict(CASOS, **CASOS_RIT, **CASOS_DRONE, **CASOS_TEX, **CASOS_ONA)
 
 
 @pytest.fixture(scope='module')
@@ -325,9 +363,9 @@ def test_una_familia_no_implementada_avisa_clarament():
     res = subprocess.run(
         [shutil.which('node'), '--input-type=module', '-e',
          f'import {{ generateMode }} from {json.dumps(GEN_JS)};'
-         'try { generateMode({cat:"ona"}); } catch (e) { process.stdout.write(e.message); }'],
+         'try { generateMode({cat:"algoritmic"}); } catch (e) { process.stdout.write(e.message); }'],
         capture_output=True, text=True)
-    assert 'ona' in res.stdout and 'implementada' in res.stdout
+    assert 'algoritmic' in res.stdout and 'implementada' in res.stdout
 
 
 # ── Els modes, corrent ────────────────────────────────────────────────────
@@ -888,6 +926,138 @@ def test_la_textura_no_te_pols_per_a_la_pantalla(modes_importats):
 def test_la_textura_calla_del_tot_en_marxar(modes_importats):
     for clau in CASOS_TEX:
         midi, _ = _fes_sonar(modes_importats[clau], voltes=1500)
+        assert not _balanc(midi), f'{clau}: notes obertes'
+
+
+# ── Família ona ───────────────────────────────────────────────────────────
+
+def _notes_de(midi):
+    return [m.note for m in midi.sent
+            if type(m).__name__.endswith('NoteOn') and m.velocity > 0]
+
+
+def test_l_ona_recorre_el_seu_rang(modes_importats):
+    """Sinus de C3 amb 12 semitons d'amplitud: hi ha d'haver el greu, l'agut
+    i el que hi ha entremig."""
+    midi, mode = _fes_sonar(modes_importats['sinus'], potes=(64, 64, 127), voltes=3000)
+    notes = set(_notes_de(midi))
+    assert len(notes) >= 5, notes
+    assert max(notes) - min(notes) >= 10, notes
+
+
+@pytest.mark.parametrize('clau', ['sinus', 'triangle', 'serra', 'respiracio_ona', 'quadrada'])
+def test_cada_forma_dona_un_recorregut_diferent(modes_importats, clau):
+    midi, _ = _fes_sonar(modes_importats[clau], potes=(64, 64, 127), voltes=2000)
+    assert _notes_de(midi), f'{clau}: no ha tocat res'
+
+
+def test_la_quadrada_només_té_dos_estats(modes_importats):
+    midi, _ = _fes_sonar(modes_importats['quadrada'], potes=(64, 64, 127), voltes=2000)
+    assert len(set(_notes_de(midi))) == 2
+
+
+def test_la_quantitzacio_ajusta_les_notes_a_l_escala(modes_importats):
+    """Amb l'escala major sobre C, cap nota pot caure fora dels seus graus."""
+    midi, _ = _fes_sonar(modes_importats['sinus'], potes=(64, 64, 127), voltes=3000)
+    major = {0, 2, 4, 5, 7, 9, 11}
+    fora = {n for n in _notes_de(midi) if n % 12 not in major}
+    assert not fora, f'notes fora de l\'escala: {sorted(fora)}'
+
+
+def test_la_quantitzacio_pentatonica_deixa_menys_graus(modes_importats):
+    penta = {0, 2, 4, 7, 9}
+    midi, _ = _fes_sonar(modes_importats['pentatonica_ona'], potes=(64, 64, 127), voltes=3000)
+    fora = {n for n in _notes_de(midi) if n % 12 not in penta}
+    assert not fora, sorted(fora)
+
+
+def test_sense_quantitzar_l_ona_passa_per_tots_els_semitons(modes_importats):
+    """És la diferència entre música i sirena: sense escala hi surten notes
+    que la major no té."""
+    midi, _ = _fes_sonar(modes_importats['cromatica'], potes=(64, 64, 127), voltes=3000)
+    major = {0, 2, 4, 5, 7, 9, 11}
+    assert {n for n in _notes_de(midi) if n % 12 not in major}
+
+
+def test_l_ona_cap_a_cc_no_toca_cap_nota(modes_importats):
+    midi, _ = _fes_sonar(modes_importats['cap_a_cc'], voltes=2000)
+    assert not _notes_de(midi)
+    vals = sorted({v for _, v in _ccs(midi, 74)})
+    assert len(vals) > 10, vals
+
+
+def test_l_ona_no_repeteix_la_nota_a_cada_volta(modes_importats):
+    """Només toca quan l'alçada canvia: si no, seria una allau de note-ons.
+    Amb una ona lenta, 1500 voltes del bucle han de donar un grapat de notes
+    (les alçades per on passa), no una per volta."""
+    midi, _ = _fes_sonar(modes_importats['molt_lenta'], voltes=1500)
+    n = len(_notes_de(midi))
+    assert 0 < n < 75, n
+
+
+def test_l_ona_lligada_manté_la_nota_fins_al_canvi(modes_importats):
+    """Lligada: tants note-offs com canvis d'alçada, ni un més."""
+    midi, _ = _fes_sonar(modes_importats['sinus'], potes=(64, 64, 127), voltes=2000, neteja=False)
+    ons = len(_notes_de(midi))
+    offs = len([m for m in midi.sent if type(m).__name__.endswith('NoteOff')])
+    assert offs == ons - 1 or offs == ons, (ons, offs)
+
+
+def test_l_ona_picada_apaga_la_nota_sola(modes_importats):
+    """Sense lligat, la nota es tanca després de la durada encara que l'ona no
+    hagi canviat: hi ha d'haver tants note-offs com note-ons."""
+    midi, _ = _fes_sonar(modes_importats['picada'], potes=(64, 64, 127), voltes=2000, neteja=False)
+    ons = len(_notes_de(midi))
+    offs = len([m for m in midi.sent if type(m).__name__.endswith('NoteOff')])
+    assert ons > 0 and offs >= ons - 1
+
+
+def test_el_random_walk_passeja_sense_sortir_del_rang(modes_importats):
+    midi, mode = _fes_sonar(modes_importats['atzar'], potes=(64, 64, 127), voltes=4000)
+    notes = _notes_de(midi)
+    assert len(set(notes)) > 3, 'un random walk ha de moure\'s'
+    assert all(0 <= n <= 127 for n in notes)
+
+
+def test_el_caos_no_es_repeteix(modes_importats):
+    """Amb r = 3,9 el mapa logístic no cau mai en un cicle curt."""
+    midi, _ = _fes_sonar(modes_importats['caos'], potes=(64, 64, 127), voltes=4000)
+    notes = _notes_de(midi)
+    assert len(set(notes)) > 4, set(notes)
+
+
+def test_l_ona_mai_no_surt_del_rang_midi(modes_importats):
+    for clau in ('base_aguda', 'amplitud_maxima'):
+        midi, _ = _fes_sonar(modes_importats[clau], potes=(64, 64, 127), voltes=2000)
+        for m in midi.sent:
+            if type(m).__name__.endswith(('NoteOn', 'NoteOff')):
+                assert 0 <= m.note <= 127, (clau, m.note)
+
+
+def test_el_pot_de_frequencia_la_canvia(modes_importats):
+    cls = modes_importats['sinus']
+    _, lenta = _fes_sonar(cls, potes=(64, 0, 64), voltes=30)
+    _, rapida = _fes_sonar(cls, potes=(64, 127, 64), voltes=30)
+    assert rapida.freq > lenta.freq * 10
+
+
+def test_el_pot_d_amplitud_estreny_el_recorregut(modes_importats):
+    cls = modes_importats['sinus']
+    estret, _ = _fes_sonar(cls, potes=(64, 64, 0), voltes=2000)
+    ample, _ = _fes_sonar(cls, potes=(64, 64, 127), voltes=2000)
+    volta = lambda midi: max(_notes_de(midi)) - min(_notes_de(midi))
+    assert volta(ample) > volta(estret)
+
+
+def test_l_ona_no_te_pols_per_a_la_pantalla(modes_importats):
+    from modes.mm_update import mode_tempo
+    _, mode = _fes_sonar(modes_importats['sinus'], voltes=40)
+    assert mode_tempo(mode) is None
+
+
+def test_l_ona_calla_del_tot_en_marxar(modes_importats):
+    for clau in CASOS_ONA:
+        midi, _ = _fes_sonar(modes_importats[clau], potes=(64, 64, 127), voltes=2000)
         assert not _balanc(midi), f'{clau}: notes obertes'
 
 

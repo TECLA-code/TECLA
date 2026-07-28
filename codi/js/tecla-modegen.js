@@ -981,11 +981,248 @@ ${formaCode}
 `;
 }
 
+// ── Família ONA ───────────────────────────────────────────────────────────
+// Els vuit modes ona_* del firmware són un valor que evoluciona amb el temps i
+// que es mapeja a una nota (o a un CC). Sinus, quadrada, triangle i serra el
+// fan amb una fase; el random walk i el mapa logístic, amb una regla. Aquí
+// són la mateixa cosa amb la forma triable — i amb una cosa que als originals
+// els faltava: la QUANTITZACIÓ A ESCALA, que és el que els fa musicals.
+
+export const ONA_FORMES = ['Sinus', 'Quadrada', 'Triangle', 'Serra', 'Respiració', 'Atzar', 'Caos'];
+
+/** Els potes que la família ona sap fer servir. */
+export const ONA_POT_FNS = ['Freqüència', 'Nota base', 'Amplitud', 'Duty',
+  'Força', 'Paràmetre del caos', 'Modulació (CC1)', '—'];
+
+function potCodeOna(fn, spec, indent = '        ') {
+  const i = indent;
+  switch (fn) {
+    case 'Freqüència': {
+      const f = clamp(spec.freq ?? 2, .02, 20);
+      return `${i}# Freqüència de l'ona: 0.05 Hz (molt lenta) a ${py.f(f * 5, 1)} Hz\n`
+           + `${i}self.freq = 0.05 + (v / 127.0) * ${py.f(f * 5 - .05)}`;
+    }
+    case 'Nota base':
+      return `${i}b = 12 + int((v / 127.0) * 84)\n`
+           + `${i}if b != self.base:\n${i}    self.base = b`;
+    case 'Amplitud':
+      return `${i}self.amp = (v / 127.0)`;
+    case 'Duty':
+      return `${i}self.duty = 0.05 + (v / 127.0) * 0.9`;
+    case 'Força':
+      return `${i}self.vel = 20 + int((v / 127.0) * 107)`;
+    case 'Paràmetre del caos':
+      return `${i}self.r = 3.5 + (v / 127.0) * 0.5`;
+    case 'Modulació (CC1)':
+      return `${i}self._cc_once(1, v)`;
+    default:
+      return `${i}pass`;
+  }
+}
+
+function generateWave(spec) {
+  const cls = className(spec.nom);
+  const nom = modeName(spec.nom);
+  const forma = ONA_FORMES.includes(spec.forma) ? spec.forma : 'Sinus';
+  const freq = clamp(spec.freq ?? 2, .02, 20);
+  const duty = clamp((spec.duty ?? 50) / 100, .05, .95);
+  const base = clamp(spec.notaBase ?? 48, 0, 120);
+  const amplitud = clamp(spec.amplitud ?? 12, 1, 48);
+  const desti = spec.desti === 'CC' ? 'CC' : 'Nota';
+  const cc = clamp(spec.cc ?? 74, 0, 127);
+  const vel = clamp(spec.vel ?? 80, 1, 127);
+  const lligat = spec.lligat !== false;
+  const durada = clamp(spec.durada ?? 150, 10, 4000);
+  const rCaos = clamp(spec.rCaos ?? 3.7, 2.5, 4);
+  const pas = clamp(spec.pasAtzar ?? 3, 1, 12);
+  const potX = spec.pots?.x || 'Freqüència';
+  const potY = spec.pots?.y || 'Nota base';
+  const potZ = spec.pots?.z || 'Amplitud';
+
+  // Quantització: per a cada classe d'altura, quants semitons cal baixar per
+  // caure sobre un grau de l'escala. És una taula de 12 i es consulta amb la
+  // nota final, no amb el desplaçament: així segueix sent correcta encara que
+  // el pot canviï la nota base en marxa (calculant-la des de la base, la
+  // quantització es trencava en silenci a la primera girada del pot).
+  const quant = !!spec.quantitza;
+  const escala = (spec.escalaIntervals && spec.escalaIntervals.length ? spec.escalaIntervals : [0, 2, 4, 5, 7, 9, 11]).map(x => x | 0);
+  const ton = clamp(spec.tonalitat | 0, 0, 11);
+  const pcs = new Set(escala.map(x => ((x + ton) % 12 + 12) % 12));
+  const snap = [];
+  for (let pc = 0; pc < 12; pc++) {
+    let d = 0;
+    while (d < 12 && !pcs.has(((pc - d) % 12 + 12) % 12)) d++;
+    snap.push(d % 12);
+  }
+
+  const spec4json = JSON.stringify({ ...spec, cat: 'ona' });
+
+  // Cada forma dona un valor de 0 a 1. Les de fase avancen amb el temps; les
+  // generatives (atzar i caos) treuen un valor nou cada cicle complet.
+  const perFase = !['Atzar', 'Caos'].includes(forma);
+  const formaCode = {
+    'Sinus': '        return 0.5 - 0.5 * cos(6.283185 * self.fase)',
+    'Quadrada': '        return 1.0 if self.fase < self.duty else 0.0',
+    'Triangle': '        return 1.0 - abs(2.0 * self.fase - 1.0)',
+    'Serra': '        return self.fase',
+    'Respiració': `        t = 1.0 - abs(2.0 * self.fase - 1.0)
+        return t * t * (3.0 - 2.0 * t)`,
+    'Atzar': '        return self.val',
+    'Caos': '        return self.val',
+  }[forma];
+
+  // El pas d'un cicle: només les formes generatives hi fan res
+  const cicleCode = {
+    'Atzar': `            # Random walk: un pas a l'atzar, amb rebot als extrems
+            self.val = self.val + (random.random() - 0.5) * ${py.f(pas / 12)}
+            if self.val < 0.0:
+                self.val = -self.val
+            elif self.val > 1.0:
+                self.val = 2.0 - self.val`,
+    'Caos': `            # Mapa logístic: x = r·x·(1−x). Amb r entre 3.5 i 4 és caos
+            self.val = self.r * self.val * (1.0 - self.val)
+            if self.val < 0.0 or self.val > 1.0:
+                self.val = 0.5`,
+  }[forma] || '            pass';
+
+  return `"""${nom} — ona feta amb el constructor de TECLA.
+X: ${potX}  Y: ${potY}  Z: ${potZ}
+Forma: ${forma} → ${desti === 'CC' ? `CC${cc}` : `nota${quant ? ' (quantitzada a escala)' : ''}`}
+"""
+# TECLA-SPEC ${spec4json}
+import time
+${forma === 'Sinus' ? 'from math import cos\n' : ''}${perFase ? '' : 'import random\n'}from modes.base_mode import BaseMode
+from adafruit_midi.control_change import ControlChange
+
+_BASE = ${base}
+_AMPLITUD = ${amplitud}
+${quant ? `_SNAP = ${py.tuple(snap)}   # semitons a baixar per caure a l'escala\n` : ''}_DESTI_CC = ${cc}
+_DURADA = ${py.f(durada / 1000)}
+
+
+class ${cls}(BaseMode):
+    def __init__(self, midi_out, config=None):
+        super().__init__(midi_out, config)
+        self.name = "${nom}"
+        self.freq = ${py.f(freq)}
+        self.duty = ${py.f(duty)}
+        self.base = _BASE
+        self.amp = 1.0
+        self.vel = ${vel}
+        self.r = ${py.f(rCaos)}
+        self.fase = 0.0
+        self.val = 0.5
+        self.sonant = -1
+        self.off_t = 0.0
+        self.ultim_cc = -1
+        self.t = 0.0
+        self._cc_cache = {}
+
+    def setup(self):
+        self.initialized = True
+        self.t = time.monotonic()
+        self.fase = 0.0
+        self.val = 0.5
+        self.sonant = -1
+        self.ultim_cc = -1
+        self._cc_cache = {}
+        print("${nom}: ${forma} %.2f Hz" % self.freq)
+
+    def _cc_once(self, cc, v):
+        v = 0 if v < 0 else (127 if v > 127 else int(v))
+        if self._cc_cache.get(cc) == v:
+            return
+        self._cc_cache[cc] = v
+        try:
+            self.midi_out.send(ControlChange(cc, v))
+        except Exception:
+            pass
+
+    def _valor(self):
+${formaCode}
+
+    def _nota_de(self, v):
+        """Valor 0–1 → alçada. Amb quantització, l'ona salta d'un grau de
+        l'escala al següent en lloc de passar per tots els semitons."""
+${quant ? `        n = self.base + int(v * self.amp * _AMPLITUD)
+        return n - _SNAP[n % 12]` : `        return self.base + int(v * self.amp * _AMPLITUD)`}
+
+    def _calla(self):
+        if self.sonant >= 0:
+            self.send_note_off(self.sonant, 0)
+            self.sonant = -1
+
+    def update(self, pot_values, button_states):
+        # Potes FÍSICS: X=pot_values[1], Y=pot_values[0], Z=pot_values[2]
+        py_, px, pz = pot_values
+        now = time.monotonic()
+        dt = now - self.t
+        self.t = now
+
+        # ── Els tres potes, tal com s'han assignat ──
+        v = px
+${potCodeOna(potX, spec)}
+        v = py_
+${potCodeOna(potY, spec)}
+        v = pz
+${potCodeOna(potZ, spec)}
+
+        # ── Avança l'ona ──
+        abans = self.fase
+        self.fase = (self.fase + dt * self.freq) % 1.0
+        if self.fase < abans:            # ha completat un cicle
+${cicleCode}
+
+        val = self._valor()
+        val = 0.0 if val < 0.0 else (1.0 if val > 1.0 else val)
+
+${desti === 'CC' ? `        # Destinació: CC
+        c = int(val * 127)
+        if c < self.ultim_cc - 1 or c > self.ultim_cc + 1:
+            self.ultim_cc = c
+            try:
+                self.midi_out.send(ControlChange(_DESTI_CC, c))
+            except Exception:
+                pass
+` : `        # Destinació: nota. Només es toca quan l'alçada canvia de debò,
+        # si no seria una allau de note-ons a cada volta del bucle.
+        nota = self._nota_de(val)
+        nota = 0 if nota < 0 else (127 if nota > 127 else nota)
+        if nota != self.sonant:
+            self._calla()
+            self.send_note_on(nota, self.vel)
+            self.sonant = nota
+            self.off_t = now + _DURADA
+${lligat ? '' : `        elif self.sonant >= 0 and now >= self.off_t:
+            self._calla()
+`}`}
+        return {'forma': '${forma}', 'hz': round(self.freq, 2), 'nota': self.sonant}
+
+    def cleanup(self):
+        self._calla()
+        self.stop_tracked_notes()
+        for c, val in ${(() => {
+          const vist = new Set();
+          const parells = [];
+          for (const c of [desti === 'CC' ? cc : 1, 1, 11, 123, 120]) {
+            if (vist.has(c)) continue;
+            vist.add(c);
+            parells.push(`(${c}, ${c === 11 || c === 7 ? 127 : 0})`);
+          }
+          return `(${parells.join(', ')})`;
+        })()}:
+            try:
+                self.midi_out.send(ControlChange(c, val))
+            except Exception:
+                pass
+`;
+}
+
 // ── Punt d'entrada ────────────────────────────────────────────────────────
 
 const GENERADORS = {
   melodic: generateMelodic, ritmic: generateRhythmic,
-  drone: generateDrone, textura: generateTexture,
+  drone: generateDrone, textura: generateTexture, ona: generateWave,
 };
 
 /**
@@ -1025,4 +1262,5 @@ export const POT_FNS = {
   ritmic: RITMIC_POT_FNS,
   drone: DRONE_POT_FNS,
   textura: TEXTURA_POT_FNS,
+  ona: ONA_POT_FNS,
 };
