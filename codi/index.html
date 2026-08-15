@@ -2351,7 +2351,9 @@
     .mg-mandel-wrap { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap }
     .mg-mandel-wrap canvas {
       border-radius: 9px; border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
-      max-width: 100%;
+      /* Prou gran per encertar-hi un punt amb el ratolí: amb 260 px de banda a
+         banda del pla, cada píxel eren cinc mil·lèsimes i no s'hi tocava. */
+      max-width: 100%; width: 420px; flex: 1 1 320px;
     }
     .mg-mandel-info { display: flex; flex-direction: column; gap: 8px }
     .mg-mandel-info .v { font-size: 9.5px; color: var(--text3); letter-spacing: .18em; text-transform: uppercase; display: block }
@@ -6659,12 +6661,12 @@
         <div class="mg-sec">
           <p class="mg-lab">El punt ${f.punt}</p>
           <div class="mg-mandel-wrap">
-            <canvas id="mg-mandel" width="260" height="200"></canvas>
+            <canvas id="mg-mandel" width="420" height="320"></canvas>
             <div class="mg-mandel-info">
               <label class="v"><span>Re(${f.punt})</span>
-                <input type="number" id="mg-cx" step="0.0001" value="${a.cx.toFixed(4)}"></label>
+                <input type="number" id="mg-cx" min="-2" max="0.75" step="0.0001" value="${a.cx.toFixed(4)}"></label>
               <label class="v"><span>Im(${f.punt})</span>
-                <input type="number" id="mg-cy" step="0.0001" value="${a.cy.toFixed(4)}"></label>
+                <input type="number" id="mg-cy" min="-1" max="1" step="0.0001" value="${a.cy.toFixed(4)}"></label>
               <label class="v"><span>òrbita</span>
                 <input type="number" id="mg-orbn" min="4" max="400" step="1" value="${a.orbita}"></label>
               <div class="v"><span>surt</span><strong id="mg-orb">—</strong></div>
@@ -7038,6 +7040,26 @@
         const c = Array.isArray(v) ? (v[1] || 0) : 0;
         return N[((st % 12) + 12) % 12] + (c ? ` ${c > 0 ? '+' : ''}${c}¢` : '');
       }).join(' · ');
+    }
+
+    /**
+     * Posa a zero els potes que tinguin assignada alguna de les funcions
+     * donades. S'hi passa pel mateix camí que un gir de debò, o sigui que el
+     * knob, la lectura i el motor queden sincronitzats.
+     */
+    function _mgZeraPots(funcions) {
+      const sel = document.querySelectorAll('#modegen-pots select');
+      let cap = false;
+      sel.forEach((s, i) => {
+        if (!funcions.includes(s.value)) return;
+        cap = true;
+        if (window._mgPotsData && window._mgPotsData[i]) window._mgPotsData[i].value = 0;
+        const knob = document.getElementById(`pot-knob-mg-${i}`);
+        try { _updateVisualPot('mg', i, 0, knob); } catch (e) { }
+        const lec = document.getElementById(`pot-val-mg-${i}`);
+        if (lec) lec.textContent = '0';
+      });
+      return cap;
     }
 
     /** Les veus d'un pas, normalitzades 0..1 per alçada (per a l'animació). */
@@ -7714,11 +7736,19 @@
         cv.addEventListener('click', e => {
           const r = cv.getBoundingClientRect();
           const [X0, X1, Y0, Y1] = _mgFracVista(a.fractal);
-          a.cx = X0 + ((e.clientX - r.left) / r.width) * (X1 - X0);
-          a.cy = Y0 + ((e.clientY - r.top) / r.height) * (Y1 - Y0);
+          const cx = X0 + ((e.clientX - r.left) / r.width) * (X1 - X0);
+          const cy = Y0 + ((e.clientY - r.top) / r.height) * (Y1 - Y0);
+          // El punt es reté al rang on el conjunt viu de debò
+          a.cx = Math.max(-2, Math.min(0.75, cx));
+          a.cy = Math.max(-1, Math.min(1, cy));
           const ix = document.getElementById('mg-cx'), iy = document.getElementById('mg-cy');
           if (ix) ix.value = a.cx.toFixed(4);
           if (iy) iy.value = a.cy.toFixed(4);
+          // Els potes que MOUEN el punt tornen a zero: si no, el que sona és
+          // el que has clicat MÉS el que el pot hi sumava, i el punt que veus
+          // no és el punt que sents. Clicar és dir "vull aquest", i això
+          // demana que les aportacions dels potes parteixin de zero.
+          _mgZeraPots(['Part real de c', 'Part imaginària de c']);
           _mgPintaFractal(color); _mgSync();
         });
       }
@@ -7730,8 +7760,11 @@
         a[camp] = Math.max(min, Math.min(max, v));
         _mgPintaFractal(color); _mgSync();
       });
-      fracNum('mg-cx', 'cx', -4, 4);
-      fracNum('mg-cy', 'cy', -4, 4);
+      // El conjunt de Mandelbrot viu entre −2 i 0,75 a l'eix real i entre −1 i
+      // 1 a l'imaginari: fora d'aquí tot s'escapa de seguida i no hi ha res a
+      // sentir. Limitar-hi el camp evita triar punts morts.
+      fracNum('mg-cx', 'cx', -2, 0.75);
+      fracNum('mg-cy', 'cy', -1, 1);
       fracNum('mg-jx', 'jx', -2, 2);
       fracNum('mg-jy', 'jy', -2, 2);
       fracNum('mg-orbn', 'orbita', 4, 400);
