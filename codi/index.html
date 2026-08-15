@@ -8787,7 +8787,8 @@
       const el = document.getElementById('modegen-msg');
       if (!el) return;
       el.textContent = txt;
-      el.style.color = mena === 'err' ? 'var(--red)' : mena === 'ok' ? 'var(--green)' : 'var(--text3)';
+      el.style.color = mena === 'err' ? 'var(--red)' : mena === 'ok' ? 'var(--green)'
+                     : mena === 'warn' ? 'var(--yellow)' : 'var(--text3)';
     }
 
     // Escoltar: genera el mode i el fa córrer al motor del simulador (Pyodide),
@@ -13055,7 +13056,11 @@
           const note = (type === 'note_on' || type === 'note_off') ? ` note=${a} vel=${b}` : ` ${a}=${b}`;
           simlog(`${labels[type] || type}${note} ch=${ch}`, 'midi');
         };
-        simlog(`MIDI: ${webMidi.outputs.length} port(s) disponibles`, 'ok');
+        webMidi.onAvis = (text, mena) => { simlog(`MIDI: ${text}`, mena || 'warn'); _mgMissatge(`MIDI: ${text}`, 'warn'); };
+        // Zero ports no és un estat neutre: vol dir que no hi ha res a triar i
+        // que la causa és del sistema, no de l'app. Es diu, amb el motiu.
+        if (webMidi.outputs.length) simlog(`MIDI: ${webMidi.outputs.length} port(s) disponibles`, 'ok');
+        else simlog(`MIDI: ${webMidi.diagnostic()}`, 'warn');
       } else { simlog(`MIDI no disponible: ${midiResult.error}`, 'warn'); }
 
       simulator = new TECLASimulator(webMidi, (msg, type) => simlog(msg, type));
@@ -13241,17 +13246,39 @@
           const opt = document.createElement('option'); opt.value = id; opt.textContent = name;
           sel.appendChild(opt);
         }
+        // Un desplegable buit no diu res, i el motiu de ser buit no és mai de
+        // l'app: es diu aquí mateix, que és on l'usuari mira quan busca el port.
+        const cap = !outputs.length && webMidi.isAvailable();
+        sel.options[0].textContent = cap ? '— cap port MIDI —' : '— sense MIDI —';
+        sel.title = cap ? webMidi.diagnostic()
+                        : 'Port MIDI de sortida (el mateix del simulador)';
         if (current) sel.value = current;
       }
     }
 
+    // Rellegir la llista just en obrir el desplegable. Un cable virtual creat
+    // amb l'app ja oberta —el cas normal a Windows: primer s'arrenca el
+    // navegador i després es fa el port— pot no arribar mai per `onstatechange`.
+    for (const sel of [simMidiSelect, document.getElementById('modegen-midi')]) {
+      sel?.addEventListener('pointerdown', () => {
+        if (webMidi.isAvailable()) updateMidiSelect(webMidi.refresca());
+      });
+    }
+
     /** Tria el port a tot arreu i ho diu on toca. */
-    function _mgTriaMidi(id, desDelConstructor) {
-      webMidi.selectOutput(id || null);
+    async function _mgTriaMidi(id, desDelConstructor) {
+      const r = await webMidi.selectOutput(id || null);
       for (const sel of [simMidiSelect, document.getElementById('modegen-midi')]) {
         if (sel && sel.value !== id) sel.value = id;
       }
       const nom = id ? (webMidi.outputs.find(o => o.id === id)?.name || id) : null;
+      // Un port que no s'obre és el cas que abans passava desapercebut: quedava
+      // triat, no sonava, i no ho deia enlloc.
+      if (!r.ok && id) {
+        _mgMissatge(`MIDI: ${r.motiu}`, 'warn');
+        try { simlog(`MIDI: ${r.motiu}`, 'warn'); } catch (e) { }
+        return;
+      }
       if (desDelConstructor) {
         _mgMissatge(nom ? `Sortida MIDI: ${nom}.` : 'Sense sortida MIDI (només so intern).',
                     nom ? 'ok' : undefined);
