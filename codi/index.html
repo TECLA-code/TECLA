@@ -2182,6 +2182,13 @@
     /* ── ACORDS: la progressió ──────────────────────────────────────────
        Cada acord és una fitxa amb el seu número romà a dalt, el nom real a
        sota i la durada al peu. Es llegeix com una partitura xifrada. */
+    .mg-son-barra { position: relative; height: 16px; margin-top: 10px; border-radius: 8px;
+      background: color-mix(in srgb, var(--bg) 70%, transparent);
+      border: 1px solid color-mix(in srgb, var(--border) 60%, transparent); overflow: hidden }
+    .mg-son-barra-fill { height: 100%; width: 0; background: var(--mg); opacity: .55;
+      transition: width .12s linear }
+    .mg-son-barra-txt { position: absolute; inset: 0; display: flex; align-items: center;
+      justify-content: center; font-size: 9.5px; color: var(--text2); letter-spacing: .06em }
     .mg-son-corba { width: 100%; height: 88px; display: block; margin-top: 10px;
       border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
       border-radius: 8px; background: color-mix(in srgb, var(--bg) 60%, transparent) }
@@ -3695,7 +3702,8 @@
     // L'anàlisi de sonificació passa TOTA aquí, al navegador: al mode generat
     // només hi viatja la corba que en surt, mai la imatge ni el vídeo.
     import { analitzaImatge as mgAnalitzaImatge, analitzaMoviment as mgAnalitzaMoviment,
-             redueix as mgRedueix, pesCorba as mgPesCorba, resumCorba as mgResumCorba }
+             redueix as mgRedueix, pesCorba as mgPesCorba, resumCorba as mgResumCorba,
+             normalitza as mgNormalitza, suavitza as mgSuavitza }
       from './js/tecla-sonify.js';
 
     // ── Instàncies ─────────────────────────────────────────────────
@@ -5718,7 +5726,10 @@
       nom: 'La meva sonificació', escala: 0, tonalitat: 0,
       notaMin: 40, notaMax: 80, quantitza: true, gate: 70,
       columnes: 128, durada: 8000, maxPunts: 256,
-      corba: [], fontNom: '', fontTipus: '',
+      // La «sazón»: la font és la base i això és el que hi posem nosaltres
+      lectura: 'pols', bpm: 110, subdiv: 2,
+      guany: 24, suavitzat: 0.35, normalitza: true, sensibilitat: 8,
+      corba: [], corbaCrua: [], fontNom: '', fontTipus: '',
       pots: { x: 'Velocitat', y: 'Densitat', z: 'Amplada de l’acord' },
     };
 
@@ -7057,13 +7068,13 @@
           c.width = W; c.height = H;
           const ctx = c.getContext('2d', { willReadFrequently: true });
           ctx.drawImage(bmp, 0, 0, W, H);
-          const crua = mgAnalitzaImatge(ctx.getImageData(0, 0, W, H),
-                                        { columnes: s.columnes, durada: s.durada });
-          s.corba = mgRedueix(crua, { maxPunts: s.maxPunts });
+          s.corbaCrua = mgAnalitzaImatge(ctx.getImageData(0, 0, W, H),
+                                         { columnes: s.columnes, durada: s.durada });
           bmp.close?.();
         } else {
-          s.corba = await _mgSonVideo(fitxer);
+          s.corbaCrua = await _mgSonVideo(fitxer);
         }
+        _mgSonCondimenta();
         const r = mgResumCorba(s.corba);
         _mgMissatge(`✓ ${fitxer.name}: ${r.punts} punts · ${(r.durada / 1000).toFixed(1)} s`
                   + ` · ${(mgPesCorba(s.corba) / 1024).toFixed(1)} KB al mode.`, 'ok');
@@ -7095,22 +7106,57 @@
           const crua = [];
           let abans = null;
           for (let k = 0; k < n; k++) {
+            // El `seeked` pot no arribar mai en alguns còdecs: sense un temps
+            // màxim, l'anàlisi es quedava penjada i la barra, clavada.
             vid.currentTime = (k / n) * dur;
-            await new Promise(r => vid.addEventListener('seeked', r, { once: true }));
+            await new Promise(r => {
+              let fet = false;
+              const ok = () => { if (!fet) { fet = true; r(); } };
+              vid.addEventListener('seeked', ok, { once: true });
+              setTimeout(ok, 400);
+            });
             ctx.drawImage(vid, 0, 0, W, H);
             const ara = ctx.getImageData(0, 0, W, H).data;
             if (abans) {
-              const m = mgAnalitzaMoviment(ara, abans, W, H);
+              const m = mgAnalitzaMoviment(ara, abans, W, H, { guany: s.guany });
               crua.push([dt, Math.round(m.centre * 127), Math.round(m.energia * 127),
                          Math.round(m.amplada * 72)]);
             }
             abans = ara.slice();
-            if (k % 20 === 0) _mgMissatge(`Analitzant… ${Math.round(100 * k / n)}%`);
+            // La barra ha d'avançar de debò: cedim el fil perquè es repinti,
+            // que si no el navegador no ensenya res fins al final.
+            _mgSonProgres(k / n, `${Math.round(100 * k / n)} %`);
+            if ((k & 3) === 0) await new Promise(r => setTimeout(r, 0));
           }
+          _mgSonProgres(1, 'fet');
           neteja();
-          resolt(mgRedueix(crua, { maxPunts: s.maxPunts }));
+          resolt(crua);
         });
       });
+    }
+
+    /** Torna a passar la corba CRUA pel condiment (normalitza, suavitza,
+     *  redueix) sense haver de tornar a llegir el fitxer: així els controls
+     *  responen a l'instant en comptes de trigar el que triga un vídeo. */
+    function _mgSonCondimenta() {
+      const s = _mgSon;
+      if (!s.corbaCrua.length) return;
+      let c = s.corbaCrua;
+      if (s.normalitza) c = mgNormalitza(c);
+      c = mgSuavitza(c, s.suavitzat);
+      s.corba = mgRedueix(c, { maxPunts: s.maxPunts });
+    }
+
+    /** La barra de progrés de l'anàlisi. Un vídeo pot trigar mig minut i
+     *  sense cap senyal sembla que l'app s'hagi penjat. */
+    function _mgSonProgres(part, text) {
+      const b = document.getElementById('mg-son-barra');
+      const f = document.getElementById('mg-son-barra-fill');
+      const t = document.getElementById('mg-son-barra-txt');
+      if (!b) return;
+      b.style.display = part >= 1 ? 'none' : '';
+      if (f) f.style.width = Math.round(Math.max(0, Math.min(1, part)) * 100) + '%';
+      if (t) t.textContent = text || '';
     }
 
     function _mgFormSonify(box) {
@@ -7131,7 +7177,53 @@
             : 'Adjunta una imatge (es llegeix com una partitura, d’esquerra a dreta) o un ' +
               'vídeo (el que sona és el que s’hi <strong>mou</strong>).'}
             <br>Al mode exportat NO hi va ni la imatge ni el vídeo: només la corba.</p>
+          <div class="mg-son-barra" id="mg-son-barra" style="display:none">
+            <div class="mg-son-barra-fill" id="mg-son-barra-fill"></div>
+            <span class="mg-son-barra-txt" id="mg-son-barra-txt"></span>
+          </div>
           ${s.corba.length ? '<canvas id="mg-son-corba" class="mg-son-corba"></canvas>' : ''}
+        </div>
+
+        <div class="mg-sec">
+          <p class="mg-lab">Com es llegeix</p>
+          <div class="mg-tabs">
+            <button class="mg-tab ${s.lectura === 'pols' ? 'on' : ''}" data-lect="pols">A pols</button>
+            <button class="mg-tab ${s.lectura === 'lliure' ? 'on' : ''}" data-lect="lliure">Lliure</button>
+          </div>
+          ${s.lectura === 'pols' ? `
+            <div class="mg-row">
+              <label>BPM <input type="number" id="mg-son-bpm" min="20" max="300" value="${s.bpm}" style="width:60px"></label>
+              <label>Subdivisió <select id="mg-son-sub">${[1, 2, 3, 4, 6, 8].map(d =>
+                `<option value="${d}" ${d === s.subdiv ? 'selected' : ''}>1/${d}</option>`).join('')}</select></label>
+            </div>
+            <p class="mg-hint">La font hi posa el <strong>contorn</strong> i la graella el
+              <strong>ritme</strong>. Els silencis de la gravació se salten, o sigui que no hi ha
+              esperes mortes: és el que fa que allò soni i no degotegi.</p>`
+            : `<p class="mg-hint">Es respecta el temps real de la font, silencis inclosos.
+               Fidel al que has vist, però una gravació amb poc moviment sonarà molt escampada.</p>`}
+        </div>
+
+        <div class="mg-sec">
+          <p class="mg-lab">Condiment</p>
+          <div class="mg-row">
+            <label><input type="checkbox" id="mg-son-norm" ${s.normalitza ? 'checked' : ''}> Normalitza la força</label>
+          </div>
+          <div class="mg-slider" style="margin-top:9px">
+            <span>cru</span>
+            <input type="range" id="mg-son-suau" min="0" max="100" value="${Math.round(s.suavitzat * 100)}">
+            <span>suau</span>
+            <span class="val" id="mg-son-suau-val">${Math.round(s.suavitzat * 100)}%</span>
+          </div>
+          <div class="mg-slider" style="margin-top:10px">
+            <span>subtil</span>
+            <input type="range" id="mg-son-guany" min="4" max="120" value="${s.guany}">
+            <span>bruta</span>
+            <span class="val" id="mg-son-guany-val">×${s.guany}</span>
+          </div>
+          <p class="mg-hint">La <strong>normalització</strong> estira la força perquè el moment de
+            més moviment arribi al màxim — sense això, una gravació subtil calla.
+            El <strong>suavitzat</strong> treu el tremolor del centre de massa i deixa el gest.
+            El <strong>guany</strong> només afecta els vídeos i cal tornar a analitzar-los.</p>
         </div>
 
         <div class="mg-sec">
@@ -7170,9 +7262,32 @@
         const f = e.target.files && e.target.files[0];
         if (f) _mgSonAnalitza(f);
       });
+      box.querySelectorAll('[data-lect]').forEach(b2 => b2.addEventListener('click', () => {
+        s.lectura = b2.dataset.lect; _mgRenderForm(); _mgRenderPots(); _mgSync();
+      }));
+      on('mg-son-bpm', 'input', e => { s.bpm = +e.target.value || 110; _mgSync(); });
+      on('mg-son-sub', 'change', e => { s.subdiv = +e.target.value; _mgSync(); });
+      on('mg-son-norm', 'change', e => {
+        s.normalitza = e.target.checked; _mgSonCondimenta(); _mgRenderForm(); _mgSync();
+      });
+      // El condiment es refà sobre la corba CRUA: instantani, sense rellegir res
+      on('mg-son-suau', 'input', e => {
+        s.suavitzat = (+e.target.value) / 100;
+        const l = document.getElementById('mg-son-suau-val');
+        if (l) l.textContent = Math.round(s.suavitzat * 100) + '%';
+        _mgSonCondimenta(); _mgSonPintaCorba(); _mgSync();
+      });
+      on('mg-son-guany', 'input', e => {
+        s.guany = +e.target.value;
+        const l = document.getElementById('mg-son-guany-val');
+        if (l) l.textContent = '×' + s.guany;
+      });
       on('mg-son-col', 'input', e => { s.columnes = +e.target.value || 128; });
       on('mg-son-dur', 'input', e => { s.durada = +e.target.value || 8000; });
-      on('mg-son-max', 'input', e => { s.maxPunts = +e.target.value || 256; });
+      on('mg-son-max', 'input', e => {
+        s.maxPunts = +e.target.value || 256;
+        _mgSonCondimenta(); _mgSonPintaCorba(); _mgSync();
+      });
       on('mg-son-min', 'input', e => { s.notaMin = +e.target.value; _mgSync(); });
       on('mg-son-max2', 'input', e => { s.notaMax = +e.target.value; _mgSync(); });
       on('mg-son-quant', 'change', e => { s.quantitza = e.target.checked; _mgSync(); });
@@ -8586,6 +8701,7 @@
           escalaIntervals: _mgEscala(_mgSon.escala), tonalitat: _mgSon.tonalitat,
           notaMin: _mgSon.notaMin, notaMax: _mgSon.notaMax,
           quantitza: _mgSon.quantitza, gate: _mgSon.gate,
+          lectura: _mgSon.lectura, bpm: _mgSon.bpm, subdiv: _mgSon.subdiv,
           corba: _mgSon.corba, fontNom: _mgSon.fontNom,
           pots: { ..._mgSon.pots },
         };

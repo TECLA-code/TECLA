@@ -3475,9 +3475,11 @@ function potCodeSonify(fn, spec, indent = '        ') {
   const i = indent;
   switch (fn) {
     case 'Velocitat':
-      // Del que dura de debò fins a vuit vegades més ràpid. En repòs, el tempo
-      // real del vídeo: el mode sona com el que has vist.
-      return `${i}self.vel_k = 1.0 + (v / 127.0) * 7.0`;
+      // Amb lectura lliure, del temps real de la font fins a vuit vegades més
+      // ràpid. A pols, mou el BPM de la graella. En repòs, com l'has fet.
+      return spec.lectura === 'pols'
+        ? `${i}self.bpm = _BPM + (v / 127.0) * ${py.f(clamp((spec.bpm ?? 110) * 1.8, 20, 300) - clamp(spec.bpm ?? 110, 20, 300))}`
+        : `${i}self.vel_k = 1.0 + (v / 127.0) * 7.0`;
     case 'Transposició':
       return `${i}self.transp = int((v / 127.0) * 24.99) - 0`;
     case 'Registre':
@@ -3517,6 +3519,12 @@ function generateSonify(spec) {
   const notaMax = clamp(spec.notaMax ?? 84, 1, 127);
   const quant = spec.quantitza !== false;
   const gate = clamp(spec.gate ?? 70, 5, 200) / 100;
+  // Lectura LLIURE (el temps de la font) o A POLS (una graella regular i la
+  // font només hi posa el contorn). El pols és el que converteix una gravació
+  // en música: el vídeo diu QUÈ sona i nosaltres QUAN.
+  const pols = spec.lectura === 'pols';
+  const bpm = clamp(spec.bpm ?? 110, 20, 300);
+  const subdiv = clamp(spec.subdiv ?? 2, 1, 8);
   const corba = (spec.corba && spec.corba.length ? spec.corba : [[500, 64, 90, 6]])
     .map(p => [Math.max(1, p[0] | 0), clamp(p[1] | 0, 0, 127), clamp(p[2] | 0, 0, 127), clamp(p[3] | 0, 0, 36)]);
   const potX = spec.pots?.x || 'Velocitat';
@@ -3547,6 +3555,9 @@ _MIN = ${Math.min(notaMin, notaMax)}
 _MAX = ${Math.max(notaMin, notaMax)}
 _QUANT = ${quant ? 'True' : 'False'}
 _GATE = ${py.f(gate)}
+_POLS = ${pols ? 'True' : 'False'}   # lectura a graella regular
+_BPM = ${py.f(bpm)}
+_SUBDIV = ${subdiv}
 _MIN_NOTA = 12
 _MAX_NOTA = 108
 
@@ -3560,6 +3571,7 @@ class ${cls}(BaseMode):
         self.sonant = []
         self.off_t = 0.0
         self.vel_k = 1.0        # multiplicador de velocitat de lectura
+        self.bpm = _BPM         # només mana amb la lectura a pols
         self.transp = 0
         self.abast = 1.0        # com d'estret és el recorregut d'alçades
         self.silenci = 0.0
@@ -3662,11 +3674,25 @@ ${potCodeSonify(potZ, spec)}
         if now >= self.t_seg:
             punt = _CORBA[self.i % _N]
             self._toca(punt, now)
-            espera = (punt[0] / 1000.0) / self.vel_k
+            if _POLS:
+                # A pols: la graella mana i la corba només hi posa el contorn.
+                # Els silencis llargs de la font desapareixen — que és el que
+                # feia que les notes sortissin tan escampades.
+                espera = (60.0 / self.bpm) / _SUBDIV
+            else:
+                espera = (punt[0] / 1000.0) / self.vel_k
             self.off_t = now + espera * self.gate
             self.t_seg = now + espera
+            # A pols, els punts muts de la font NO es mengen pulsacions: es
+            # salten. La graella sempre sona, que és tot el sentit d'aquest
+            # mode — el vídeo hi posa el contorn, no els silencis.
+            if _POLS:
+                for _ in range(n_punts):
+                    self.i = (self.i + 1) % n_punts
+                    if _CORBA[self.i % _N][2] > 0:
+                        break
             # El sentit de lectura
-            if self.sentit == 1:
+            elif self.sentit == 1:
                 self.i = (self.i - 1) % n_punts
             elif self.sentit == 2:
                 if self.amunt:
@@ -3677,7 +3703,7 @@ ${potCodeSonify(potZ, spec)}
                     self.i -= 1
                     if self.i <= 0:
                         self.amunt = True
-            else:
+            elif not _POLS:
                 self.i = (self.i + 1) % n_punts
 
         return {'punt': self.i + 1, 'punts': _N, 'veus': list(self.sonant),

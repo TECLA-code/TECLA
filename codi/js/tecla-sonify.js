@@ -106,7 +106,7 @@ export function analitzaImatge(img, opc = {}) {
  *   deriva = cap on s'ha desplaçat el centre respecte de l'anterior (−1..1)
  */
 export function analitzaMoviment(ara, abans, w, h, opc = {}) {
-    const { llindar = 0.08, mostreig = 2 } = opc;
+    const { llindar = 0.08, mostreig = 2, guany = 24 } = opc;
     let suma = 0, sumaY = 0, sumaY2 = 0, sumaX = 0;
     for (let y = 0; y < h; y += mostreig) {
         for (let x = 0; x < w; x += mostreig) {
@@ -126,8 +126,11 @@ export function analitzaMoviment(ara, abans, w, h, opc = {}) {
     const varia = Math.max(0, sumaY2 / suma - centre * centre);
     return {
         centre,
-        // Normalitzat pel nombre de píxels mirats, no per la mida del vídeo
-        energia: Math.min(1, suma / ((w * h) / (mostreig * mostreig)) * 24),
+        // Normalitzat pel nombre de píxels mirats, no per la mida del vídeo.
+        // El guany és un paràmetre perquè el moviment d'un vídeo real sol ser
+        // MOLT més subtil que el d'una prova: amb un guany fix, mitja gravació
+        // es queda a força zero i el mode calla.
+        energia: Math.min(1, suma / ((w * h) / (mostreig * mostreig)) * guany),
         amplada: Math.sqrt(varia),
         deriva: sumaX / suma,
     };
@@ -210,4 +213,57 @@ export function resumCorba(corba) {
         notaMax: actius ? nMax : 0,
         forcaMitja: actius ? Math.round(fSuma / actius) : 0,
     };
+}
+
+/**
+ * NORMALITZA la força de la corba: el que es va mesurar s'estira perquè el
+ * punt més fort arribi a 127.
+ *
+ * És la diferència entre una gravació que sona i una que calla. El moviment
+ * d'un vídeo de debò —algú que es mou per una habitació— pot ser vint vegades
+ * més subtil que el d'una prova de laboratori, i amb un guany fix la meitat de
+ * les mostres es queden a zero. Normalitzant, cada gravació es fa servir
+ * sencera, sigui quina sigui la seva escala.
+ *
+ * @param {number[][]} corba
+ * @param {number} [terra=0.12]  quina part de baix es considera silenci
+ */
+export function normalitza(corba, terra = 0.12) {
+    if (!corba || !corba.length) return corba || [];
+    let max = 0;
+    for (const p of corba) if (p[2] > max) max = p[2];
+    if (max <= 0) return corba;
+    const k = 127 / max;
+    const tall = 127 * terra;
+    return corba.map(([dt, nota, forca, ample]) => {
+        const f = forca * k;
+        return [dt, nota, f < tall ? 0 : Math.round(Math.min(127, f)), ample];
+    });
+}
+
+/**
+ * SUAVITZA el contorn d'alçades amb una mitjana mòbil.
+ *
+ * L'anàlisi de moviment és sorollosa per naturalesa: el centre de massa salta
+ * quan una ombra canvia. Sense suavitzar, el contorn és una serra i no s'hi
+ * reconeix el gest; suavitzant, se sent el moviment i no el soroll de mesura.
+ * La FORÇA no es toca — allà els cops sobtats són el que dona vida.
+ *
+ * @param {number[][]} corba
+ * @param {number} quantitat  0 (res) a 1 (molt)
+ */
+export function suavitza(corba, quantitat = 0) {
+    if (!corba || corba.length < 3 || quantitat <= 0) return corba || [];
+    const n = Math.max(1, Math.round(quantitat * 8));
+    return corba.map((p, i) => {
+        let suma = 0, pes = 0;
+        for (let k = -n; k <= n; k++) {
+            const j = i + k;
+            if (j < 0 || j >= corba.length) continue;
+            const w = 1 + n - Math.abs(k);
+            suma += corba[j][1] * w;
+            pes += w;
+        }
+        return [p[0], Math.round(suma / pes), p[2], p[3]];
+    });
 }
