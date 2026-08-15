@@ -3834,11 +3834,18 @@
         }
       });
     });
-    buildKeysGrid(); // async: populates selects, syncs bank select, restores saved values
-    _builtKeys = true;
-    // La pestanya Teclat (tab-modes) és la primera visible en obrir l'app → construir-la ja.
-    buildModesTab();
-    _builtModes = true;
+    // DEFERIT (queueMicrotask): `buildKeysGrid` usa `_keysConfig` i `buildModesTab`
+    // usa `_modesIndex`, tots dos `let` definits més avall → cridar-los ara donaria
+    // ReferenceError (TDZ) quan la continuació de l'`await` s'executés abans que el
+    // cos del mòdul hi arribés. El microtask els fa córrer un cop el mòdul ja s'ha
+    // avaluat sencer (i abans del setTimeout d'initDispositiu, com fins ara).
+    queueMicrotask(() => {
+      buildKeysGrid(); // async: populates selects, syncs bank select, restores saved values
+      _builtKeys = true;
+      // La pestanya Teclat (tab-modes) és la primera visible en obrir l'app → construir-la ja.
+      buildModesTab();
+      _builtModes = true;
+    });
 
     // ══ DISPOSITIU — gestor de capes tipades (v3) ═══════════════════════════
     // Reutilitza els configuradors existents (tab-modes = teclat, tab-keys =
@@ -13608,23 +13615,35 @@
       return '#' + [d(r), d(g), d(b)].map(v => v.toString(16).padStart(2, '0')).join('');
     }
 
+    // Única font de veritat de les variables CSS del tema personalitzat:
+    // _applyCustomVars() les escriu totes i _clearCustomVars() esborra exactament
+    // les mateixes, perquè no contaminin després cap paleta integrada.
+    function _customVarMap(vars) {
+      return {
+        'bg': vars.bg,
+        'surface': vars.surface,
+        'surface2': vars.surface2,
+        'surface3': _darkenHex(vars.surface2, 1.15),
+        'text': vars.text,
+        'text2': _darkenHex(vars.text, 0.53),
+        'text3': _darkenHex(vars.text, 0.27),
+        'accent': vars.accent,
+        'accent-d': _darkenHex(vars.accent, 0.82),
+      };
+    }
+    const _CUSTOM_CSS_VARS = Object.keys(_customVarMap({}));
+
     function _clearCustomVars() {
-      ['bg', 'surface', 'surface2', 'text', 'accent', 'accent-d'].forEach(v =>
+      _CUSTOM_CSS_VARS.forEach(v =>
         document.documentElement.style.removeProperty(`--${v}`)
       );
     }
 
     function _applyCustomVars(vars, updatePickers = true) {
       const root = document.documentElement;
-      root.style.setProperty('--bg', vars.bg);
-      root.style.setProperty('--surface', vars.surface);
-      root.style.setProperty('--surface2', vars.surface2);
-      root.style.setProperty('--surface3', _darkenHex(vars.surface2, 1.15));
-      root.style.setProperty('--text', vars.text);
-      root.style.setProperty('--text2', _darkenHex(vars.text, 0.53));
-      root.style.setProperty('--text3', _darkenHex(vars.text, 0.27));
-      root.style.setProperty('--accent', vars.accent);
-      root.style.setProperty('--accent-d', _darkenHex(vars.accent, 0.82));
+      for (const [k, val] of Object.entries(_customVarMap(vars))) {
+        root.style.setProperty(`--${k}`, val);
+      }
       if (updatePickers) {
         for (const k of ['bg', 'surface', 'surface2', 'text', 'accent']) {
           const el = document.getElementById(`ct-${k}`);
