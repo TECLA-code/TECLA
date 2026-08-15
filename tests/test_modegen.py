@@ -8,7 +8,9 @@ notes penjades o que es surti del rang MIDI no arriba mai a l'usuari.
 import ast
 import importlib
 import json
+import math
 import os
+import random
 import shutil
 import subprocess
 import sys
@@ -151,6 +153,9 @@ CASOS_DRONE = {
     'gate': _specd(nom='Gate drone', moviment='Gate', movDuty=25),
     'respiracio': _specd(nom='Respira', moviment='Respiració', movPeriode=6),
     'sense_moviment': _specd(nom='Quiet', moviment='Cap'),
+    'atmosfera': _specd(nom='Atmosfera', acords=[[0, 7, 12, 19]], respiraVeus=True,
+                        respiraPer=4, respiraDisp=60, respiraProf=70),
+    'quiet_veus': _specd(nom='Acord quiet', acords=[[0, 7, 12, 19]], respiraVeus=False),
     'una_veu': _specd(nom='Pedal', acords=[[0]]),
     'moltes_veus': _specd(nom='Catedral', acords=[[0, 7, 12, 16, 19, 24]]),
     'veus_repetides': _specd(nom='Repetit', acords=[[0, 0, 7, 7, 7]]),   # s'han de fondre
@@ -299,11 +304,56 @@ CASOS_ALG = {
     'vida': _speca(nom='Vida prova', algoritme='Joc de la vida', llavorVida=_GLIDER),
     'vida_buida': _speca(nom='Vida buida', algoritme='Joc de la vida',
                          llavorVida=[[0] * 12 for _ in range(8)]),
-    'mandel_dins': _speca(nom='Mandel dins', algoritme='Mandelbrot', cx=-0.4, cy=0.0),
+    # 'Mandelbrot' com a algorisme és la forma VELLA (ara és un mapa de dins de
+    # 'Fractal'): serveix per comprovar que els modes antics es migren sols.
+    'mandel_dins': _speca(nom='Mandel dins', algoritme='Mandelbrot', cx=-0.4, cy=0.0, zoom=2),
     'mandel_fora': _speca(nom='Mandel fora', algoritme='Mandelbrot', cx=1.5, cy=1.5),
     'mandel_iters': _speca(nom='Mandel iters', algoritme='Mandelbrot', cx=-0.75, cy=0.1, iters=5),
     'alg_pots': _speca(nom='Alg potes', pots={'x': 'Densitat', 'y': 'Rotació', 'z': 'Octava'}),
     'alg_pots_buits': _speca(nom='Alg sense potes', pots={'x': '—', 'y': '—', 'z': '—'}),
+}
+
+
+def _specs(**canvis):
+    """Especificació de la família SOROLL."""
+    base = {
+        'cat': 'soroll', 'nom': 'El meu soroll', 'motor': 'Núvol',
+        'alfa': 0, 'alfaPot': -2, 'estacions': 5, 'xiulet': 70,
+        'densitat': 120, 'densMin': 0.5, 'densMax': 400,
+        'centre': 60, 'ample': 24, 'gruix': 3, 'intensitat': 70, 'cruix': 85,
+        'maxVeus': 20, 'graMin': 40, 'graMax': 180,
+        'fmHz': 12, 'fmProf': 12, 'dial': 50, 'ccBrill': True, 'ccRes': False,
+        'pots': {'x': 'Densitat', 'y': 'Cruixent', 'z': 'Intensitat'},
+    }
+    base.update(canvis)
+    return base
+
+
+CASOS_SOR = {
+    'sor_nuvol': _specs(),
+    'sor_saturacio': _specs(nom='Sor paret', motor='Saturació', densitat=380, gruix=8,
+                            intensitat=100, cruix=92, graMin=4, graMax=40),
+    'sor_fm': _specs(nom='Sor fm', motor='FM', fmHz=60, fmProf=36, densitat=200, cruix=95),
+    'sor_dial': _specs(nom='Sor dial', motor='Dial', dial=45, densitat=110),
+    'sor_impulsos': _specs(nom='Sor pluja', motor='Impulsos', densitat=90, gruix=1,
+                           intensitat=26, cruix=100, graMin=8, graMax=40),
+    # Els cinc sorolls purs, com a punts de la llei S(f) ∝ 1/f^α
+    'sor_violeta': _specs(nom='Sor violeta', alfa=-2),
+    'sor_blau': _specs(nom='Sor blau', alfa=-1),
+    'sor_rosa': _specs(nom='Sor rosa', alfa=1),
+    'sor_marro': _specs(nom='Sor marro', alfa=2),
+    # …i valors d'entremig, que és la gràcia de tenir-ho com una sola llei
+    'sor_mig': _specs(nom='Sor mig', alfa=0.5),
+    'sor_alfa_extrem': _specs(nom='Sor extrem', alfa=3, alfaPot=3),
+    'sor_radio': _specs(nom='Sor radio', motor='Dial', alfa=0.4, alfaPot=0.4,
+                        densitat=150, cruix=96, graMin=8, graMax=200,
+                        dial=0, estacions=5, xiulet=80, centre=60, ample=26,
+                        pots={'x': 'Dial (emissora)', 'y': '—', 'z': '—'}),
+    'sor_quiet': _specs(nom='Sor quiet', densitat=0.4, cruix=0, gruix=1),
+    'sor_ample_zero': _specs(nom='Sor clavat', ample=0),
+    'sor_pots_buits': _specs(nom='Sor sense potes', pots={'x': '—', 'y': '—', 'z': '—'}),
+    'sor_pots_tot': _specs(nom='Sor potes', pots={'x': 'Color', 'y': 'Gruix del clúster',
+                                                  'z': 'Centre'}),
 }
 
 
@@ -330,7 +380,8 @@ def _genera(specs):
     return json.loads(res.stdout)
 
 
-TOTS = dict(CASOS, **CASOS_RIT, **CASOS_DRONE, **CASOS_TEX, **CASOS_ONA, **CASOS_ALG)
+TOTS = dict(CASOS, **CASOS_RIT, **CASOS_DRONE, **CASOS_TEX, **CASOS_ONA, **CASOS_ALG,
+            **CASOS_SOR)
 
 
 @pytest.fixture(scope='module')
@@ -1423,13 +1474,191 @@ def test_amb_els_potes_en_repos_l_automat_manté_la_regla_que_has_triat(modes_im
     assert '_REGLES = (110,' in g['source'], g['source'][:400]
 
 
-def test_amb_els_potes_en_repos_mandelbrot_manté_el_punt_que_has_triat(modes_importats):
-    """Els potes de c hi SUMEN: el punt que has clicat es respecta."""
+def _mode_solt(g, tmp_path_factory, nom='solt'):
+    """Importa un mode generat a part (per als casos que no són a TOTS)."""
+    import modes as paquet_modes
+    tmp = tmp_path_factory.mktemp(nom)
+    (tmp / g['file']).write_text(g['source'])
+    paquet_modes.__path__.append(str(tmp))
+    try:
+        mod = importlib.import_module('modes.' + g['file'][:-3])
+        return getattr(mod, g['cls'])
+    finally:
+        paquet_modes.__path__.remove(str(tmp))
+        sys.modules.pop('modes.' + g['file'][:-3], None)
+
+
+def test_el_pot_de_qualitat_recorre_els_nou_acords(tmp_path_factory):
+    """Nou trams de 0 a 127, un per qualitat, i el primer és el que has muntat:
+    en repòs ha de sonar el teu acord i girant-lo les altres vuit."""
+    spec = _specd(nom='Nou qualitats', acords=[[0, 7]],
+                  pots={'x': 'Qualitat', 'y': '—', 'z': '—'})
+    cls = _mode_solt(_genera({'p': spec})['p'], tmp_path_factory, 'qualitat')
+    vistes = []
+    for pot in range(0, 128, 4):
+        _, mode = _fes_sonar(cls, potes=(0, pot, 0), voltes=8, neteja=False)
+        arrel = mode.octave * 12 + mode.key
+        ivs = tuple(n - arrel for n in mode.sonant)
+        if not vistes or vistes[-1] != ivs:
+            vistes.append(ivs)
+    assert vistes[0] == (0, 7), f'en repòs ha de sonar el teu acord: {vistes[0]}'
+    assert len(set(vistes)) == 9, f'hi ha d\'haver nou acords, i n\'hi ha {len(set(vistes))}'
+
+
+def test_els_bancs_d_acords_es_poden_afegir_i_treure(tmp_path_factory):
+    """De un a nou bancs: el pot de tipus d'acord els ha de recórrer tots."""
+    for n in (1, 9):
+        # Les mateixes nou qualitats que el generador (aquí escrites a mà: el
+        # test ha de fallar si algú les canvia al generador sense pensar-hi).
+        quals = [[0, 7], [0, 4, 7], [0, 3, 7], [0, 4, 7, 10], [0, 4, 7, 11],
+                 [0, 2, 7], [0, 5, 7], [0, 3, 6], [0, 7, 12, 19]]
+        acords = quals[:n]
+        spec = _specd(nom=f'Bancs {n}', acords=acords,
+                      pots={'x': "Tipus d'acord", 'y': '—', 'z': '—'})
+        cls = _mode_solt(_genera({'b': spec})['b'], tmp_path_factory, f'bancs{n}')
+        vistos = set()
+        for pot in range(0, 128, 4):
+            _, mode = _fes_sonar(cls, potes=(0, pot, 0), voltes=8, neteja=False)
+            vistos.add(mode.acord)
+        assert vistos == set(range(n)), f'amb {n} bancs se n\'han vist {sorted(vistos)}'
+
+
+def _drone_viu(cls, moviments, dt=0.01, voltes=40):
+    """Fa córrer un drone movent el pot X pels valors de 'moviments' (una llista
+    de valors de pot), i torna el MIDI de tot plegat."""
+    import time as _t
+    midi = FakeMidiOut()
+    mode = cls(midi)
+    mode.setup()
+    real = _t.monotonic
+    rellotge = [real()]
+    _t.monotonic = lambda: rellotge[0]
+    try:
+        for v in moviments:
+            for _ in range(voltes):
+                rellotge[0] += dt
+                mode.update([0, v, 0], [False] * 16)
+    finally:
+        _t.monotonic = real
+    return midi, mode
+
+
+def test_canviar_d_acord_no_re_ataca_les_notes_que_ja_sonaven(tmp_path_factory):
+    """Conducció de veus: el que és comú entre l'acord vell i el nou es queda
+    sonant. Abans es callava tot i s'atacava tot de nou, i el release del vell
+    se sumava a l'atac del nou —el doble de veus alhora i en fase— que és el que
+    feia el cop en girar el pot d'acords."""
+    # Do-Sol → Do-Mi-Sol → Do-Mi-Sol-Si♭: el Do i el Sol hi són sempre.
+    spec = _specd(nom='Conduccio', acords=[[0, 7], [0, 4, 7], [0, 4, 7, 10]],
+                  respiraVeus=False, moviment='Cap',
+                  pots={'x': "Tipus d'acord", 'y': '—', 'z': '—'})
+    cls = _mode_solt(_genera({'c': spec})['c'], tmp_path_factory, 'conduccio')
+    midi, mode = _drone_viu(cls, [0, 60, 120])
+    arrel = mode.octave * 12 + mode.key
+    atacs = {}
+    for m in midi.sent:
+        if type(m).__name__.endswith('NoteOn') and m.velocity > 0:
+            atacs[m.note] = atacs.get(m.note, 0) + 1
+    assert mode.acord == 2, f'el pot no ha arribat a l\'últim banc: {mode.acord}'
+    # La fonamental i la quinta són als tres acords → un sol atac cadascuna.
+    assert atacs[arrel] == 1, f'la fonamental s\'ha re-atacat {atacs[arrel]} cops'
+    assert atacs[arrel + 7] == 1, f'la quinta s\'ha re-atacat {atacs[arrel + 7]} cops'
+    # I el que sí que és nou s'ha d'haver atacat, un cop i prou.
+    assert atacs[arrel + 4] == 1 and atacs[arrel + 10] == 1
+    mode.cleanup()
+    assert not _balanc(midi), f'notes penjades: {_balanc(midi)}'
+
+
+def test_el_pot_no_fa_saltar_l_acord_quan_tremola_al_limit(tmp_path_factory):
+    """Un pot que tria per trams té un límit entre tram i tram, i el conversor
+    del dispositiu hi tremola ±1. Sense histèresi l'acord saltava endavant i
+    enrere a cada volta del bucle: cent re-atacs per segon, que és el retall que
+    se sentia. Amb histèresi, el tremolor no ha de fer cap canvi."""
+    spec = _specd(nom='Tremolor', acords=[[0, 7], [0, 4, 7], [0, 3, 7]],
+                  respiraVeus=False, moviment='Cap',
+                  pots={'x': "Tipus d'acord", 'y': '—', 'z': '—'})
+    cls = _mode_solt(_genera({'t': spec})['t'], tmp_path_factory, 'tremolor')
+    # 43 és el límit entre el banc 0 i el banc 1 amb tres bancs (128/3 = 42,7).
+    import time as _t
+    midi = FakeMidiOut()
+    mode = cls(midi)
+    mode.setup()
+    real = _t.monotonic
+    rellotge = [real()]
+    _t.monotonic = lambda: rellotge[0]
+    try:
+        for i in range(400):
+            rellotge[0] += 0.01
+            mode.update([0, 42 + (i % 2), 0], [False] * 16)
+    finally:
+        _t.monotonic = real
+    atacs = sum(1 for m in midi.sent
+                if type(m).__name__.endswith('NoteOn') and m.velocity > 0)
+    # Només l'acord del setup (+ com a molt un canvi de tram en entrar-hi).
+    assert atacs <= 5, f'{atacs} atacs amb el pot tremolant al límit'
+
+
+def test_el_drone_amb_respiracio_batega_i_sense_es_queda_quiet(modes_importats):
+    """La diferència entre un acord sostingut i una ATMOSFERA: amb la respiració
+    per veu, cada veu es torna a atacar tota sola i a un volum diferent — que és
+    el mecanisme del mode Dinamo de la casa. Sense, les notes s'ataquen un cop
+    i prou i el moviment només pot venir del CC."""
+    def atacs(clau):
+        midi, _ = _fes_sonar(modes_importats[clau], potes=(0, 0, 0), voltes=900, dt=0.01)
+        per_nota = {}
+        for m in midi.sent:
+            if type(m).__name__.endswith('NoteOn') and m.velocity > 0:
+                per_nota.setdefault(m.note, []).append(m.velocity)
+        return per_nota
+
+    quiet = atacs('quiet_veus')
+    viu = atacs('atmosfera')
+    assert quiet, 'el drone quiet no ha sonat'
+    assert all(len(v) == 1 for v in quiet.values()), (
+        f'sense respiració no hi pot haver re-atacs: {[(n, len(v)) for n, v in quiet.items()]}')
+    assert len(viu) >= 3, 'l\'atmosfera ha de tenir totes les veus'
+    assert all(len(v) > 3 for v in viu.values()), (
+        f'cada veu ha de respirar: {[(n, len(v)) for n, v in viu.items()]}')
+    # …i cada una pel seu compte: si totes anessin juntes seria un trèmolo.
+    comptes = sorted(len(v) for v in viu.values())
+    assert comptes[-1] != comptes[0], f'les veus respiren totes alhora: {comptes}'
+    # …i de debò pugen i baixen de volum.
+    for n, vs in viu.items():
+        assert max(vs) - min(vs) > 15, f'la nota {n} no canvia de volum: {min(vs)}–{max(vs)}'
+
+
+def test_amb_els_potes_en_repos_el_fractal_manté_el_punt_que_has_triat(tmp_path_factory):
+    """El punt que has clicat s'ha de respectar amb els potes en repòs, tant si
+    n'hi ha un que el mou com si n'hi ha dos."""
     spec = _speca(nom='Punt mantingut', algoritme='Mandelbrot', cx=-0.75, cy=0.1,
                   pots={'x': 'Part real de c', 'y': 'Part imaginària de c', 'z': 'Octava'})
     g = _genera({'m': spec})['m']
     assert '_CX = -0.75' in g['source']
-    assert 'self.cx = _CX + (v / 127.0)' in g['source']
+    cls = _mode_solt(g, tmp_path_factory, 'fractal_repos')
+    _, mode = _fes_sonar(cls, potes=(0, 0, 0), voltes=40)
+    assert abs(mode.cx - (-0.75)) < 1e-6, f'cx ha marxat a {mode.cx}'
+    assert abs(mode.cy - 0.1) < 1e-6, f'cy ha marxat a {mode.cy}'
+
+
+def test_dos_potes_sobre_el_punt_del_fractal_se_sumen(tmp_path_factory):
+    """Trobat provant-ho: amb un pot a la part real i un altre al «recorregut
+    del pla» (que mou les dues parts), el segon reescrivia self.cx i el primer
+    no feia RES. Ara cada funció hi suma la seva aportació."""
+    spec = _speca(nom='Dos potes', algoritme='Fractal', cx=-0.4, cy=0.6,
+                  pots={'x': 'Part real de c', 'y': 'Recorregut del pla', 'z': '—'})
+    cls = _mode_solt(_genera({'m': spec})['m'], tmp_path_factory, 'fractal_suma')
+
+    # Només la X (recorda: X=pot_values[1], Y=pot_values[0])
+    _, nomes_x = _fes_sonar(cls, potes=(0, 127, 0), voltes=40)
+    # Només la Y
+    _, nomes_y = _fes_sonar(cls, potes=(127, 0, 0), voltes=40)
+    # Totes dues
+    _, totes = _fes_sonar(cls, potes=(127, 127, 0), voltes=40)
+
+    assert nomes_x.cx > -0.4 + 0.5, 'la X sola no mou la part real'
+    assert nomes_y.cx > -0.4 + 0.4, 'la Y sola no mou la part real'
+    assert abs(totes.cx - (nomes_x.cx + nomes_y.cx - (-0.4))) < 1e-6, (
+        f'les dues aportacions no se sumen: {totes.cx}')
 
 
 def test_amb_el_pot_de_densitat_al_minim_l_euclidia_toca_el_que_has_posat(tmp_path_factory):
@@ -1479,11 +1708,14 @@ def test_amb_els_potes_en_repos_els_modes_sonen_com_els_has_fet(modes_importats)
 
     Trobat exportant modes de debò: el ritme sonava pelat (el breakdown en
     repòs retirava totes les pistes menys el bombo) i els drones sonaven una
-    octava per sota de la triada.
+    octava per sota de la triada. I més tard, la família de soroll sencera:
+    densitat mínima, intensitat zero i amplada zero en repòs — un soroll fet a
+    consciència arrencava mut i semblava que els potes no fessin res.
     """
     ref = {
         # família        atribut      el que diu el formulari
-        'senzill':      [('speed', 60 / 40), ('artic', 0.55), ('vel_k', 1.0), ('pat', 0)],
+        'senzill':      [('speed', 60 / 40), ('artic', 0.55), ('din_k', 1.0), ('pat', 0),
+                         ('key', 0)],
         'quatre_per_quatre': [('capa', 3), ('swing', 0.0), ('oct_baix', 2)],
         'arc':          [('octave', 3), ('acord', 0), ('vel', 80), ('mov_per', 2.0)],
         'gra':          [('dens', 8.0), ('centre', 78), ('disp', 18), ('vol', 1.0),
@@ -1491,6 +1723,13 @@ def test_amb_els_potes_en_repos_els_modes_sonen_com_els_has_fet(modes_importats)
         'sinus':        [('freq', 2.0), ('base', 48), ('amp', 1.0), ('duty', 0.5), ('vel', 80)],
         'euclid':       [('rot', 0), ('dens', 0.0), ('octave', 4)],
         'markov':       [('atzar', 0.0), ('abast', 2), ('octave', 4)],
+        'mandel_dins':  [('zoom', 2.0), ('octave', 4)],
+        'sor_nuvol':    [('dens', 120.0), ('cruix', 0.85), ('inten', 0.7), ('ample', 24),
+                         ('gruix', 3), ('centre', 60), ('alfa', 0.0)],
+        'sor_pots_tot': [('alfa', 0.0), ('gruix', 3), ('centre', 60)],
+        'sor_impulsos': [('dens', 90.0), ('cruix', 1.0), ('inten', 0.26)],
+        'sor_marro':    [('alfa', 2.0)],
+        'sor_mig':      [('alfa', 0.5)],
     }
     dolents = []
     for clau, camps in ref.items():
@@ -1503,6 +1742,155 @@ def test_amb_els_potes_en_repos_els_modes_sonen_com_els_has_fet(modes_importats)
             elif real != esperat:
                 dolents.append(f'{clau}.{camp}: {real} en lloc de {esperat}')
     assert not dolents, 'els potes en repòs canvien el disseny:\n  ' + '\n  '.join(dolents)
+
+
+def test_el_soroll_supera_la_frequencia_del_bucle(modes_importats):
+    """El que separa el soroll de "notes ràpides": la densitat ha de poder passar
+    per damunt del ritme del bucle, disparant més d'un esdeveniment per volta.
+
+    Amb un rellotge de "quan toca el següent" això era impossible i el soroll
+    quedava topat a una nota per volta, sonés com sonés el formulari.
+    """
+    voltes, dt = 400, 0.01                      # 4 s a 100 Hz, com el simulador
+    midi, _ = _fes_sonar(modes_importats['sor_saturacio'], potes=(0, 0, 0),
+                         voltes=voltes, dt=dt)
+    ons = [m for m in midi.sent if type(m).__name__.endswith('NoteOn') and m.velocity > 0]
+    per_volta = len(ons) / voltes
+    assert per_volta > 3, f'només {per_volta:.2f} notes per volta: això no és soroll'
+
+
+def test_el_soroll_te_sostre_de_notes(modes_importats):
+    """…i alhora no pot desbocar-se: cap sintetitzador no aguanta milers de
+    notes per segon, i passat el sostre el so ja no es densifica, es trenca."""
+    voltes, dt = 400, 0.01
+    midi, _ = _fes_sonar(modes_importats['sor_saturacio'], potes=(127, 127, 127),
+                         voltes=voltes, dt=dt)
+    ons = [m for m in midi.sent if type(m).__name__.endswith('NoteOn') and m.velocity > 0]
+    assert len(ons) / voltes <= 10.001, 'el pressupost de notes per volta no es respecta'
+
+
+def test_el_cruixent_deixa_les_notes_a_zero(modes_importats):
+    """Cruixent al 100% = clic: el note_off ha de sortir tot seguit del note_on,
+    a la mateixa volta. Si les notes queden obertes, sonen com a notes."""
+    midi, mode = _fes_sonar(modes_importats['sor_impulsos'], potes=(0, 0, 0),
+                            voltes=200, dt=0.01, neteja=False)
+    assert mode.cruix == 1.0
+    assert not mode.pend, 'amb cruixent al 100% no hi pot haver cap nota pendent'
+    tipus = [type(m).__name__ for m in midi.sent]
+    ons = sum(1 for t in tipus if t.endswith('NoteOn'))
+    offs = sum(1 for t in tipus if t.endswith('NoteOff'))
+    assert ons > 20 and offs >= ons, f'{ons} note_on però només {offs} note_off'
+
+
+def _mostres_soroll(cls, n=8192, llavor=20250731):
+    """Mostra el generador de soroll directament: la seqüència ÉS el senyal.
+
+    Es mesuren propietats ESTADÍSTIQUES (autocorrelació, RMS) d'un procés
+    estocàstic, i una realització curta i sense sembrar en feia caure alguna
+    de tant en tant sense que res s'hagués trencat. Dues coses ho arreglen
+    sense abaixar cap llistó:
+
+    · La LLAVOR fixa fa la mesura repetible — i, com que cada color se sembra
+      igual, tots cinc filtren EXACTAMENT el mateix soroll blanc: la comparació
+      passa a ser aparellada, que és justament el que diu la llei (una sola
+      font, cinc ordres d'integració).
+    · Les 8192 MOSTRES (abans 2048) són les que donen el marge. El que menys
+      en tenia era el quocient de RMS entre colors, perquè el marró té memòria
+      llarga (r(1) ≈ 0,98) i la seva variància mostral convergeix a ritme de
+      n/_M mostres efectives: amb 2048 arribava a 1,35 amb un llindar d'1,25.
+      Escombrant 500 llavors amb 8192: quocient màxim 1,166, esglaó mínim de
+      r(1) entre colors veïns 0,158 (llindar 0,05) i |r(1)| del blanc màxim
+      0,033 (llindar 0,15). Cap llavor no falla, o sigui que la triada d'aquí
+      no és cap sortada.
+
+    L'estat del generador global es restaura en sortir: sembrar-lo i prou
+    deixaria deterministes —i lligats a l'ordre d'execució— els tests de després.
+    """
+    estat = random.getstate()
+    try:
+        random.seed(llavor)
+        mode = cls(FakeMidiOut())
+        mode.setup()
+        return [mode._soroll() for _ in range(n)], mode
+    finally:
+        random.setstate(estat)
+
+
+def test_els_cinc_sorolls_purs_surten_de_la_mateixa_llei(modes_importats):
+    """S(f) ∝ 1/f^α, amb α = −2 … 2, i prou: no hi ha cinc casos especials sinó
+    una integració fraccionària d'ordre α/2 sobre soroll blanc.
+
+    La firma de cada color és l'autocorrelació a retard 1: negativa als aguts
+    (violeta, blau), zero al blanc i positiva als greus (rosa, marró). I com que
+    el filtre es normalitza per l'energia dels coeficients, tots han de sonar
+    IGUAL DE FORTS — el que canvia és el caràcter, no el volum.
+    """
+    ordre = ['sor_violeta', 'sor_blau', 'sor_nuvol', 'sor_rosa', 'sor_marro']
+    r1s, rms = [], []
+    for clau in ordre:
+        x, mode = _mostres_soroll(modes_importats[clau])
+        mu = sum(x) / len(x)
+        var = sum((v - mu) ** 2 for v in x) / len(x)
+        assert var > 0.001, f'{clau}: el soroll no es mou'
+        r1s.append(sum((x[i] - mu) * (x[i + 1] - mu) for i in range(len(x) - 1))
+                   / (len(x) - 1) / var)
+        rms.append(math.sqrt(sum(v * v for v in x) / len(x)))
+    # L'autocorrelació ha de créixer monòtonament del violeta al marró
+    for i in range(len(r1s) - 1):
+        assert r1s[i] < r1s[i + 1] - 0.05, (
+            f'{ordre[i]} i {ordre[i + 1]} no es distingeixen: r(1) = '
+            + ', '.join(f'{c}={r:+.2f}' for c, r in zip(ordre, r1s)))
+    assert r1s[0] < -0.2 and r1s[-1] > 0.8, f'els extrems no hi són: {r1s}'
+    assert abs(r1s[2]) < 0.15, f'el blanc hauria de ser pla: r(1)={r1s[2]:+.3f}'
+    # Igual de forts: entre el més fluix i el més fort, menys d'un 25%
+    assert max(rms) / min(rms) < 1.25, (
+        'els colors no sonen igual de forts: '
+        + ', '.join(f'{c}={r:.3f}' for c, r in zip(ordre, rms)))
+
+
+def test_hi_ha_espectre_entre_els_noms(modes_importats):
+    """La gràcia de tenir-ho com una llei contínua: α = 0,5 ha de quedar ENTRE
+    el blanc i el rosa, no coincidir amb cap dels dos."""
+    def r1(clau):
+        x, _ = _mostres_soroll(modes_importats[clau])
+        mu = sum(x) / len(x)
+        var = sum((v - mu) ** 2 for v in x) / len(x)
+        return sum((x[i] - mu) * (x[i + 1] - mu) for i in range(len(x) - 1)) / (len(x) - 1) / var
+    blanc, mig, rosa = r1('sor_nuvol'), r1('sor_mig'), r1('sor_rosa')
+    assert blanc < mig < rosa, f'α=0,5 no queda entre blanc i rosa: {blanc:.2f} {mig:.2f} {rosa:.2f}'
+
+
+def test_el_dial_de_la_radio_xiula_i_sintonitza(modes_importats):
+    """Buscar emissora: el xiulet d'heterodí ha de BAIXAR de to a mesura que
+    t'hi acostes i desaparèixer quan hi entres, i llavors l'emissora surt neta.
+    És el que fa que això soni a ràdio i no a soroll qualsevol."""
+    cls = modes_importats['sor_radio']
+    # Amb 5 emissores i el pot governant el dial, n'hi ha una a dial ≈ 0,20.
+    # El mode informa de la nota del xiulet (xn), i −1 vol dir sintonitzat.
+    xn = {}
+    for pot, on in ((12, 'lluny'), (20, 'aprop'), (25, 'dins')):
+        _, mode = _fes_sonar(cls, potes=(0, pot, 0), voltes=120, dt=0.005)
+        xn[on] = mode.xn
+    assert xn['lluny'] > 0 and xn['aprop'] > 0, f'no hi ha xiulet entre emissores: {xn}'
+    assert xn['lluny'] > xn['aprop'] + 4, f'el xiulet no baixa en acostar-te: {xn}'
+    assert xn['dins'] == -1, f'sintonitzat no hi pot haver xiulet: {xn}'
+
+    # I sintonitzat ha de sonar MENYS soroll: el control de guany es tanca.
+    def notes(pot):
+        midi, _ = _fes_sonar(cls, potes=(0, pot, 0), voltes=200, dt=0.005)
+        return sum(1 for m in midi.sent
+                   if type(m).__name__.endswith('NoteOn') and m.velocity > 0)
+    assert notes(25) < notes(12) * 0.85, 'sintonitzat hi hauria d\'haver menys soroll'
+
+
+def test_tots_els_sorolls_fan_soroll(modes_importats):
+    for clau in CASOS_SOR:
+        if clau == 'sor_quiet':
+            continue                              # aquest és de degoteig, a posta
+        midi, _ = _fes_sonar(modes_importats[clau], potes=(0, 0, 0), voltes=600, dt=0.01)
+        ons = [m for m in midi.sent
+               if type(m).__name__.endswith('NoteOn') and m.velocity > 0]
+        assert ons, f'{clau}: no ha sonat res'
 
 
 def test_tots_els_algorismes_toquen_alguna_cosa(modes_importats):
@@ -1539,3 +1927,252 @@ def test_el_doble_clic_canvia_la_tonalitat(modes_importats):
     finally:
         _t.monotonic = real
         mode.cleanup()
+
+
+# ── ACORDS ─────────────────────────────────────────────────────────────────
+# La família que aplega l'harmonia de la capa teclat: progressions amb funció
+# harmònica, conducció de veus, harmonia negativa i arpegiador.
+
+def _specac(**canvis):
+    base = {
+        'cat': 'acords', 'nom': 'La meva progressió',
+        'escalaIntervals': [0, 2, 4, 5, 7, 9, 11], 'tonalitat': 0, 'octava': 3,
+        # ii–V–I amb setenes diatòniques
+        'passos': [{'grau': 1, 'fn': 'tonics', 'dur': 2},
+                   {'grau': 4, 'fn': 'tonics', 'dur': 2},
+                   {'grau': 0, 'fn': 'tonics', 'dur': 2}],
+        'vl': 'proximitat', 'vlOn': True, 'negOn': False, 'negEix': 0,
+        'arp': 'Bloc', 'arpDiv': 4, 'baixOn': False, 'baixOctava': 2,
+        'vel': 90, 'gate': 100, 'bpmMin': 120, 'bpmMax': 120,
+        'pots': {'x': '—', 'y': '—', 'z': '—'},
+    }
+    base.update(canvis)
+    return base
+
+
+def _acords_sonats(cls, potes=(0, 0, 0), voltes=900, dt=0.01):
+    """Els voicings que han sonat, en ordre, sense repetir-ne cap de seguit."""
+    import time as _t
+    midi = FakeMidiOut()
+    mode = cls(midi)
+    mode.setup()
+    real = _t.monotonic
+    rellotge = [real()]
+    _t.monotonic = lambda: rellotge[0]
+    vist = []
+    try:
+        for _ in range(voltes):
+            rellotge[0] += dt
+            e = mode.update(list(potes), [False] * 16)
+            v = tuple(e['veus'])
+            if v and (not vist or vist[-1] != v):
+                vist.append(v)
+    finally:
+        _t.monotonic = real
+    return midi, mode, vist
+
+
+def test_la_progressio_treu_la_qualitat_de_la_funcio_harmonica(tmp_path_factory):
+    """El ii–V–I amb 7enes diatòniques ha de donar m7, dom7 i maj7: la qualitat
+    de cada acord surt del GRAU i de la funció, no d'una llista escrita a mà."""
+    cls = _mode_solt(_genera({'a': _specac()})['a'], tmp_path_factory, 'acords')
+    _, mode, vist = _acords_sonats(cls)
+    assert len(vist) >= 3, f'no ha recorregut la progressió: {vist}'
+    # Els intervals de cada acord respecte de la seva nota més greu, per classe
+    formes = []
+    for v in vist[:3]:
+        pcs = sorted({(n - min(v)) % 12 for n in v})
+        formes.append(tuple(pcs))
+    # m7 = {0,3,7,10} · dom7 = {0,4,7,10} · maj7 = {0,4,7,11}, en qualsevol inversió
+    esperats = [{0, 3, 7, 10}, {0, 4, 7, 10}, {0, 4, 7, 11}]
+    for i, v in enumerate(vist[:3]):
+        pcs = {n % 12 for n in v}
+        arrel = None
+        for cand in pcs:
+            if {(p - cand) % 12 for p in pcs} == esperats[i]:
+                arrel = cand
+                break
+        assert arrel is not None, f'acord {i + 1}: {sorted(pcs)} no és {esperats[i]}'
+
+
+def test_la_conduccio_de_veus_mou_molt_menys_que_sense(tmp_path_factory):
+    """El valor de la conducció de veus és mesurable: el mateix ii–V–I mou
+    moltes menys semitons amb 'proximitat' que saltant a fonamental cada cop."""
+    g = _genera({'amb': _specac(vlOn=True, vl='proximitat'),
+                 'sense': _specac(vlOn=False)})
+    def moviment(clau, nom):
+        cls = _mode_solt(g[clau], tmp_path_factory, nom)
+        _, _, vist = _acords_sonats(cls)
+        salts = [sum(abs(x - y) for x, y in zip(sorted(a), sorted(b)))
+                 for a, b in zip(vist, vist[1:]) if len(a) == len(b)]
+        return sum(salts) / max(1, len(salts))
+    amb = moviment('amb', 'vlamb')
+    sense = moviment('sense', 'vlsense')
+    assert amb < sense / 2, f'conduint mou {amb:.1f} st i sense {sense:.1f} st'
+
+
+def test_les_formes_de_conduccio_donen_voicings_diferents(tmp_path_factory):
+    """'obert' ha de separar les veus i 'tancat' ajuntar-les: si les dotze
+    formes donessin el mateix, el pot de conducció no serviria de res."""
+    g = _genera({'obert': _specac(vl='obert'), 'tancat': _specac(vl='tancat')})
+    def obertura(clau, nom):
+        cls = _mode_solt(g[clau], tmp_path_factory, nom)
+        _, _, vist = _acords_sonats(cls)
+        return sum(max(v) - min(v) for v in vist) / max(1, len(vist))
+    assert obertura('obert', 'vlob') > obertura('tancat', 'vltan') + 6
+
+
+def test_el_pot_de_conduccio_recorre_les_dotze_formes(tmp_path_factory):
+    """Dotze trams de 0 a 127, un per forma, començant per la que has triat."""
+    spec = _specac(pots={'x': 'Conducció de veus', 'y': '—', 'z': '—'})
+    cls = _mode_solt(_genera({'a': spec})['a'], tmp_path_factory, 'acvl')
+    formes = set()
+    for pot in range(0, 128, 4):
+        _, mode, _ = _acords_sonats(cls, potes=(0, pot, 0), voltes=60)
+        formes.add(mode.vl)
+    assert len(formes) == 12, f'se n\'han vist {len(formes)}: {sorted(formes)}'
+
+
+def test_el_pot_d_harmonia_negativa_reposa_com_l_has_fet(tmp_path_factory):
+    """En repòs sona el mode tal com l'has construït (apagada si la vas deixar
+    apagada); a partir del primer terç s'encén i recorre els vuit eixos."""
+    spec = _specac(negOn=False, pots={'x': 'Harmonia negativa', 'y': '—', 'z': '—'})
+    cls = _mode_solt(_genera({'a': spec})['a'], tmp_path_factory, 'acneg')
+    _, repos, _ = _acords_sonats(cls, potes=(0, 0, 0), voltes=60)
+    assert repos.neg is False, 'en repòs no hauria d\'estar activada'
+    eixos = set()
+    for pot in range(43, 128, 3):
+        _, mode, _ = _acords_sonats(cls, potes=(0, pot, 0), voltes=60)
+        assert mode.neg is True, f'a {pot} hauria d\'estar activada'
+        eixos.add(mode.neg_eix)
+    assert eixos == set(range(8)), f'eixos vistos: {sorted(eixos)}'
+
+
+def test_l_harmonia_negativa_reflecteix_les_altures(tmp_path_factory):
+    """Amb l'eix de Levy, la progressió conserva la funció però les classes
+    d'altura han de canviar: si sortissin iguals, no s'estaria reflectint res."""
+    g = _genera({'no': _specac(negOn=False), 'si': _specac(negOn=True, negEix=0)})
+    def pcs(clau, nom):
+        cls = _mode_solt(g[clau], tmp_path_factory, nom)
+        _, _, vist = _acords_sonats(cls)
+        return [tuple(sorted({n % 12 for n in v})) for v in vist[:3]]
+    assert pcs('no', 'acn') != pcs('si', 'acs')
+
+
+def test_l_arpegi_toca_una_nota_cada_cop(tmp_path_factory):
+    """La diferència entre el bloc i l'arpegi no és el nombre de notes sinó
+    QUANTES en sonen alhora: al bloc, tot l'acord; a l'arpegi, una de sola."""
+    import time as _t
+    g = _genera({'bloc': _specac(arp='Bloc'), 'amunt': _specac(arp='Amunt', arpDiv=4)})
+
+    def alhora(clau, nom):
+        cls = _mode_solt(g[clau], tmp_path_factory, nom)
+        midi = FakeMidiOut()
+        mode = cls(midi)
+        mode.setup()
+        real = _t.monotonic
+        rellotge = [real()]
+        _t.monotonic = lambda: rellotge[0]
+        pic, atacs = 0, 0
+        try:
+            for _ in range(900):
+                rellotge[0] += 0.01
+                mode.update([0, 0, 0], [False] * 16)
+                pic = max(pic, len(mode.sonant))
+        finally:
+            _t.monotonic = real
+        atacs = sum(1 for m in midi.sent
+                    if type(m).__name__.endswith('NoteOn') and m.velocity > 0)
+        mode.cleanup()
+        return pic, atacs
+
+    pic_arp, atacs_arp = alhora('amunt', 'acarp')
+    pic_bloc, atacs_bloc = alhora('bloc', 'acbloc')
+    assert pic_arp == 1, f"l'arpegi hauria de tocar d'una en una i en toca {pic_arp}"
+    assert pic_bloc >= 3, f'el bloc hauria de tocar l\'acord sencer i en toca {pic_bloc}'
+    assert atacs_arp > atacs_bloc, "l'arpegi ha de disparar més notes que el bloc"
+
+
+def test_els_acords_no_deixen_notes_penjades(tmp_path_factory):
+    """Cap nota viva després del cleanup, amb arpegi i baix pel mig."""
+    spec = _specac(arp='Ping-pong', baixOn=True, gate=60,
+                  pots={'x': 'Tempo', 'y': 'Conducció de veus', 'z': 'Extensió de l\'acord'})
+    cls = _mode_solt(_genera({'a': spec})['a'], tmp_path_factory, 'acpenj')
+    midi, mode, _ = _acords_sonats(cls, potes=(90, 70, 100), voltes=1200)
+    mode.cleanup()
+    assert not _balanc(midi), f'notes penjades: {_balanc(midi)}'
+
+
+def test_el_tonnetz_mou_una_sola_veu_a_cada_pas(tmp_path_factory):
+    """La propietat que defineix el reticle neo-riemannià: entre dues posicions
+    consecutives es conserven DOS tons comuns i només se'n mou un. Si algú
+    toca la taula i això es trenca, deixa de ser un Tonnetz."""
+    import subprocess, json as _json
+    driver = (
+        "import { tonnetzWalk } from %s;\n"
+        "console.log(JSON.stringify(tonnetzWalk('PLPLPLRPLPLPLR')));" % _json.dumps(GEN_JS)
+    )
+    out = subprocess.run(['node', '--input-type=module', '-e', driver],
+                         capture_output=True, text=True, check=True)
+    pos = _json.loads(out.stdout)
+    assert len(pos) >= 12, f'el passeig és massa curt: {len(pos)}'
+    for (n1, v1), (n2, v2) in zip(pos, pos[1:]):
+        a = {x % 12 for x in v1}
+        b = {x % 12 for x in v2}
+        assert len(a & b) == 2, f'{n1} → {n2}: {len(a & b)} tons comuns, n\'hi ha d\'haver 2'
+
+
+def test_la_taula_d_acords_viatja_al_mode_i_el_pot_l_escombra(tmp_path_factory):
+    """La taula s'incrusta al mode i el pot la recorre sobre la MATEIXA arrel;
+    la posició 0 és sempre el que has muntat al formulari."""
+    spec = _specac(nom='Amb taula', taula='tonnetz',
+                   pots={'x': "Taula d'acords", 'y': '—', 'z': '—'})
+    g = _genera({'t': spec})['t']
+    assert '_TAULA = (' in g['source'] and '_N_TAULA' in g['source']
+    cls = _mode_solt(g, tmp_path_factory, 'actaula')
+    formes = []
+    for pot in range(0, 128, 6):
+        _, mode, _ = _acords_sonats(cls, potes=(0, pot, 0), voltes=60)
+        arrel = min(mode.veus) if mode.veus else 0
+        formes.append(tuple(sorted((n - arrel) % 12 for n in mode.veus)))
+    # En repòs, la forma de la progressió (una setena diatònica: 4 veus)
+    assert len(formes[0]) == 4, f'en repòs hauria de sonar el teu acord: {formes[0]}'
+    # I girant-lo, moltes formes diferents de la taula
+    assert len(set(formes)) >= 6, f'la taula no s\'escombra: {len(set(formes))} formes'
+
+
+def test_sense_taula_el_pot_no_trenca_res(tmp_path_factory):
+    """Amb el pot assignat però cap taula triada, el mode ha de seguir sonant
+    igual: la taula buida només té la posició 0."""
+    spec = _specac(nom='Sense taula', taula='',
+                   pots={'x': "Taula d'acords", 'y': '—', 'z': '—'})
+    cls = _mode_solt(_genera({'s': spec})['s'], tmp_path_factory, 'acsense')
+    _, m0, _ = _acords_sonats(cls, potes=(0, 0, 0), voltes=200)
+    _, m1, _ = _acords_sonats(cls, potes=(0, 127, 0), voltes=200)
+    assert m0.veus and m1.veus
+    assert {n % 12 for n in m0.veus} == {n % 12 for n in m1.veus}
+
+
+def test_el_reflex_gradual_dona_colors_intermedis(tmp_path_factory):
+    """L'harmonia negativa deixa de ser un interruptor: el pot decideix quantes
+    veus es reflecteixen, de dalt cap avall. Els punts intermedis han de donar
+    acords DIFERENTS tant del positiu com del negatiu — si només hi hagués els
+    dos extrems, el pot no aportaria res."""
+    spec = _specac(nom='Morph', passos=[{'grau': 0, 'fn': 'tonics', 'dur': 8}],
+                   vlOn=False, negOn=False,
+                   pots={'x': 'Reflex gradual', 'y': '—', 'z': '—'})
+    cls = _mode_solt(_genera({'m': spec})['m'], tmp_path_factory, 'acmorph')
+    colors = []
+    for pot in (0, 32, 64, 96, 127):
+        _, mode, _ = _acords_sonats(cls, potes=(0, pot, 0), voltes=80)
+        colors.append((mode.neg_morph, tuple(sorted(n % 12 for n in mode.veus))))
+    # En repòs, res reflectit; al final, tot
+    assert colors[0][0] == 0.0, 'en repòs no s\'ha de reflectir res'
+    assert colors[-1][0] > 0.99, 'al final s\'ha de reflectir tot'
+    formes = [c[1] for c in colors]
+    assert formes[0] != formes[-1], 'el positiu i el negatiu han de diferir'
+    # I els intermedis no poden ser cap dels dos extrems
+    intermedis = set(formes[1:-1])
+    assert len(intermedis) >= 2, f'els punts intermedis no donen colors nous: {formes}'
+    assert formes[0] not in intermedis and formes[-1] not in intermedis, (
+        f'algun intermedi repeteix un extrem: {formes}')

@@ -13,6 +13,21 @@
 import { WebMidiManager } from './tecla-webmidi.js';
 
 export class TECLASimulator {
+    /** Pot per nom (X, Y, Z) → índex dins pot_values, com al dispositiu. */
+    static VIS_TO_FRAME = [1, 0, 2];
+
+    /**
+     * Període del bucle d'actualització, en ms.
+     *
+     * El dispositiu no espera: el seu bucle principal crida update() tan de
+     * pressa com pot. Aquí hi havia 50 ms (20 Hz) i això posava un sostre a
+     * tot — un mode no podia emetre més de 20 esdeveniments per segon, els
+     * ritmes quedaven quantitzats a 50 ms i el soroll no arribava a ser
+     * soroll. Un tick mesurat costa ~0,3 ms, o sigui que a 10 ms el motor va
+     * al 3% de CPU amb un mode i a un ~12% amb quatre de la capa MIX.
+     */
+    static TICK_MS = 10;
+
     constructor(webMidi, onLog) {
         this.webMidi = webMidi;          // WebMidiManager instance
         this.onLog = onLog || (() => { }); // callback(msg, type)
@@ -33,6 +48,19 @@ export class TECLASimulator {
         this._mixFrozenPots = new Map(); // slot → [p0,p1,p2] congelats
         this._forceChannel = null;       // canal forçat per a l'update en curs
         this.mixEditTarget = null;       // slot que rep els potes en directe
+        // Capa de MODES pura (sense teclat a sobre): allà els potes no tenen amb qui
+        // competir i van directes a tots els modes que sonen, com al dispositiu. La
+        // presa per tecla ('hold'/'latch') només cal a la capa híbrida, on els potes
+        // són del teclat mentre no mantinguis premuda la tecla d'un mode.
+        this.potsToAllMix = false;
+
+        // Últim estat que ha retornat el mode actiu (el mateix diccionari que
+        // alimenta la pantalla del dispositiu). El constructor l'aprofita per fer
+        // que la previsualització respiri amb el que sona de debò i no només amb
+        // el que hi ha escrit al formulari.
+        this.estat = null;
+        this._tickN = 0;
+        this._modGen = 0;      // generació del relleu en calent del mode únic
     }
 
     get mixCount() { return this._mixModes.size; }
@@ -95,60 +123,67 @@ export class TECLASimulator {
 
     // ── Carregar mode ────────────────────────────────────────────────────────
 
+    /**
+     * Carrega el mode únic. RELLEU EN CALENT: el mode nou es compila, s'instancia
+     * i es prepara MENTRE el vell encara sona, i només al final es fa el canvi.
+     *
+     * Abans es feia al revés —aturar, netejar, importar, arrencar— i entremig hi
+     * havia un forat de silenci de tot el que triga Python a importar el mòdul.
+     * Com que el constructor recarrega el mode a cada canvi del formulari, aquell
+     * forat era un tall a cada lliscador que moguessis. Ara el bucle no s'atura
+     * en cap moment: el salt és d'una volta (10 ms).
+     */
     async loadMode(pyCode, fileName) {
         if (!this.isReady) throw new Error('Pyodide no inicialitzat');
 
-        const wasRunning = this.isRunning;
-        if (wasRunning) this.stopLoop();
+        // Cada relleu fa servir un nom de mòdul nou. Reutilitzar-lo obligava a
+        // purgar sys.modules abans de compilar, i això és el que forçava a matar
+        // el mode vell primer.
+        const gen = ++this._modGen;
+        const mod = `mode_live_${gen}`;
+        this.pyodide.FS.writeFile(`/tecla/modes/${mod}.py`, pyCode);
 
-        // Escriu el codi del mode al VFS
-        this.pyodide.FS.writeFile('/tecla/modes/mode_active.py', pyCode);
-
-        // Cleanup del mode anterior i purga de mòduls
-        await this.pyodide.runPythonAsync(`
-import sys, importlib
-
-# Neteja el mode anterior
-if '_active_mode' in globals():
-    try: _active_mode.cleanup()
-    except: pass
-    del _active_mode
-
-# Purga tots els mòduls del mode actiu
-for _k in list(sys.modules.keys()):
-    if 'mode_active' in _k:
-        del sys.modules[_k]
-`);
-
-        // Importa el mòdul directament (no import *) i cerca la classe dins __dict__
+        // 1) Compilar i preparar el NOU sense tocar el que sona.
         const result = await this.pyodide.runPythonAsync(`
 import importlib
-import modes.mode_active as _mode_mod
-importlib.reload(_mode_mod)
-
 from adafruit_midi import MIDI
 import usb_midi
 from modes.base_mode import BaseMode
 
-_mode_class = None
-for _v in vars(_mode_mod).values():
+_nou_mod = importlib.import_module('modes.${mod}')
+_nou_cls = None
+for _v in vars(_nou_mod).values():
     if isinstance(_v, type) and _v is not BaseMode and issubclass(_v, BaseMode):
-        _mode_class = _v
+        _nou_cls = _v
         break
-
-if _mode_class is None:
-    raise ValueError("No s'ha trobat cap classe que hereti de BaseMode a mode_active")
-
-_midi_inst = MIDI(midi_out=usb_midi.ports[1])
-_active_mode = _mode_class(_midi_inst)
-_active_mode.setup()
-_active_mode.__class__.__name__
+if _nou_cls is None:
+    raise ValueError("No s'ha trobat cap classe que hereti de BaseMode a ${mod}")
+_nou = _nou_cls(MIDI(midi_out=usb_midi.ports[1]))
+_nou.setup()
+_nou_cls.__name__
 `);
+
+        // 2) El canvi, en un sol pas: el tick següent ja fa servir el nou. El vell
+        //    es neteja DESPRÉS (allibera les seves notes) i el seu mòdul es purga.
+        await this.pyodide.runPythonAsync(`
+import sys
+_vell = globals().get('_active_mode')
+_active_mode = _nou
+del _nou
+if _vell is not None:
+    try: _vell.cleanup()
+    except Exception: pass
+for _k in list(sys.modules.keys()):
+    if 'mode_live_' in _k and not _k.endswith('${mod}'):
+        del sys.modules[_k]
+`);
+        // Els fitxers dels relleus vells no fan cap falta al disc virtual.
+        for (let g = 1; g < gen; g++) {
+            try { this.pyodide.FS.unlink(`/tecla/modes/mode_live_${g}.py`); } catch (e) { }
+        }
 
         this._modeName = result;
         this._log(`Mode carregat: ${this._modeName}`, 'ok');
-
-        if (wasRunning) this.startLoop();
         return result;
     }
 
@@ -225,14 +260,19 @@ if '_mix_modes' in globals() and ${slot} in _mix_modes:
             return;
         }
         this.isRunning = true;
-        this._loopId = setInterval(() => this._tick(), 50);
+        this._loopId = setInterval(() => this._tick(), TECLASimulator.TICK_MS);
         this._log('Simulador iniciat', 'ok');
+    }
+
+    /** Para el rellotge del bucle i prou: no descarrega res ni apaga notes. */
+    _pausaBucle() {
+        this.isRunning = false;
+        if (this._loopId) { clearInterval(this._loopId); this._loopId = null; }
     }
 
     stopLoop() {
         if (!this.isRunning) return;
-        this.isRunning = false;
-        if (this._loopId) { clearInterval(this._loopId); this._loopId = null; }
+        this._pausaBucle();
 
         // Crida cleanup + All Notes Off (mode únic + tots els modes MIX)
         try {
@@ -248,30 +288,43 @@ if '_active_mode' in globals() and hasattr(_active_mode, 'cleanup'):
     }
 
     _tick() {
-        // Mode únic (capa modes): rep botons i potes en directe, com sempre.
-        if (this._mixModes.size === 0 && this.pyodide.globals.has('_active_mode')) {
+        // Mode únic (capa modes / audició del constructor): rep botons i potes
+        // en directe. Corre SEMPRE que hi sigui — també amb modes MIX a sobre,
+        // perquè es puguin provar combinacions amb el mode que estàs fent.
+        if (this.pyodide.globals.has('_active_mode')) {
             try {
                 for (let i = 0; i < 16; i++) this.state.set_button(i, this.buttons[i]);
                 for (let i = 0; i < 3; i++) this.state.set_pot(i, this.pots[i]);
-                this.pyodide.runPython(`
+                const res = this.pyodide.runPython(`
 _active_mode.update(
     [_state.pots[0], _state.pots[1], _state.pots[2]],
     list(_state.buttons)
 )
 `);
+                // El diccionari que torna el mode arriba com a PyProxy: convertir-lo
+                // a cada volta seria car (i a 100 Hz, inútil), així que es recull un
+                // cop cada cinc — 20 Hz, de sobres per moure una animació. El proxy
+                // s'ha de destruir sempre o la memòria de Python se'n va.
+                if (res && typeof res.toJs === 'function') {
+                    if ((++this._tickN % 5) === 0) {
+                        try { this.estat = Object.fromEntries(res.toJs()); } catch (e) { }
+                    }
+                    res.destroy();
+                }
             } catch (e) {
                 console.warn('[Simulator tick]', e.message);
             }
-            return;
         }
+        if (this._mixModes.size === 0) return;
 
         // Modes MIX: cada mode corre AUTÒNOM (botons neutres: el teclat es toca a part)
         // i pel SEU canal. Els potes només editen en directe el mode "objectiu"; la
         // resta conserven els seus potes congelats.
         for (let i = 0; i < 16; i++) this.state.set_button(i, false);
+        const aTots = this.potsToAllMix && this.mixEditTarget === null;
         for (const [slot, info] of this._mixModes) {
             let pots = this._mixFrozenPots.get(slot) || [0, 0, 0];
-            if (slot === this.mixEditTarget) { pots = [...this.pots]; this._mixFrozenPots.set(slot, pots); }
+            if (aTots || slot === this.mixEditTarget) { pots = [...this.pots]; this._mixFrozenPots.set(slot, pots); }
             try {
                 for (let i = 0; i < 3; i++) this.state.set_pot(i, pots[i]);
                 this._forceChannel = info.channel;
@@ -288,7 +341,19 @@ _active_mode.update(
 
     pressButton(idx) { if (idx >= 0 && idx < 16) this.buttons[idx] = true; }
     releaseButton(idx) { if (idx >= 0 && idx < 16) this.buttons[idx] = false; }
+
+    /** Índex DE TRAMA (el que arriba al mode com pot_values[idx]). */
     setPot(idx, value) { if (idx >= 0 && idx < 3) this.pots[idx] = Math.max(0, Math.min(127, value | 0)); }
+
+    /**
+     * Pot per NOM (0=X, 1=Y, 2=Z), tal com el veu qui toca l'aparell.
+     *
+     * Al dispositiu la trama de potes és [A0, A1, A2] (main.py) i modes/kbd_pots.py
+     * hi llegeix X=pot_values[1], Y=pot_values[0], Z=pot_values[2]. El simulador ha
+     * de passar el MATEIX ordre al Python o el que sona aquí no és el que sonarà al
+     * dispositiu: girar la X mouria la funció de la Y.
+     */
+    setPotXYZ(vis, value) { this.setPot(TECLASimulator.VIS_TO_FRAME[vis] ?? vis, value); }
 
     // ── Log helper ───────────────────────────────────────────────────────────
 

@@ -1,6 +1,7 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "tecla-v3", "runtimeExecutable": "python3", "runtimeArgs": ["codi/server.py", "8123"], "port": 8123 }
+    { "name": "tecla-v3", "runtimeExecutable": "python3", "runtimeArgs": ["codi/server.py", "8080"], "port": 8080 },
+    { "name": "tecla-v4", "runtimeExecutable": "python3", "runtimeArgs": ["/Users/zen/Desktop/app_TECLA_v4/codi/server.py", "8081"], "port": 8081 }
   ]
 }

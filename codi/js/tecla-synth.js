@@ -59,6 +59,26 @@ export const PRESETS = {
 };
 
 export class TeclaSynth {
+    /** Veus simultànies màximes abans de robar la més vella. */
+    static MAX_VEUS = 48;
+
+    /**
+     * Corba de saturació suau: y = tanh(k·x)/k sobre −4..4 d'entrada.
+     *
+     * Dividir per k (i no pel màxim) deixa el pendent a l'origen exactament a 1:
+     * el que ja sonava bé —una nota, un acord— passa igual, sense tocar-lo. El
+     * sostre queda a 1/k, així que per molt que s'hi acumulin veus la sortida no
+     * passa d'aquí i el que abans era retall digital ara és compressió.
+     */
+    static _corbaTanh(n = 4096, k = 1.4) {
+        const c = new Float32Array(n);
+        for (let i = 0; i < n; i++) {
+            const x = (i / (n - 1)) * 8 - 4;          // −4 … 4
+            c[i] = Math.tanh(k * x) / k;
+        }
+        return c;
+    }
+
     constructor() {
         this.ctx = null;
         this.master = null;
@@ -81,7 +101,26 @@ export class TeclaSynth {
         this.ctx = new AC();
         this.master = this.ctx.createGain();
         this.master.gain.value = this._masterVol * this._expr;
-        this.master.connect(this.ctx.destination);
+
+        // Saturació suau a la sortida. Una família de soroll pot posar quaranta
+        // veus a sonar alhora i el màster arribava a un RMS de 3 — o sigui,
+        // retallat digitalment, que és el pitjor soroll que hi ha: escarransit i
+        // dolorós. Una tanh ho doblega en comptes de tallar-ho, que és el que fa
+        // qualsevol etapa analògica quan la satures: se sent fort i greixós, no
+        // trencat. Amb senyal petit no fa absolutament res (tanh(x) ≈ x).
+        //
+        // El «clic» en canviar d'acord al drone NO era això: era que _arrenca()
+        // callava tot l'acord i l'atacava de nou, i el release del vell se
+        // sumava a l'atac del nou —el doble de veus alhora, totes en fase— un
+        // transitori que la tanh no pot arreglar. Es corregeix a l'origen, amb
+        // conducció de veus al generador (mode_*.py, _arrenca): només es toca la
+        // nota que de debò canvia. Un compressor aquí no hi feia res (el drone
+        // sostingut viu sempre per sobre del llindar) i amb el guany de
+        // compensació encara saturava més.
+        this.limit = this.ctx.createWaveShaper();
+        this.limit.curve = TeclaSynth._corbaTanh();
+        this.limit.oversample = '2x';
+        this.master.connect(this.limit).connect(this.ctx.destination);
         this.enabled = true;
     }
 
@@ -128,6 +167,14 @@ export class TeclaSynth {
         if (!this.enabled || !this.ctx) return;
         const key = ch * 128 + midi;
         if (this.voices.has(key)) this._killVoice(key, true);  // retrigger net
+
+        // Sostre de veus: la família de soroll pot arribar a mil notes per segon
+        // i cada veu són tres o quatre nodes de Web Audio. Passat el sostre, la
+        // més vella deixa pas — robatori de veu, com qualsevol sintetitzador
+        // polifònic. Sense això el navegador es queda sense àudio i calla del tot.
+        if (this.voices.size >= TeclaSynth.MAX_VEUS) {
+            this._killVoice(this.voices.keys().next().value, true);
+        }
 
         const ctx = this.ctx;
         const t = ctx.currentTime;

@@ -1,0 +1,139 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   TECLA · MATERIAL de les superfícies flotants
+   ═══════════════════════════════════════════════════════════════════════
+
+   Un sol eix, i petit a posta: de què està fet el Laboratori, la finestra
+   del simulador i la pantalla del dispositiu. Res més.
+
+   NO toca la tipografia, ni la disposició, ni els radis, ni la paleta.
+   Aquestes tres coses ja van fallar quan les vaig voler canviar totes de
+   cop; això és només el TACTE de la superfície.
+
+   · Vidre (per defecte, sense classe) — translúcid i desenfocat.
+   · Mat  (body.mat) — opac, vora seca i tecles amb mecànica de pressió.
+     La sensació és d'aparell: cap superfície deixa passar el que hi ha a
+     sota, i l'elevació la fa el to, no el desenfocament.
+
+   Perquè convisquin, tot el que canvia va sota body.mat: el vidre queda
+   intacte per construcció.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── El vel de darrere del Laboratori ────────────────────────────────── */
+body.mat .modegen {
+  background: rgba(0, 0, 0, .72);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* ── El marc del Laboratori ──────────────────────────────────────────── */
+body.mat .modegen-frame {
+  background: var(--surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-color: var(--border-h);
+}
+
+/* Les capçaleres i separadors de dins deixen de ser vels i passen a ser
+   vores de debò: és el que fa que se separin els blocs sense difuminar-los. */
+body.mat .modegen-head,
+body.mat .modegen-foot {
+  background: var(--surface2);
+  border-color: var(--border-h);
+}
+
+body.mat .modegen-form {
+  border-left-color: var(--border);
+  border-right-color: var(--border);
+}
+
+/* Les famílies: superfície opaca i, en comptes de resplendor, una vora
+   nítida. La resplendor és justament el que no fa cap aparell. */
+body.mat .modegen-cat {
+  background: var(--surface2);
+  border-color: var(--border);
+}
+
+body.mat .modegen-cat:hover {
+  background: var(--surface3);
+}
+
+body.mat .modegen-cat.on {
+  background: color-mix(in srgb, var(--mg) 16%, var(--surface2));
+  border-color: var(--mg);
+  box-shadow: none;
+}
+
+/* ── La finestra flotant del simulador ───────────────────────────────── */
+body.mat .mgsim {
+  background: var(--surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-color: var(--border-h);
+}
+
+body.mat .mgsim-head,
+body.mat .mgsim-foot {
+  background: var(--surface2);
+}
+
+/* Les tecles són pastilles físiques: opaques i amb la vora inferior
+   gruixuda que s'enfonsa en prémer-les. */
+body.mat .mgsim-key,
+body.mat .sim-key {
+  background: var(--sim-key);
+  border-bottom-width: 3px;
+  transition: background .09s, border-color .09s, transform .09s;
+}
+
+body.mat .mgsim-key:active,
+body.mat .mgsim-key.down,
+body.mat .sim-key:active,
+body.mat .sim-key.pressed {
+  transform: translateY(1px);
+  border-bottom-width: 1px;
+  margin-bottom: 2px;
+}
+
+body.mat .mgsim-key.sonant {
+  background: color-mix(in srgb, var(--mg) 22%, var(--sim-key));
+}
+
+/* ── La pantalla del dispositiu ──────────────────────────────────────── */
+body.mat .devmon {
+  background: var(--surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-color: var(--border-h);
+}
+
+body.mat .devmon.pip .devmon-head {
+  background: var(--surface2);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* ── Camps ───────────────────────────────────────────────────────────── */
+/* Compte amb l'abreujat `background:` als selects: reinicia
+   background-repeat i background-position, i la fletxa de l'SVG es repeteix
+   per tota la casella (surten triangles en mosaic). Amb background-color
+   només es toca el color i la fletxa es queda on ha d'estar. */
+body.mat input,
+body.mat select,
+body.mat textarea {
+  background-color: var(--surface2);
+  border-color: var(--border-h);
+}
+
+body.mat input:focus,
+body.mat select:focus,
+body.mat textarea:focus {
+  border-color: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  body.mat .mgsim-key,
+  body.mat .sim-key {
+    transition: none;
+  }
+}

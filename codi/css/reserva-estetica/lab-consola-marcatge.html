@@ -1,0 +1,48 @@
+        <div class="modegen-head">
+          <span class="modegen-title">Laboratori de Modes</span>
+          <span class="modegen-crumb" id="modegen-crumb">—</span>
+          <span class="modegen-badge">maqueta</span>
+          <button class="btn" id="modegen-close" title="Tancar">✕</button>
+        </div>
+
+        <!-- Tira de lectura: el panell frontal del Laboratori. Diu l'estat del
+             sistema d'un cop d'ull —què estàs fent, a quin pols, per on surt i
+             si el motor corre— sense haver de buscar-ho pel formulari. -->
+        <div class="mg-readout" id="mg-readout">
+          <div class="ro-cell"><div class="k">Família</div><div class="v hot" id="ro-familia">—</div></div>
+          <div class="ro-cell"><div class="k">Mode</div><div class="v" id="ro-mode">—</div></div>
+          <div class="ro-cell"><div class="k">Pols</div><div class="v" id="ro-pols">—</div></div>
+          <div class="ro-cell"><div class="k">Sortida</div><div class="v" id="ro-sortida">—</div></div>
+          <div class="ro-cell"><div class="k">Motor</div><div class="v" id="ro-motor">aturat</div></div>
+          <div class="ro-cell"><div class="k">Dispositiu</div><div class="v" id="ro-disp">—</div></div>
+        </div>
+
+        <div class="modegen-body">
+          <!-- Columna 1 — les famílies, en LLISTA dins d'un panell. Abans eren
+               targetes flotants amb resplendor; aquí són files d'un mateix
+               bloc, que és el que diu que són alternatives del mateix eix. -->
+          <div class="mg-pn mg-pn-cats">
+            <div class="mg-pn-h"><h3>Família</h3><span class="ref" id="mg-cats-ref"></span></div>
+            <div class="mg-pn-b flush" id="modegen-cats"></div>
+          </div>
+
+          <div class="mg-pn mg-pn-form">
+            <div class="mg-pn-h"><h3 id="mg-form-titol">Mode</h3><span class="ref" id="mg-form-ref"></span></div>
+            <div class="mg-pn-b" id="modegen-form"></div>
+          </div>
+
+          <div class="mg-pn mg-pn-prev">
+            <div class="mg-pn-h"><h3>Previsualització</h3><span class="ref" id="mg-prev-ref">EN REPÒS</span></div>
+            <div class="mg-pn-b flush modegen-prev">
+              <canvas class="modegen-canvas" id="modegen-canvas"></canvas>
+              <div class="modegen-prev-now" id="modegen-prev-now">
+                <div class="tag">previsualització</div>
+                <div class="main">—</div>
+                <!-- El pols real del mode: canvia amb el tempo, la densitat o la
+                     freqüència segons la família, i l'animació hi batega igual. -->
+                <div class="pols"></div>
+              </div>
+              <div class="mg-pn-sub">Potenciòmetres <span class="ref">EN REPÒS SONA TAL COM L'HAS FET</span></div>
+              <div class="modegen-pots" id="modegen-pots"></div>
+            </div>
+          </div>

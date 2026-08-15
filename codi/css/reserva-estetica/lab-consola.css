@@ -1,0 +1,123 @@
+/* RESERVA — no està carregat enlloc.
+   La composició de «consola» aplicada al Laboratori de Modes: tira de
+   lectura, panells amb capçalera i referència tècnica, famílies en llista
+   i etiquetes de secció com a regles. Es va provar i es va descartar
+   perquè es perdia l'estètica de la mini-app original.
+   Marcatge corresponent: lab-consola-marcatge.html */
+
+    /* El Laboratori és una CONSOLA, no una finestra de vidre: superfície
+       opaca, cantonades curtes i vores seques. L'elevació la fa la diferència
+       de to entre el fons, els panells i les capçaleres — no el desenfocament
+       ni les ombres. */
+    .modegen-frame {
+      position: relative; width: 100%; max-width: 1280px; height: 100%; max-height: 900px;
+      display: flex; flex-direction: column; overflow: hidden;
+      background: var(--bg);
+      border: 1px solid var(--border-h); border-radius: 10px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .55);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .modegen-logo-bg {
+      position: absolute; inset: 0; margin: auto; width: min(58%, 500px); height: 58%;
+      background-color: var(--text); opacity: .03; pointer-events: none;
+      -webkit-mask: url('./logo_tecla.svg') no-repeat center / contain;
+      mask: url('./logo_tecla.svg') no-repeat center / contain;
+    }
+    .modegen-head {
+      position: relative; display: flex; align-items: center; gap: 14px; padding: 11px 16px;
+      background: var(--surface); border-bottom: 1px solid var(--border-h);
+    }
+    .modegen-title { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--text3) }
+    .modegen-crumb { font-size: 12.5px; font-weight: 700; letter-spacing: .04em; flex: 1 }
+    .modegen-head .btn { padding: 3px 10px; font-size: 11px }
+
+    /* ── Tira de lectura: el panell frontal ──────────────────────────────
+       Cel·les clau/valor amb el fons enfonsat, separades per una vora. És el
+       que fa que això sembli un aparell i no un formulari. */
+    .mg-readout {
+      display: flex; background: var(--sim-log, #000);
+      border-bottom: 1px solid var(--border-h);
+    }
+    .mg-readout .ro-cell { flex: 1; min-width: 0; padding: 7px 12px; border-right: 1px solid var(--border) }
+    .mg-readout .ro-cell:last-child { border-right: none }
+    .mg-readout .k {
+      font-size: 8px; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--text3); margin-bottom: 4px;
+    }
+    .mg-readout .v {
+      font-size: 11.5px; font-weight: 600; color: var(--text);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .mg-readout .v.hot { color: var(--mg, var(--accent)) }
+    .mg-readout .v.live { color: var(--green) }
+    .mg-readout .v.off { color: var(--text3) }
+
+    .modegen-body {
+      position: relative; flex: 1; min-height: 0;
+      display: grid; grid-template-columns: 208px minmax(0, 1fr) 250px;
+      gap: 12px; padding: 12px; overflow: hidden;
+    }
+
+    /* ── Panell: capçalera amb títol i referència tècnica ──────────────── */
+    .mg-pn {
+      display: flex; flex-direction: column; min-height: 0; min-width: 0;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      overflow: hidden;
+    }
+    .mg-pn-h {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 9px 12px; background: var(--surface2);
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    .mg-pn-h h3 {
+      font-size: 11px; font-weight: 600; color: var(--text); letter-spacing: .02em;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .mg-pn-h .ref {
+      font-size: 8.5px; letter-spacing: .06em; text-transform: uppercase;
+      color: var(--text3); white-space: nowrap; flex-shrink: 0;
+    }
+    .mg-pn-b { flex: 1; min-height: 0; overflow-y: auto; padding: 14px }
+    .mg-pn-b.flush { padding: 0 }
+    /* Sub-capçalera dins d'un panell (la secció de potes de la columna 3) */
+    .mg-pn-sub {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 8px 12px; margin-top: auto;
+      border-top: 1px solid var(--border); background: var(--surface2);
+      font-size: 10px; font-weight: 600; color: var(--text2);
+    }
+    .mg-pn-sub .ref {
+      font-size: 8px; letter-spacing: .06em; text-transform: uppercase;
+      color: var(--text3); font-weight: 400;
+    }
+
+    /* ── Columna 1: les famílies, en llista ──────────────────────────────
+       Files d'un mateix bloc amb una barra de 2px a l'esquerra quan estan
+       actives. Res de targetes flotants ni de resplendor: són alternatives
+       del mateix eix i s'han de llegir com una llista. */
+    .modegen-cat {
+      position: relative; display: block; width: 100%; text-align: left; cursor: pointer;
+      padding: 9px 12px; border: 0; border-bottom: 1px solid var(--border);
+      border-radius: 0; background: transparent; color: var(--text2);
+      transition: background .1s, color .1s;
+    }
+    .modegen-cat:last-child { border-bottom: 0 }
+    .modegen-cat:hover { color: var(--text); background: var(--surface2) }
+    .modegen-cat.on {
+      color: var(--text);
+      background: color-mix(in srgb, var(--mg) 10%, transparent);
+      box-shadow: none;
+    }
+    .modegen-cat.on::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+      background: var(--mg);
+    }
+    .modegen-cat-top { display: flex; align-items: center; gap: 8px }
+    .modegen-cat-ico { font-size: 14px; color: var(--text3); width: 16px; text-align: center }
+    .modegen-cat.on .modegen-cat-ico { color: var(--mg) }
+    .modegen-cat-nom { font-size: 12px; font-weight: 600; letter-spacing: .02em; flex: 1 }
+    .modegen-cat.on .modegen-cat-nom { color: var(--mg) }
+    .modegen-cat-n { font-size: 9px; color: var(--text3); letter-spacing: .08em; font-variant-numeric: tabular-nums }
+    /* ── Columna 2: el formulari ── */
+    .modegen-form { overflow-y: visible; padding: 0 }

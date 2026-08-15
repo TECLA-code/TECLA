@@ -1,0 +1,267 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   TECLA · tema TERMINAL
+   Una sola família tipogràfica, cantonades a zero i fòsfor ambre. És el cas
+   extrem del contracte: si l'app aguanta radius 0 i mono a tot arreu sense
+   trencar-se, el sistema de temes és sòlid.
+
+   Fòsfor SENSE glow: el resplendor és el tòpic d'aquest estil i el que el
+   converteix en disfressa. El caràcter surt del contrast, de la reixa i de
+   la disciplina d'una sola família.
+   Contracte: css/reserva-estetica/CONTRACTE.md
+   ═══════════════════════════════════════════════════════════════════════ */
+
+body.skin-terminal {
+  /* ── Superfícies: fosc amb un punt de verd, mai #000 pur ────────────── */
+  --bg: #0C0E0C;
+  --surface: #121512;
+  --surface2: #181C18;
+  --surface3: #20251F;
+  --raised: #181C18;
+  --inset: #080A08;
+
+  /* ── Vores: reixa ───────────────────────────────────────────────────── */
+  --border: #232A22;
+  --border-h: #35402F;
+  --bd-strong: #35402F;
+  --bd-active: #55654C;
+  --bd-w: 1px;
+
+  /* ── Text ───────────────────────────────────────────────────────────── */
+  --text: #D6DDD2;
+  --text2: #8B9686;
+  --text3: #5A6356;
+
+  /* ── Acents: ambre = ho has fet tu · verd = està viu ────────────────── */
+  --accent: #E0A32E;
+  --accent-d: #B8811E;
+  --action: #E0A32E;
+  --action-bg: rgba(224, 163, 46, .1);
+  --action-bd: rgba(224, 163, 46, .32);
+  --green: #5FCF8A;
+  --signal: #5FCF8A;
+  --signal-bg: rgba(95, 207, 138, .09);
+  --signal-bd: rgba(95, 207, 138, .28);
+  --red: #D9564F;
+  --yellow: #E0A32E;
+
+  /* ── Geometria: res arrodonit. Enlloc. ──────────────────────────────── */
+  --radius: 0px;
+  --r2: 0px;
+  --r-pill: 0px;
+
+  /* ── Tipografia: UNA família per a tot ──────────────────────────────── */
+  --font: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
+  --mono: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
+  --data-font: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
+  --num: tabular-nums;
+  --lbl-font: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
+  --lbl-ls: .1em;
+  --lbl-ls-strong: .12em;
+  --lbl-tr: uppercase;
+
+  /* ── Materialitat ───────────────────────────────────────────────────── */
+  --press: 0px;
+  --head-bg: #181C18;
+
+  /* Simulador */
+  --sim-bg: #080A08;
+  --sim-sb: #121512;
+  --sim-tb: #121512;
+  --sim-pot: #101310;
+  --sim-log: #060806;
+  --sim-key: #181C18;
+  --sim-key-h: #20251F;
+  --sim-key-p: #2A312A;
+  --sim-key-stop: #241614;
+  --sim-key-fx: #16201A;
+  --sim-key-kb: #1A1C22;
+  --sim-key-bd: #35402F;
+  --sim-key-bd-h: #55654C;
+  --sim-key-bd-p: #6F8064;
+  --sim-lbl: #5A6356;
+  --sim-lbl2: #8B9686;
+  --sim-pot-lbl: #5A6356;
+  --sim-pot-val: #E0A32E;
+  --sim-pot-track: #232A22;
+  --slog-info: #5A6356;
+}
+
+/* Xifres sempre en columna: aquí tot és dato */
+body.skin-terminal {
+  font-variant-numeric: tabular-nums;
+  font-size: 12.5px;
+}
+
+/* ═══ CANTONADES A ZERO ══════════════════════════════════════════════════
+   L'app té seixanta radis escrits a mà que cap token pot abastar. Aquí es
+   posen a zero d'una passada: és l'única regla del sistema que es permet
+   ser tan ampla, i és justament la que dona el caràcter al tema. */
+body.skin-terminal *,
+body.skin-terminal *::before,
+body.skin-terminal *::after {
+  border-radius: 0 !important;
+}
+
+/* Excepte el que ha de ser rodó de debò: knobs, pilots i el rodet dels
+   lliscadors. La llista surt de buscar tots els border-radius de 50% o de
+   càpsula del full de l'app — si algun dia n'hi ha un de nou, aquí. */
+body.skin-terminal .pot-knob,
+body.skin-terminal .mg-knob,
+body.skin-terminal .modegen-pot .mg-knob,
+body.skin-terminal .kb-pot-knob-circle,
+body.skin-terminal .mgsim-pot .k,
+body.skin-terminal .sim-dot,
+body.skin-terminal .mgsim-dot,
+body.skin-terminal .devmon-dot,
+body.skin-terminal .device-badge .dot,
+body.skin-terminal .spinner,
+body.skin-terminal .pot-range::-webkit-slider-thumb,
+body.skin-terminal input[type="radio"] {
+  border-radius: 50% !important;
+}
+
+/* ═══ CAPÇALERA I NAVEGACIÓ ══════════════════════════════════════════════ */
+body.skin-terminal header {
+  border-bottom: 1px solid var(--bd-strong);
+}
+
+body.skin-terminal .nav-tab {
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  font-size: 10.5px;
+  color: var(--text3);
+}
+
+body.skin-terminal .nav-tab:hover {
+  color: var(--text2);
+}
+
+body.skin-terminal .nav-tab.active {
+  color: var(--action);
+  border-bottom-color: var(--action);
+}
+
+/* ═══ PANELLS: marc i barra de títol ═════════════════════════════════════ */
+body.skin-terminal .card {
+  background: var(--surface);
+  border: 1px solid var(--bd-strong);
+}
+
+body.skin-terminal .card>.card-title {
+  display: block;
+  margin: -16px -16px 14px;
+  padding: 7px 12px;
+  background: var(--head-bg);
+  border-bottom: 1px solid var(--bd-strong);
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--text2);
+  letter-spacing: var(--lbl-ls);
+}
+
+body.skin-terminal .section-title {
+  font-size: 9.5px;
+  color: var(--text3);
+}
+
+/* ═══ BOTONS ═════════════════════════════════════════════════════════════ */
+body.skin-terminal .btn {
+  background: var(--surface2);
+  border: 1px solid var(--bd-strong);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-size: 10.5px;
+  font-weight: 500;
+}
+
+body.skin-terminal .btn:hover:not(:disabled) {
+  background: var(--surface3);
+  border-color: var(--bd-active);
+  color: var(--text);
+}
+
+body.skin-terminal .btn-primary {
+  background: var(--action);
+  border-color: var(--action);
+  color: #14100A;
+}
+
+body.skin-terminal .btn-primary:hover:not(:disabled) {
+  background: #EFB444;
+  border-color: #EFB444;
+}
+
+body.skin-terminal .btn:focus-visible {
+  outline: 1px solid var(--action);
+  outline-offset: 2px;
+}
+
+/* ═══ CAMPS ══════════════════════════════════════════════════════════════ */
+body.skin-terminal input,
+body.skin-terminal select,
+body.skin-terminal textarea {
+  background: var(--inset);
+  border: 1px solid var(--bd-strong);
+  font-family: var(--mono);
+  font-size: 11.5px;
+}
+
+body.skin-terminal input:focus,
+body.skin-terminal select:focus,
+body.skin-terminal textarea:focus {
+  border-color: var(--action);
+}
+
+body.skin-terminal select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238B9686'/%3E%3C/svg%3E");
+}
+
+/* ═══ SIMULADOR: la reixa ════════════════════════════════════════════════ */
+body.skin-terminal .sim-key,
+body.skin-terminal .mgsim-key {
+  border: 1px solid var(--bd-strong);
+}
+
+body.skin-terminal .mgsim-key .l,
+body.skin-terminal .mgsim-key .n {
+  text-transform: uppercase;
+}
+
+body.skin-terminal .mgsim {
+  background: var(--surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid var(--bd-active);
+}
+
+body.skin-terminal .mgsim-head {
+  background: var(--head-bg);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  font-size: 9px;
+}
+
+/* ═══ PANTALLA ═══════════════════════════════════════════════════════════ */
+body.skin-terminal .devmon {
+  background: var(--sim-log);
+  border: 1px solid var(--bd-strong);
+}
+
+/* ═══ TARGETES DE TEMA ═══════════════════════════════════════════════════ */
+body.skin-terminal .skin-card.active,
+body.skin-terminal .theme-card.active {
+  border-color: var(--action);
+  box-shadow: none;
+  background: var(--action-bg);
+}
+
+/* ═══ ICONES DE FUNCIÓ ═══════════════════════════════════════════════════
+   L'app pinta cada glif de la seva categoria amb un color propi (un hex
+   inline des del JS). En aquest sistema el color té ROL, no categoria: una
+   llista de dotze colors diu que tot és important i per tant que res ho és.
+   Es tornen monocromes — el nom de la funció és just al costat. */
+body.skin-terminal .chip-icon,
+body.skin-terminal .kb-fn-chip .chip-icon,
+body.skin-terminal .sim-fn-item .chip-icon {
+  color: var(--text2) !important;
+}

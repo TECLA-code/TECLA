@@ -14,6 +14,21 @@
  *   Host → device:  JSON, p. ex. {"s":"kbd","oct":4}
  */
 
+/**
+ * El diagnòstic que de fet passa: el dispositiu només exposa la consola.
+ *
+ * CircuitPython només crea el segon port CDC si el boot.py hi diu
+ * `usb_cdc.enable(console=True, data=True)`. El boot.py del MacroPad el deixa
+ * a `data=False` a posta (allà interessa que hi hagi un sol port a triar), i
+ * si aquell boot.py acaba al dispositiu de l'Instrument, el Sync no pot
+ * funcionar de cap manera: no hi ha canal de dades per on rebre les trames.
+ */
+const DIAG_SENSE_DADES =
+    'El TECLA només exposa la consola: li falta el canal de dades. '
+    + 'Al boot.py del dispositiu hi ha usb_cdc.enable(console=True, data=False) '
+    + 'i cal data=True. Reinstal·la el firmware des de la pestanya Firmware i '
+    + 'reinicia el dispositiu (el boot.py només s\'aplica en reiniciar).';
+
 // ── Funcions pures (testejables headless) ───────────────────────────────────
 
 /**
@@ -68,20 +83,49 @@ export class TeclaThinLink {
         }
         let candidates = [];
         try { candidates = await navigator.serial.getPorts(); } catch { /* cap */ }
+        const motius = [];
         for (const p of candidates) {
-            if (await this._probeDataPort(p)) return this._adopt(p);
+            const r = await this._probeDataPort(p);
+            if (r.ok) return this._adopt(p);
+            motius.push(r.motiu);
+        }
+        // Si TOTS els ports ja autoritzats són la consola, el selector no hi pot
+        // fer res: el dispositiu no exposa canal de dades. Ensenyar-lo només fa
+        // que triïs el mateix port una i altra vegada.
+        if (candidates.length && motius.every(m => m === 'consola')) {
+            return { success: false, sensePortDeDades: true, error: DIAG_SENSE_DADES };
         }
         // Cap port autoritzat vàlid → selector (únic cop; després queda memoritzat)
         let p;
         try { p = await navigator.serial.requestPort(); }
         catch (e) { return (e && e.name === 'NotFoundError') ? { success: false, aborted: true } : { success: false, error: e.message }; }
-        if (await this._probeDataPort(p, 2500)) return this._adopt(p);
-        return { success: false, error: 'Aquest port no envia trames del TECLA (deu ser la consola). Prem de nou i tria l\'altre — quedarà memoritzat.' };
+        const r = await this._probeDataPort(p, 2500);
+        if (r.ok) return this._adopt(p);
+        // Amb un sol port al sistema no hi ha cap "altre" per triar: el que
+        // passa és que el canal de dades està apagat al boot.py.
+        let altres = [];
+        try { altres = await navigator.serial.getPorts(); } catch { /* cap */ }
+        if (r.motiu === 'consola' && altres.length <= 1) {
+            return { success: false, sensePortDeDades: true, error: DIAG_SENSE_DADES };
+        }
+        return {
+            success: false,
+            error: r.motiu === 'consola'
+                ? 'Aquest port és la consola, no el de dades. Prem de nou i tria l\'altre — quedarà memoritzat.'
+                : 'Aquest port no diu res. Comprova que el TECLA estigui endollat i prem de nou.',
+        };
     }
 
-    /** Obre el port i espera una trama "I …" fins a `ms`. Tanca sempre. */
+    /**
+     * Obre el port i espera una trama "I …" fins a `ms`. Tanca sempre.
+     * @returns {{ok:boolean, motiu:'dades'|'consola'|'silenci'|'ocupat'}}
+     *   Saber PER QUÈ ha fallat és el que permet donar un consell útil: un port
+     *   que parla però no envia trames és la consola; un que no diu res pot ser
+     *   qualsevol altre cacharro connectat a l'ordinador.
+     */
     async _probeDataPort(port, ms = 1600) {
-        try { await port.open({ baudRate: this.baudRate }); } catch { return false; }
+        try { await port.open({ baudRate: this.baudRate }); }
+        catch { return { ok: false, motiu: 'ocupat' }; }
         const reader = port.readable.getReader();
         const dec = new TextDecoder();
         let buf = '', pending = null, found = false;
@@ -99,7 +143,9 @@ export class TeclaThinLink {
         try { await reader.cancel(); } catch { /* ja tancat */ }
         try { reader.releaseLock(); } catch { /* noop */ }
         try { await port.close(); } catch { /* noop */ }
-        return found;
+        if (found) return { ok: true, motiu: 'dades' };
+        // Ha dit alguna cosa però cap trama → la consola (REPL, prints…)
+        return { ok: false, motiu: buf.length ? 'consola' : 'silenci' };
     }
 
     /** Adopta un port validat: reobre net i arrenca el bucle normal. */
@@ -197,17 +243,24 @@ export class TeclaThinLink {
 
     _onChunk(text) {
         this._rxBuf += text;
+        // Si en un mateix tros hi arriben diverses trames d'entrada (per una
+        // pausa del navegador o una ràfega del dispositiu), les de BOTONS s'han
+        // d'aplicar totes —si no, una premuda curta es perdria— però dels POTES
+        // només interessa l'última: aplicar les velles afegeix latència visible
+        // al knob per res.
+        let ultimaPots = null;
         let nl;
         while ((nl = this._rxBuf.indexOf('\n')) >= 0) {
             const line = this._rxBuf.slice(0, nl);
             this._rxBuf = this._rxBuf.slice(nl + 1);
             const frame = decodeInput(line);
-            if (frame) { this._applyInput(frame); continue; }
+            if (frame) { ultimaPots = frame.pots; this._applyInput(frame, true); continue; }
             // Resposta de diagnòstic del firmware: "D <json>"
             if (line.startsWith('D ')) {
                 try { if (this.onDiag) this.onDiag(JSON.parse(line.slice(2))); } catch { /* brossa */ }
             }
         }
+        if (ultimaPots) this._aplicaPots(ultimaPots);
         if (this._rxBuf.length > 512) this._rxBuf = '';   // protecció anti-brossa
     }
 
@@ -216,7 +269,12 @@ export class TeclaThinLink {
         await this.sendScreen({ s: 'diag' });
     }
 
-    _applyInput({ mask, pots }) {
+    /**
+     * @param {{mask:number, pots:number[]}} frame
+     * @param {boolean} [nomesBotons] si és cert, els potes els aplica qui crida
+     *   (amb l'última trama del tros) en comptes de trama a trama.
+     */
+    _applyInput({ mask, pots }, nomesBotons) {
         // Botons: emet només els bits que han canviat respecte la trama anterior.
         const changed = mask ^ this._mask;
         if (changed) {
@@ -228,7 +286,11 @@ export class TeclaThinLink {
             }
             this._mask = mask;
         }
-        // Pots: emet els que han canviat (la 1a trama sincronitza posicions inicials).
+        if (!nomesBotons) this._aplicaPots(pots);
+    }
+
+    /** Pots: emet els que han canviat (la 1a trama sincronitza posicions inicials). */
+    _aplicaPots(pots) {
         for (let i = 0; i < 3; i++) {
             if (pots[i] !== this._pots[i]) {
                 this._pots[i] = pots[i];

@@ -66,6 +66,20 @@ export class MidiLooper {
         return this.overdub;
     }
 
+    /**
+     * Pausa el bucle si sona, sense esborrar-lo. És el que han de fer els STOP
+     * generals (la tecla 16, l'■ del constructor): aturar el so no t'ha de fer
+     * perdre el fragment que has gravat. Per esborrar-lo cal dir-ho a posta.
+     * @returns {boolean} si hi havia un bucle sonant
+     */
+    pausa() {
+        if (this.state !== 3) return false;
+        if (this.overdub) this.overdub = false;
+        this._pause();
+        this.onState && this.onState(this.state);
+        return true;
+    }
+
     clear() {
         this._stopTimer();
         this._silence();
