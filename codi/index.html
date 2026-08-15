@@ -6,20 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>T E C L A</title>
   <script src="https://cdn.jsdelivr.net/pyodide/v0.26.3/full/pyodide.js"></script>
-  <link rel="stylesheet" href="./css/materials.css">
-  <script>
-    // El MATERIAL s'ha de posar abans del primer pintat: si esperés el mòdul
-    // JS veuries el vidre un instant a cada càrrega.
-    (function () {
-      try {
-        if (localStorage.getItem('tecla-material') === 'mat') {
-          document.addEventListener('DOMContentLoaded', function () {
-            document.body.classList.add('mat');
-          });
-        }
-      } catch (e) { }
-    })();
-  </script>
   <style>
     * {
       margin: 0;
@@ -1355,81 +1341,6 @@
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
       gap: 8px
-    }
-
-    /* Selector de MATERIAL: dues opcions i prou. La mostra ensenya la
-       diferència de debò —una translúcida i desenfocada, l'altra opaca amb
-       vora seca— perquè es triï pel que es veu, no pel nom. */
-    .mat-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 10px
-    }
-
-    .mat-card {
-      padding: 10px;
-      border: 1.5px solid var(--border);
-      border-radius: var(--r2);
-      cursor: pointer;
-      transition: border-color .15s, transform .1s;
-      -webkit-user-select: none;
-      user-select: none
-    }
-
-    .mat-card:hover {
-      border-color: var(--border-h);
-      transform: translateY(-1px)
-    }
-
-    .mat-card.active {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 1px var(--accent)
-    }
-
-    .mat-mostra {
-      height: 34px;
-      border-radius: var(--radius);
-      margin-bottom: 8px;
-      /* Un fons a ratlles que es veu (o no) a través de la mostra */
-      background-image: repeating-linear-gradient(45deg, var(--accent) 0 6px, transparent 6px 12px);
-      position: relative;
-      overflow: hidden
-    }
-
-    .mat-mostra::after {
-      content: '';
-      position: absolute;
-      inset: 5px;
-      border-radius: 3px
-    }
-
-    .mat-mostra.vidre::after {
-      background: color-mix(in srgb, var(--surface2) 72%, transparent);
-      backdrop-filter: blur(5px);
-      -webkit-backdrop-filter: blur(5px);
-      border: 1px solid var(--border)
-    }
-
-    .mat-mostra.mat::after {
-      background: var(--surface2);
-      border: 1px solid var(--border-h)
-    }
-
-    .mat-card-nom {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text2)
-    }
-
-    .mat-card.active .mat-card-nom {
-      color: var(--text)
-    }
-
-    .mat-card-desc {
-      font-size: 10px;
-      line-height: 1.4;
-      color: var(--text3);
-      margin-top: 2px
     }
 
     .theme-card {
@@ -3430,27 +3341,6 @@
     <!-- ══ APARENÇA ══════════════════════════════════════════════ -->
     <div class="tab-panel" id="tab-theme">
       <div style="max-width:620px">
-        <div class="card" style="margin-bottom:14px">
-          <div class="card-title">Material</div>
-          <div class="mat-cards" id="mat-cards">
-            <div class="mat-card" data-mat="">
-              <div class="mat-mostra vidre"></div>
-              <div class="mat-card-nom">Vidre</div>
-              <div class="mat-card-desc">Translúcid i desenfocat</div>
-            </div>
-            <div class="mat-card" data-mat="mat">
-              <div class="mat-mostra mat"></div>
-              <div class="mat-card-nom">Mat</div>
-              <div class="mat-card-desc">Opac, vora seca i tecles amb pressió</div>
-            </div>
-          </div>
-          <p style="font-size:11px;color:var(--text3);line-height:1.5;margin-top:12px">
-            De què estan fetes les superfícies flotants: el Laboratori, la
-            finestra del simulador i la pantalla. No toca ni els colors ni la
-            tipografia — la paleta la tries a sota.
-          </p>
-        </div>
-
         <div class="card">
           <div class="card-title" data-i18n="aparenca">Aparença</div>
           <div class="theme-cards" id="theme-cards">
@@ -13727,26 +13617,6 @@
     document.querySelectorAll('.theme-card').forEach(btn => {
       if (!btn.dataset.customId) btn.addEventListener('click', () => applyTheme(btn.dataset.theme));
     });
-
-    // ── MATERIAL de les superfícies flotants ────────────────────────────
-    // Un sol eix i dues opcions: vidre (per defecte) o mat. És ortogonal a
-    // la paleta —no toca cap color— i per això conviuen sense condicions.
-    function applyMaterial(id, save = true) {
-      document.body.classList.toggle('mat', id === 'mat');
-      if (save) { try { localStorage.setItem('tecla-material', id || ''); } catch { } }
-      document.querySelectorAll('.mat-card').forEach(c =>
-        c.classList.toggle('active', (c.dataset.mat || '') === (id || '')));
-      // La pantalla desancorada i el Laboratori porten el mateix material.
-      window._monSyncPipTheme?.();
-      window._mgSyncTheme?.();
-    }
-    document.querySelectorAll('.mat-card').forEach(c =>
-      c.addEventListener('click', () => applyMaterial(c.dataset.mat || '')));
-    {
-      let m = '';
-      try { m = localStorage.getItem('tecla-material') || ''; } catch { }
-      applyMaterial(m === 'mat' ? 'mat' : '', false);
-    }
 
     // Live preview while editing pickers
     ['bg', 'surface', 'surface2', 'text', 'accent'].forEach(field => {
