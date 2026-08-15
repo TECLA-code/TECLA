@@ -1498,6 +1498,37 @@ try:
         supervisor.set_usb_identification(product=name)
 except Exception:
     pass
+
+# Port MIDI USB. Dues coses importants per als programes de visuals i d'àudio
+# (Resolume, Ableton...):
+#   - Si la configuració no fa servir MIDI, el port s'apaga del tot: un port
+#     MIDI obert que ningú no llegeix penja aquests programes quan el trien.
+#   - Si el fa servir, el port es diu com el dispositiu i no pas "CircuitPython".
+# El fitxer /config/usb_midi.txt ('on'/'off') l'escriu l'app en actualitzar.
+try:
+    import usb_midi
+    midi_on = True
+    try:
+        with open('/config/usb_midi.txt', 'r') as f:
+            midi_on = f.read().strip().lower() not in ('off', '0', 'no')
+    except Exception:
+        pass
+    if midi_on:
+        midi_name = 'TECLA'
+        try:
+            with open('/config/device_name.txt', 'r') as f:
+                midi_name = (f.read().strip() or 'TECLA')[:24]
+        except Exception:
+            pass
+        try:
+            usb_midi.set_names(streaming_interface_name=midi_name,
+                               in_jack_name=midi_name, out_jack_name=midi_name)
+        except Exception:
+            pass
+    else:
+        usb_midi.disable()
+except Exception:
+    pass
 `;
 
     // Bloc Python que "escriu" un caràcter Unicode amb la seqüència d'entrada del
@@ -1549,6 +1580,22 @@ except Exception:
       return c;
     }
 
+    // Fa servir MIDI, aquesta configuració? Ho necessiten dues bandes: el
+    // code.py (per saber què enviar) i el boot.py, que apaga el port MIDI USB
+    // quan no cal — un port MIDI que ningú no llegeix penja el Resolume i
+    // companyia quan el trien a les preferències.
+    function _configUsesMidi() {
+      const keys = layers.map(l => l.keys).flat();
+      const pots = layers.map(l => l.pots).flat();
+      const steps = [
+        ...keys.filter(k => k?.type === 'macro').flatMap(k => k.steps || []),
+        ...pots.filter(pp => pp?.function === 'macro_step').flatMap(pp => [...(pp.steps_up || []), ...(pp.steps_down || [])]),
+      ];
+      return keys.some(k => k?.type === 'midi_note')
+        || pots.some(p => p?.function === 'midi_cc')
+        || steps.some(s => s.kind === 'midi_note');
+    }
+
     function generateCode() {
       const allKeys = layers.map(l => l.keys);
       const allPots = layers.map(l => l.pots);
@@ -1594,17 +1641,36 @@ except Exception:
         || _macroSteps.some(s => s.kind === 'consumer');
       const needsMouse    = allKeys.flat().some(k => k.type === 'mouse') || allPots.flat().some(p => p.function.startsWith('mouse') || p.function.startsWith('scroll') || p.function === 'click_step')
         || _macroSteps.some(s => s.kind === 'mouse');
-      const needsMidi     = allKeys.flat().some(k => k.type === 'midi_note') || allPots.flat().some(p => p.function === 'midi_cc')
-        || _macroSteps.some(s => s.kind === 'midi_note');
+      const needsMidi     = _configUsesMidi();
+      // Canals MIDI emprats per les notes: en canviar de capa cal apagar-los
+      // (si no, la nota que s'estava tocant es queda encesa al Resolume).
+      const _midiChans = Array.from(new Set([
+        ...allKeys.flat().filter(k => k.type === 'midi_note').map(k => (k.midi_channel || 1) - 1),
+        ..._macroSteps.filter(s => s.kind === 'midi_note').map(s => (s.midi_channel || 1) - 1),
+      ])).sort((a, b) => a - b);
 
-      let code = `# TECLA MacroPad - Codi generat autom\u00e0ticament\nimport time\nimport board\nimport digitalio\nimport usb_hid\nimport analogio\n\n`;
+      let code = `# TECLA MacroPad - Codi generat autom\u00e0ticament\nimport time\nimport board\nimport digitalio\nimport usb_hid\nimport analogio\nimport usb_midi\n\n`;
       if (needsKeycode) code += `from adafruit_hid.keycode import Keycode\n`;
       // Escriure text també necessita el Keyboard: sense això el code.py peta amb NameError
       if (needsKeyboard || needsString) code += `from adafruit_hid.keyboard import Keyboard\n`;
       if (needsString)   code += `from adafruit_hid.keyboard_layout_us import KeyboardLayoutUS\n`;
       if (needsConsumer) code += `from adafruit_hid.consumer_control import ConsumerControl\nfrom adafruit_hid.consumer_control_code import ConsumerControlCode\n`;
       if (needsMouse)    code += `from adafruit_hid.mouse import Mouse\n`;
-      if (needsMidi)     code += `import usb_midi\n`;
+
+      code += `\n# --- MIDI USB ---\n`;
+      code += `# L'entrada MIDI s'ha de BUIDAR encara que no la fem servir: quan un\n`;
+      code += `# programa del PC (Resolume, Ableton...) tria el dispositiu, li envia MIDI\n`;
+      code += `# de retorn. Si el dispositiu no ho llegeix mai, la cua del port s'omple,\n`;
+      code += `# l'ordinador es queda esperant i el programa es penja.\n`;
+      code += `midi_in = usb_midi.ports[0] if len(usb_midi.ports) > 0 else None\n`;
+      code += `midi_out = usb_midi.ports[1] if len(usb_midi.ports) > 1 else None\n`;
+      code += `_midi_buf = bytearray(64)\n\n`;
+      code += `def midi_drain():\n    if midi_in is None:\n        return\n    for _ in range(8):\n        if not midi_in.readinto(_midi_buf):\n            break\n\n`;
+      code += `def midi_send(msg):\n    if midi_out is not None:\n        midi_out.write(msg)\n`;
+      if (_midiChans.length) {
+        code += `\ndef midi_all_notes_off():\n`;
+        _midiChans.forEach(ch => { code += `    midi_send(bytes([0xB0 | ${ch}, 123, 0]))\n`; });
+      }
 
       code += `\n# --- HID Setup ---\n`;
       if (needsKeyboard || needsString) code += `keyboard = Keyboard(usb_hid.devices)\n`;
@@ -1618,11 +1684,20 @@ except Exception:
       code += `btn_pins = [board.GP0, board.GP1, board.GP2, board.GP3, board.GP4, board.GP5, board.GP6, board.GP7, board.GP8, board.GP9, board.GP10, board.GP11, board.GP12, board.GP13, board.GP14, board.GP15]\n`;
       code += `btns = [digitalio.DigitalInOut(pin) for pin in btn_pins]\nfor b in btns:\n    b.direction = digitalio.Direction.INPUT\n    b.pull = digitalio.Pull.DOWN\n`;
       code += `\npots = [analogio.AnalogIn(board.A1), analogio.AnalogIn(board.A0), analogio.AnalogIn(board.A2)]\n`;
-      const _potInits = [0,1,2].map(p => layers.some(l => l.pots[p] && l.pots[p].function === 'midi_cc') ? `pots[${p}].value >> 9` : `pots[${p}].value // 1000`);
+      // Lectura estable de les potes. El convertidor del Pico tremola uns
+      // quants bits: sense filtre, una pota QUIETA ja canviava de valor a cada
+      // volta del bucle i escopia centenars de missatges MIDI per segon (això
+      // és el que ofega programes com el Resolume) o feia clics sols.
+      // Mitjana mòbil + marge mort: pot_raw només es mou si la pota es mou.
+      code += `pot_raw = [pots[0].value, pots[1].value, pots[2].value]\n`;
+      code += `_pot_ema = list(pot_raw)\n`;
+      code += `POT_DEADBAND = 384   # ~3/4 de pas de CC: prou per matar el tremolor\n\n`;
+      code += `def read_pots():\n    for i in range(3):\n        _pot_ema[i] = (_pot_ema[i] * 3 + pots[i].value) >> 2\n        if abs(_pot_ema[i] - pot_raw[i]) > POT_DEADBAND:\n            pot_raw[i] = _pot_ema[i]\n\n`;
+      const _potInits = [0,1,2].map(p => layers.some(l => l.pots[p] && l.pots[p].function === 'midi_cc') ? `pot_raw[${p}] >> 9` : `pot_raw[${p}] // 1000`);
       code += `last_pot_vals = [${_potInits.join(', ')}]\n`;
       // Testimoni de potes per a la Pantalla (moviment coarse 0–127).
       const _monPots = [0,1,2].filter(p => layers.some(l => l.pots[p] && l.pots[p].function !== 'none'));
-      _monPots.forEach(p => { code += `_lastmv${p} = pots[${p}].value >> 9\n`; });
+      _monPots.forEach(p => { code += `_lastmv${p} = pot_raw[${p}] >> 9\n`; });
       code += `last_btn_states = [False] * 16\n`;
       if (multiLayer) code += `current_layer = 0\nLAYER_COUNT = ${layers.length}\n`;
       if (hasHoldMod) code += `DEBOUNCE_TIME = 0.02\n`;
@@ -1631,11 +1706,11 @@ except Exception:
         const pp = layers.map(l => l.pots[p]).find(pp => pp && (pp.function === 'click_step' || pp.function === 'text_step' || pp.function === 'macro_step'));
         if (!pp) continue;
         const step = pp.step_size || 10;
-        code += `last_click_bucket_p${p} = pots[${p}].value // 512 // ${step}\n`;
+        code += `last_click_bucket_p${p} = pot_raw[${p}] // 512 // ${step}\n`;
       }
 
       code += `\nprint("TECLA Macropad")\n`;   // banner per identificar el port a la Pantalla
-      code += `\n# --- Loop Principal ---\nwhile True:\n    # TECLES\n`;
+      code += `\n# --- Loop Principal ---\nwhile True:\n    midi_drain()\n    read_pots()\n\n    # TECLES\n`;
 
       // Text literal segur per a Python (cometes, barres i salts de línia)
       function _pyStr(s) {
@@ -1653,19 +1728,22 @@ except Exception:
         const i2 = indent + '    ';
         if (k.type === 'midi_note') {
           const ch = (k.midi_channel || 1) - 1;
-          return `${indent}usb_midi.ports[1].write(bytes([0x90 | ${ch}, ${k.midi_note ?? 60}, ${k.midi_velocity ?? 100}]))\n`;
+          return `${indent}midi_send(bytes([0x90 | ${ch}, ${k.midi_note ?? 60}, ${k.midi_velocity ?? 100}]))\n`;
         }
         if (k.type === 'hold_mod') return `${indent}keyboard.press(${k.modifier || 'Keycode.COMMAND'})\n`;
         if (k.type === 'layer_change') {
           const prev = k.layer_dir === 'prev';
           const beacon = `${indent}print(">L\\t" + str(current_layer))\n`;   // testimoni de capa
+          // Les tecles de la capa que deixem ja no es tornaran a llegir: si hi
+          // havia una nota sonant es quedaria encesa al programa de l'altra banda.
+          const panic = _midiChans.length ? `${indent}midi_all_notes_off()\n` : '';
           if (k.layer_mode === 'clamp') {
             // Topall: es queda a l'extrem en comptes de tornar a l'altre cap
-            return (prev
+            return panic + (prev
               ? `${indent}current_layer = max(current_layer - 1, 0)\n`
               : `${indent}current_layer = min(current_layer + 1, LAYER_COUNT - 1)\n`) + beacon;
           }
-          return `${indent}current_layer = (current_layer + ${prev ? '-1' : '1'}) % LAYER_COUNT\n` + beacon;
+          return panic + `${indent}current_layer = (current_layer + ${prev ? '-1' : '1'}) % LAYER_COUNT\n` + beacon;
         }
         if (k.type === 'key') {
           const pmods = (k.mods||[]).map(m => ({'Ctrl':'Keycode.CONTROL','Shift':'Keycode.SHIFT','Alt':'Keycode.ALT','Cmd':'Keycode.COMMAND'})[m]||'').filter(Boolean);
@@ -1715,9 +1793,9 @@ except Exception:
           else if (st.kind === 'midi_note') {
             // Nota curta: com que la macro no té "deixar anar", tanca-la ella mateixa
             const ch = (st.midi_channel || 1) - 1, n = st.midi_note ?? 60;
-            c += `${indent}usb_midi.ports[1].write(bytes([0x90 | ${ch}, ${n}, 100]))\n`;
+            c += `${indent}midi_send(bytes([0x90 | ${ch}, ${n}, 100]))\n`;
             c += `${indent}time.sleep(0.12)\n`;
-            c += `${indent}usb_midi.ports[1].write(bytes([0x80 | ${ch}, ${n}, 0]))\n`;
+            c += `${indent}midi_send(bytes([0x80 | ${ch}, ${n}, 0]))\n`;
           }
         }
         return c || `${indent}pass\n`;
@@ -1725,7 +1803,7 @@ except Exception:
       function _keyRelease(k, indent) {
         if (k.type === 'midi_note') {
           const ch = (k.midi_channel || 1) - 1;
-          return `${indent}usb_midi.ports[1].write(bytes([0x80 | ${ch}, ${k.midi_note ?? 60}, 0]))\n`;
+          return `${indent}midi_send(bytes([0x80 | ${ch}, ${k.midi_note ?? 60}, 0]))\n`;
         }
         if (k.type === 'hold_mod') return `${indent}keyboard.release(${k.modifier || 'Keycode.COMMAND'})\n`;
         if (k.type === 'key') {
@@ -1775,7 +1853,7 @@ except Exception:
         let c = '';
         if (pf === 'click_step') {
           const step = pp.step_size || 10;
-          c += `${ind}curr_bucket_p${p} = pots[${p}].value // 512 // ${step}\n`;
+          c += `${ind}curr_bucket_p${p} = pot_raw[${p}] // 512 // ${step}\n`;
           c += `${ind}if curr_bucket_p${p} != last_click_bucket_p${p}:\n`;
           c += `${i2}mouse.click(Mouse.LEFT_BUTTON)\n`;
           c += `${i2}last_click_bucket_p${p} = curr_bucket_p${p}\n\n`;
@@ -1783,7 +1861,7 @@ except Exception:
           const step = pp.step_size || 10;
           const up = _typeStmt(pp.text_up ?? '+');
           const down = _typeStmt(pp.text_down ?? '-');
-          c += `${ind}curr_bucket_p${p} = pots[${p}].value // 512 // ${step}\n`;
+          c += `${ind}curr_bucket_p${p} = pot_raw[${p}] // 512 // ${step}\n`;
           c += `${ind}if curr_bucket_p${p} != last_click_bucket_p${p}:\n`;
           c += `${i2}if curr_bucket_p${p} > last_click_bucket_p${p}:\n`;
           c += `${i2}    ${up}\n`;
@@ -1793,7 +1871,7 @@ except Exception:
         } else if (pf === 'macro_step') {
           // Cada pas del gir executa una macro (una per sentit)
           const step = pp.step_size || 10;
-          c += `${ind}curr_bucket_p${p} = pots[${p}].value // 512 // ${step}\n`;
+          c += `${ind}curr_bucket_p${p} = pot_raw[${p}] // 512 // ${step}\n`;
           c += `${ind}if curr_bucket_p${p} != last_click_bucket_p${p}:\n`;
           c += `${i2}if curr_bucket_p${p} > last_click_bucket_p${p}:\n`;
           c += _stepsCode(pp.steps_up || [], i2 + '    ');
@@ -1806,19 +1884,19 @@ except Exception:
           const lo = pp.cc_min ?? 0, hi = pp.cc_max ?? 127, curve = pp.cc_curve || 'linear';
           const custom = lo !== 0 || hi !== 127 || curve !== 'linear';
           if (!custom) {
-            c += `${ind}curr_p${p} = pots[${p}].value >> 9\n`;
+            c += `${ind}curr_p${p} = pot_raw[${p}] >> 9\n`;
           } else {
             // Rang [lo,hi] (invertible) i corba de resposta aplicats al valor 0–127.
-            c += `${ind}_t${p} = (pots[${p}].value >> 9) / 127\n`;
+            c += `${ind}_t${p} = (pot_raw[${p}] >> 9) / 127\n`;
             if (curve === 'exp') c += `${ind}_t${p} = _t${p} * _t${p}\n`;
             else if (curve === 'log') c += `${ind}_t${p} = _t${p} ** 0.5\n`;
             c += `${ind}curr_p${p} = ${lo} + int((${hi - lo}) * _t${p} + 0.5)\n`;
           }
           c += `${ind}if curr_p${p} != last_pot_vals[${p}]:\n`;
-          c += `${i2}usb_midi.ports[1].write(bytes([0xB0 | ${ccCh}, ${ccNum}, curr_p${p}]))\n`;
+          c += `${i2}midi_send(bytes([0xB0 | ${ccCh}, ${ccNum}, curr_p${p}]))\n`;
           c += `${i2}last_pot_vals[${p}] = curr_p${p}\n\n`;
         } else {
-          c += `${ind}curr_p${p} = pots[${p}].value // 1000\n${ind}if abs(curr_p${p} - last_pot_vals[${p}]) > 2:\n`;
+          c += `${ind}curr_p${p} = pot_raw[${p}] // 1000\n${ind}if abs(curr_p${p} - last_pot_vals[${p}]) > 2:\n`;
           if (pf === 'volume') c += `${i2}cc.send(ConsumerControlCode.VOLUME_INCREMENT if curr_p${p} > last_pot_vals[${p}] else ConsumerControlCode.VOLUME_DECREMENT)\n`;
           else if (pf === 'scroll_y') c += `${i2}mouse.move(wheel=1 if curr_p${p} > last_pot_vals[${p}] else -1)\n`;
           else if (pf === 'scroll_x') c += `${i2}mouse.move(wheel=0, x=1 if curr_p${p} > last_pot_vals[${p}] else -1)\n`;
@@ -1855,7 +1933,7 @@ except Exception:
       if (_monPots.length) {
         code += `\n    # PANTALLA (potes)\n`;
         _monPots.forEach(p => {
-          code += `    _mv${p} = pots[${p}].value >> 9\n`;
+          code += `    _mv${p} = pot_raw[${p}] >> 9\n`;
           code += `    if abs(_mv${p} - _lastmv${p}) > 1:\n`;
           code += `        print(">P\\t${POT_NAMES[p]}\\t" + str(_mv${p}))\n`;
           code += `        _lastmv${p} = _mv${p}\n`;
@@ -2179,6 +2257,10 @@ except Exception:
         plan.push({ path: `lib/adafruit_hid/${fname}`, content });
       }
       plan.push({ path: 'boot.py', content: BOOT_PY });
+      // El boot.py hi mira per decidir si encén el port MIDI USB. Sense MIDI a
+      // la configuració val més apagar-lo: així el dispositiu no apareix com a
+      // aparell MIDI i no pot penjar programes com el Resolume.
+      plan.push({ path: 'config/usb_midi.txt', content: _configUsesMidi() ? 'on' : 'off' });
       const savedName = localStorage.getItem('tecla_device_name');
       const savedSuffix = localStorage.getItem('tecla_disk_suffix');
       if (savedName) plan.push({ path: 'config/device_name.txt', content: savedName });
@@ -2205,12 +2287,19 @@ except Exception:
         const dir = _deviceDir || await window.showDirectoryPicker({ mode: 'readwrite', startIn: 'desktop' });
         const plan = _firmwarePlan(code);
         let done = 0, skipped = 0;
+        // El boot.py i el que hi ha a /config només es llegeixen en arrencar:
+        // si canvien, cal desconnectar i tornar a connectar el dispositiu
+        // perquè el port USB (MIDI inclòs) es torni a presentar a l'ordinador.
+        let usbChanged = false;
         const errors = [];
         for (let i = 0; i < plan.length; i++) {
           const entry = plan[i];
           _fwMsg(`${_i('fw_checking')} ${entry.path}…`);
           try {
-            if (await _writeIfChanged(dir, entry.path, entry.content)) done++; else skipped++;
+            if (await _writeIfChanged(dir, entry.path, entry.content)) {
+              done++;
+              if (entry.path === 'boot.py' || entry.path.startsWith('config/')) usbChanged = true;
+            } else skipped++;
           } catch (err) {
             errors.push(`${entry.path}: ${err.message}`);
             console.error('Error escrivint', entry.path, err);
@@ -2222,7 +2311,7 @@ except Exception:
           _fwMsg(`⚠ ${_i('fw_incomplete_a')} (${errors.length} ${_i('fw_incomplete_files')}). ${_i('fw_incomplete_retry')}`);
           showToast(`⚠ ${_i('fw_incomplete_a')}: ${errors.length} ${_i('fw_incomplete_files')}`, 'err');
         } else {
-          _fwMsg(`✓ ${_i('fw_done')}`);
+          _fwMsg(`✓ ${_i('fw_done')}${usbChanged ? ' — ' + _i('fw_usb_replug') : ''}`);
           showToast(`✓ ${_i('fw_done')}`, 'ok');
           _fwRefreshStatus();
         }
@@ -2691,6 +2780,7 @@ except Exception:
         fw_kind_other:'Altre codi (code.py)', fw_kind_partial:'Parcial (incomplet)', fw_kind_none:'No instal·lat',
         fw_done_a:'Firmware TECLA:', fw_done_copied:'fitxers copiats',
         fw_done_uptodate:'ja al dia.', fw_done_unplug:'NO desendollis el dispositiu: es reinicia sol en uns segons.',
+        fw_usb_replug:'ha canviat la configuració USB: quan hagi acabat de reiniciar-se, desconnecta i torna a connectar el TECLA.',
         fw_incomplete_a:'Actualització INCOMPLETA', fw_incomplete_files:'fitxers',
         fw_incomplete_retry:'El firmware anterior es manté actiu: torna a clicar Actualitzar — només es recopiarà el que falta.',
         fw_downloaded_code:"code.py descarregat. Copia'l manualment al dispositiu.",
@@ -2784,6 +2874,7 @@ except Exception:
         fw_kind_other:'Otro código (code.py)', fw_kind_partial:'Parcial (incompleto)', fw_kind_none:'No instalado',
         fw_done_a:'Firmware TECLA:', fw_done_copied:'archivos copiados',
         fw_done_uptodate:'ya al día.', fw_done_unplug:'NO desenchufes el dispositivo: se reinicia solo en unos segundos.',
+        fw_usb_replug:'ha cambiado la configuración USB: cuando haya terminado de reiniciarse, desconecta y vuelve a conectar el TECLA.',
         fw_incomplete_a:'Actualización INCOMPLETA', fw_incomplete_files:'archivos',
         fw_incomplete_retry:'El firmware anterior se mantiene activo: vuelve a pulsar Actualizar — solo se recopiará lo que falta.',
         fw_downloaded_code:'code.py descargado. Cópialo manualmente al dispositivo.',
@@ -2877,6 +2968,7 @@ except Exception:
         fw_kind_other:'Other code (code.py)', fw_kind_partial:'Partial (incomplete)', fw_kind_none:'Not installed',
         fw_done_a:'TECLA firmware:', fw_done_copied:'files copied',
         fw_done_uptodate:'already up to date.', fw_done_unplug:'DO NOT unplug the device: it restarts on its own in a few seconds.',
+        fw_usb_replug:'the USB setup changed: once it has finished restarting, unplug the TECLA and plug it back in.',
         fw_incomplete_a:'INCOMPLETE update', fw_incomplete_files:'files',
         fw_incomplete_retry:'The previous firmware stays active: press Update again — only what is missing will be copied.',
         fw_downloaded_code:'code.py downloaded. Copy it to the device manually.',
