@@ -15,6 +15,7 @@ Mapa de la NVM (el crashguard ja n'ocupa una part; vegeu core/crashguard.py):
     [2..65]    últim error
     [66]       MAGIC d'aquest mòdul      ← a partir d'aquí, nosaltres
     [67]       personalitat (0, 1 o 2)
+    [68]       marca de "el reinici que ve el demano jo" (vegeu més avall)
 
 Per què cal un REINICI DUR
 ──────────────────────────
@@ -31,6 +32,7 @@ Tot és best-effort: sense NVM (tests, simulador) queda a la personalitat 0.
 
 MAGIC = 0x5A
 BASE = 66                     # primer byte lliure després del crashguard
+REINICI = BASE + 2            # marca: el reinici que ve el demana el gest
 NOMS = ('instrument', 'macropad', 'blocks')
 ETIQUETES = ('Instrument', 'Macropad', 'Blocks')
 
@@ -133,6 +135,110 @@ def reinicia():
         pass
 
 
+# ── «Aquest reinici el demano jo» ──────────────────────────────────────────
+# El gest en marxa rota la personalitat i reinicia en DUR ~mig segon després.
+# Mig segon no és res: encara tens els dits a les cantonades quan el boot.py
+# les torna a llegir, i el seu rescat les veu premudes i ROTA UNA ALTRA VEGADA.
+# Des de l'Instrument no arribaves al Macropad: te'l saltaves i queies al
+# Blocks.
+#
+# No es pot resoldre per temps (quanta estona triga algú a treure els dits?),
+# així que es resol per intenció: qui demana el reinici deixa una marca, i el
+# boot, si la troba, sap que aquestes tecles premudes són les MATEIXES d'un
+# gest ja atès i no un endoll nou.
+#
+# La marca es consumeix sempre, passi el que passi. Si es perd el corrent
+# entremig es queda posada i es menja el primer rescat següent; és un
+# inconvenient petit i acotat, i l'alternativa —no marcar res— és una rotació
+# doble cada vegada.
+
+def marca_reinici_propi():
+    """Deixa dit que el reinici que ve el demana el firmware, no un endoll."""
+    if _nvm is None:
+        return
+    try:
+        _nvm[REINICI:REINICI + 1] = bytes((MAGIC,))
+    except Exception:
+        pass
+
+
+def consumeix_reinici_propi():
+    """El reinici l'ha demanat el firmware? Ho diu i esborra la marca."""
+    if _nvm is None:
+        return False
+    try:
+        hi_es = _nvm[REINICI] == MAGIC
+        if hi_es:
+            _nvm[REINICI:REINICI + 1] = bytes((0,))
+        return hi_es
+    except Exception:
+        return False
+
+
+# ── El rescat d'arrencada ──────────────────────────────────────────────────
+# Les quatre cantonades premudes MENTRE S'ENDOLLA. És l'única sortida que no
+# depèn de codi generat per cap app, i per això és la que ha de funcionar
+# sempre: el Macropad i el Blocks els escriuen les seves apps, i una generació
+# que peta o un bucle que no hi és et deixen amb un dispositiu que no respon a
+# res. Ho crida el boot.py, l'únic lloc on encara es pot triar.
+#
+# Dues sortides, no una:
+#   · endollar aguantant-les          → la personalitat SEGÜENT
+#   · seguir aguantant-les LLARG s    → l'INSTRUMENT, directe
+# La segona és el que fa que no es pugui perdre un dispositiu. Sortir d'una
+# personalitat morta rotant a cegues no és cap interfície: ningú no hauria
+# d'endevinar quantes vegades li toca tornar a endollar.
+#
+# I es MOSTREGEN, no es llegeixen un cop. Abans era una sola lectura, a pèl,
+# l'instant just després de configurar els pins: si el pull-down encara no
+# havia assentat o una tecla rebotava, no hi havia rescat — i no hi havia cap
+# manera de saber per què.
+
+FINESTRA = 0.35   # s: temps per trobar-les. El preu que paga cada arrencada.
+MINIM = 0.15      # s: menys que això és rebot, no pas un gest
+LLARG = 5.0       # s: aguantant-les tant, cap a l'Instrument
+
+
+def rescat(premudes, ara, dorm, sentit=None):
+    """Mostreja les cantonades en arrencar. Retorna None, 'seguent' o
+    'instrument'.
+
+    Tot el maquinari entra per paràmetre —`premudes()` diu si les quatre hi
+    són, `ara()` és el rellotge, `dorm(s)` espera— perquè això es pugui provar
+    sencer sense dispositiu. És l'últim recurs que hi ha entre una persona i un
+    TECLA que no respon: no pot ser l'únic tros de codi que ningú no prova.
+
+    `sentit()` es crida un sol cop, en reconèixer el gest: el parpelleig de
+    «t'he sentit». Sense ell, aguantar cinc segons a cegues no és un gest, és fe.
+    """
+    ini = ara()
+    des_de = None
+    estona = 0.0
+    avisat = False
+    while True:
+        t = ara()
+        if premudes():
+            if des_de is None:
+                des_de = t
+            estona = t - des_de
+            if not avisat and estona >= MINIM:
+                avisat = True
+                if sentit is not None:
+                    try:
+                        sentit()
+                    except Exception:
+                        pass
+            if estona >= LLARG:
+                return 'instrument'
+        else:
+            if estona >= MINIM:
+                return 'seguent'      # deixades anar: rotació simple
+            des_de = None             # rebot: torna a començar
+            if t - ini >= FINESTRA:
+                return None           # no hi ha ningú: arrencada normal
+        dorm(0.005)
+
+
 # ── El gest ────────────────────────────────────────────────────────────────
 # Aquesta classe és PURA: no llegeix pins ni toca maquinari, només rep l'estat
 # de les dues tecles i l'hora. Així es pot provar sense dispositiu i la poden
@@ -216,3 +322,49 @@ def avisa(n=None):
         llum.personalitat(n)
     except Exception:
         pass
+
+
+# ── El gest sencer, en una sola crida ──────────────────────────────────────
+# El Macropad i el Blocks NO són fitxers d'aquest repositori: els escriuen les
+# seves apps a personalitats/*.py. Tot el que hagin d'emetre és codi que es pot
+# emetre malament, i durant tota la v3.15 i la v3.16 senzillament no en van
+# emetre gens: el gest existia, estava ben provat, i no el cridava ningú més
+# que l'Instrument — l'única personalitat de la qual sempre se'n pot sortir.
+#
+# Per això la lògica viu AQUÍ i allà només hi va la crida. Com menys hagin
+# d'escriure els generadors, menys se'n poden deixar.
+
+_vigilant = None
+
+
+def vigila(tecles, ara, silencia=None):
+    """Detecta el gest, avisa, rota i reinicia. Retorna el que ha passat.
+
+    `tecles`  llista d'estats dels 16 botons (True = premut).
+    `ara`     time.monotonic().
+    `silencia`  crida opcional per deixar-ho tot callat abans del reinici dur:
+                deixar anar les tecles del HID, apagar les notes MIDI. Sense
+                això, el que sonés o estigués premut es queda així a l'altra
+                banda del cable, perquè el dispositiu marxa sense acomiadar-se.
+    """
+    global _vigilant
+    if _vigilant is None:
+        _vigilant = Gest()
+    que = _vigilant.actualitza(tecles, ara)
+    if que == 'avis':
+        avisa()
+    elif que == 'canvi':
+        if silencia is not None:
+            try:
+                silencia()
+            except Exception:
+                pass
+        nova = seguent()
+        try:
+            print('Canviant a la personalitat %d (%s)' % (nova, etiqueta(nova)))
+        except Exception:
+            pass
+        avisa(nova)
+        marca_reinici_propi()
+        reinicia()
+    return que

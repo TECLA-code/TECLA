@@ -51,8 +51,20 @@ def _instrument():
 
 def _personalitat_externa(modul):
     """Macropad i Blocks són fitxers GENERATS per les seves apps. S'executen
-    tal com són, sense embolcallar-los en cap funció."""
+    tal com són, sense embolcallar-los en cap funció.
+
+    I com que són generats, poden sortir malament. El cas real: el generador
+    del Blocks va petar ("Maximum call stack size exceeded") i l'app va
+    escriure el missatge d'error al dispositiu com si fos codi. Un comentari
+    és Python perfectament vàlid: s'importava sense queixar-se, tornava de
+    seguida, i el TECLA es quedava mut sense dir ni una paraula.
+
+    Una personalitat que TORNA és una personalitat morta. La seva feina és
+    engegar el bucle del dispositiu i no tornar mai; si torna, val més
+    tractar-ho com el que és —no serveix— i caure a l'Instrument.
+    """
     __import__('personalitats.' + modul)
+    raise ImportError('%s ha tornat sense engegar res' % modul)
 
 
 try:
@@ -67,9 +79,10 @@ try:
 except SystemExit:
     pass
 except ImportError as e:
-    # La personalitat triada no és instal·lada: torna a l'Instrument i deixa
-    # el byte apuntant-hi, perquè el pròxim boot no hi torni a ensopegar.
-    print("Personalitat %d no instal·lada (%s) — arrenco l'Instrument" % (_pers, e))
+    # La personalitat triada no hi és, o hi és i no serveix: torna a
+    # l'Instrument i deixa el byte apuntant-hi, perquè el pròxim boot no hi
+    # torni a ensopegar.
+    print("Personalitat %d inservible (%s) — arrenco l'Instrument" % (_pers, e))
     try:
         personalitat.posa(0)
     except Exception:

@@ -1,6 +1,6 @@
 {
   "version": "3.15.4",
-  "generated": "2026-08-28 22:09",
+  "generated": "2026-08-29 01:20",
   "files": [
     "boot.py",
     "code.py",
@@ -141,8 +141,8 @@
     "reset.py"
   ],
   "sha": {
-    "boot.py": "faca392926001e9488f0373a289ffe8c766f75233ba66803e9486ce86250e531",
-    "code.py": "dcad1998220ed799059adde33e8c3c33866188d0449e620c77ac21f92da2914c",
+    "boot.py": "f39550fb378c1306f227df71e9e13d206e43dbf4be5d4c4143b47fad8f03d8a4",
+    "code.py": "a1a4d598dd56dc38c88e996c952d7939e46afce07f997670727c7ece1008b4be",
     "config/__init__.py": "15a81048590e36f5b1fe131b17506c4a679002058867cf3bd1c4075868f47079",
     "config/settings.mpy": "3ea7aeaf834985b5bcfc8cc69c192d7a653316356f641abfdaac697f1fa86998",
     "core/__init__.py": "29d47046a9e71d66d8e13c3b318887b0503b47a081fd021c6857e9bbc2b765e3",
@@ -155,7 +155,7 @@
     "core/display_manager.mpy": "389291617bab2d1624a5986a4bdd35396b21d95eb1894687b43939d54656aa15",
     "core/layer_manager.mpy": "5d439bba48afc31b199ae5a4baa72b7601fe5e3ced9ea1f1171bea0bd105aeaf",
     "core/llum.mpy": "09d229ba0634a56bcb1a13ac559926dc7ed96bcbd53a9007c99fec9283be243c",
-    "core/personalitat.mpy": "9faa24a17573a79cc6703d07269fcacf9008b63279e3d282ea244d8b9c401f5a",
+    "core/personalitat.mpy": "9f52f7325f6cfbafd37ad59afbb67ee135071d2c33bf14720210e0c60c3afd9d",
     "core/sim_link.mpy": "39495eb0de0c208545550688999e49b0047d331498a3050058778fe0df15495e",
     "effects/__init__.py": "3deb0556605e37760b252cae9095b8f2912e131da825e4e118b025d5501370b7",
     "effects/base_effect.mpy": "d88f35c2962ecae43f06d62dad2512c1261a6bc5019bcb41137c80fcc47f7f41",
@@ -192,7 +192,7 @@
     "lib/adafruit_midi/stop.mpy": "3a50a373afdd08cd92efe9b964506e2d49503f3a0dba669b702c56870c958e04",
     "lib/adafruit_midi/system_exclusive.mpy": "242a523962592b465d54b7a4aef061497067dd39281c926cd143d07e64b20a23",
     "lib/adafruit_midi/timing_clock.mpy": "75404b10937dbbe84ba9193a4f51e1139238b7d04d3021e760e85f9cc0dd1149",
-    "main.py": "8b1ac241801e35020f00692b9e7c012fec9837b268fe880cc6d8daece5b6c585",
+    "main.py": "5e91ea5a5ee0901081a50ee00172767be054bb1987b54217a5c8cb12f280399c",
     "modes/__init__.py": "2c3cc6f1b76696eeb40fb4f025fa5908caafab9711b93d7267411b64c687b7fd",
     "modes/accompaniment.mpy": "9b5c2643a7905bae90981fc96f570c9885ede9858f8cfce79d00359e3061eeed",
     "modes/base_mode.mpy": "64b01d7f8888eefc59c2e973668b03eaacf641fdca9024063609d1a3bd27c407",

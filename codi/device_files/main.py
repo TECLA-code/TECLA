@@ -617,15 +617,22 @@ def main():
     except Exception:
         _simlink = None
 
-    # Gest de canvi de PERSONALITAT: les quatre cantonades, 3 s. Comparteix
-    # implementació amb el Macropad i el Blocks (core/personalitat.Gest) perquè
-    # el gest sigui idèntic visqui on visqui l'usuari.
+    # Gest de canvi de PERSONALITAT: les quatre cantonades, 3 s. Tota la
+    # lògica és a core/personalitat.vigila() i les tres personalitats hi
+    # passen — el Macropad i el Blocks són codi GENERAT per les seves apps, i
+    # com menys n'hagin d'escriure, menys se'n poden deixar (se n'havien deixat
+    # el gest sencer).
     try:
         from core import personalitat as _pers_mod
-        _gest = _pers_mod.Gest()
     except Exception:
         _pers_mod = None
-        _gest = None
+
+    def _silencia():
+        """Abans del reinici dur: que no quedi res sonant a l'altra banda."""
+        if hardware.keyboard_mode:
+            hardware.keyboard_mode.stop_all_notes()
+        if mode_manager:
+            mode_manager.stop_all_sound()
 
     # Bucle principal
     _ctrl_c_count = 0
@@ -654,23 +661,9 @@ def main():
                 # ── Canvi de personalitat (4 cantonades, 3 s) ──────────────
                 # Va ABANS de tot el processament: si el gest s'ha completat,
                 # aquesta volta ja no ha de fer sonar res.
-                if _gest is not None:
-                    _q = _gest.actualitza(button_states, current_time)
-                    if _q == 'avis':
-                        _pers_mod.avisa()
-                    elif _q == 'canvi':
-                        _nova = _pers_mod.seguent()
-                        print("Canviant a la personalitat %d (%s)"
-                              % (_nova, _pers_mod.etiqueta(_nova)))
-                        try:
-                            if hardware.keyboard_mode:
-                                hardware.keyboard_mode.stop_all_notes()
-                            if mode_manager:
-                                mode_manager.stop_all_sound()
-                        except Exception:
-                            pass
-                        _pers_mod.avisa(_nova)
-                        _pers_mod.reinicia()      # reinici DUR: torna per boot.py
+                if _pers_mod is not None:
+                    # Si el gest es completa, vigila() no torna: reinicia en dur.
+                    _pers_mod.vigila(button_states, current_time, _silencia)
 
                 # ── Mode CONTROLADOR: el simulador de l'app està connectat ──
                 if _simlink is not None:
