@@ -1,0 +1,436 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   TECLA · tema ONÍRIC
+   Consola tècnica: fosc càlid, tipografia dual (Inter editorial + IBM Plex
+   Mono per a tot dato), serigrafia de maquinari i controls amb mecànica de
+   pressió. L'elevació ve del to de les superfícies i de les vores, mai
+   d'ombres flotants ni de glow.
+
+   Segueix el contracte de css/reserva-estetica/CONTRACTE.md: tot va sota
+   body.skin-oniric, o sigui que el Clàssic queda intacte per construcció.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+body.skin-oniric {
+  /* ── Superfícies: fosc CÀLID, mai negre pur ─────────────────────────── */
+  --bg: #171512;
+  --surface: #1E1C18;
+  --surface2: #26231E;
+  --surface3: #2E2A24;
+  --raised: #26231E;
+  --inset: #12100E;
+
+  /* ── Vores: seques i precises ───────────────────────────────────────── */
+  --border: #34302A;
+  --border-h: #453F36;
+  --bd-strong: #453F36;
+  --bd-active: #6B6157;
+  --bd-w: 1px;
+
+  /* ── Text, tres nivells ─────────────────────────────────────────────── */
+  --text: #EDE9E3;
+  --text2: #A39C92;
+  --text3: #6E675E;
+
+  /* ── Acents amb rol estricte: taronja = ho has fet tu · teal = està viu ─ */
+  --accent: #E8622C;
+  --accent-d: #C94E1E;
+  --action: #E8622C;
+  --action-bg: rgba(232, 98, 44, .09);
+  --action-bd: rgba(232, 98, 44, .28);
+  --green: #3FBF9F;
+  --signal: #3FBF9F;
+  --signal-bg: rgba(63, 191, 159, .08);
+  --signal-bd: rgba(63, 191, 159, .25);
+  --red: #D64541;
+  --yellow: #D9A62E;
+
+  /* ── Geometria: radis curts, res tou ────────────────────────────────── */
+  --radius: 5px;
+  --r2: 8px;
+
+  /* ── Tipografia dual ────────────────────────────────────────────────── */
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
+  --data-font: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
+  --num: tabular-nums;
+  /* Les etiquetes de secció són serigrafia: mono, petites, espaiades */
+  --lbl-font: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
+  --lbl-ls: .08em;
+  --lbl-tr: uppercase;
+
+  /* ── Materialitat ───────────────────────────────────────────────────── */
+  --press: 2px;
+  --head-bg: #26231E;
+
+  /* Simulador: el xassís del dispositiu, en el mateix material */
+  --sim-bg: #12100E;
+  --sim-sb: #1E1C18;
+  --sim-tb: #1E1C18;
+  --sim-pot: #1A1814;
+  --sim-log: #0B0A08;
+  --sim-key: #26231E;
+  --sim-key-h: #2E2A24;
+  --sim-key-p: #383229;
+  --sim-key-stop: #2A1C18;
+  --sim-key-fx: #1F2622;
+  --sim-key-kb: #252019;
+  --sim-key-bd: #453F36;
+  --sim-key-bd-h: #6B6157;
+  --sim-key-bd-p: #8A7E70;
+  --sim-lbl: #6E675E;
+  --sim-lbl2: #A39C92;
+  --sim-pot-lbl: #6E675E;
+  --sim-pot-val: #A39C92;
+  --sim-pot-track: #34302A;
+  --slog-info: #6E675E;
+}
+
+/* ── Tot dato en mono i amb xifres de columna ────────────────────────── */
+body.skin-oniric {
+  font-feature-settings: 'cv05' 1;
+}
+
+body.skin-oniric .mono,
+body.skin-oniric code,
+body.skin-oniric kbd {
+  font-variant-numeric: var(--num);
+}
+
+/* ═══ CAPÇALERA ══════════════════════════════════════════════════════════
+   Marca amb la revisió en mono al costat, com la serigrafia d'una placa. */
+body.skin-oniric header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+body.skin-oniric .logo,
+body.skin-oniric header .logo-text {
+  letter-spacing: .14em;
+  font-weight: 700;
+}
+
+/* ═══ NAVEGACIÓ ══════════════════════════════════════════════════════════
+   Subratllat de 2px, sense pastilles de fons. */
+body.skin-oniric nav {
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+body.skin-oniric .nav-tab {
+  font-family: var(--font);
+  font-weight: 500;
+  color: var(--text3);
+  border-bottom-width: 2px;
+}
+
+body.skin-oniric .nav-tab:hover {
+  color: var(--text2);
+}
+
+body.skin-oniric .nav-tab.active {
+  color: var(--text);
+  border-bottom-color: var(--action);
+}
+
+/* ═══ PANELLS ════════════════════════════════════════════════════════════
+   La card deixa de ser una capsa flotant i passa a ser un panell amb
+   capçalera pròpia: el títol hi va damunt d'una franja --raised, separat
+   del cos per una vora. */
+body.skin-oniric .card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  overflow: hidden;
+}
+
+/* El títol es menja el coixí de la card amb marges negatius i es converteix
+   en la franja de capçalera. Així no cal tocar cap germà: el cos de la card
+   es queda exactament on era. */
+body.skin-oniric .card>.card-title {
+  display: block;
+  margin: -16px -16px 14px;
+  padding: 10px 16px;
+  background: var(--head-bg);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--lbl-font);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: var(--lbl-ls);
+  color: var(--text2);
+}
+
+/* ═══ ETIQUETES DE SECCIÓ ════════════════════════════════════════════════ */
+body.skin-oniric .section-title {
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--text3);
+}
+
+/* ═══ BOTONS ═════════════════════════════════════════════════════════════
+   Mecànica de pressió: vora inferior gruixuda que s'enfonsa en prémer. */
+body.skin-oniric .btn {
+  font-family: var(--font);
+  font-weight: 600;
+  font-size: 11.5px;
+  background: var(--raised);
+  border: 1px solid var(--bd-strong);
+  border-bottom-width: calc(1px + var(--press));
+  transition: background .09s, border-color .09s, transform .09s;
+}
+
+body.skin-oniric .btn:hover:not(:disabled) {
+  background: var(--surface3);
+  border-color: var(--bd-active);
+}
+
+body.skin-oniric .btn:active:not(:disabled) {
+  transform: translateY(1px);
+  border-bottom-width: 1px;
+  margin-bottom: var(--press);
+}
+
+body.skin-oniric .btn-primary {
+  background: var(--action);
+  border-color: var(--action);
+  color: #1A0E06;
+}
+
+body.skin-oniric .btn-primary:hover:not(:disabled) {
+  background: #F07240;
+  border-color: #F07240;
+}
+
+body.skin-oniric .btn-danger {
+  background: var(--raised);
+  border-color: var(--bd-strong);
+  color: var(--red);
+}
+
+body.skin-oniric .btn:focus-visible {
+  outline: 2px solid var(--action);
+  outline-offset: 2px;
+}
+
+/* ═══ CAMPS ══════════════════════════════════════════════════════════════ */
+body.skin-oniric input,
+body.skin-oniric select,
+body.skin-oniric textarea {
+  background: var(--inset);
+  border: 1px solid var(--border);
+  font-family: var(--font);
+  font-size: 12px;
+}
+
+body.skin-oniric input:focus,
+body.skin-oniric select:focus,
+body.skin-oniric textarea:focus {
+  border-color: var(--bd-active);
+}
+
+body.skin-oniric input[type="number"],
+body.skin-oniric input[type="text"].num {
+  font-family: var(--data-font);
+  font-variant-numeric: var(--num);
+}
+
+/* ═══ SIMULADOR — el xassís ══════════════════════════════════════════════
+   Les tecles són pads físics: número en mono, etiqueta en serigrafia i la
+   mateixa mecànica de pressió que els botons. */
+body.skin-oniric .sim-key,
+body.skin-oniric .mgsim-key {
+  border-width: 1px;
+  border-bottom-width: 3px;
+  transition: background .09s, border-color .09s, transform .09s;
+}
+
+body.skin-oniric .sim-key:active,
+body.skin-oniric .sim-key.pressed,
+body.skin-oniric .mgsim-key:active,
+body.skin-oniric .mgsim-key.down {
+  transform: translateY(1px);
+  border-bottom-width: 1px;
+  margin-bottom: 2px;
+}
+
+body.skin-oniric .mgsim-key .n,
+body.skin-oniric .sim-key .key-num {
+  font-family: var(--data-font);
+  font-variant-numeric: var(--num);
+}
+
+body.skin-oniric .mgsim-key .l {
+  font-family: var(--data-font);
+  text-transform: uppercase;
+  letter-spacing: .02em;
+}
+
+/* Tecla amb mode viu: el rol de senyal, no el d'acció */
+body.skin-oniric .mgsim-key.sonant,
+body.skin-oniric .sim-key.sim-active-mode {
+  border-color: var(--signal);
+  background: var(--signal-bg);
+}
+
+/* Registre del simulador: una pantalla encastada */
+body.skin-oniric .sim-log,
+body.skin-oniric #sim-log {
+  background: var(--sim-log);
+  font-family: var(--data-font);
+}
+
+/* ═══ POTENCIÒMETRES ═════════════════════════════════════════════════════
+   Cos definit amb vora, sense degradats radials ni ombres. */
+body.skin-oniric .pot-knob,
+body.skin-oniric .mg-knob,
+body.skin-oniric .mgsim-pot .k {
+  background: var(--surface3);
+  border: 1px solid var(--bd-active);
+  box-shadow: none;
+}
+
+body.skin-oniric .pot-knob i,
+body.skin-oniric .mg-knob i,
+body.skin-oniric .mgsim-pot .k i {
+  background: var(--text);
+}
+
+body.skin-oniric .mgsim-pot .v,
+body.skin-oniric .modegen-pot .val,
+body.skin-oniric .pot-value {
+  font-family: var(--data-font);
+  font-variant-numeric: var(--num);
+}
+
+/* ═══ CONSTRUCTOR DE MODES ═══════════════════════════════════════════════ */
+body.skin-oniric .modegen-cat {
+  border-radius: var(--radius);
+}
+
+body.skin-oniric .modegen-cat.on {
+  background: var(--action-bg);
+  border-color: var(--action-bd);
+}
+
+body.skin-oniric .mg-lab {
+  font-family: var(--lbl-font);
+  font-size: 9px;
+  letter-spacing: var(--lbl-ls);
+  text-transform: uppercase;
+  color: var(--text3);
+}
+
+body.skin-oniric .mg-tab {
+  font-family: var(--font);
+  font-weight: 500;
+  border-radius: var(--radius);
+}
+
+body.skin-oniric .mg-tab.on {
+  background: var(--action-bg);
+  border-color: var(--action-bd);
+  color: var(--action);
+}
+
+body.skin-oniric .modegen-pot-rang,
+body.skin-oniric .modegen-badge {
+  font-family: var(--data-font);
+  font-variant-numeric: var(--num);
+}
+
+/* La finestra flotant del simulador: xassís, no vidre. El glassmorphism és
+   justament el que aquest tema no fa. */
+body.skin-oniric .mgsim {
+  background: var(--surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid var(--bd-strong);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, .5);
+}
+
+body.skin-oniric .mgsim-head {
+  background: var(--raised);
+  font-family: var(--lbl-font);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  font-size: 9px;
+}
+
+body.skin-oniric .mgsim-foot {
+  font-family: var(--font);
+}
+
+/* ═══ PANTALLA DEL DISPOSITIU ════════════════════════════════════════════
+   OLED de debò: quasi negre, marc definit i línies d'escaneig molt subtils. */
+body.skin-oniric .devmon {
+  background: #0B0A08;
+  border: 1px solid var(--bd-strong);
+}
+
+body.skin-oniric .devmon::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent 0 2px, rgba(255, 255, 255, .006) 2px 3px);
+}
+
+body.skin-oniric .devmon-now,
+body.skin-oniric .devmon-head {
+  font-family: var(--data-font);
+}
+
+/* ═══ TARGETES DE TEMA / PALETA ══════════════════════════════════════════ */
+body.skin-oniric .theme-card {
+  border-radius: var(--radius);
+}
+
+body.skin-oniric .theme-card.active {
+  border-color: var(--action);
+  background: var(--action-bg);
+}
+
+/* ═══ ESTAT VIU ══════════════════════════════════════════════════════════
+   El punt de connexió, amb anell exterior: està viu, no és decoració. */
+body.skin-oniric .sim-dot.running,
+body.skin-oniric .status-dot.connected {
+  background: var(--signal);
+  box-shadow: none;
+  position: relative;
+}
+
+body.skin-oniric .sim-dot.running::after,
+body.skin-oniric .status-dot.connected::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1px solid var(--signal-bd);
+}
+
+/* ═══ PROHIBICIONS DEL SISTEMA ═══════════════════════════════════════════
+   Sense glow ni ombres de text lluminoses enlloc: l'elevació és tonal. */
+body.skin-oniric .card,
+body.skin-oniric .btn,
+body.skin-oniric .sim-key,
+body.skin-oniric .mgsim-key {
+  text-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  body.skin-oniric .btn,
+  body.skin-oniric .sim-key,
+  body.skin-oniric .mgsim-key {
+    transition: none;
+  }
+}
+
+/* ═══ ICONES DE FUNCIÓ ═══════════════════════════════════════════════════
+   L'app pinta cada glif de la seva categoria amb un color propi (un hex
+   inline des del JS). En aquest sistema el color té ROL, no categoria: una
+   llista de dotze colors diu que tot és important i per tant que res ho és.
+   Es tornen monocromes — el nom de la funció és just al costat. */
+body.skin-oniric .chip-icon,
+body.skin-oniric .kb-fn-chip .chip-icon,
+body.skin-oniric .sim-fn-item .chip-icon {
+  color: var(--text2) !important;
+}

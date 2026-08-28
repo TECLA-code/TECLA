@@ -1,0 +1,107 @@
+TECLA — Condicions de llicència
+===============================
+
+Aquest projecte es distribueix sota DUES llicències diferents segons la part
+del codi. Llegeix bé quina s'aplica a què abans de fer-ne cap ús.
+
+  PART A — Les aplicacions web ............ Propietària. Tots els drets reservats.
+  PART B — El codi del dispositiu ......... GPL-3.0. Programari lliure.
+  PART C — Components de tercers .......... Llicències pròpies dels seus autors.
+
+Copyright (c) 2026 TECLA. Tots els drets reservats.
+
+
+-------------------------------------------------------------------------------
+PART A — APLICACIONS WEB (llicència propietària)
+-------------------------------------------------------------------------------
+
+S'aplica a:
+
+    codi/index.html
+    codi/js/
+    codi/css/
+    codi/server.py
+    gui/
+    blocks/            (excepte blocks/vendor/, vegeu la PART C)
+    index.html
+    tools/
+    tests/
+
+Tots els drets reservats.
+
+Aquest programari és propietat de TECLA i està protegit per la legislació de
+propietat intel·lectual. Queda expressament PROHIBIT, sense autorització
+escrita i prèvia del titular:
+
+  1. Copiar, reproduir o descarregar el codi font per a qualsevol ús que no
+     sigui l'execució de l'aplicació oficial al navegador.
+  2. Distribuir, publicar, allotjar o posar a disposició de tercers aquest
+     programari o qualsevol part seva, modificada o no.
+  3. Modificar, adaptar, traduir o crear obres derivades.
+  4. Fer-ne qualsevol ús comercial, directe o indirecte.
+  5. Descompilar, desofuscar o fer enginyeria inversa del codi distribuït.
+  6. Eliminar o alterar els avisos de copyright i d'autoria.
+
+L'ÚNIC ús permès és l'execució de l'aplicació tal com es publica al lloc
+oficial, per a finalitats personals o educatives, amb un dispositiu TECLA.
+
+El fet que aquest codi sigui tècnicament visible al navegador NO n'autoritza
+la còpia ni la reutilització. La visibilitat és una conseqüència tècnica de la
+tecnologia web, no una cessió de drets.
+
+Per demanar autorització: obre una incidència al repositori oficial.
+
+
+-------------------------------------------------------------------------------
+PART B — CODI DEL DISPOSITIU (GNU General Public License v3.0)
+-------------------------------------------------------------------------------
+
+S'aplica a:
+
+    codi/device_files/     (excepte codi/device_files/lib/, vegeu la PART C)
+
+Això inclou main.py, code.py, boot.py, modes/, core/, effects/, config/ i els
+.mpy compilats corresponents.
+
+Aquest codi és PROGRAMARI LLIURE. El pots executar, estudiar, modificar i
+redistribuir sota els termes de la GNU General Public License, versió 3, tal
+com la publica la Free Software Foundation.
+
+Es distribueix amb l'esperança que sigui útil, però SENSE CAP GARANTIA; ni tan
+sols la garantia implícita de COMERCIABILITAT o ADEQUACIÓ A UN PROPÒSIT
+PARTICULAR. Consulta la GNU General Public License per a més detalls.
+
+El text complet és a: codi/device_files/LICENSE
+                  i a: https://www.gnu.org/licenses/gpl-3.0.html
+
+Aquesta obertura és deliberada: el codi que s'executa al dispositiu forma part
+del valor educatiu de TECLA i l'usuari l'ha de poder llegir i modificar. La
+GPL garanteix que qui en faci una obra derivada l'hagi de publicar amb les
+mateixes llibertats.
+
+
+-------------------------------------------------------------------------------
+PART C — COMPONENTS DE TERCERS
+-------------------------------------------------------------------------------
+
+Les parts següents NO són de TECLA i es regeixen per les llicències dels seus
+autors respectius. Res del que diu la PART A s'hi aplica.
+
+    blocks/vendor/blockly/          Blockly (Google LLC) — Apache License 2.0
+    codi/device_files/lib/          Biblioteques Adafruit (adafruit_hid,
+                                    adafruit_midi) — MIT License
+    codi/firmware/*.uf2             CircuitPython (Adafruit) — MIT License
+    codi/fonts/*.woff2              Inter i IBM Plex Mono — SIL Open Font
+                                    License 1.1
+    Pyodide (carregat via CDN)      Mozilla Public License 2.0
+
+
+-------------------------------------------------------------------------------
+NOTA SOBRE ELS FORKS DE GITHUB
+-------------------------------------------------------------------------------
+
+Si aquest repositori es publica en mode públic a GitHub, els termes de servei
+de GitHub permeten als seus usuaris veure'l i fer-ne fork DINS de la
+plataforma. Aquesta autorització es limita estrictament a això: no atorga cap
+dret de distribució fora de GitHub, d'ús comercial ni d'explotació de les
+parts cobertes per la PART A.

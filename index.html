@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<!--
+  TECLA — Copyright (c) 2026 TECLA. Tots els drets reservats.
+  Programari propietari. Prohibida la còpia, distribució, modificació o ús
+  comercial sense autorització escrita. Vegeu LICENSE (PART A).
+  El fet que aquest codi sigui visible al navegador no n'autoritza la còpia.
+-->
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>T E C L A</title>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111;
+      --surface2: #181818;
+      --border: rgba(255,255,255,.07);
+      --border-h: rgba(255,255,255,.13);
+      --text: #e0e0e0;
+      --text2: rgba(255,255,255,.38);
+      --text3: rgba(255,255,255,.2);
+      --text-strong: rgba(255,255,255,.9);
+      --logo-icon-bg: #fff;
+      --accent: #4a80f0;
+      --midi-accent: #a855f7;
+      --blocks-accent: #10b981;
+      --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    }
+    [data-theme="light"] {
+      --bg: #ffffff;
+      --surface: #f5f5f5;
+      --surface2: #ebebeb;
+      --border: rgba(0,0,0,.08);
+      --border-h: rgba(0,0,0,.15);
+      --text: #999;
+      --text2: rgba(0,0,0,.32);
+      --text3: rgba(0,0,0,.2);
+      --text-strong: #555;
+      --logo-icon-bg: #fff;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+      width: 100%;
+      max-width: 760px;
+      padding: 0 24px;
+    }
+
+    .header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-icon {
+      width: 52px;
+      height: 52px;
+      background: var(--logo-icon-bg);
+      border-radius: 13px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tecla-logo-img {
+      width: 52px;
+      height: 52px;
+      display: block;
+    }
+
+    .logo-img-white {
+      height: 80px;
+      width: auto;
+      display: block;
+      filter: drop-shadow(0 0 20px rgba(255,255,255,.08));
+    }
+    .logo-img-blue {
+      height: 80px;
+      width: auto;
+      display: none;
+    }
+    [data-theme="light"] .logo-img-white { display: none; }
+    [data-theme="light"] .logo-img-blue  { display: block; }
+    [data-theme="light"] .logo-icon { display: none; }
+    :not([data-theme="light"]) .logo-icon { display: none; }
+
+    .logo {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: .5em;
+      color: var(--text-strong);
+      opacity: .75;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      width: 100%;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 40px 28px 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color .2s, background .2s, transform .2s;
+      position: relative;
+    }
+
+    .card:hover {
+      border-color: var(--border-h);
+      background: var(--surface2);
+      transform: translateY(-2px);
+    }
+    .card.macropad:hover { border-color: rgba(74,128,240,.28); }
+    .card.midi:hover     { border-color: rgba(168,85,247,.28); }
+    .card.blocks:hover   { border-color: rgba(16,185,129,.28); }
+
+    .card-top {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 10px;
+    }
+
+    .card-sub {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    .card.macropad .card-sub { color: var(--accent); }
+    .card.midi     .card-sub { color: var(--midi-accent); }
+    .card.blocks   .card-sub { color: var(--blocks-accent); }
+
+    .card-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-strong);
+      letter-spacing: .01em;
+    }
+
+    .card-arrow {
+      position: absolute;
+      bottom: 18px;
+      right: 20px;
+      opacity: 0;
+      transform: translateX(-4px);
+      transition: opacity .2s, transform .2s;
+      color: var(--text3);
+    }
+    .card:hover .card-arrow {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .card.macropad:hover .card-arrow { color: var(--accent); }
+    .card.midi:hover     .card-arrow { color: var(--midi-accent); }
+    .card.blocks:hover   .card-arrow { color: var(--blocks-accent); }
+
+    /* Top bar */
+    .top-bar {
+      position: fixed;
+      top: 14px;
+      right: 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .lang-bar {
+      display: flex;
+      gap: 3px;
+    }
+    .theme-toggle {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text3);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color .2s, border-color .2s;
+      padding: 0;
+    }
+    .theme-toggle:hover { color: var(--text2); border-color: var(--border-h); }
+    .theme-toggle svg { width: 13px; height: 13px; }
+    .icon-moon { display: block; }
+    .icon-sun  { display: none; }
+    [data-theme="light"] .icon-moon { display: none; }
+    [data-theme="light"] .icon-sun  { display: block; }
+    .lang-btn {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text3);
+      cursor: pointer;
+      transition: color .2s, border-color .2s;
+      font-family: var(--font);
+      letter-spacing: .04em;
+    }
+    .lang-btn:hover { color: var(--text2); border-color: var(--border-h); }
+    .lang-btn.active { color: var(--text); border-color: var(--border-h); }
+
+    @media (max-width: 540px) {
+      .cards { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <button class="theme-toggle" id="btn-theme" aria-label="Canviar tema">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+    <div class="lang-bar">
+      <button class="lang-btn active" data-lang="ca">CA</button>
+      <button class="lang-btn" data-lang="es">ES</button>
+      <button class="lang-btn" data-lang="en">EN</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="header">
+      <img class="logo-img-white" src="logo-white.png" alt="TECLA">
+      <img class="logo-img-blue"  src="codi/AppIcon.png" alt="TECLA">
+      <div class="logo">T E C L A</div>
+    </div>
+
+    <div class="cards">
+
+      <a class="card macropad" href="gui/index.html">
+        <div class="card-top">
+          <div class="card-sub" id="sub-macropad">Utilitats</div>
+          <div class="card-name">MacroPad</div>
+        </div>
+        <svg class="card-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 8h10M9 4l4 4-4 4"/>
+        </svg>
+      </a>
+
+      <a class="card blocks" href="blocks/index.html">
+        <div class="card-top">
+          <div class="card-sub">Programació</div>
+          <div class="card-name">Blocks</div>
+        </div>
+        <svg class="card-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 8h10M9 4l4 4-4 4"/>
+        </svg>
+      </a>
+
+      <a class="card midi" href="codi/index.html">
+        <div class="card-top">
+          <div class="card-sub" id="sub-midi">Instrument</div>
+          <div class="card-name">MIDI</div>
+        </div>
+        <svg class="card-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 8h10M9 4l4 4-4 4"/>
+        </svg>
+      </a>
+
+    </div>
+  </div>
+
+  <script>
+    const _T = {
+      ca: {
+        sub_mp: 'Utilitats', sub_midi: 'Instrument',
+      },
+      es: {
+        sub_mp: 'Utilidades', sub_midi: 'Instrumento',
+      },
+      en: {
+        sub_mp: 'Utilities', sub_midi: 'Instrument',
+      },
+    };
+
+    let _lang = localStorage.getItem('tecla-platform-lang') || 'ca';
+
+    function applyLang(lang) {
+      _lang = lang;
+      localStorage.setItem('tecla-platform-lang', lang);
+      const t = _T[lang] || _T.ca;
+      document.getElementById('sub-macropad').textContent = t.sub_mp;
+      document.getElementById('sub-midi').textContent = t.sub_midi;
+      document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+      document.documentElement.lang = lang;
+    }
+
+    document.querySelectorAll('.lang-btn').forEach(b => b.addEventListener('click', e => {
+      e.preventDefault(); applyLang(b.dataset.lang);
+    }));
+
+    applyLang(_lang);
+
+    // Theme
+    let _theme = localStorage.getItem('tecla-platform-theme') || 'dark';
+    function applyTheme(t) {
+      _theme = t;
+      localStorage.setItem('tecla-platform-theme', t);
+      document.documentElement.dataset.theme = t === 'light' ? 'light' : '';
+    }
+    document.getElementById('btn-theme').addEventListener('click', () => {
+      applyTheme(_theme === 'dark' ? 'light' : 'dark');
+    });
+    applyTheme(_theme);
+  </script>
+</body>
+</html>

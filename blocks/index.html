@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<!--
+  TECLA — Copyright (c) 2026 TECLA. Tots els drets reservats.
+  Programari propietari. Prohibida la còpia, distribució, modificació o ús
+  comercial sense autorització escrita. Vegeu LICENSE (PART A).
+  El fet que aquest codi sigui visible al navegador no n'autoritza la còpia.
+-->
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TECLA Blocks</title>
+  <!-- Blockly vendoritzat (v10.4.3): funciona sense connexió a internet -->
+  <script src="vendor/blockly/blockly_compressed.js"></script>
+  <script src="vendor/blockly/blocks_compressed.js"></script>
+  <script>
+    // Carrega les traduccions de Blockly segons l'idioma desat (ca/es/en)
+    (function () {
+      var lang = localStorage.getItem('tecla-blk-lang') || 'ca';
+      if (['ca', 'es', 'en'].indexOf(lang) === -1) lang = 'ca';
+      document.write('<script src="vendor/blockly/msg/' + lang + '.js"><\/script>');
+    })();
+  </script>
+  <script src="vendor/blockly/python_compressed.js"></script>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111;
+      --surface2: #1a1a1a;
+      --surface3: #222;
+      --border: rgba(255,255,255,.09);
+      --border-h: rgba(255,255,255,.17);
+      --text: #e0e0e0;
+      --text2: rgba(255,255,255,.38);
+      --text3: rgba(255,255,255,.22);
+      --accent: #4a80f0;
+      --accent-d: #2d5cd9;
+      --green: #3dc96c;
+      --key-bg: #dde1eb;
+      --radius: 6px;
+      --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+      --mono: "SF Mono", Menlo, Monaco, Consolas, monospace;
+      --sidebar: 420px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 14px; height: 44px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface); flex-shrink: 0;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11px; color: var(--text2); text-decoration: none;
+      padding: 4px 8px; border-radius: var(--radius);
+      border: 1px solid var(--border); background: var(--surface2);
+      transition: color .15s, border-color .15s;
+    }
+    .back-btn:hover { color: var(--text); border-color: var(--border-h); }
+    .logo { font-size: 13px; font-weight: 600; letter-spacing: .2em; user-select: none; }
+    .logo-sub { font-size: 10px; color: var(--text3); letter-spacing: .06em; }
+    .header-right { display: flex; align-items: center; gap: 6px; }
+
+    /* ── Buttons ─────────────────────────────────────────────── */
+    .btn {
+      padding: 5px 10px; border-radius: var(--radius);
+      border: 1px solid var(--border); background: var(--surface2);
+      color: var(--text); font-size: 11.5px; cursor: pointer;
+      transition: all .15s; display: inline-flex; align-items: center; gap: 5px;
+      font-family: var(--font);
+    }
+    .btn:hover { background: var(--surface3); border-color: var(--border-h); }
+    .btn:active { opacity: .8; }
+    .btn-primary { background: rgba(74,128,240,.15); border-color: var(--accent); color: var(--accent); }
+    .btn-primary:hover { background: rgba(74,128,240,.25); }
+    .btn-success { background: rgba(61,201,108,.13); border-color: rgba(61,201,108,.5); color: var(--green); }
+    .btn-success:hover { background: rgba(61,201,108,.22); }
+    .btn-danger { background: rgba(240,82,82,.1); border-color: rgba(240,82,82,.4); color: #f05252; }
+    .sep { width: 1px; height: 16px; background: var(--border); margin: 0 2px; }
+
+    /* ── Device badge ────────────────────────────────────────── */
+    .device-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 3px 10px; border-radius: 20px;
+      border: 1px solid var(--border); background: var(--surface2);
+      font-size: 11px; color: var(--text2);
+    }
+    .device-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); flex-shrink: 0; }
+    .device-badge.connected .dot { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .device-badge.connected { color: var(--text); border-color: var(--border-h); }
+
+    /* ── Layout ──────────────────────────────────────────────── */
+    .main { display: flex; flex: 1; min-height: 0; }
+    .workspace-container { flex: 1; position: relative; }
+    #blocklyDiv { width: 100%; height: 100%; }
+
+    /* ── Side panel ──────────────────────────────────────────── */
+    .side-panel {
+      width: var(--sidebar); background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex; flex-direction: column; flex-shrink: 0;
+    }
+    .panel-tabs {
+      display: flex; border-bottom: 1px solid var(--border);
+      background: var(--surface); flex-shrink: 0;
+    }
+    .tab-btn {
+      flex: 1; padding: 10px 8px;
+      background: transparent; border: none; border-bottom: 2px solid transparent;
+      color: var(--text2); cursor: pointer; font-size: 11.5px;
+      font-family: var(--font); font-weight: 500;
+      transition: color .15s, border-color .15s; margin-bottom: -1px;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
+    .panel-body { flex: 1; overflow: hidden; position: relative; }
+    .panel-content { display: none; flex-direction: column; height: 100%; overflow-y: auto; padding: 16px; }
+    .panel-content.active { display: flex; }
+
+    /* ── Code panel ──────────────────────────────────────────── */
+    .code-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-shrink: 0; }
+    .code-header h3 { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; }
+    .code-display {
+      flex: 1; background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px;
+      font-family: var(--mono); font-size: 11.5px; color: var(--accent);
+      overflow: auto; line-height: 1.5; min-height: 200px;
+      white-space: pre;
+    }
+
+    /* ── Simulator panel ─────────────────────────────────────── */
+    .sim-section { margin-bottom: 14px; }
+    .sim-label { font-size: 10.5px; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; display: block; }
+    .sim-canvas-wrap {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+      display: flex; justify-content: center; align-items: center;
+    }
+    #simulatorCanvas { display: block; }
+    .sim-controls { display: flex; gap: 6px; flex-wrap: wrap; }
+    .sim-terminal {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 12px;
+      font-family: var(--mono); font-size: 11px; color: var(--text2);
+      height: 150px; overflow-y: auto;
+    }
+    .sim-line { margin-bottom: 3px; line-height: 1.4; }
+    .sim-line.note { color: #f472b6; }
+    .sim-line.cc { color: #60a5fa; }
+    .sim-line.sys { color: var(--green); }
+
+    /* ── Help panel ──────────────────────────────────────────── */
+    .help-section {
+      background: var(--surface2); padding: 12px 14px;
+      border-radius: var(--radius); border-left: 2px solid var(--accent);
+      margin-bottom: 12px;
+    }
+    .help-section h4 { font-size: 11.5px; font-weight: 600; color: var(--accent); margin-bottom: 8px; }
+    .help-section ul, .help-section ol { margin-left: 16px; color: var(--text2); font-size: 12px; line-height: 1.75; }
+    .help-section .ex-btns { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; }
+    .card-title { font-size: 10.5px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+
+    /* ── Status bar ──────────────────────────────────────────── */
+    footer {
+      height: 32px; background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px; font-size: 11px; color: var(--text3); flex-shrink: 0;
+    }
+    .status-left { display: flex; gap: 20px; align-items: center; }
+    #status-message { color: var(--text2); }
+    #status-message.ok { color: var(--green); }
+    #status-message.err { color: #f05252; }
+
+    /* ── Upload modal ────────────────────────────────────────── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.6); backdrop-filter: blur(4px);
+      z-index: 200; justify-content: center; align-items: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border-h);
+      border-radius: 12px; padding: 24px; width: 420px; max-width: 90vw;
+    }
+    .modal h2 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+    .modal p { font-size: 12.5px; color: var(--text2); line-height: 1.65; margin-bottom: 16px; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+    /* ── 7 tabs ──────────────────────────────────────────────── */
+    .tab-btn { font-size: 9.5px; }
+
+    /* ── Guide styles ────────────────────────────────────────── */
+    .guide-h1 { font-size: 12.5px; font-weight: 700; color: var(--text); margin: 0 0 8px; }
+    .guide-h2 { font-size: 11px; font-weight: 600; color: var(--accent); margin: 10px 0 5px; text-transform: uppercase; letter-spacing: .05em; }
+    .guide-li { font-size: 12px; color: var(--text2); line-height: 1.7; margin-bottom: 4px; }
+    .guide-note { background: rgba(74,128,240,.07); border-left: 2px solid var(--accent); border-radius: var(--radius); padding: 9px 12px; font-size: 11.5px; color: var(--text2); margin: 10px 0; line-height: 1.55; }
+    .guide-section { margin-bottom: 16px; }
+
+    /* ── Firmware styles ─────────────────────────────────────── */
+    .fw-step { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; background: var(--surface2); }
+    .fw-step-title { font-size: 12px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .fw-step-num { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+    .fw-step-desc { font-size: 11.5px; color: var(--text2); line-height: 1.6; margin-bottom: 6px; }
+    .fw-step-sub { font-size: 11px; color: var(--text3); line-height: 1.55; }
+    .status-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 12px; background: var(--surface2); }
+    .status-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 11.5px; color: var(--text2); }
+    .status-row:last-child { border-bottom: none; }
+    .status-val { color: var(--text2); }
+    .status-val.ok { color: var(--green); font-weight: 500; }
+    .dl-link { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--accent); text-decoration: none; padding: 4px 8px; border-radius: var(--radius); border: 1px solid rgba(74,128,240,.3); background: rgba(74,128,240,.07); transition: background .15s; margin-top: 8px; }
+    .dl-link:hover { background: rgba(74,128,240,.15); }
+
+    /* ── MIDI bar ─────────────────────────────────────────────── */
+    .midi-bar { display: flex; align-items: center; gap: 7px; padding: 8px 0 10px; border-bottom: 1px solid var(--border); margin-bottom: 8px; flex-wrap: wrap; }
+    .midi-bar select { flex: 1; min-width: 0; padding: 5px 8px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: 11px; font-family: var(--font); }
+    .midi-bar select:focus { outline: none; border-color: var(--accent); }
+    #midi-status-text { font-size: 11px; color: var(--text3); white-space: nowrap; }
+
+    /* ── Blockly override ────────────────────────────────────── */
+    .blocklyToolboxDiv { border-right: 1px solid var(--border) !important; width: 190px !important; }
+    .blocklyTreeLabel { font-family: var(--font) !important; font-size: 15px !important; font-weight: 600 !important; letter-spacing: .01em !important; }
+    .blocklyScrollbarHandle { opacity: .5 !important; }
+    .blocklyTreeRow { display: flex !important; align-items: stretch !important; padding: 4px 6px !important; cursor: pointer !important; min-height: 38px !important; }
+    .blocklyTreeRowContentContainer { display: flex !important; flex-direction: row !important; align-items: center !important; gap: 10px !important; flex: 1 !important; padding: 0 4px !important; }
+    .blocklyColourBlock { flex: 0 0 5px !important; width: 5px !important; min-height: 24px !important; align-self: stretch !important; border-radius: 3px !important; }
+    .blocklyTreeRow:hover:not(.blocklyTreeSelected) { background: rgba(255,255,255,.06) !important; }
+    .blocklyDraggable .blocklyPath { filter: drop-shadow(0 0 5px rgba(255,255,255,.12)) !important; }
+    .blocklyDraggable:hover .blocklyPath { filter: drop-shadow(0 0 10px rgba(255,255,255,.25)) brightness(1.1) !important; }
+    .blocklyFlyout .blocklyPath { filter: drop-shadow(0 0 4px rgba(255,255,255,.1)) !important; }
+
+    /* ── Toast ───────────────────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 48px; left: 50%; transform: translateX(-50%);
+      background: var(--surface2); border: 1px solid var(--border-h);
+      color: var(--text); padding: 8px 18px; border-radius: 20px;
+      font-size: 12px; z-index: 300; opacity: 0;
+      transition: opacity .2s; pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+    .toast.ok { border-color: rgba(61,201,108,.5); color: var(--green); }
+    .toast.err { border-color: rgba(240,82,82,.4); color: #f05252; }
+
+    /* File input hidden */
+    #file-open-input { display: none; }
+
+    /* ── Theme tab ───────────────────────────────────────────── */
+    .theme-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px; }
+    .theme-card { border: 1.5px solid var(--border); border-radius: var(--radius); padding: 9px 8px 8px; cursor: pointer; transition: border-color .15s, transform .1s; user-select: none; text-align: center; position: relative; }
+    .theme-card:hover { border-color: var(--border-h); transform: translateY(-1px); }
+    .theme-card.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .theme-swatches { display: flex; gap: 3px; margin-bottom: 8px; height: 12px; }
+    .theme-swatches span { flex: 1; border-radius: 3px; display: block; }
+    .theme-card-name { font-size: 11px; color: var(--text3); }
+    .theme-card.active .theme-card-name { color: var(--text); font-weight: 600; }
+    .custom-theme-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px 8px; }
+    .ct-field { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+    .ct-field input[type=color] { width: 100%; min-width: 36px; height: 36px; border-radius: var(--radius); border: 1.5px solid var(--border); background: var(--surface2); cursor: pointer; padding: 2px 3px; }
+    .ct-field label { font-size: 10.5px; color: var(--text2); white-space: nowrap; }
+    input[type=text] { width: 100%; padding: 6px 10px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: 12px; font-family: var(--font); }
+    input[type=text]:focus { outline: none; border-color: var(--accent); }
+
+    /* ── Projects library panel ──────────────────────────────── */
+    .proj-topbar { display:flex; gap:6px; margin-bottom:12px; flex-shrink:0; }
+    .proj-topbar .btn { flex:1; justify-content:center; font-size:10.5px; }
+    .proj-list { display:flex; flex-direction:column; gap:6px; flex:1; overflow-y:auto; }
+    .proj-card {
+      display:flex; align-items:center; gap:10px; padding:9px 11px;
+      background:var(--surface2); border:1.5px solid var(--border);
+      border-radius:8px; transition:border-color .15s;
+    }
+    .proj-card:hover { border-color:var(--border-h); }
+    .proj-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+    .proj-info { flex:1; min-width:0; }
+    .proj-name { font-size:12px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .proj-meta { font-size:9.5px; color:var(--text3); margin-top:2px; }
+    .proj-actions { display:flex; gap:4px; flex-shrink:0; }
+    .proj-actions .btn { padding:3px 7px; font-size:10px; }
+    .proj-empty {
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      flex:1; gap:10px; color:var(--text3); font-size:12px; text-align:center;
+      padding:30px 20px; line-height:1.65;
+    }
+    .proj-empty-icon { font-size:28px; opacity:.4; }
+    .proj-btn-picker {
+      display:flex; flex-wrap:wrap; gap:5px; padding:8px 0 4px;
+    }
+    .proj-btn-pick {
+      width:28px; height:28px; border-radius:5px; background:#dde1eb;
+      border:1.5px solid rgba(0,0,0,.18); font-size:9px; font-weight:700;
+      color:rgba(0,0,0,.55); cursor:pointer; display:flex; align-items:center;
+      justify-content:center; transition:all .1s; font-family:var(--mono);
+      box-shadow: 0 2px 0 rgba(0,0,0,.22);
+    }
+    .proj-btn-pick:hover { background:#eaecf5; border-color:rgba(0,0,0,.3); }
+    .proj-btn-pick.taken { background:rgba(61,201,108,.18); border-color:rgba(61,201,108,.5); color:rgba(15,80,40,.7); }
+    .proj-btn-pick.taken:hover { background:rgba(61,201,108,.28); }
+    .proj-assign-overlay {
+      background:var(--surface); border:1px solid var(--border-h);
+      border-radius:8px; padding:10px 12px; margin-top:4px;
+    }
+    .proj-assign-title { font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:.07em; margin-bottom:8px; }
+    /* Checklist — idèntic a TECLA MIDI pestanya Capes */
+    .checklist { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; margin-bottom:9px; }
+    label.cb { display:flex; align-items:center; gap:6px; cursor:pointer; font-size:11.5px; padding:3px 0; line-height:1.4; }
+    label.cb input[type=checkbox] { width:12px; height:12px; accent-color:var(--accent); cursor:pointer; flex-shrink:0; }
+    .checklist label.cb { padding:4px 6px; border-radius:3px; }
+    .checklist label.cb:hover { background:var(--surface2); }
+    .proj-section { flex-shrink:0; }
+    .proj-sect-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+    .proj-sect-title { font-size:10.5px; font-weight:600; color:var(--text2); text-transform:uppercase; letter-spacing:.07em; }
+    .proj-sect-count { font-size:10px; color:var(--accent); }
+    .proj-sect-desc { font-size:11.5px; color:var(--text2); line-height:1.65; margin-bottom:10px; }
+    .proj-divider { height:1px; background:var(--border); margin:12px 0; flex-shrink:0; }
+    .btn-sm { font-size:10.5px; padding:3px 8px; }
+
+    /* ── Tecles panel (estètica idèntica a TECLA MIDI) ─────────── */
+    .dev-hw-wrap { display: flex; flex-direction: row; gap: 14px; align-items: center; justify-content: center; padding: 12px 0 10px; flex-shrink: 0; }
+    .dev-pots-col { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; flex-shrink: 0; }
+    .dev-pot-w { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; opacity: 0.8; transition: opacity .2s; }
+    .dev-pot-w:hover, .dev-pot-w.selected { opacity: 1; }
+    .dev-pot-knob { width: 50px; height: 50px; border-radius: 50%; border: 2px solid rgba(0,0,0,.2); background: var(--key-bg); position: relative; box-shadow: 0 3px 0 rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.6); transition: border-color .15s, box-shadow .15s; }
+    .dev-pot-w.selected .dev-pot-knob { border-color: var(--accent); box-shadow: 0 3px 0 rgba(0,0,0,.28), 0 0 0 2px var(--accent); }
+    .dev-pot-indicator { position: absolute; top: 4px; left: 50%; transform: translateX(-50%); width: 2px; height: 10px; background: rgba(0,0,0,.45); border-radius: 2px; }
+    .dev-pot-lbl { font-size: 11px; font-weight: 600; color: var(--text); }
+    .dev-pot-cc { font-size: 9px; color: var(--text2); }
+    .dev-keys-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 320px; }
+    .dev-key-btn {
+      aspect-ratio: 1; background: var(--key-bg); border: 1px solid rgba(0,0,0,.18);
+      border-radius: 7px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      cursor: pointer; position: relative;
+      box-shadow: 0 3px 0 rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.55);
+      transition: all .1s; padding: 2px; overflow: hidden;
+    }
+    .dev-key-btn:hover { border-color: rgba(0,0,0,.28); filter: brightness(1.07); }
+    .dev-key-btn:active { transform: scale(.95); box-shadow: 0 1px 0 rgba(0,0,0,.3), inset 0 1px 2px rgba(0,0,0,.15); }
+    .dev-key-btn.selected { border-color: var(--accent) !important; box-shadow: 0 0 0 2px var(--accent), 0 3px 0 rgba(0,0,0,.2) !important; }
+    .dev-key-btn.assigned { background: var(--key-bg); border-color: rgba(74,128,240,.7); box-shadow: inset 0 0 0 1000px rgba(74,128,240,.18), 0 3px 0 rgba(74,128,240,.3), inset 0 1px 0 rgba(255,255,255,.4); }
+    .dev-key-num { position: absolute; top: 3px; left: 4px; font-size: 7px; color: rgba(0,0,0,.3); font-family: var(--mono); pointer-events: none; font-weight: 700; }
+    .dev-key-name { font-size: 8px; font-weight: 700; color: rgba(0,0,0,.72); font-family: var(--mono); pointer-events: none; line-height: 1.2; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 3px; text-align: center; }
+    .dev-key-proj { font-size: 7px; color: rgba(0,0,0,.4); pointer-events: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; line-height: 1.2; text-align: center; padding: 0 2px; }
+    .dev-key-btn.assigned .dev-key-name { color: rgba(30,60,160,.95); }
+    .dev-key-btn.assigned .dev-key-proj { color: rgba(30,60,160,.65); }
+    .dev-cfg-area { flex-shrink: 0; border-top: 1px solid var(--border); padding: 10px 0 8px; }
+    .dev-cfg-hint { display: flex; align-items: center; justify-content: center; min-height: 56px; font-size: 11px; color: var(--text3); }
+    .dev-cfg-head { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .dev-cfg-head span { color: var(--accent); }
+    .dev-cfg-name-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+    .dev-cfg-name-row input { flex: 1; padding: 5px 8px; font-size: 11px; min-width: 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface2); color: var(--text); font-family: var(--font); }
+    .dev-cfg-name-row input:focus { outline: none; border-color: var(--accent); }
+    .dev-cfg-proj-info { font-size: 10.5px; padding: 5px 8px; border-radius: 5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .dev-cfg-proj-info.has-proj { color: var(--accent); background: rgba(74,128,240,.07); border: 1px solid rgba(74,128,240,.2); }
+    .dev-cfg-proj-info.no-proj { color: var(--text3); background: var(--surface2); border: 1px solid var(--border); }
+    .dev-cfg-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+    .dev-cfg-btns .btn { padding: 4px 9px; font-size: 10.5px; }
+    .dev-pot-fields { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; }
+    .dev-pot-field { display: flex; flex-direction: column; gap: 3px; }
+    .dev-pot-field label { font-size: 9.5px; color: var(--text3); text-transform: uppercase; letter-spacing: .04em; }
+    .dev-pot-field input[type=number] { width: 100%; padding: 5px 4px; border-radius: 4px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: 11px; font-family: var(--font); text-align: center; }
+    .dev-pot-field input[type=number]:focus { outline: none; border-color: var(--accent); }
+    .dev-export-bar { display:flex; gap:8px; padding:10px 0 2px; border-top:1px solid var(--border); flex-shrink:0; }
+    .dcf-lib-picker { max-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; }
+    .dcf-lib-item { flex-shrink: 0; padding: 6px 9px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); font-size: 11.5px; color: var(--text); cursor: pointer; transition: background .1s, border-color .1s; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dcf-lib-item:hover { background: var(--surface3); border-color: var(--accent); color: var(--accent); }
+    .dcf-lib-item.active { border-color: var(--accent); color: var(--accent); background: rgba(74,128,240,.1); }
+    .proj-cat-label { font-size: 10px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .07em; padding: 2px 0 4px; margin-top: 4px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+
+    /* ── Theme body classes ──────────────────────────────────── */
+    body.theme-light { --bg:#f2f2f2; --surface:#ffffff; --surface2:#ebebeb; --surface3:#e0e0e0; --accent:#4a80f0; --accent-d:#2d5cd9; --border:rgba(0,0,0,.1); --border-h:rgba(0,0,0,.2); --text:#111; --text2:rgba(0,0,0,.5); --text3:rgba(0,0,0,.3); }
+    body.theme-neon { --bg:#080808; --surface:#0d0d0d; --surface2:#121212; --surface3:#1a1a1a; --accent:#00ffe0; --accent-d:#00ccb4; --border:rgba(0,255,224,.08); --border-h:rgba(0,255,224,.16); }
+    body.theme-warm { --bg:#100c08; --surface:#1a1410; --surface2:#231c16; --surface3:#2e2520; --accent:#e08030; --accent-d:#b86020; --border:rgba(224,128,48,.09); --border-h:rgba(224,128,48,.18); }
+    body.theme-purple { --bg:#0d0b14; --surface:#14101e; --surface2:#1e1830; --surface3:#28224a; --accent:#a070f0; --accent-d:#8050d0; --border:rgba(160,112,240,.09); --border-h:rgba(160,112,240,.18); }
+    body.theme-ocean { --bg:#07101a; --surface:#0d1824; --surface2:#132030; --surface3:#1a2a3e; --accent:#20c8f8; --accent-d:#10a0cc; --border:rgba(32,200,248,.08); --border-h:rgba(32,200,248,.16); }
+    body.theme-forest { --bg:#07100a; --surface:#0d1a10; --surface2:#152018; --surface3:#1c2a20; --accent:#22c55e; --accent-d:#16a348; --border:rgba(34,197,94,.09); --border-h:rgba(34,197,94,.18); }
+    body.theme-rose { --bg:#120a0e; --surface:#1e1016; --surface2:#281520; --surface3:#34202a; --accent:#f472b6; --accent-d:#d44090; --border:rgba(244,114,182,.09); --border-h:rgba(244,114,182,.18); }
+    body.theme-ice { --bg:#eff5ff; --surface:#ffffff; --surface2:#e4eeff; --surface3:#d4e2ff; --accent:#0ea5e9; --accent-d:#0870b0; --border:rgba(14,165,233,.12); --border-h:rgba(14,165,233,.24); --text:#0a1a2e; --text2:rgba(10,26,46,.5); --text3:rgba(10,26,46,.3); }
+    body.theme-carbon { --bg:#080808; --surface:#111111; --surface2:#181818; --surface3:#222222; --accent:#ef4444; --accent-d:#c02020; --border:rgba(239,68,68,.08); --border-h:rgba(239,68,68,.16); }
+    body.theme-hc { --bg:#000000; --surface:#0d0d0d; --surface2:#1a1a1a; --surface3:#282828; --accent:#ffe000; --accent-d:#ccaa00; --border:rgba(255,224,0,.12); --border-h:rgba(255,224,0,.25); }
+    body.theme-crepuscle { --bg:#100808; --surface:#1a100a; --surface2:#24160c; --surface3:#301e14; --accent:#f97316; --accent-d:#c05010; --border:rgba(249,115,22,.09); --border-h:rgba(249,115,22,.18); }
+    body.theme-cosmic { --bg:#06050f; --surface:#0c0b1c; --surface2:#13112c; --surface3:#1c1840; --accent:#818cf8; --accent-d:#5560d0; --border:rgba(129,140,248,.09); --border-h:rgba(129,140,248,.18); }
+    body.theme-mint { --bg:#f0faf5; --surface:#ffffff; --surface2:#dff2e9; --surface3:#c8e8d8; --accent:#059669; --accent-d:#047050; --border:rgba(5,150,105,.12); --border-h:rgba(5,150,105,.24); --text:#0a2e1e; --text2:rgba(10,46,30,.5); --text3:rgba(10,46,30,.3); }
+    body.theme-slate { --bg:#0a0e14; --surface:#111820; --surface2:#18222e; --surface3:#202c3c; --accent:#94a3b8; --accent-d:#7c8fa6; --border:rgba(148,163,184,.09); --border-h:rgba(148,163,184,.18); }
+    body.theme-acid { --bg:#060900; --surface:#0b1100; --surface2:#131a00; --surface3:#1c2600; --accent:#a3e635; --accent-d:#84cc16; --border:rgba(163,230,53,.09); --border-h:rgba(163,230,53,.18); }
+    body.theme-sand { --bg:#fef7e8; --surface:#fffcf2; --surface2:#fdefc5; --surface3:#fae3a5; --accent:#b45309; --accent-d:#92400e; --border:rgba(180,83,9,.12); --border-h:rgba(180,83,9,.24); --text:#3a1800; --text2:#854d0e; --text3:#c08030; }
+    /* ── Per-theme key colour ───────────────────────────── */
+    body.theme-light{--key-bg:#e0e0e0}body.theme-neon{--key-bg:#d4f2ec}body.theme-warm{--key-bg:#ede5d8}
+    body.theme-purple{--key-bg:#e2dbf5}body.theme-ocean{--key-bg:#d6edf8}body.theme-forest{--key-bg:#d4eadb}
+    body.theme-rose{--key-bg:#f0dae8}body.theme-ice{--key-bg:#deeeff}body.theme-carbon{--key-bg:#e8d4d4}
+    body.theme-hc{--key-bg:#f0f0f0}body.theme-crepuscle{--key-bg:#ede0d2}body.theme-cosmic{--key-bg:#dcdaf8}
+    body.theme-mint{--key-bg:#d4eee0}body.theme-slate{--key-bg:#dde4ec}body.theme-acid{--key-bg:#d8ee96}body.theme-sand{--key-bg:#f5e4c4}
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-left">
+      <a href="../index.html" class="back-btn">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H3M7 4l-4 4 4 4"/></svg>
+        <span data-i18n="btn.back">Inici</span>
+      </a>
+      <select id="sel-lang" class="btn" title="Idioma" style="min-width:42px;padding:3px 6px;font-size:11px;cursor:pointer;appearance:none;-webkit-appearance:none;text-align:center">
+        <option value="ca">CA</option>
+        <option value="es">ES</option>
+        <option value="en">EN</option>
+      </select>
+      <div>
+        <div class="logo">T E C L A</div>
+        <div class="logo-sub">BLOCKS</div>
+      </div>
+      <div class="device-badge" id="device-badge">
+        <span class="dot"></span><span id="device-name">desconnectat</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="btn" id="btn-new" data-i18n="btn.new">Nou</button>
+      <button class="btn" id="btn-open" data-i18n="btn.open">Obrir</button>
+      <button class="btn btn-primary" id="btn-save" data-i18n="btn.save">Guardar</button>
+      <button class="btn" id="btn-export" data-i18n="btn.export">Exportar .py</button>
+      <div class="sep"></div>
+      <button class="btn" id="btn-connect" data-i18n="btn.connect">Connectar</button>
+      <button class="btn btn-success" id="btn-upload" disabled data-i18n="btn.upload">Pujar</button>
+    </div>
+  </header>
+
+  <div class="main">
+    <!-- Blockly workspace -->
+    <div class="workspace-container">
+      <div id="blocklyDiv"></div>
+    </div>
+
+    <!-- Side panel -->
+    <div class="side-panel">
+      <div class="panel-tabs">
+        <button class="tab-btn active" data-tab="code" data-i18n="tab.code">Codi</button>
+        <button class="tab-btn" data-tab="device" data-i18n="tab.device">Tecles</button>
+        <button class="tab-btn" data-tab="projects" data-i18n="tab.proj">Projectes</button>
+        <button class="tab-btn" data-tab="simulator" data-i18n="tab.sim">Simulador</button>
+        <button class="tab-btn" data-tab="firmware" data-i18n="tab.fw">Firmware</button>
+        <button class="tab-btn" data-tab="theme" data-i18n="tab.theme">Aparença</button>
+        <button class="tab-btn" data-tab="guide" data-i18n="tab.guide">Guia</button>
+      </div>
+      <div class="panel-body">
+
+        <!-- Code panel -->
+        <div id="panel-code" class="panel-content active">
+          <div class="code-header">
+            <h3 data-i18n="code.title">Codi Python generat</h3>
+            <button class="btn" id="btn-copy-code" data-i18n="btn.copy">Copiar</button>
+          </div>
+          <pre id="generatedCode" class="code-display"># El teu codi apareixerà aquí...</pre>
+        </div>
+
+        <!-- Simulator panel -->
+        <div id="panel-simulator" class="panel-content">
+          <div class="midi-bar">
+            <span class="dot" id="midi-status-dot" style="background:var(--border-h)"></span>
+            <span id="midi-status-text" data-i18n="midi.disconn">MIDI: desconnectat</span>
+            <select id="midi-port-select"><option value="">— port MIDI —</option></select>
+            <button class="btn" id="btn-midi-connect">MIDI</button>
+          </div>
+          <span class="sim-label" data-i18n="sim.vis">Visualitzador</span>
+          <span class="sim-label" style="display:none" id="sim-label-midi"></span>
+          <div class="sim-section">
+            <div class="sim-canvas-wrap">
+              <canvas id="simulatorCanvas" width="388" height="200"></canvas>
+            </div>
+          </div>
+          <div class="sim-section">
+            <div class="sim-controls">
+              <button class="btn btn-primary" id="btn-simulate" data-i18n="btn.simulate">Executar</button>
+              <button class="btn" id="btn-stop-sim" disabled data-i18n="btn.stop">Aturar</button>
+            </div>
+          </div>
+          <span class="sim-label" data-i18n="sim.out">Sortida</span>
+          <div id="simulatorOutput" class="sim-terminal"></div>
+        </div>
+
+        <!-- Guide panel -->
+        <div id="panel-guide" class="panel-content">
+          <div class="guide-section">
+            <div class="guide-h1" data-i18n="guide.t1">1. Primers passos</div>
+            <p class="guide-li" data-i18n="guide.p1a">Connecta el TECLA a l'ordinador via USB-C.</p>
+            <p class="guide-li" data-i18n="guide.p1b">Si és la primera vegada, instal·la CircuitPython (pestanya Firmware → Pas 1).</p>
+            <p class="guide-li" data-i18n="guide.p1c">Instal·la la carpeta adafruit_midi a CIRCUITPY/lib/ (Pas 2).</p>
+            <div class="guide-note" data-i18n="guide.n1">El TECLA funciona com a interfície MIDI USB. No cal cap driver addicional a macOS i Linux.</div>
+          </div>
+          <div class="guide-section">
+            <div class="guide-h1" data-i18n="guide.t2">2. Programar amb blocs</div>
+            <p class="guide-li" data-i18n="guide.p2a">Arrossega blocs de la caixa d'eines a l'espai de treball.</p>
+            <p class="guide-li" data-i18n="guide.p2b">Encaixa els blocs per crear el teu programa.</p>
+            <p class="guide-li" data-i18n="guide.p2c">El codi CircuitPython es genera automàticament a la pestanya Codi.</p>
+            <div class="guide-h2" data-i18n="guide.t2b">Categories de blocs</div>
+            <p class="guide-li" data-i18n="guide.cat1">Música Bàsica: Notes MIDI, acords, escales</p>
+            <p class="guide-li" data-i18n="guide.cat2">Síntesi Avançada: Oscil·ladors, LFO, envelops</p>
+            <p class="guide-li" data-i18n="guide.cat3">Control Hardware: Botons i potenciòmetres del TECLA</p>
+            <p class="guide-li" data-i18n="guide.cat4">Efectes: Delay, reverb, filtres</p>
+            <p class="guide-li" data-i18n="guide.cat5">GPIO: Pins digitals, PWM, analògics</p>
+            <p class="guide-li" data-i18n="guide.cat6">Generatiu: Probabilitat, LFO per software, quantització</p>
+            <p class="guide-li" data-i18n="guide.cat7">Accions: Teclat USB, dreceres, media</p>
+            <p class="guide-li" data-i18n="guide.cat8">Pantalla i LEDs: OLED, NeoPixels, servos i motors</p>
+            <p class="guide-li" data-i18n="guide.cat9">Sensors i Sistema: temperatura, distància, llum, memòria</p>
+          </div>
+          <div class="guide-section">
+            <div class="guide-h1" data-i18n="guide.t3">3. Pujar al dispositiu</div>
+            <p class="guide-li" data-i18n="guide.p3a">Prem Connectar al header i selecciona el volum CIRCUITPY.</p>
+            <p class="guide-li" data-i18n="guide.p3b">Un cop connectat, prem Pujar per copiar el codi al dispositiu.</p>
+            <p class="guide-li" data-i18n="guide.p3c">El TECLA s'executa automàticament en reiniciar-se.</p>
+            <div class="guide-note" data-i18n="guide.n3">Requereix Chrome o Edge (File System Access API). A Safari, exporta el .py i copia'l manualment a CIRCUITPY.</div>
+          </div>
+          <div class="guide-section">
+            <div class="guide-h1" data-i18n="guide.t4">Exemples</div>
+            <div class="ex-btns">
+              <button class="btn" id="btn-ex-melody" data-i18n="ex.melody">Melodia</button>
+              <button class="btn" id="btn-ex-sequencer" data-i18n="ex.seq">Seqüenciador</button>
+              <button class="btn" id="btn-ex-buttons" data-i18n="ex.btns">Botons</button>
+              <button class="btn" id="btn-ex-complex" data-i18n="ex.synth">Sintetitzador</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Firmware panel -->
+        <div id="panel-firmware" class="panel-content">
+          <div class="status-card">
+            <div class="card-title" data-i18n="fw.status">Estat del dispositiu</div>
+            <div class="status-row"><span data-i18n="fw.device">Dispositiu</span><span class="status-val" id="fw-device-name">—</span></div>
+            <div class="status-row"><span data-i18n="fw.circuitpy">Volum CIRCUITPY</span><span class="status-val" id="fw-device-status" data-i18n-id="fw.disconn">desconnectat</span></div>
+          </div>
+          <button class="btn btn-success" id="btn-fw-upload" style="width:100%;margin-bottom:14px;justify-content:center" data-i18n="fw.push">Pujar codi al dispositiu</button>
+
+          <div class="fw-step">
+            <div class="fw-step-title"><span class="fw-step-num">1</span><span data-i18n="fw.t1">Instal·lar CircuitPython</span></div>
+            <p class="fw-step-desc">Entra al mode bootloader mantenint <strong>BOOTSEL</strong> mentre connectes el USB-C. El dispositiu apareixerà com <strong>RPI-RP2</strong>.</p>
+            <p class="fw-step-sub">Obre el Finder → arrossega el fitxer <strong>.uf2</strong> al volum <strong>RPI-RP2</strong>. El dispositiu es reiniciarà com <strong>CIRCUITPY</strong>.</p>
+            <a class="dl-link" href="https://circuitpython.org/board/raspberry_pi_pico/" target="_blank">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M4 7l4 4 4-4"/><rect x="2" y="11" width="12" height="2" rx="1"/></svg>
+              <span data-i18n="fw.dl.fw">Descarregar CircuitPython (.uf2)</span>
+            </a>
+          </div>
+          <div class="fw-step">
+            <div class="fw-step-title"><span class="fw-step-num">2</span><span data-i18n="fw.t2">Instal·lar les llibreries</span></div>
+            <p class="fw-step-desc">Descarrega el <strong>bundle de llibreries</strong> de CircuitPython i copia la carpeta <strong>adafruit_midi</strong> dins <strong>CIRCUITPY/lib/</strong>.</p>
+            <p class="fw-step-sub">Cerca <em>adafruit-circuitpython-bundle</em> → descomprimeix → copia <strong>adafruit_midi/</strong> a <strong>CIRCUITPY/lib/</strong>.</p>
+            <p class="fw-step-sub">Segons els blocs que usis, copia també: <strong>adafruit_hid/</strong> (teclat i media), <strong>adafruit_ssd1306.mpy</strong> + <strong>adafruit_framebuf.mpy</strong> (pantalla OLED), <strong>neopixel.mpy</strong> (LEDs) i <strong>adafruit_motor/</strong> (servos).</p>
+            <a class="dl-link" href="https://github.com/adafruit/Adafruit_CircuitPython_Bundle/releases/latest" target="_blank">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M4 7l4 4 4-4"/><rect x="2" y="11" width="12" height="2" rx="1"/></svg>
+              <span data-i18n="fw.dl.lib">Descarregar Bundle de Llibreries</span>
+            </a>
+          </div>
+          <div class="fw-step">
+            <div class="fw-step-title"><span class="fw-step-num">3</span><span data-i18n="fw.t3">Pujar el codi del projecte</span></div>
+            <p class="fw-step-desc">Un cop CIRCUITPY és visible, connecta el dispositiu amb el botó <strong>Connectar</strong> del header i prem <strong>Pujar</strong> per copiar el codi.</p>
+            <p class="fw-step-sub">El codi es copia a <strong>personalitats/blocks.py</strong> i el dispositiu arrenca com a TECLA Blocks. Les altres personalitats (Instrument, Macropad) es queden al seu lloc: per tornar-hi, aguanta les <strong>quatre cantonades</strong> uns segons.</p>
+          </div>
+        </div>
+
+        <!-- Theme panel -->
+        <div id="panel-theme" class="panel-content">
+          <div class="card">
+            <div class="card-title" data-i18n="theme.title">Aparença</div>
+            <div class="theme-cards" id="theme-cards">
+              <div class="theme-card active" data-theme="dark"><div class="theme-swatches"><span style="background:#0c0c0c"></span><span style="background:#141414"></span><span style="background:#1c1c1c"></span><span style="background:#4a80f0"></span></div><div class="theme-card-name">Fosc</div></div>
+              <div class="theme-card" data-theme="light"><div class="theme-swatches"><span style="background:#f2f2f2"></span><span style="background:#fff"></span><span style="background:#ebebeb"></span><span style="background:#4a80f0"></span></div><div class="theme-card-name">Clar</div></div>
+              <div class="theme-card" data-theme="neon"><div class="theme-swatches"><span style="background:#080808"></span><span style="background:#0d0d0d"></span><span style="background:#121212"></span><span style="background:#00ffe0"></span></div><div class="theme-card-name">Neó</div></div>
+              <div class="theme-card" data-theme="warm"><div class="theme-swatches"><span style="background:#100c08"></span><span style="background:#1a1410"></span><span style="background:#231c16"></span><span style="background:#e08030"></span></div><div class="theme-card-name">Càlid</div></div>
+              <div class="theme-card" data-theme="purple"><div class="theme-swatches"><span style="background:#0d0b14"></span><span style="background:#14101e"></span><span style="background:#1e1830"></span><span style="background:#a070f0"></span></div><div class="theme-card-name">Lila</div></div>
+              <div class="theme-card" data-theme="ocean"><div class="theme-swatches"><span style="background:#07101a"></span><span style="background:#0d1824"></span><span style="background:#132030"></span><span style="background:#20c8f8"></span></div><div class="theme-card-name">Oceà</div></div>
+              <div class="theme-card" data-theme="forest"><div class="theme-swatches"><span style="background:#07100a"></span><span style="background:#0d1a10"></span><span style="background:#152018"></span><span style="background:#22c55e"></span></div><div class="theme-card-name">Bosc</div></div>
+              <div class="theme-card" data-theme="rose"><div class="theme-swatches"><span style="background:#120a0e"></span><span style="background:#1e1016"></span><span style="background:#281520"></span><span style="background:#f472b6"></span></div><div class="theme-card-name">Rosa</div></div>
+              <div class="theme-card" data-theme="ice"><div class="theme-swatches"><span style="background:#eff5ff"></span><span style="background:#fff"></span><span style="background:#e4eeff"></span><span style="background:#0ea5e9"></span></div><div class="theme-card-name">Gel</div></div>
+              <div class="theme-card" data-theme="carbon"><div class="theme-swatches"><span style="background:#080808"></span><span style="background:#111"></span><span style="background:#181818"></span><span style="background:#ef4444"></span></div><div class="theme-card-name">Carbó</div></div>
+              <div class="theme-card" data-theme="hc"><div class="theme-swatches"><span style="background:#000"></span><span style="background:#0d0d0d"></span><span style="background:#1a1a1a"></span><span style="background:#ffe000"></span></div><div class="theme-card-name">Alt Contrast</div></div>
+              <div class="theme-card" data-theme="crepuscle"><div class="theme-swatches"><span style="background:#100808"></span><span style="background:#1a100a"></span><span style="background:#24160c"></span><span style="background:#f97316"></span></div><div class="theme-card-name">Crepuscle</div></div>
+              <div class="theme-card" data-theme="cosmic"><div class="theme-swatches"><span style="background:#06050f"></span><span style="background:#0c0b1c"></span><span style="background:#13112c"></span><span style="background:#818cf8"></span></div><div class="theme-card-name">Còsmic</div></div>
+              <div class="theme-card" data-theme="mint"><div class="theme-swatches"><span style="background:#f0faf5"></span><span style="background:#fff"></span><span style="background:#dff2e9"></span><span style="background:#059669"></span></div><div class="theme-card-name">Menta</div></div>
+              <div class="theme-card" data-theme="slate"><div class="theme-swatches"><span style="background:#0a0e14"></span><span style="background:#111820"></span><span style="background:#18222e"></span><span style="background:#94a3b8"></span></div><div class="theme-card-name">Pissarra</div></div>
+              <div class="theme-card" data-theme="acid"><div class="theme-swatches"><span style="background:#060900"></span><span style="background:#0b1100"></span><span style="background:#131a00"></span><span style="background:#a3e635"></span></div><div class="theme-card-name">Àcid</div></div>
+              <div class="theme-card" data-theme="sand"><div class="theme-swatches"><span style="background:#fef7e8"></span><span style="background:#fffcf2"></span><span style="background:#fdefc5"></span><span style="background:#b45309"></span></div><div class="theme-card-name">Sorra</div></div>
+            </div>
+            <div style="border-top:1px solid var(--border);margin:20px 0 16px;position:relative">
+              <span style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--surface2);padding:0 12px;font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase" data-i18n="theme.editor">Editor de temes</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <div id="ct-mode-indicator" style="font-size:11px;color:var(--text3);font-weight:500"></div>
+              <button class="btn" id="btn-new-theme" style="font-size:11px" data-i18n="theme.newbtn">+ Nou tema</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+              <label style="font-size:12px;color:var(--text2);white-space:nowrap;min-width:36px" data-i18n="theme.name">Nom:</label>
+              <input type="text" id="ct-name" placeholder="Ex: El meu tema">
+              <button class="btn" id="btn-random-theme" data-i18n="theme.random">🎲 Aleatori</button>
+            </div>
+            <div class="custom-theme-grid">
+              <div class="ct-field"><input type="color" id="ct-bg" value="#0c0c0c"><label>Fons</label></div>
+              <div class="ct-field"><input type="color" id="ct-surface" value="#141414"><label>Superfície</label></div>
+              <div class="ct-field"><input type="color" id="ct-surface2" value="#1c1c1c"><label>Superf. 2</label></div>
+              <div class="ct-field"><input type="color" id="ct-text" value="#e0e0e0"><label>Text</label></div>
+              <div class="ct-field"><input type="color" id="ct-accent" value="#4a80f0"><label>Accent</label></div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+              <button class="btn btn-primary" id="btn-save-custom-theme" data-i18n="theme.save">Desa i aplica</button>
+              <button class="btn" id="btn-reset-custom-theme" data-i18n="theme.reset">Restablir</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Projects library panel -->
+        <div id="panel-projects" class="panel-content">
+          <!-- Exemples integrats (renderitzat per JS) -->
+          <div id="proj-examples-section"></div>
+          <div class="proj-divider"></div>
+          <!-- Els meus projectes -->
+          <div class="proj-sect-head">
+            <span class="proj-sect-title" data-i18n="proj.mine">Els meus projectes</span>
+          </div>
+          <div class="proj-topbar">
+            <button class="btn btn-sm btn-primary" id="btn-proj-save" data-i18n="btn.projsave">↓ Guardar actual</button>
+            <button class="btn btn-sm" id="btn-proj-import" data-i18n="btn.projimport">↑ Importar .tblocks</button>
+          </div>
+          <div id="proj-list" class="proj-list"></div>
+        </div>
+
+        <!-- Device config panel -->
+        <div id="panel-device" class="panel-content">
+          <!-- hardware representation rendered by JS -->
+          <div id="dev-hw-wrap" class="dev-hw-wrap">
+            <div id="dev-keys-grid" class="dev-keys-grid"></div>
+            <div id="dev-pots-col" class="dev-pots-col"></div>
+          </div>
+          <!-- contextual config area rendered by JS -->
+          <div id="dev-cfg-area" class="dev-cfg-area">
+            <div class="dev-cfg-hint">← Clica un botó o potenciòmetre per configurar-lo</div>
+          </div>
+          <div class="dev-export-bar">
+            <button class="btn btn-primary" id="btn-gen-device-code" style="flex:1;justify-content:center" data-i18n="dev.gencode">⬇ Generar codi.py</button>
+            <button class="btn btn-success" id="btn-upload-device-code" style="flex:1;justify-content:center" disabled data-i18n="dev.pushbtn">📤 Pujar</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="status-left">
+      <span id="status-blocks">Blocs: 0</span>
+    </div>
+    <span id="status-message">Llest per programar</span>
+  </footer>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Hidden file input for open -->
+  <input type="file" id="file-open-input" accept=".tblocks,.py,.json" style="display:none">
+  <input type="file" id="proj-import-input" accept=".tblocks" multiple style="display:none">
+
+  <!-- Toolbox XML -->
+  <xml id="toolbox" style="display:none">
+    <category name="Música Bàsica" colour="#ff1a6c">
+      <block type="tecla_play_note">
+        <value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value>
+        <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+        <value name="DURATION"><shadow type="math_number"><field name="NUM">1.0</field></shadow></value>
+      </block>
+      <block type="tecla_play_chord"></block>
+      <block type="tecla_play_scale"></block>
+      <block type="tecla_set_octave"></block>
+    </category>
+    <category name="Síntesi Avançada" colour="#d500f9">
+      <block type="tecla_oscillator">
+        <value name="FREQUENCY"><shadow type="math_number"><field name="NUM">440</field></shadow></value>
+        <value name="AMPLITUDE"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+      </block>
+      <block type="tecla_lfo">
+        <value name="RATE"><shadow type="math_number"><field name="NUM">2</field></shadow></value>
+        <value name="DEPTH"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
+      </block>
+      <block type="tecla_envelope">
+        <value name="ATTACK"><shadow type="math_number"><field name="NUM">10</field></shadow></value>
+        <value name="DECAY"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
+        <value name="SUSTAIN"><shadow type="math_number"><field name="NUM">70</field></shadow></value>
+        <value name="RELEASE"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+      </block>
+      <block type="tecla_modulation">
+        <value name="CARRIER"><shadow type="math_number"><field name="NUM">440</field></shadow></value>
+        <value name="MODULATOR"><shadow type="math_number"><field name="NUM">220</field></shadow></value>
+        <value name="DEPTH"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
+      </block>
+      <block type="tecla_waveshaper">
+        <value name="AMOUNT"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
+      </block>
+    </category>
+    <category name="Control Hardware" colour="#2979ff">
+      <block type="tecla_read_button"></block>
+      <block type="tecla_read_pot"></block>
+      <block type="tecla_on_button_press"></block>
+    </category>
+    <category name="Efectes Àudio" colour="#e040fb">
+      <block type="tecla_effect_delay"></block>
+      <block type="tecla_effect_reverb"></block>
+      <block type="tecla_effect_filter"></block>
+      <block type="tecla_set_instrument"></block>
+      <block type="tecla_set_volume"><value name="VOLUME"><shadow type="math_number"><field name="NUM">100</field></shadow></value></block>
+      <block type="tecla_set_pan"><value name="PAN"><shadow type="math_number"><field name="NUM">64</field></shadow></value></block>
+    </category>
+    <category name="GPIO (Pins)" colour="#00f0ff">
+      <block type="tecla_digital_write"></block>
+      <block type="tecla_digital_read"></block>
+      <block type="tecla_analog_write"><value name="VALUE"><shadow type="math_number"><field name="NUM">32768</field></shadow></value></block>
+      <block type="tecla_analog_read"></block>
+      <block type="tecla_pwm_setup">
+        <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+        <value name="FREQ"><shadow type="math_number"><field name="NUM">1000</field></shadow></value>
+      </block>
+      <block type="tecla_pwm_duty">
+        <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+        <value name="DUTY"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
+      </block>
+    </category>
+    <category name="Pantalla OLED" colour="#00f0ff">
+      <block type="tecla_display_setup"></block>
+      <block type="tecla_display_text">
+        <value name="TEXT"><shadow type="text"><field name="TEXT">Hola TECLA!</field></shadow></value>
+        <value name="X"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="Y"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+      </block>
+      <block type="tecla_display_clear"></block>
+      <block type="tecla_display_pixel">
+        <value name="X"><shadow type="math_number"><field name="NUM">64</field></shadow></value>
+        <value name="Y"><shadow type="math_number"><field name="NUM">32</field></shadow></value>
+      </block>
+      <block type="tecla_display_line">
+        <value name="X1"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="Y1"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="X2"><shadow type="math_number"><field name="NUM">127</field></shadow></value>
+        <value name="Y2"><shadow type="math_number"><field name="NUM">63</field></shadow></value>
+      </block>
+      <block type="tecla_display_rect">
+        <value name="X"><shadow type="math_number"><field name="NUM">10</field></shadow></value>
+        <value name="Y"><shadow type="math_number"><field name="NUM">10</field></shadow></value>
+        <value name="WIDTH"><shadow type="math_number"><field name="NUM">40</field></shadow></value>
+        <value name="HEIGHT"><shadow type="math_number"><field name="NUM">20</field></shadow></value>
+      </block>
+    </category>
+    <category name="LEDs NeoPixel" colour="#f472b6">
+      <block type="tecla_neopixel_setup">
+        <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+        <value name="COUNT"><shadow type="math_number"><field name="NUM">8</field></shadow></value>
+      </block>
+      <block type="tecla_neopixel_set">
+        <value name="INDEX"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="R"><shadow type="math_number"><field name="NUM">255</field></shadow></value>
+        <value name="G"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="B"><shadow type="math_number"><field name="NUM">128</field></shadow></value>
+      </block>
+      <block type="tecla_neopixel_show"></block>
+      <block type="tecla_neopixel_clear"></block>
+      <block type="tecla_neopixel_rainbow">
+        <value name="OFFSET"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+      </block>
+    </category>
+    <category name="Servos i Motors" colour="#fb923c">
+      <block type="tecla_servo_setup">
+        <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+      </block>
+      <block type="tecla_servo_angle">
+        <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+        <value name="ANGLE"><shadow type="math_number"><field name="NUM">90</field></shadow></value>
+      </block>
+      <block type="tecla_motor_setup">
+        <value name="PIN1"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+        <value name="PIN2"><shadow type="math_number"><field name="NUM">17</field></shadow></value>
+      </block>
+      <block type="tecla_motor_speed">
+        <value name="SPEED"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+      </block>
+    </category>
+    <category name="Sensors" colour="#4ade80">
+      <block type="tecla_sensor_temperature"></block>
+      <block type="tecla_sensor_light">
+        <value name="PIN"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+      </block>
+      <block type="tecla_sensor_sound">
+        <value name="PIN"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+      </block>
+      <block type="tecla_sensor_moisture">
+        <value name="PIN"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+      </block>
+      <block type="tecla_sensor_pir">
+        <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+      </block>
+      <block type="tecla_sensor_button_external">
+        <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+      </block>
+      <block type="tecla_sensor_distance"></block>
+      <block type="tecla_system_voltage"></block>
+    </category>
+    <category name="Temps i Bucles" colour="#ff9100">
+      <block type="tecla_wait"><value name="TIME"><shadow type="math_number"><field name="NUM">1.0</field></shadow></value></block>
+      <block type="tecla_sleep_ms"><value name="TIME"><shadow type="math_number"><field name="NUM">500</field></shadow></value></block>
+      <block type="tecla_repeat_forever"></block>
+      <block type="controls_repeat_ext"><value name="TIMES"><shadow type="math_number"><field name="NUM">10</field></shadow></value></block>
+      <block type="controls_whileUntil"></block>
+      <block type="tecla_break"></block>
+      <block type="tecla_continue"></block>
+      <block type="tecla_set_bpm"><value name="BPM"><shadow type="math_number"><field name="NUM">120</field></shadow></value></block>
+      <block type="tecla_wait_beat"></block>
+      <block type="tecla_timer_start"></block>
+      <block type="tecla_timer_elapsed"></block>
+      <block type="tecla_time_now"></block>
+      <block type="tecla_time_millis"></block>
+    </category>
+    <category name="Generatiu" colour="#ff1a6c">
+      <block type="tecla_probability"><value name="PERCENT"><shadow type="math_number"><field name="NUM">50</field></shadow></value></block>
+      <block type="tecla_software_lfo">
+        <value name="RATE"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+        <value name="MIN"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="MAX"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+      </block>
+      <block type="tecla_scale_quantize"><value name="VALUE"><shadow type="math_number"><field name="NUM">60</field></shadow></value></block>
+      <block type="tecla_get_random_scale_note">
+        <value name="OCTAVE"><shadow type="math_number"><field name="NUM">4</field></shadow></value>
+      </block>
+      <block type="tecla_euclidean_rhythm">
+        <value name="STEP"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="PULSES"><shadow type="math_number"><field name="NUM">4</field></shadow></value>
+        <value name="STEPS"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+      </block>
+    </category>
+    <category name="Lògica" colour="#00e676">
+      <block type="controls_if"></block>
+      <block type="controls_ifelse"></block>
+      <block type="logic_compare"></block>
+      <block type="logic_operation"></block>
+      <block type="logic_negate"></block>
+      <block type="logic_boolean"></block>
+      <block type="tecla_switch">
+        <value name="VALUE"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+      </block>
+      <block type="tecla_try_except"></block>
+    </category>
+    <category name="Matemàtiques" colour="#00e676">
+      <block type="math_number"></block>
+      <block type="math_arithmetic">
+        <value name="A"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+        <value name="B"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+      </block>
+      <block type="tecla_math_random_int">
+        <value name="FROM"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="TO"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+      </block>
+      <block type="tecla_math_map">
+        <value name="VALUE"><shadow type="math_number"><field name="NUM">512</field></shadow></value>
+        <value name="FROM_MIN"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="FROM_MAX"><shadow type="math_number"><field name="NUM">1023</field></shadow></value>
+        <value name="TO_MIN"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="TO_MAX"><shadow type="math_number"><field name="NUM">127</field></shadow></value>
+      </block>
+      <block type="tecla_math_constrain">
+        <value name="VALUE"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
+        <value name="MIN"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="MAX"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+      </block>
+      <block type="tecla_math_trig">
+        <value name="NUM"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+      </block>
+      <block type="tecla_math_degrees">
+        <value name="RADIANS"><shadow type="math_number"><field name="NUM">3.14</field></shadow></value>
+      </block>
+      <block type="tecla_math_radians">
+        <value name="DEGREES"><shadow type="math_number"><field name="NUM">180</field></shadow></value>
+      </block>
+      <block type="tecla_math_log">
+        <value name="VALUE"><shadow type="math_number"><field name="NUM">10</field></shadow></value>
+      </block>
+      <block type="tecla_math_exp">
+        <value name="VALUE"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+      </block>
+      <block type="tecla_math_bitwise">
+        <value name="A"><shadow type="math_number"><field name="NUM">5</field></shadow></value>
+        <value name="B"><shadow type="math_number"><field name="NUM">3</field></shadow></value>
+      </block>
+    </category>
+    <category name="Text" colour="#ffe500">
+      <block type="text"></block>
+      <block type="tecla_text_join">
+        <value name="TEXT1"><shadow type="text"><field name="TEXT">Hola </field></shadow></value>
+        <value name="TEXT2"><shadow type="text"><field name="TEXT">TECLA</field></shadow></value>
+      </block>
+      <block type="tecla_text_length">
+        <value name="TEXT"><shadow type="text"><field name="TEXT">hola</field></shadow></value>
+      </block>
+      <block type="tecla_text_contains">
+        <value name="TEXT"><shadow type="text"><field name="TEXT">hola món</field></shadow></value>
+        <value name="SEARCH"><shadow type="text"><field name="TEXT">món</field></shadow></value>
+      </block>
+      <block type="tecla_string_replace">
+        <value name="TEXT"><shadow type="text"><field name="TEXT">hola món</field></shadow></value>
+        <value name="OLD"><shadow type="text"><field name="TEXT">món</field></shadow></value>
+        <value name="NEW"><shadow type="text"><field name="TEXT">TECLA</field></shadow></value>
+      </block>
+      <block type="tecla_string_split">
+        <value name="TEXT"><shadow type="text"><field name="TEXT">a,b,c</field></shadow></value>
+        <value name="DELIMITER"><shadow type="text"><field name="TEXT">,</field></shadow></value>
+      </block>
+      <block type="tecla_string_format">
+        <value name="FORMAT"><shadow type="text"><field name="TEXT">Valor: {}</field></shadow></value>
+        <value name="VALUE"><shadow type="math_number"><field name="NUM">42</field></shadow></value>
+      </block>
+      <block type="tecla_string_startswith">
+        <value name="TEXT"><shadow type="text"><field name="TEXT">hola món</field></shadow></value>
+        <value name="PREFIX"><shadow type="text"><field name="TEXT">hola</field></shadow></value>
+      </block>
+      <block type="tecla_string_endswith">
+        <value name="TEXT"><shadow type="text"><field name="TEXT">hola món</field></shadow></value>
+        <value name="SUFFIX"><shadow type="text"><field name="TEXT">món</field></shadow></value>
+      </block>
+      <block type="tecla_serial_print">
+        <value name="TEXT"><shadow type="text"><field name="TEXT">Hola consola!</field></shadow></value>
+      </block>
+    </category>
+    <category name="Llistes" colour="#ff6e40">
+      <block type="tecla_list_create"></block>
+      <block type="tecla_list_add">
+        <value name="ITEM"><shadow type="math_number"><field name="NUM">60</field></shadow></value>
+      </block>
+      <block type="tecla_list_get">
+        <value name="INDEX"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+      </block>
+      <block type="tecla_list_length"></block>
+      <block type="tecla_string_join">
+        <value name="SEPARATOR"><shadow type="text"><field name="TEXT">, </field></shadow></value>
+      </block>
+    </category>
+    <category name="MIDI Avançat" colour="#40c8ff">
+      <block type="tecla_midi_cc">
+        <value name="CC_NUM"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+        <value name="CC_VAL"><shadow type="math_number"><field name="NUM">64</field></shadow></value>
+      </block>
+      <block type="tecla_midi_pitch_bend">
+        <value name="AMOUNT"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+      </block>
+      <block type="tecla_midi_sustain"></block>
+      <block type="tecla_midi_expression">
+        <value name="VALUE"><shadow type="math_number"><field name="NUM">127</field></shadow></value>
+      </block>
+      <block type="tecla_midi_all_notes_off"></block>
+    </category>
+    <category name="Live Coding" colour="#ff3d00">
+      <block type="tecla_note_on_only">
+        <value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value>
+        <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+      </block>
+      <block type="tecla_note_off_only">
+        <value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value>
+      </block>
+      <block type="tecla_transpose">
+        <value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value>
+        <value name="SEMITONES"><shadow type="math_number"><field name="NUM">7</field></shadow></value>
+      </block>
+      <block type="tecla_humanize_vel">
+        <value name="BASE_VEL"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+        <value name="SPREAD"><shadow type="math_number"><field name="NUM">12</field></shadow></value>
+      </block>
+      <block type="tecla_crescendo">
+        <value name="FROM_VAL"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="TO_VAL"><shadow type="math_number"><field name="NUM">127</field></shadow></value>
+        <value name="DURATION"><shadow type="math_number"><field name="NUM">4.0</field></shadow></value>
+      </block>
+      <block type="tecla_riff_repeat"></block>
+    </category>
+    <category name="Seqüenciador" colour="#00ffc8">
+      <block type="tecla_note_name"></block>
+      <block type="tecla_seq_grid"></block>
+      <block type="tecla_seq_play_steps">
+        <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+        <value name="STEP_DUR"><shadow type="math_number"><field name="NUM">0.25</field></shadow></value>
+      </block>
+      <block type="tecla_arpeggio_dir">
+        <value name="SPEED"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value>
+      </block>
+      <block type="tecla_drum_hit">
+        <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+      </block>
+      <block type="tecla_drum_pattern">
+        <value name="STEP_DUR"><shadow type="math_number"><field name="NUM">0.125</field></shadow></value>
+      </block>
+      <block type="tecla_chord_progression">
+        <value name="BEATS_DUR"><shadow type="math_number"><field name="NUM">1.0</field></shadow></value>
+      </block>
+    </category>
+    <category name="Variables" colour="#FF6F00" custom="VARIABLE"></category>
+    <category name="Funcions" colour="#76ff03">
+      <block type="tecla_function_define"></block>
+      <block type="tecla_function_call"></block>
+    </category>
+    <category name="Accions" colour="#ff6d00">
+      <block type="tecla_key_press"></block>
+      <block type="tecla_key_combo"></block>
+      <block type="tecla_type_text"></block>
+      <block type="tecla_media"></block>
+      <block type="tecla_open_app"></block>
+    </category>
+    <category name="Sistema" colour="#94a3b8">
+      <block type="tecla_storage_write">
+        <value name="KEY"><shadow type="text"><field name="TEXT">comptador</field></shadow></value>
+        <value name="VALUE"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+      </block>
+      <block type="tecla_storage_read">
+        <value name="KEY"><shadow type="text"><field name="TEXT">comptador</field></shadow></value>
+      </block>
+      <block type="tecla_storage_exists">
+        <value name="KEY"><shadow type="text"><field name="TEXT">comptador</field></shadow></value>
+      </block>
+      <block type="tecla_storage_delete">
+        <value name="KEY"><shadow type="text"><field name="TEXT">comptador</field></shadow></value>
+      </block>
+      <block type="tecla_system_memory"></block>
+      <block type="tecla_system_reset"></block>
+    </category>
+    <sep></sep>
+    <category name="Events Scratch" colour="#FFBF00">
+      <block type="scratch_when_flag_clicked"></block>
+      <block type="scratch_when_key_pressed"></block>
+      <block type="scratch_broadcast"><field name="MESSAGE">missatge1</field></block>
+      <block type="scratch_when_receive"><field name="MESSAGE">missatge1</field></block>
+    </category>
+    <category name="Control Scratch" colour="#FFAB19">
+      <block type="scratch_stop"></block>
+      <block type="scratch_say">
+        <value name="MESSAGE"><shadow type="text"><field name="TEXT">Hola!</field></shadow></value>
+        <value name="SECONDS"><shadow type="math_number"><field name="NUM">2</field></shadow></value>
+      </block>
+      <block type="scratch_think">
+        <value name="MESSAGE"><shadow type="text"><field name="TEXT">Hmm...</field></shadow></value>
+        <value name="SECONDS"><shadow type="math_number"><field name="NUM">2</field></shadow></value>
+      </block>
+      <block type="scratch_timer"></block>
+      <block type="scratch_reset_timer"></block>
+      <block type="scratch_change_var">
+        <value name="VALUE"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+      </block>
+      <block type="scratch_show_variable"></block>
+    </category>
+    <category name="Operadors Scratch" colour="#59C059">
+      <block type="scratch_join">
+        <value name="STRING1"><shadow type="text"><field name="TEXT">poma </field></shadow></value>
+        <value name="STRING2"><shadow type="text"><field name="TEXT">pera</field></shadow></value>
+      </block>
+      <block type="scratch_letter_of">
+        <value name="LETTER"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+        <value name="STRING"><shadow type="text"><field name="TEXT">poma</field></shadow></value>
+      </block>
+      <block type="scratch_length_of">
+        <value name="STRING"><shadow type="text"><field name="TEXT">poma</field></shadow></value>
+      </block>
+      <block type="scratch_contains">
+        <value name="STRING1"><shadow type="text"><field name="TEXT">poma</field></shadow></value>
+        <value name="STRING2"><shadow type="text"><field name="TEXT">o</field></shadow></value>
+      </block>
+      <block type="scratch_mod">
+        <value name="NUM1"><shadow type="math_number"><field name="NUM">10</field></shadow></value>
+        <value name="NUM2"><shadow type="math_number"><field name="NUM">3</field></shadow></value>
+      </block>
+      <block type="scratch_round">
+        <value name="NUM"><shadow type="math_number"><field name="NUM">3.5</field></shadow></value>
+      </block>
+      <block type="scratch_mathop">
+        <value name="NUM"><shadow type="math_number"><field name="NUM">9</field></shadow></value>
+      </block>
+    </category>
+  </xml>
+
+  <!-- Block definitions & generators -->
+  <script src="app.min.js?v=8"></script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   TECLA · tema ESTUDI
+   Taller de dia: paper càlid, aire, i la mateixa tipografia dual però amb
+   els papers canviats — Inter porta el pes editorial i la mono es queda
+   només per als datos. Vores de mig to en comptes de caixes plenes: la
+   jerarquia la fan l'espai i les línies, no els fons.
+
+   És el contrapunt de l'Oníric i serveix per demostrar que el contracte
+   aguanta un mode clar sencer sense tocar ni una regla de l'app.
+   Contracte: css/reserva-estetica/CONTRACTE.md
+   ═══════════════════════════════════════════════════════════════════════ */
+
+body.skin-estudi {
+  /* ── Superfícies: paper càlid, mai blanc clínic ─────────────────────── */
+  --bg: #F4F2EE;
+  --surface: #FFFFFF;
+  --surface2: #F7F5F1;
+  --surface3: #EDEAE4;
+  --raised: #F7F5F1;
+  --inset: #EDEAE4;
+
+  /* ── Vores: fines i de mig to ───────────────────────────────────────── */
+  --border: #DFDAD1;
+  --border-h: #C6BFB3;
+  --bd-strong: #C6BFB3;
+  --bd-active: #A79E8F;
+  --bd-w: 1px;
+
+  /* ── Text: tinta, no negre ──────────────────────────────────────────── */
+  --text: #23201B;
+  --text2: #6B655B;
+  --text3: #9A9287;
+
+  /* ── Acents: saturació continguda, com demana el mode clar ──────────── */
+  --accent: #B4531B;
+  --accent-d: #8E3F12;
+  --action: #B4531B;
+  --action-bg: rgba(180, 83, 27, .07);
+  --action-bd: rgba(180, 83, 27, .3);
+  --green: #1E7F68;
+  --signal: #1E7F68;
+  --signal-bg: rgba(30, 127, 104, .07);
+  --signal-bd: rgba(30, 127, 104, .28);
+  --red: #B3332F;
+  --yellow: #9A6B0F;
+
+  /* ── Geometria: una mica més tou, perquè hi ha més aire ─────────────── */
+  --radius: 6px;
+  --r2: 10px;
+
+  /* ── Tipografia ─────────────────────────────────────────────────────── */
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
+  --data-font: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
+  --num: tabular-nums;
+  /* Les etiquetes NO criden: minúscula, editorial, sense espaiat forçat */
+  --lbl-font: 'Inter', -apple-system, sans-serif;
+  --lbl-ls: 0;
+  --lbl-ls-strong: 0;
+  --lbl-tr: none;
+
+  /* ── Materialitat: pla. El paper no s'enfonsa. ──────────────────────── */
+  --press: 0px;
+  --head-bg: transparent;
+
+  /* Simulador: el dispositiu damunt la taula */
+  --sim-bg: #EDEAE4;
+  --sim-sb: #F7F5F1;
+  --sim-tb: #F7F5F1;
+  --sim-pot: #F1EEE9;
+  --sim-log: #23201B;
+  --sim-key: #FFFFFF;
+  --sim-key-h: #F7F5F1;
+  --sim-key-p: #EDEAE4;
+  --sim-key-stop: #F7EBEA;
+  --sim-key-fx: #EEF3F1;
+  --sim-key-kb: #F1EFF6;
+  --sim-key-bd: #DFDAD1;
+  --sim-key-bd-h: #C6BFB3;
+  --sim-key-bd-p: #A79E8F;
+  --sim-lbl: #9A9287;
+  --sim-lbl2: #6B655B;
+  --sim-pot-lbl: #9A9287;
+  --sim-pot-val: #6B655B;
+  --sim-pot-track: #DFDAD1;
+  --slog-info: #9A9287;
+}
+
+/* ═══ TIPOGRAFIA EDITORIAL ═══════════════════════════════════════════════
+   Aquest tema respira: el cos creix i els títols agafen presència. */
+body.skin-estudi {
+  font-size: 13.5px;
+}
+
+body.skin-estudi .card>.card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -.01em;
+  margin-bottom: 14px;
+}
+
+body.skin-estudi .section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  letter-spacing: 0;
+}
+
+/* ═══ PANELLS: línia, no caixa ═══════════════════════════════════════════ */
+body.skin-estudi .card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  padding: 18px;
+  box-shadow: 0 1px 2px rgba(35, 32, 27, .04);
+}
+
+/* ═══ NAVEGACIÓ ══════════════════════════════════════════════════════════ */
+body.skin-estudi nav {
+  background: var(--bg);
+}
+
+body.skin-estudi .nav-tab {
+  font-weight: 500;
+  color: var(--text2);
+}
+
+body.skin-estudi .nav-tab.active {
+  color: var(--text);
+  border-bottom-color: var(--action);
+}
+
+/* ═══ BOTONS: plans, definits per la vora ════════════════════════════════ */
+body.skin-estudi .btn {
+  background: var(--surface);
+  border: 1px solid var(--border-h);
+  font-weight: 500;
+}
+
+body.skin-estudi .btn:hover:not(:disabled) {
+  background: var(--surface2);
+  border-color: var(--bd-active);
+}
+
+body.skin-estudi .btn-primary {
+  background: var(--action);
+  border-color: var(--action);
+  color: #FFFFFF;
+}
+
+body.skin-estudi .btn-primary:hover:not(:disabled) {
+  background: var(--accent-d);
+  border-color: var(--accent-d);
+}
+
+body.skin-estudi .btn:focus-visible {
+  outline: 2px solid var(--action);
+  outline-offset: 2px;
+}
+
+/* ═══ CAMPS ══════════════════════════════════════════════════════════════ */
+body.skin-estudi input,
+body.skin-estudi select,
+body.skin-estudi textarea {
+  background: var(--surface);
+  border: 1px solid var(--border-h);
+}
+
+body.skin-estudi input:focus,
+body.skin-estudi select:focus,
+body.skin-estudi textarea:focus {
+  border-color: var(--action);
+}
+
+/* La fletxa del select ve d'un SVG amb el gris fosc incrustat: al paper no
+   es veuria bé, i com que és una imatge no hi arriba cap variable. */
+body.skin-estudi select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236B655B'/%3E%3C/svg%3E");
+}
+
+/* ═══ DATOS ══════════════════════════════════════════════════════════════ */
+body.skin-estudi .mgsim-pot .v,
+body.skin-estudi .modegen-pot .val,
+body.skin-estudi .modegen-pot-rang,
+body.skin-estudi .modegen-badge {
+  font-family: var(--data-font);
+  font-variant-numeric: var(--num);
+}
+
+/* ═══ SIMULADOR ══════════════════════════════════════════════════════════ */
+body.skin-estudi .sim-key,
+body.skin-estudi .mgsim-key {
+  box-shadow: 0 1px 1px rgba(35, 32, 27, .05);
+}
+
+body.skin-estudi .mgsim {
+  background: rgba(255, 255, 255, .88);
+  border-color: var(--border-h);
+  box-shadow: 0 12px 40px rgba(35, 32, 27, .16);
+}
+
+/* El registre és una pantalla: fosc sobre paper, l'únic contrast dur */
+body.skin-estudi .sim-log,
+body.skin-estudi #sim-log {
+  background: var(--sim-log);
+  color: #E8E4DC;
+}
+
+/* ═══ PANTALLA DEL DISPOSITIU ════════════════════════════════════════════ */
+body.skin-estudi .devmon {
+  background: #23201B;
+  border: 1px solid var(--bd-active);
+}
+
+/* ═══ ICONES DE FUNCIÓ ═══════════════════════════════════════════════════
+   L'app pinta cada glif de la seva categoria amb un color propi (un hex
+   inline des del JS). En aquest sistema el color té ROL, no categoria: una
+   llista de dotze colors diu que tot és important i per tant que res ho és.
+   Es tornen monocromes — el nom de la funció és just al costat. */
+body.skin-estudi .chip-icon,
+body.skin-estudi .kb-fn-chip .chip-icon,
+body.skin-estudi .sim-fn-item .chip-icon {
+  color: var(--text2) !important;
+}
