@@ -1986,7 +1986,7 @@ LAYER_COUNT = ${layers.length}
 `);const M=layers.map(o=>Array.isArray(o.color)&&o.color.length===3?o.color.map(i=>Math.max(0,Math.min(255,i|0))):_COLOR_CAPA_DEF);d+=`
 # --- LED RGB de capa (R, G, B) ---
 `,d+=`import pwmio
-`,d+=`LED_PINS = (board.GP20, board.GP21, board.GP22)
+`,d+=`LED_PINS = (board.GP20, board.GP19, board.GP21)
 `,d+=`LED_CATODE_COMU = True   # False si el teu RGB es d'anode comu
 `,d+=`LED_BRILL = 0.35
 `,d+=`COLORS_CAPA = [${M.map(o=>`(${o[0]}, ${o[1]}, ${o[2]})`).join(", ")}]
@@ -1998,7 +1998,7 @@ LAYER_COUNT = ${layers.length}
 `,d+=`        if _led is None:
 `,d+=`            _led = [pwmio.PWMOut(p, frequency=1000, duty_cycle=0) for p in LED_PINS]
 `,d+=`        for n, v in enumerate(COLORS_CAPA[i % len(COLORS_CAPA)]):
-`,d+=`            d = _GAMMA[max(0, min(255, int(v * LED_BRILL)))]
+`,d+=`            d = int(_GAMMA[max(0, min(255, v))] * LED_BRILL)
 `,d+=`            _led[n].duty_cycle = d if LED_CATODE_COMU else 65535 - d
 `,d+=`    except Exception:
 `,d+=`        pass

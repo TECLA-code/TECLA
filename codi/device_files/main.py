@@ -512,12 +512,13 @@ def main():
     except Exception:
         pass
 
-    # ── GP22 = LED MULTICOLOR ───────────────────────────────────────────────
-    # Fins a la v3.16 aquell pin era la sortida d'àudio (minijack) i el
-    # firmware hi feia un to PWM monofònic a cada nota del teclat. El maquinari
-    # ha canviat: ara hi ha un LED multicolor, i el to intern s'ha retirat
-    # sencer (core/tone.py). El pin és de core/llum.py i de ningú més — dos
-    # amos al mateix pin volia dir soroll al LED a cada tecla.
+    # ── SENSE ÀUDIO INTERN: EL LED HI VA OCUPAR EL LLOC ─────────────────────
+    # Fins a la v3.16 GP22 era la sortida d'àudio (minijack) i el firmware hi
+    # feia un to PWM monofònic a cada nota del teclat. El maquinari ha canviat:
+    # ara hi ha un LED multicolor i el to intern s'ha retirat sencer
+    # (core/tone.py). El LED està soldat a GP19/GP20/GP21 — no a GP22, que ha
+    # quedat lliure. Els seus pins són de core/llum.py i de ningú més: dos amos
+    # al mateix pin volia dir soroll al LED a cada tecla.
     hardware.audio = None
 
     # CRÍTIC: Crear KeyboardMode ANTES de ModeManager mentre la memòria és neta

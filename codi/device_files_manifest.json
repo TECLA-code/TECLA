@@ -1,6 +1,6 @@
 {
   "version": "3.15.4",
-  "generated": "2026-08-26 01:20",
+  "generated": "2026-08-28 22:09",
   "files": [
     "boot.py",
     "code.py",
@@ -154,7 +154,7 @@
     "core/crashguard.mpy": "ccd57dca5648fb9a7e8c26f63eef6ec84cf778db41eae43ec83ff74d2dd469f9",
     "core/display_manager.mpy": "389291617bab2d1624a5986a4bdd35396b21d95eb1894687b43939d54656aa15",
     "core/layer_manager.mpy": "5d439bba48afc31b199ae5a4baa72b7601fe5e3ced9ea1f1171bea0bd105aeaf",
-    "core/llum.mpy": "ea2831d07c46fe38bf48c124e026d1a32afe94ce6999af798a55028f741ebfe7",
+    "core/llum.mpy": "09d229ba0634a56bcb1a13ac559926dc7ed96bcbd53a9007c99fec9283be243c",
     "core/personalitat.mpy": "9faa24a17573a79cc6703d07269fcacf9008b63279e3d282ea244d8b9c401f5a",
     "core/sim_link.mpy": "39495eb0de0c208545550688999e49b0047d331498a3050058778fe0df15495e",
     "effects/__init__.py": "3deb0556605e37760b252cae9095b8f2912e131da825e4e118b025d5501370b7",
@@ -192,7 +192,7 @@
     "lib/adafruit_midi/stop.mpy": "3a50a373afdd08cd92efe9b964506e2d49503f3a0dba669b702c56870c958e04",
     "lib/adafruit_midi/system_exclusive.mpy": "242a523962592b465d54b7a4aef061497067dd39281c926cd143d07e64b20a23",
     "lib/adafruit_midi/timing_clock.mpy": "75404b10937dbbe84ba9193a4f51e1139238b7d04d3021e760e85f9cc0dd1149",
-    "main.py": "8c973932f71752b7c0344da2c21ea8e8d2b4b42ba4e7613a7004dd17a942578f",
+    "main.py": "8b1ac241801e35020f00692b9e7c012fec9837b268fe880cc6d8daece5b6c585",
     "modes/__init__.py": "2c3cc6f1b76696eeb40fb4f025fa5908caafab9711b93d7267411b64c687b7fd",
     "modes/accompaniment.mpy": "9b5c2643a7905bae90981fc96f570c9885ede9858f8cfce79d00359e3061eeed",
     "modes/base_mode.mpy": "64b01d7f8888eefc59c2e973668b03eaacf641fdca9024063609d1a3bd27c407",

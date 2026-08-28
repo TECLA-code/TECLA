@@ -11,8 +11,10 @@ color i un de comú. Per tant vol TRES PINS PWM, no un.
 El pin de l'àudio va desaparèixer
 ────────────────────────────────
 Fins a la v3.16 GP22 era la sortida de minijack i `core/tone.py` hi feia un to
-PWM a cada nota del teclat. El to intern s'ha retirat sencer; GP22 és ara un
-dels tres canals del LED i no el toca ningú més.
+PWM a cada nota del teclat. El to intern s'ha retirat sencer i GP22 va quedar
+lliure. El LED, però, no hi va anar a parar: al muntatge real està soldat a
+GP19, GP20 i GP21, i GP22 no fa res. Cap altre mòdul toca aquests tres pins —
+dos amos al mateix pin volia dir soroll al LED a cada tecla.
 
 Dues coses que fan que els colors surtin bé
 ───────────────────────────────────────────
@@ -27,8 +29,15 @@ Tot és best-effort: sense maquinari (tests, simulador) queda en no-op.
 """
 
 # ── El que s'ha d'ajustar al muntatge ──────────────────────────────────────
-PINS = ('GP20', 'GP21', 'GP22')   # R, G, B. Els lliures del Pico són GP16-GP22
-                                  # (els botons ocupen GP0-GP15, els potes A0-A2).
+PINS = ('GP20', 'GP19', 'GP21')   # R, G, B — ORDRE MESURAT AL DISPOSITIU.
+                                  # No és consecutiu i no segueix la numeració:
+                                  # el VERD va a GP19 i el VERMELL a GP20. Es va
+                                  # comprovar encenent els pins d'un en un pel
+                                  # REPL i mirant el LED. Si algun dia es torna a
+                                  # soldar, refés la prova abans de tocar això.
+                                  # Els lliures del Pico són GP16-GP22 (els
+                                  # botons ocupen GP0-GP15, els potes A0-A2);
+                                  # GP22 ha quedat sense connectar.
 CATODE_COMU = True                # LL-509RGB(C)2E → càtode comú. Amb ànode
                                   # comú, posa-ho a False: el cicle s'inverteix.
 CALIBRAT = (1.0, 1.0, 1.0)        # trim per canal si el blanc surt tenyit
@@ -81,8 +90,14 @@ def color(r, g, b):
             return
         taula = _gamma()
         for i, v in enumerate((r, g, b)):
-            v = int(max(0, min(255, v)) * BRILLANTOR * CALIBRAT[i])
-            duty = taula[max(0, min(255, v))]
+            # L'ORDRE IMPORTA: primer la gamma sobre el color, i la brillantor
+            # DESPRÉS, sobre el cicle de treball. Al revés, la brillantor entra
+            # a la corba i queda comprimida ella també (0.35 ** 2.2 ≈ 0.098):
+            # un color apagat com (102, 125, 169) baixava a l'1-4% de cicle i
+            # no es veia. La brillantor és una escala lineal de sortida, no un
+            # color.
+            v = int(max(0, min(255, v)) * CALIBRAT[i])
+            duty = int(taula[max(0, min(255, v))] * BRILLANTOR)
             c[i].duty_cycle = duty if CATODE_COMU else 65535 - duty
     except Exception:
         pass
