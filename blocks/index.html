@@ -132,6 +132,8 @@
       border-bottom: 1px solid var(--border); background: var(--surface);
       flex-shrink: 0; overflow-x: auto;
     }
+    .dev-obert-lbl { font-size: 11.5px; color: var(--text2); white-space: nowrap; flex-shrink: 0; }
+    .dev-obert { font-size: 11.5px; color: var(--accent); font-weight: 600; white-space: nowrap; max-width: 260px; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
     .bank-bar input[type=text] {
       width: 200px; flex-shrink: 0; padding: 4px 9px; font-size: 11.5px;
       border: 1px solid var(--border); border-radius: var(--radius);
@@ -146,9 +148,27 @@
     .side-panel {
       width: var(--sidebar); background: var(--surface);
       border-left: 1px solid var(--border);
-      display: flex; flex-direction: column; flex-shrink: 0;
-      min-height: 0; padding: 16px;
+      display: flex; flex-direction: column; flex-shrink: 0; min-height: 0;
     }
+    /* El commutador del panell: el mateix gest que les pestanyes de dalt, una
+       mida més petit, per no inventar-se un idioma nou. */
+    .side-tabs {
+      display: flex; padding: 0 16px; flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .side-tab {
+      padding: 9px 12px; font-size: 11.5px; color: var(--text2);
+      cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px;
+      white-space: nowrap; transition: color .15s, border-color .15s;
+      user-select: none; flex-shrink: 0;
+    }
+    .side-tab:hover { color: var(--text); }
+    .side-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+    .side-view { display: none; flex: 1; min-height: 0; padding: 16px; overflow-y: auto; }
+    .side-view.active { display: flex; flex-direction: column; }
+    #view-sim .sim-canvas-wrap { flex-shrink: 0; margin-bottom: 12px; }
+    #view-sim .sim-controls { flex-shrink: 0; margin-bottom: 14px; }
+    #view-sim .sim-terminal { flex: 1; min-height: 120px; height: auto; }
 
     /* ── Code panel ──────────────────────────────────────────── */
     .code-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-shrink: 0; }
@@ -324,7 +344,10 @@
       box-shadow: 0 2px 0 rgba(0,0,0,.22);
     }
     .proj-btn-pick:hover { background:#eaecf5; border-color:rgba(0,0,0,.3); }
-    .proj-btn-pick.taken { background:rgba(61,201,108,.18); border-color:rgba(61,201,108,.5); color:rgba(15,80,40,.7); }
+    .proj-btn-pick.pot { border-radius:50%; }
+    /* Ocupat: verd translúcid sobre fons fosc — la lletra ha de ser clara,
+       o el nom de la tecla no es llegeix. */
+    .proj-btn-pick.taken { background:rgba(61,201,108,.22); border-color:rgba(61,201,108,.6); color:var(--green); }
     .proj-btn-pick.taken:hover { background:rgba(61,201,108,.28); }
     .proj-assign-overlay {
       background:var(--surface); border:1px solid var(--border-h);
@@ -352,9 +375,6 @@
     #tab-firmware .status-card,
     #tab-firmware .fw-step,
     #tab-firmware #btn-fw-upload { max-width: 620px; }
-    #tab-simulator .midi-bar,
-    #tab-simulator .sim-section,
-    #tab-simulator .sim-terminal { max-width: 620px; }
     #tab-guide .guide-section { max-width: 780px; }
     #tab-projects #proj-examples-section,
     #tab-projects .proj-sect-head,
@@ -374,7 +394,6 @@
     .insp-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); z-index: 5; }
     .drawer-title { font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: .08em; }
     .insp-body { padding: 16px 16px 8px; }
-    .insp-tools { border-top: 1px solid var(--border); padding: 14px 16px 20px; margin-top: auto; display: flex; gap: 8px; }
 
     /* Potes */
     .pots-row { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
@@ -384,7 +403,13 @@
     .pot-knob { width: 50px; height: 50px; border-radius: 50%; border: 2px solid rgba(0,0,0,0.2); background: var(--key-bg); position: relative; box-shadow: 0 3px 0 rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.6); }
     .pot-indicator { position: absolute; top: 4px; left: 50%; transform: translateX(-50%); width: 2px; height: 10px; background: rgba(0,0,0,0.45); border-radius: 2px; }
     .pot-label { font-size: 11px; font-weight: 600; color: var(--text); }
-    .pot-fn { font-size: 9px; color: var(--text3); font-family: var(--mono); }
+    /* La reixa no s'encongeix quan una pota estrena un nom llarg: les
+       tecles han de fer sempre la mateixa mida. */
+    .device-pane .keys-grid { flex-shrink: 0; }
+    .pot-fn { font-size: 9px; color: var(--text3); font-family: var(--mono); max-width: 76px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pot-fn.te-proj { color: var(--accent); }
+    .pot-wrapper.assigned .pot-knob { border-color: rgba(74,128,240,.7); box-shadow: inset 0 0 0 1000px rgba(74,128,240,.18), 0 3px 0 rgba(74,128,240,.3), inset 0 1px 0 rgba(255,255,255,.4); }
+    .pot-wrapper.assigned.active .pot-knob { border-color: var(--accent); box-shadow: inset 0 0 0 1000px rgba(74,128,240,.18), 0 0 0 2px var(--accent), 0 3px 0 rgba(74,128,240,.3); }
     .pot-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: inline-block; vertical-align: middle; margin-left: 4px; box-shadow: 0 0 4px var(--green); }
 
     /* Tecles */
@@ -405,19 +430,25 @@
     .key-btn.assigned .key-proj { color: rgba(30,60,160,.65); }
     .dev-cfg-hint { display: flex; align-items: center; justify-content: center; min-height: 56px; font-size: 11px; color: var(--text3); }
     .dev-cfg-name-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
-    .dev-cfg-name-row input { flex: 1; padding: 5px 8px; font-size: 11px; min-width: 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface2); color: var(--text); font-family: var(--font); }
+    .dev-cfg-name-row input[type=text] { flex: 1; width: 100%; padding: 5px 8px; font-size: 11px; min-width: 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface2); color: var(--text); font-family: var(--font); }
     .dev-cfg-name-row input:focus { outline: none; border-color: var(--accent); }
     .dev-cfg-proj-info { font-size: 10.5px; padding: 5px 8px; border-radius: 5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
     .dev-cfg-proj-info.has-proj { color: var(--accent); background: rgba(74,128,240,.07); border: 1px solid rgba(74,128,240,.2); }
     .dev-cfg-proj-info.no-proj { color: var(--text3); background: var(--surface2); border: 1px solid var(--border); }
     .dev-cfg-btns { display: flex; gap: 6px; flex-wrap: wrap; }
     .dev-cfg-btns .btn { padding: 4px 9px; font-size: 10.5px; }
+    .dev-cfg-seccio { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin: 12px 0 5px; }
+    .dev-cfg-nota { font-size: 10.5px; color: var(--text3); line-height: 1.6; margin-bottom: 4px; }
+    .dev-cfg-check { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--text); cursor: pointer; margin-bottom: 8px; }
+    .dev-cfg-check input { width: 13px; height: 13px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
     .dev-pot-fields { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
-    .dev-pot-fields > .dev-pot-field:first-child { grid-column: 1 / -1; }
+    .dev-pot-fields > .amplada { grid-column: 1 / -1; }
     .dev-pot-field { display: flex; flex-direction: column; gap: 3px; }
     .dev-pot-field label { font-size: 9.5px; color: var(--text3); text-transform: uppercase; letter-spacing: .04em; }
-    .dev-pot-field input[type=number] { width: 100%; padding: 5px 4px; border-radius: 4px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: 11px; font-family: var(--font); text-align: center; }
-    .dev-pot-field input[type=number]:focus { outline: none; border-color: var(--accent); }
+    .dev-pot-field input[type=number], .dev-pot-field select { width: 100%; padding: 5px 4px; border-radius: 4px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: 11px; font-family: var(--font); }
+    .dev-pot-field input[type=number] { text-align: center; }
+    .dev-pot-field input:focus, .dev-pot-field select:focus { outline: none; border-color: var(--accent); }
+    .dcf-lib-buit { font-size: 11px; color: var(--text3); padding: 4px 0; }
     .dcf-lib-picker { max-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; }
     .dcf-lib-item { flex-shrink: 0; padding: 6px 9px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); font-size: 11.5px; color: var(--text); cursor: pointer; transition: background .1s, border-color .1s; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .dcf-lib-item:hover { background: var(--surface3); border-color: var(--accent); color: var(--accent); }
@@ -548,7 +579,6 @@
     <span class="nav-tab active" data-tab="blocs" data-i18n="tab.blocs">Blocs</span>
     <span class="nav-tab" data-tab="device" data-i18n="tab.device">Dispositiu</span>
     <span class="nav-tab" data-tab="projects" data-i18n="tab.proj">Projectes</span>
-    <span class="nav-tab" data-tab="simulator" data-i18n="tab.sim">Simulador</span>
     <span class="nav-tab" data-tab="firmware" data-i18n="tab.fw">Firmware</span>
     <span class="nav-tab" data-tab="theme" data-i18n="tab.theme">Aparen&ccedil;a</span>
     <span class="nav-tab" data-tab="guide" data-i18n="tab.guide">Guia</span>
@@ -577,18 +607,55 @@
         <div id="blocklyDiv"></div>
       </div>
       <div class="side-panel">
-        <div class="code-header">
-          <h3 data-i18n="code.title">Codi Python generat</h3>
-          <button class="btn" id="btn-copy-code" data-i18n="btn.copy">Copiar</button>
+        <!-- Dues vistes del mateix: què s'ha generat i què fa quan corre. -->
+        <div class="side-tabs">
+          <span class="side-tab active" data-view="code" data-i18n="tab.code">Codi</span>
+          <span class="side-tab" data-view="sim" data-i18n="sim.vis">Visualitzador</span>
         </div>
-        <pre id="generatedCode" class="code-display"># El teu codi apareixerà aquí...</pre>
 
+        <div class="side-view active" id="view-code">
+          <div class="code-header">
+            <h3 data-i18n="code.title">Codi Python generat</h3>
+            <button class="btn" id="btn-copy-code" data-i18n="btn.copy">Copiar</button>
+          </div>
+          <pre id="generatedCode" class="code-display"># El teu codi apareixerà aquí...</pre>
+        </div>
+
+        <div class="side-view" id="view-sim">
+          <div class="midi-bar">
+            <span class="dot" id="midi-status-dot" style="background:var(--border-h)"></span>
+            <span id="midi-status-text" data-i18n="midi.disconn">MIDI: desconnectat</span>
+            <select id="midi-port-select"><option value="">&mdash; port MIDI &mdash;</option></select>
+            <button class="btn" id="btn-midi-connect">MIDI</button>
+          </div>
+          <span class="sim-label" style="display:none" id="sim-label-midi"></span>
+          <div class="sim-canvas-wrap">
+            <canvas id="simulatorCanvas" width="388" height="200"></canvas>
+          </div>
+          <div class="sim-controls">
+            <button class="btn btn-primary" id="btn-simulate" data-i18n="btn.simulate">Executar</button>
+            <button class="btn" id="btn-stop-sim" disabled data-i18n="btn.stop">Aturar</button>
+          </div>
+          <span class="sim-label" data-i18n="sim.out">Sortida</span>
+          <div id="simulatorOutput" class="sim-terminal"></div>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- ══ DISPOSITIU (el diagrama de tecles i potes) ═════════════════ -->
   <div class="tab-panel" id="tab-device">
+    <!-- Aquesta pestanya no va per lliure: reparteix pel maquinari el que has
+         fet a Blocs. La barra diu qu&egrave; hi ha obert ara mateix. -->
+    <div class="bank-bar">
+      <span class="dev-obert-lbl" data-i18n="dev.obert">Projecte obert a Blocs:</span>
+      <span class="dev-obert" id="dev-obert-nom">&mdash;</span>
+      <button class="btn btn-sm" id="btn-dev-a-blocs" data-i18n="dev.aeditor">Editar a Blocs</button>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <button class="btn btn-sm btn-primary" id="btn-gen-device-code" data-i18n="dev.gencode">Generar codi.py</button>
+        <button class="btn btn-sm btn-success" id="btn-upload-device-code" disabled data-i18n="dev.pushbtn">Pujar</button>
+      </div>
+    </div>
     <div class="config-main">
       <div class="device-pane">
         <div class="pots-row" id="device-pots"></div>
@@ -600,10 +667,6 @@
         </div>
         <div class="insp-body" id="dev-cfg-area">
           <div class="dev-cfg-hint" data-i18n="dev.hint">&larr; Clica un bot&oacute; o potenci&ograve;metre per configurar-lo</div>
-        </div>
-        <div class="insp-tools">
-          <button class="btn btn-primary" id="btn-gen-device-code" style="flex:1;justify-content:center" data-i18n="dev.gencode">&#8681; Generar codi.py</button>
-          <button class="btn btn-success" id="btn-upload-device-code" style="flex:1;justify-content:center" disabled data-i18n="dev.pushbtn">&#128228; Pujar</button>
         </div>
       </aside>
     </div>
@@ -619,37 +682,10 @@
         <span class="proj-sect-title" data-i18n="proj.mine">Els meus projectes</span>
       </div>
       <div class="proj-topbar">
-        <button class="btn btn-sm btn-primary" id="btn-proj-save" data-i18n="btn.projsave">↓ Guardar actual</button>
-        <button class="btn btn-sm" id="btn-proj-import" data-i18n="btn.projimport">↑ Importar .tblocks</button>
+        <button class="btn btn-sm btn-primary" id="btn-proj-save" data-i18n="btn.projsave">Guardar actual</button>
+        <button class="btn btn-sm" id="btn-proj-import" data-i18n="btn.projimport">Importar .tblocks</button>
       </div>
       <div id="proj-list" class="proj-list"></div>
-
-    </div></div>
-  </div>
-
-  <div class="tab-panel" id="tab-simulator">
-    <div class="panel-inner"><div class="inner-w">
-      <div class="midi-bar">
-        <span class="dot" id="midi-status-dot" style="background:var(--border-h)"></span>
-        <span id="midi-status-text" data-i18n="midi.disconn">MIDI: desconnectat</span>
-        <select id="midi-port-select"><option value="">— port MIDI —</option></select>
-        <button class="btn" id="btn-midi-connect">MIDI</button>
-      </div>
-      <span class="sim-label" data-i18n="sim.vis">Visualitzador</span>
-      <span class="sim-label" style="display:none" id="sim-label-midi"></span>
-      <div class="sim-section">
-        <div class="sim-canvas-wrap">
-          <canvas id="simulatorCanvas" width="388" height="200"></canvas>
-        </div>
-      </div>
-      <div class="sim-section">
-        <div class="sim-controls">
-          <button class="btn btn-primary" id="btn-simulate" data-i18n="btn.simulate">Executar</button>
-          <button class="btn" id="btn-stop-sim" disabled data-i18n="btn.stop">Aturar</button>
-        </div>
-      </div>
-      <span class="sim-label" data-i18n="sim.out">Sortida</span>
-      <div id="simulatorOutput" class="sim-terminal"></div>
 
     </div></div>
   </div>
@@ -725,7 +761,7 @@
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
           <label style="font-size:12px;color:var(--text2);white-space:nowrap;min-width:36px" data-i18n="theme.name">Nom:</label>
           <input type="text" id="ct-name" placeholder="Ex: El meu tema">
-          <button class="btn" id="btn-random-theme" data-i18n="theme.random">🎲 Aleatori</button>
+          <button class="btn" id="btn-random-theme" data-i18n="theme.random">Aleatori</button>
         </div>
         <div class="custom-theme-grid">
           <div class="ct-field"><input type="color" id="ct-bg" value="#0c0c0c"><label>Fons</label></div>
@@ -841,6 +877,7 @@
     <category name="Control Hardware" colour="#2979ff">
       <block type="tecla_read_button"></block>
       <block type="tecla_read_pot"></block>
+      <block type="tecla_pot_change"></block>
       <block type="tecla_on_button_press"></block>
     </category>
     <category name="Efectes Àudio" colour="#e040fb">
@@ -1147,6 +1184,10 @@
       <block type="tecla_key_combo"></block>
       <block type="tecla_type_text"></block>
       <block type="tecla_media"></block>
+      <block type="tecla_brightness"></block>
+      <block type="tecla_mouse_scroll">
+        <value name="AMOUNT"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+      </block>
       <block type="tecla_open_app"></block>
     </category>
     <category name="Sistema" colour="#94a3b8">
