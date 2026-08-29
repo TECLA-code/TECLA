@@ -81,6 +81,14 @@
     .btn-success:hover { background: rgba(61,201,108,.22); }
     .btn-danger { background: rgba(240,82,82,.1); border-color: rgba(240,82,82,.4); color: #f05252; }
     .sep { width: 1px; height: 16px; background: var(--border); margin: 0 2px; }
+    .lang-btn {
+      font-size: 10px; padding: 3px 7px; border-radius: 5px;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--text3); cursor: pointer; font-family: var(--font);
+      letter-spacing: .04em; transition: color .15s, border-color .15s;
+    }
+    .lang-btn:hover { color: var(--text2); border-color: var(--border-h); }
+    .lang-btn.active { color: var(--text); border-color: var(--border-h); }
 
     /* ── Device badge ────────────────────────────────────────── */
     .device-badge {
@@ -93,33 +101,54 @@
     .device-badge.connected .dot { background: var(--green); box-shadow: 0 0 6px var(--green); }
     .device-badge.connected { color: var(--text); border-color: var(--border-h); }
 
-    /* ── Layout ──────────────────────────────────────────────── */
-    .main { display: flex; flex: 1; min-height: 0; }
-    .workspace-container { flex: 1; position: relative; }
-    #blocklyDiv { width: 100%; height: 100%; }
+    /* ── Pestanyes ───────────────────────────────────────────────
+       Calcades de l'Instrument i el Macropad: una barra a tota l'amplada
+       sota el header, no pas pestanyes petites dins d'un panell lateral. */
+    nav {
+      display: flex; padding: 0 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface); flex-shrink: 0; overflow-x: auto;
+    }
+    .nav-tab {
+      padding: 10px 14px; font-size: 12px; color: var(--text2);
+      cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px;
+      white-space: nowrap; transition: color .15s, border-color .15s;
+      user-select: none; flex-shrink: 0;
+    }
+    .nav-tab:hover { color: var(--text); }
+    .nav-tab.active { color: var(--text); border-bottom-color: var(--accent); }
 
-    /* ── Side panel ──────────────────────────────────────────── */
+    /* ── Panells ─────────────────────────────────────────────── */
+    .tab-panel { display: none; flex: 1; min-height: 0; }
+    .tab-panel.active { display: flex; flex-direction: column; }
+    #tab-blocs.active { overflow: hidden; }
+    /* Tot el que no és l'editor fa scroll i es centra, com el <main> de l'Instrument */
+    .panel-inner { flex: 1; min-height: 0; overflow-y: auto; padding: 22px 20px; }
+    .panel-inner > .inner-w { max-width: 1100px; margin: 0 auto; }
+
+    /* Barra d'accions sota les pestanyes: la .bank-bar de les altres apps */
+    .bank-bar {
+      display: flex; align-items: center; gap: 8px; padding: 8px 16px;
+      border-bottom: 1px solid var(--border); background: var(--surface);
+      flex-shrink: 0; overflow-x: auto;
+    }
+    .bank-bar input[type=text] {
+      width: 200px; flex-shrink: 0; padding: 4px 9px; font-size: 11.5px;
+      border: 1px solid var(--border); border-radius: var(--radius);
+      background: var(--surface2); color: var(--text); font-family: var(--font);
+    }
+    .bank-bar input[type=text]:focus { outline: none; border-color: var(--accent); }
+
+    /* ── Editor: els blocs a l'esquerra, el codi a la dreta ──── */
+    .main { display: flex; flex: 1; min-height: 0; }
+    .workspace-container { flex: 1; position: relative; min-width: 0; }
+    #blocklyDiv { width: 100%; height: 100%; }
     .side-panel {
       width: var(--sidebar); background: var(--surface);
       border-left: 1px solid var(--border);
       display: flex; flex-direction: column; flex-shrink: 0;
+      min-height: 0; padding: 16px;
     }
-    .panel-tabs {
-      display: flex; border-bottom: 1px solid var(--border);
-      background: var(--surface); flex-shrink: 0;
-    }
-    .tab-btn {
-      flex: 1; padding: 10px 8px;
-      background: transparent; border: none; border-bottom: 2px solid transparent;
-      color: var(--text2); cursor: pointer; font-size: 11.5px;
-      font-family: var(--font); font-weight: 500;
-      transition: color .15s, border-color .15s; margin-bottom: -1px;
-    }
-    .tab-btn:hover { color: var(--text); }
-    .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
-    .panel-body { flex: 1; overflow: hidden; position: relative; }
-    .panel-content { display: none; flex-direction: column; height: 100%; overflow-y: auto; padding: 16px; }
-    .panel-content.active { display: flex; }
 
     /* ── Code panel ──────────────────────────────────────────── */
     .code-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-shrink: 0; }
@@ -191,9 +220,6 @@
     .modal h2 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
     .modal p { font-size: 12.5px; color: var(--text2); line-height: 1.65; margin-bottom: 16px; }
     .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
-
-    /* ── 7 tabs ──────────────────────────────────────────────── */
-    .tab-btn { font-size: 9.5px; }
 
     /* ── Guide styles ────────────────────────────────────────── */
     .guide-h1 { font-size: 12.5px; font-weight: 700; color: var(--text); margin: 0 0 8px; }
@@ -319,38 +345,65 @@
     .proj-divider { height:1px; background:var(--border); margin:12px 0; flex-shrink:0; }
     .btn-sm { font-size:10.5px; padding:3px 8px; }
 
-    /* ── Tecles panel (estètica idèntica a TECLA MIDI) ─────────── */
-    .dev-hw-wrap { display: flex; flex-direction: row; gap: 14px; align-items: center; justify-content: center; padding: 12px 0 10px; flex-shrink: 0; }
-    .dev-pots-col { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; flex-shrink: 0; }
-    .dev-pot-w { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; opacity: 0.8; transition: opacity .2s; }
-    .dev-pot-w:hover, .dev-pot-w.selected { opacity: 1; }
-    .dev-pot-knob { width: 50px; height: 50px; border-radius: 50%; border: 2px solid rgba(0,0,0,.2); background: var(--key-bg); position: relative; box-shadow: 0 3px 0 rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.6); transition: border-color .15s, box-shadow .15s; }
-    .dev-pot-w.selected .dev-pot-knob { border-color: var(--accent); box-shadow: 0 3px 0 rgba(0,0,0,.28), 0 0 0 2px var(--accent); }
-    .dev-pot-indicator { position: absolute; top: 4px; left: 50%; transform: translateX(-50%); width: 2px; height: 10px; background: rgba(0,0,0,.45); border-radius: 2px; }
-    .dev-pot-lbl { font-size: 11px; font-weight: 600; color: var(--text); }
-    .dev-pot-cc { font-size: 9px; color: var(--text2); }
-    .dev-keys-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 320px; }
-    .dev-key-btn {
-      aspect-ratio: 1; background: var(--key-bg); border: 1px solid rgba(0,0,0,.18);
-      border-radius: 7px; display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      cursor: pointer; position: relative;
-      box-shadow: 0 3px 0 rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.55);
-      transition: all .1s; padding: 2px; overflow: hidden;
-    }
-    .dev-key-btn:hover { border-color: rgba(0,0,0,.28); filter: brightness(1.07); }
-    .dev-key-btn:active { transform: scale(.95); box-shadow: 0 1px 0 rgba(0,0,0,.3), inset 0 1px 2px rgba(0,0,0,.15); }
-    .dev-key-btn.selected { border-color: var(--accent) !important; box-shadow: 0 0 0 2px var(--accent), 0 3px 0 rgba(0,0,0,.2) !important; }
-    .dev-key-btn.assigned { background: var(--key-bg); border-color: rgba(74,128,240,.7); box-shadow: inset 0 0 0 1000px rgba(74,128,240,.18), 0 3px 0 rgba(74,128,240,.3), inset 0 1px 0 rgba(255,255,255,.4); }
-    .dev-key-num { position: absolute; top: 3px; left: 4px; font-size: 7px; color: rgba(0,0,0,.3); font-family: var(--mono); pointer-events: none; font-weight: 700; }
-    .dev-key-name { font-size: 8px; font-weight: 700; color: rgba(0,0,0,.72); font-family: var(--mono); pointer-events: none; line-height: 1.2; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 3px; text-align: center; }
-    .dev-key-proj { font-size: 7px; color: rgba(0,0,0,.4); pointer-events: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; line-height: 1.2; text-align: center; padding: 0 2px; }
-    .dev-key-btn.assigned .dev-key-name { color: rgba(30,60,160,.95); }
-    .dev-key-btn.assigned .dev-key-proj { color: rgba(30,60,160,.65); }
-    .dev-cfg-area { flex-shrink: 0; border-top: 1px solid var(--border); padding: 10px 0 8px; }
+    /* Dins d'un panell ample, el contingut no s'estira: es queda en una
+       columna estreta arrenglerada a l'esquerra, com les targetes de
+       l'Instrument dins del seu <main> de 1100px. */
+    #tab-theme .card { max-width: 620px; }
+    #tab-firmware .status-card,
+    #tab-firmware .fw-step,
+    #tab-firmware #btn-fw-upload { max-width: 620px; }
+    #tab-simulator .midi-bar,
+    #tab-simulator .sim-section,
+    #tab-simulator .sim-terminal { max-width: 620px; }
+    #tab-guide .guide-section { max-width: 780px; }
+    #tab-projects #proj-examples-section,
+    #tab-projects .proj-sect-head,
+    #tab-projects .proj-divider,
+    #tab-projects .proj-topbar,
+    #tab-projects .proj-list { max-width: 860px; }
+    #tab-projects .proj-topbar .btn { flex: 0 0 auto; }
+
+    /* ── Dispositiu: el diagrama de tecles i potes ──────────────
+       Les mateixes classes i les mateixes mides que a l'Instrument i el
+       Macropad: la reixa de 4×4 a 440px, els botons quadrats amb el número
+       a dalt a l'esquerra i els potes en columna al costat. Si allà es
+       canvia la mètrica, aquí també. */
+    .config-main { flex: 1; display: flex; min-height: 0; }
+    .device-pane { flex: 1; display: flex; flex-direction: row-reverse; align-items: center; justify-content: center; gap: 28px; padding: 20px; overflow-y: auto; min-width: 0; }
+    .inspector { width: 340px; flex-shrink: 0; border-left: 1px solid var(--border); background: var(--surface); overflow-y: auto; display: flex; flex-direction: column; }
+    .insp-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); z-index: 5; }
+    .drawer-title { font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: .08em; }
+    .insp-body { padding: 16px 16px 8px; }
+    .insp-tools { border-top: 1px solid var(--border); padding: 14px 16px 20px; margin-top: auto; display: flex; gap: 8px; }
+
+    /* Potes */
+    .pots-row { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+    .pot-wrapper { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; opacity: 0.8; transition: opacity 0.2s; }
+    .pot-wrapper:hover, .pot-wrapper.active { opacity: 1; }
+    .pot-wrapper.active .pot-knob { border-color: var(--accent); box-shadow: 0 3px 0 rgba(0,0,0,0.28), 0 0 0 2px var(--accent); }
+    .pot-knob { width: 50px; height: 50px; border-radius: 50%; border: 2px solid rgba(0,0,0,0.2); background: var(--key-bg); position: relative; box-shadow: 0 3px 0 rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.6); }
+    .pot-indicator { position: absolute; top: 4px; left: 50%; transform: translateX(-50%); width: 2px; height: 10px; background: rgba(0,0,0,0.45); border-radius: 2px; }
+    .pot-label { font-size: 11px; font-weight: 600; color: var(--text); }
+    .pot-fn { font-size: 9px; color: var(--text3); font-family: var(--mono); }
+    .pot-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: inline-block; vertical-align: middle; margin-left: 4px; box-shadow: 0 0 4px var(--green); }
+
+    /* Tecles */
+    .keys-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 440px; }
+    .key-btn { aspect-ratio: 1; background: var(--key-bg); border: 1px solid rgba(0,0,0,0.18); border-radius: 7px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; transition: all 0.1s; position: relative; overflow: hidden; padding: 2px; box-shadow: 0 3px 0 rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.55); }
+    .key-btn:hover { border-color: rgba(0,0,0,0.28); filter: brightness(1.07); }
+    .key-btn:active, .key-btn.pressed { transform: scale(.95); box-shadow: 0 1px 0 rgba(0,0,0,0.3), inset 0 1px 2px rgba(0,0,0,0.15); }
+    .key-num { position: absolute; top: 5px; left: 6px; font-size: 9px; color: rgba(0,0,0,0.35); font-family: var(--mono); pointer-events: none; }
+    .key-label { font-size: 10px; font-weight: 700; color: rgba(0,0,0,0.72); font-family: var(--mono); pointer-events: none; text-align: center; padding: 0 4px; line-height: 1.2; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .key-btn.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent), 0 3px 0 rgba(0,0,0,0.2); }
+    /* Una tecla amb projecte assignat. Es tenyeix de blau PER DINS (l'ombra
+       interior) i no canviant el fons: la cara de la tecla es queda clara i
+       el nom del projecte s'hi continua llegint. */
+    .key-btn.assigned { border-color: rgba(74,128,240,.7); box-shadow: inset 0 0 0 1000px rgba(74,128,240,.18), 0 3px 0 rgba(74,128,240,.3), inset 0 1px 0 rgba(255,255,255,.4); }
+    .key-btn.assigned .key-label { color: rgba(30,60,160,.95); }
+    .key-btn.assigned.active { border-color: var(--accent); box-shadow: inset 0 0 0 1000px rgba(74,128,240,.18), 0 0 0 2px var(--accent), 0 3px 0 rgba(74,128,240,.3); }
+    .key-proj { font-size: 8.5px; color: rgba(0,0,0,.45); pointer-events: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; line-height: 1.2; text-align: center; padding: 0 3px; }
+    .key-btn.assigned .key-proj { color: rgba(30,60,160,.65); }
     .dev-cfg-hint { display: flex; align-items: center; justify-content: center; min-height: 56px; font-size: 11px; color: var(--text3); }
-    .dev-cfg-head { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-    .dev-cfg-head span { color: var(--accent); }
     .dev-cfg-name-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
     .dev-cfg-name-row input { flex: 1; padding: 5px 8px; font-size: 11px; min-width: 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface2); color: var(--text); font-family: var(--font); }
     .dev-cfg-name-row input:focus { outline: none; border-color: var(--accent); }
@@ -359,17 +412,66 @@
     .dev-cfg-proj-info.no-proj { color: var(--text3); background: var(--surface2); border: 1px solid var(--border); }
     .dev-cfg-btns { display: flex; gap: 6px; flex-wrap: wrap; }
     .dev-cfg-btns .btn { padding: 4px 9px; font-size: 10.5px; }
-    .dev-pot-fields { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; }
+    .dev-pot-fields { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
+    .dev-pot-fields > .dev-pot-field:first-child { grid-column: 1 / -1; }
     .dev-pot-field { display: flex; flex-direction: column; gap: 3px; }
     .dev-pot-field label { font-size: 9.5px; color: var(--text3); text-transform: uppercase; letter-spacing: .04em; }
     .dev-pot-field input[type=number] { width: 100%; padding: 5px 4px; border-radius: 4px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: 11px; font-family: var(--font); text-align: center; }
     .dev-pot-field input[type=number]:focus { outline: none; border-color: var(--accent); }
-    .dev-export-bar { display:flex; gap:8px; padding:10px 0 2px; border-top:1px solid var(--border); flex-shrink:0; }
     .dcf-lib-picker { max-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; }
     .dcf-lib-item { flex-shrink: 0; padding: 6px 9px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); font-size: 11.5px; color: var(--text); cursor: pointer; transition: background .1s, border-color .1s; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .dcf-lib-item:hover { background: var(--surface3); border-color: var(--accent); color: var(--accent); }
     .dcf-lib-item.active { border-color: var(--accent); color: var(--accent); background: rgba(74,128,240,.1); }
     .proj-cat-label { font-size: 10px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .07em; padding: 2px 0 4px; margin-top: 4px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+
+    /* Amples petits: el codi i l'inspector passen a sota, com al Macropad */
+    @media (max-width: 900px) {
+      .main { flex-direction: column; }
+      .side-panel { width: 100%; border-left: none; border-top: 1px solid var(--border); height: 40%; }
+      .config-main { flex-direction: column; overflow-y: auto; }
+      .device-pane { overflow: visible; flex: none; flex-direction: column; gap: 18px; }
+      .pots-row { flex-direction: row; }
+      .inspector { width: 100%; border-left: none; border-top: 1px solid var(--border); overflow: visible; }
+    }
+
+    /* ── PANTALLA del dispositiu ─────────────────────────────────
+       Copiada del Macropad sense tocar-hi res: és la mateixa finestra,
+       i s'ha de veure igual a les tres apps. */
+    .devmon { position: fixed; right: 24px; bottom: 24px; z-index: 350; width: 400px; display: flex; flex-direction: column;
+      background: color-mix(in srgb, var(--surface) 82%, transparent); backdrop-filter: blur(18px) saturate(1.15); -webkit-backdrop-filter: blur(18px) saturate(1.15);
+      border: 1px solid var(--border-h); border-radius: 16px; box-shadow: 0 18px 60px rgba(0,0,0,.5); overflow: hidden;
+      font-family: var(--mono); resize: both; min-width: 300px; min-height: 240px; max-width: 92vw; max-height: 88vh; }
+    .devmon.hidden { display: none; }
+    .devmon-head { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent); font-size: 11px; color: var(--text2); cursor: grab; user-select: none; }
+    .devmon-head:active { cursor: grabbing; }
+    .devmon-head .btn { padding: 2px 8px; font-size: 10.5px; }
+    .devmon-head .btn.hidden { display: none; }
+    .devmon-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); flex-shrink: 0; }
+    .devmon.live .devmon-dot { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .devmon-title { font-weight: 600; letter-spacing: .05em; flex: 1; }
+    .devmon-body { position: relative; flex: 1; min-height: 240px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 18px 16px 14px; overflow: hidden; }
+    /* Logo TECLA sempre de fons: protagonista mentre la pantalla espera,
+       marca d'aigua que només s'intueix quan el dispositiu treballa. */
+    .devmon-logo-bg { position: absolute; inset: 0; margin: auto; width: 190px; height: 190px;
+      background-color: var(--text); opacity: .9; pointer-events: none; transition: opacity .8s ease;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg%20version=%221.0%22%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22964.000000pt%22%20height=%22964.000000pt%22%20viewBox=%220%200%20964.000000%20964.000000%22%20preserveAspectRatio=%22xMidYMid%20meet%22%3E%20%3Cg%20transform=%22translate(0.000000,964.000000)%20scale(0.100000,-0.100000)%22%20fill=%22%23000000%22%20stroke=%22none%22%3E%20%3Cpath%20d=%22M5650%209178%20c-222%20-18%20-478%20-65%20-860%20-159%20-219%20-54%20-315%20-81%20-633%20-173%20-624%20-183%20-1451%20-543%20-1934%20-843%20-156%20-97%20-419%20-304%20-474%20-373%20l-28%20-35%2018%20-90%20c28%20-135%20150%20-499%20278%20-830%20129%20-333%20209%20-517%20395%20-915%2022%20-47%2048%20-105%2058%20-130%2024%20-61%20152%20-318%20232%20-465%20119%20-220%20305%20-515%20419%20-666%2055%20-72%2060%20-76%20105%20-83%20103%20-14%20432%2034%20839%20121%20222%2047%20635%20157%20752%20199%2054%2020%20150%2053%20213%2074%20164%2054%20542%20217%20850%20367%20276%20134%20795%20435%20995%20576%20550%20388%20841%20656%20995%20914%2029%2048%2060%2096%2067%20105%2010%2010%2012%2025%208%2040%20-23%2075%20-424%20694%20-564%20871%20-31%2040%20-134%20173%20-228%20297%20-218%20286%20-348%20434%20-653%20744%20-383%20389%20-454%20440%20-618%20452%20-43%202%20-90%206%20-107%207%20-16%202%20-73%200%20-125%20-5z%22/%3E%20%3Cpath%20d=%22M1456%207448%20c-312%20-410%20-531%20-758%20-739%20-1173%20-162%20-324%20-329%20-764%20-386%20-1020%20-13%20-55%20-34%20-146%20-47%20-203%20-13%20-57%20-24%20-124%20-24%20-149%200%20-105%20185%20-677%20328%20-1010%2049%20-114%20111%20-264%20138%20-333%2052%20-133%20226%20-487%20397%20-810%20210%20-397%20217%20-407%20605%20-980%20115%20-169%20372%20-521%20509%20-695%20117%20-148%20375%20-405%20408%20-405%2042%200%2047%2025%2040%20238%20-14%20454%2031%201278%2096%201757%206%2044%2017%20141%2024%20215%208%2074%2023%20200%2034%20280%2012%2080%2026%20179%2032%20220%206%2041%2035%20181%2066%20310%2031%20129%2066%20282%2078%20340%20l22%20105%20-118%20175%20c-65%2096%20-147%20230%20-183%20297%20-36%2068%20-78%20142%20-94%20165%20-105%20154%20-415%20795%20-659%201363%20-52%20121%20-110%20255%20-129%20298%20-58%20130%20-299%20838%20-331%20971%20-10%2042%20-23%2076%20-30%2076%20-7%200%20-23%20-15%20-37%20-32z%22/%3E%20%3Cpath%20d=%22M8044%206408%20c-188%20-230%20-384%20-432%20-534%20-552%20-333%20-267%20-587%20-439%20-920%20-621%20-318%20-175%20-895%20-463%20-1050%20-525%20-74%20-29%20-200%20-81%20-280%20-115%20-292%20-125%20-759%20-267%20-1270%20-385%20-257%20-59%20-325%20-70%20-545%20-91%20-66%20-6%20-125%20-15%20-132%20-21%20-19%20-15%20-60%20-111%20-92%20-213%20-49%20-156%20-133%20-649%20-176%20-1025%20-9%20-80%20-21%20-163%20-25%20-185%20-5%20-22%20-16%20-119%20-24%20-215%20-9%20-96%20-23%20-240%20-31%20-320%20-39%20-377%20-55%20-1025%20-35%20-1380%207%20-124%2017%20-241%2024%20-260%20l11%20-35%2065%201%20c68%201%20465%2043%20655%2069%20330%2046%20663%20118%201235%20266%20107%2028%20245%2064%20307%2080%2062%2016%20149%2043%20195%2060%2046%2016%20196%2070%20333%20119%20241%2085%20755%20286%20940%20368%20211%2093%20772%20371%20911%20452%20220%20127%20588%20358%20749%20470%2077%2053%20176%20120%20220%20150%2084%2056%20331%20242%20425%20319%20206%20170%20315%20274%20343%20326%2033%2060%2029%20207%20-10%20385%20-55%20248%20-173%20696%20-214%20816%20-99%20288%20-244%20673%20-308%20820%20-162%20373%20-195%20443%20-333%20719%20-215%20430%20-314%20595%20-357%20595%20-9%200%20-44%20-33%20-77%20-72z%22/%3E%20%3C/g%3E%20%3C/svg%3E") no-repeat center / contain;
+      mask: url("data:image/svg+xml,%3Csvg%20version=%221.0%22%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22964.000000pt%22%20height=%22964.000000pt%22%20viewBox=%220%200%20964.000000%20964.000000%22%20preserveAspectRatio=%22xMidYMid%20meet%22%3E%20%3Cg%20transform=%22translate(0.000000,964.000000)%20scale(0.100000,-0.100000)%22%20fill=%22%23000000%22%20stroke=%22none%22%3E%20%3Cpath%20d=%22M5650%209178%20c-222%20-18%20-478%20-65%20-860%20-159%20-219%20-54%20-315%20-81%20-633%20-173%20-624%20-183%20-1451%20-543%20-1934%20-843%20-156%20-97%20-419%20-304%20-474%20-373%20l-28%20-35%2018%20-90%20c28%20-135%20150%20-499%20278%20-830%20129%20-333%20209%20-517%20395%20-915%2022%20-47%2048%20-105%2058%20-130%2024%20-61%20152%20-318%20232%20-465%20119%20-220%20305%20-515%20419%20-666%2055%20-72%2060%20-76%20105%20-83%20103%20-14%20432%2034%20839%20121%20222%2047%20635%20157%20752%20199%2054%2020%20150%2053%20213%2074%20164%2054%20542%20217%20850%20367%20276%20134%20795%20435%20995%20576%20550%20388%20841%20656%20995%20914%2029%2048%2060%2096%2067%20105%2010%2010%2012%2025%208%2040%20-23%2075%20-424%20694%20-564%20871%20-31%2040%20-134%20173%20-228%20297%20-218%20286%20-348%20434%20-653%20744%20-383%20389%20-454%20440%20-618%20452%20-43%202%20-90%206%20-107%207%20-16%202%20-73%200%20-125%20-5z%22/%3E%20%3Cpath%20d=%22M1456%207448%20c-312%20-410%20-531%20-758%20-739%20-1173%20-162%20-324%20-329%20-764%20-386%20-1020%20-13%20-55%20-34%20-146%20-47%20-203%20-13%20-57%20-24%20-124%20-24%20-149%200%20-105%20185%20-677%20328%20-1010%2049%20-114%20111%20-264%20138%20-333%2052%20-133%20226%20-487%20397%20-810%20210%20-397%20217%20-407%20605%20-980%20115%20-169%20372%20-521%20509%20-695%20117%20-148%20375%20-405%20408%20-405%2042%200%2047%2025%2040%20238%20-14%20454%2031%201278%2096%201757%206%2044%2017%20141%2024%20215%208%2074%2023%20200%2034%20280%2012%2080%2026%20179%2032%20220%206%2041%2035%20181%2066%20310%2031%20129%2066%20282%2078%20340%20l22%20105%20-118%20175%20c-65%2096%20-147%20230%20-183%20297%20-36%2068%20-78%20142%20-94%20165%20-105%20154%20-415%20795%20-659%201363%20-52%20121%20-110%20255%20-129%20298%20-58%20130%20-299%20838%20-331%20971%20-10%2042%20-23%2076%20-30%2076%20-7%200%20-23%20-15%20-37%20-32z%22/%3E%20%3Cpath%20d=%22M8044%206408%20c-188%20-230%20-384%20-432%20-534%20-552%20-333%20-267%20-587%20-439%20-920%20-621%20-318%20-175%20-895%20-463%20-1050%20-525%20-74%20-29%20-200%20-81%20-280%20-115%20-292%20-125%20-759%20-267%20-1270%20-385%20-257%20-59%20-325%20-70%20-545%20-91%20-66%20-6%20-125%20-15%20-132%20-21%20-19%20-15%20-60%20-111%20-92%20-213%20-49%20-156%20-133%20-649%20-176%20-1025%20-9%20-80%20-21%20-163%20-25%20-185%20-5%20-22%20-16%20-119%20-24%20-215%20-9%20-96%20-23%20-240%20-31%20-320%20-39%20-377%20-55%20-1025%20-35%20-1380%207%20-124%2017%20-241%2024%20-260%20l11%20-35%2065%201%20c68%201%20465%2043%20655%2069%20330%2046%20663%20118%201235%20266%20107%2028%20245%2064%20307%2080%2062%2016%20149%2043%20195%2060%2046%2016%20196%2070%20333%20119%20241%2085%20755%20286%20940%20368%20211%2093%20772%20371%20911%20452%20220%20127%20588%20358%20749%20470%2077%2053%20176%20120%20220%20150%2084%2056%20331%20242%20425%20319%20206%20170%20315%20274%20343%20326%2033%2060%2029%20207%20-10%20385%20-55%20248%20-173%20696%20-214%20816%20-99%20288%20-244%20673%20-308%20820%20-162%20373%20-195%20443%20-333%20719%20-215%20430%20-314%20595%20-357%20595%20-9%200%20-44%20-33%20-77%20-72z%22/%3E%20%3C/g%3E%20%3C/svg%3E") no-repeat center / contain; }
+    .devmon.inuse .devmon-logo-bg { opacity: .07; }
+    .devmon-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    .devmon-hero { position: absolute; left: 0; right: 0; bottom: 12px; display: flex; justify-content: center; }
+    .devmon-hero .hint { color: var(--text3); font-size: 10.5px; text-align: center; line-height: 1.6; max-width: 280px; padding: 0 12px; }
+    .devmon-now { position: relative; text-align: center; display: none; }
+    .devmon.inuse .devmon-now { display: block; }
+    @keyframes devmonPop { from { transform: scale(.94); opacity: .4; } to { transform: scale(1); opacity: 1; } }
+    .devmon-now .tag { font-size: 10px; letter-spacing: .35em; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; }
+    .devmon-now .main { font-size: 34px; font-weight: 700; letter-spacing: .04em; line-height: 1.2; color: var(--text); word-break: break-word; }
+    .devmon-now.capa .main { color: var(--green); text-shadow: 0 0 26px color-mix(in srgb, var(--green) 45%, transparent); }
+    .devmon-now.pot .main { color: var(--accent); }
+    .devmon.pip { position: static; width: 100%; height: 100%; border: 0; border-radius: 0; box-shadow: none; resize: none;
+      background: radial-gradient(130% 100% at 50% 0%, color-mix(in srgb, var(--surface) 90%, var(--accent) 10%) 0%, var(--surface) 48%, color-mix(in srgb, var(--surface) 85%, black) 100%); }
+    .devmon.pip .devmon-body { flex: 1; padding: 0; }
+    .devmon.pip .devmon-head { position: absolute; top: 0; left: 0; right: 0; z-index: 2; opacity: 0; transition: opacity .25s ease; background: color-mix(in srgb, var(--surface) 80%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .devmon.pip:hover .devmon-head { opacity: 1; }
 
     /* ── Theme body classes ──────────────────────────────────── */
     body.theme-light { --bg:#f2f2f2; --surface:#ffffff; --surface2:#ebebeb; --surface3:#e0e0e0; --accent:#4a80f0; --accent-d:#2d5cd9; --border:rgba(0,0,0,.1); --border-h:rgba(0,0,0,.2); --text:#111; --text2:rgba(0,0,0,.5); --text3:rgba(0,0,0,.3); }
@@ -400,250 +502,290 @@
 
   <header>
     <div class="header-left">
-      <a href="../index.html" class="back-btn">
+      <a href="../index.html" class="back-btn" title="Tornar al hub d'aplicacions">
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H3M7 4l-4 4 4 4"/></svg>
         <span data-i18n="btn.back">Inici</span>
       </a>
-      <select id="sel-lang" class="btn" title="Idioma" style="min-width:42px;padding:3px 6px;font-size:11px;cursor:pointer;appearance:none;-webkit-appearance:none;text-align:center">
-        <option value="ca">CA</option>
-        <option value="es">ES</option>
-        <option value="en">EN</option>
-      </select>
       <div>
         <div class="logo">T E C L A</div>
         <div class="logo-sub">BLOCKS</div>
       </div>
       <div class="device-badge" id="device-badge">
-        <span class="dot"></span><span id="device-name">desconnectat</span>
+        <span class="dot"></span><span id="device-name" data-i18n="fw.disconn">desconnectat</span>
       </div>
     </div>
     <div class="header-right">
-      <button class="btn" id="btn-new" data-i18n="btn.new">Nou</button>
-      <button class="btn" id="btn-open" data-i18n="btn.open">Obrir</button>
-      <button class="btn btn-primary" id="btn-save" data-i18n="btn.save">Guardar</button>
-      <button class="btn" id="btn-export" data-i18n="btn.export">Exportar .py</button>
+      <button class="lang-btn active" data-lang="ca">CA</button>
+      <button class="lang-btn" data-lang="es">ES</button>
+      <button class="lang-btn" data-lang="en">EN</button>
       <div class="sep"></div>
-      <button class="btn" id="btn-connect" data-i18n="btn.connect">Connectar</button>
-      <button class="btn btn-success" id="btn-upload" disabled data-i18n="btn.upload">Pujar</button>
+      <button class="btn" id="btn-pantalla" data-i18n="btn.pantalla" title="Pantalla del dispositiu: veu en directe les accions del TECLA pel port s&egrave;rie">Pantalla</button>
+      <button class="btn btn-primary" id="btn-connect" data-i18n="btn.connect">Connecta dispositiu</button>
+      <button class="btn" id="btn-disconnect" style="display:none" data-i18n="btn.disconnect">Desconnectar</button>
     </div>
   </header>
 
-  <div class="main">
-    <!-- Blockly workspace -->
-    <div class="workspace-container">
-      <div id="blocklyDiv"></div>
+  <!-- PANTALLA del dispositiu: transl&uacute;cida, arrossegable i desancorable (PiP).
+       Llegeix la consola del TECLA per WebSerial i mostra en gran l'acci&oacute; actual. -->
+  <div class="devmon hidden" id="device-monitor">
+    <div class="devmon-head" id="devmon-head">
+      <span class="devmon-dot"></span>
+      <span class="devmon-title">TECLA &middot; pantalla</span>
+      <button class="btn" id="devmon-pip" title="Desancora la pantalla en una finestra flotant fora de l'app">&#x2921;</button>
+      <button class="btn devmon-connect" id="devmon-connect" data-i18n="devmon.connect" title="Connecta la pantalla al port s&egrave;rie del TECLA">Connectar</button>
+      <button class="btn" id="devmon-clear" data-i18n="devmon.clear" title="Neteja la pantalla">Netejar</button>
+      <button class="btn" id="devmon-close" title="Tanca la pantalla">&#x2715;</button>
     </div>
+    <div class="devmon-body" id="devmon-body">
+      <div class="devmon-logo-bg"></div>
+      <canvas class="devmon-canvas" id="devmon-canvas"></canvas>
+      <div class="devmon-hero" id="devmon-hero"><div class="hint" data-i18n="devmon.hint">Prem &laquo;Connectar&raquo; per veure en directe les accions del TECLA.</div></div>
+      <div class="devmon-now" id="devmon-now"><div class="tag"></div><div class="main"></div></div>
+    </div>
+  </div>
 
-    <!-- Side panel -->
-    <div class="side-panel">
-      <div class="panel-tabs">
-        <button class="tab-btn active" data-tab="code" data-i18n="tab.code">Codi</button>
-        <button class="tab-btn" data-tab="device" data-i18n="tab.device">Tecles</button>
-        <button class="tab-btn" data-tab="projects" data-i18n="tab.proj">Projectes</button>
-        <button class="tab-btn" data-tab="simulator" data-i18n="tab.sim">Simulador</button>
-        <button class="tab-btn" data-tab="firmware" data-i18n="tab.fw">Firmware</button>
-        <button class="tab-btn" data-tab="theme" data-i18n="tab.theme">Aparença</button>
-        <button class="tab-btn" data-tab="guide" data-i18n="tab.guide">Guia</button>
+  <nav>
+    <span class="nav-tab active" data-tab="blocs" data-i18n="tab.blocs">Blocs</span>
+    <span class="nav-tab" data-tab="device" data-i18n="tab.device">Dispositiu</span>
+    <span class="nav-tab" data-tab="projects" data-i18n="tab.proj">Projectes</span>
+    <span class="nav-tab" data-tab="simulator" data-i18n="tab.sim">Simulador</span>
+    <span class="nav-tab" data-tab="firmware" data-i18n="tab.fw">Firmware</span>
+    <span class="nav-tab" data-tab="theme" data-i18n="tab.theme">Aparen&ccedil;a</span>
+    <span class="nav-tab" data-tab="guide" data-i18n="tab.guide">Guia</span>
+  </nav>
+
+  <!-- ══ BLOCS (l'editor: espai de treball + codi generat) ══════════ -->
+  <div class="tab-panel active" id="tab-blocs">
+    <div class="bank-bar">
+      <!-- El nom del projecte: el que sortir&agrave; a la biblioteca i, si l'assignes,
+           a la tecla del diagrama. Sense nom tots es dirien igual. -->
+      <input type="text" id="proj-name" maxlength="32" data-i18n-ph="proj.nameph"
+             placeholder="Nom del projecte" title="Nom del projecte" value="Projecte sense t&iacute;tol">
+      <div class="sep"></div>
+      <button class="btn btn-sm" id="btn-new" data-i18n="btn.new">Nou</button>
+      <button class="btn btn-sm" id="btn-open" data-i18n="btn.open">Obrir</button>
+      <button class="btn btn-sm btn-primary" id="btn-save" data-i18n="btn.save">Guardar</button>
+      <div class="sep"></div>
+      <button class="btn btn-sm" id="btn-export-file" data-i18n="btn.exportfile">Exportar .tblocks</button>
+      <button class="btn btn-sm" id="btn-export" data-i18n="btn.export">Exportar .py</button>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <button class="btn btn-sm btn-success" id="btn-upload" disabled data-i18n="btn.upload">Pujar</button>
       </div>
-      <div class="panel-body">
-
-        <!-- Code panel -->
-        <div id="panel-code" class="panel-content active">
-          <div class="code-header">
-            <h3 data-i18n="code.title">Codi Python generat</h3>
-            <button class="btn" id="btn-copy-code" data-i18n="btn.copy">Copiar</button>
-          </div>
-          <pre id="generatedCode" class="code-display"># El teu codi apareixerà aquí...</pre>
+    </div>
+    <div class="main">
+      <div class="workspace-container">
+        <div id="blocklyDiv"></div>
+      </div>
+      <div class="side-panel">
+        <div class="code-header">
+          <h3 data-i18n="code.title">Codi Python generat</h3>
+          <button class="btn" id="btn-copy-code" data-i18n="btn.copy">Copiar</button>
         </div>
-
-        <!-- Simulator panel -->
-        <div id="panel-simulator" class="panel-content">
-          <div class="midi-bar">
-            <span class="dot" id="midi-status-dot" style="background:var(--border-h)"></span>
-            <span id="midi-status-text" data-i18n="midi.disconn">MIDI: desconnectat</span>
-            <select id="midi-port-select"><option value="">— port MIDI —</option></select>
-            <button class="btn" id="btn-midi-connect">MIDI</button>
-          </div>
-          <span class="sim-label" data-i18n="sim.vis">Visualitzador</span>
-          <span class="sim-label" style="display:none" id="sim-label-midi"></span>
-          <div class="sim-section">
-            <div class="sim-canvas-wrap">
-              <canvas id="simulatorCanvas" width="388" height="200"></canvas>
-            </div>
-          </div>
-          <div class="sim-section">
-            <div class="sim-controls">
-              <button class="btn btn-primary" id="btn-simulate" data-i18n="btn.simulate">Executar</button>
-              <button class="btn" id="btn-stop-sim" disabled data-i18n="btn.stop">Aturar</button>
-            </div>
-          </div>
-          <span class="sim-label" data-i18n="sim.out">Sortida</span>
-          <div id="simulatorOutput" class="sim-terminal"></div>
-        </div>
-
-        <!-- Guide panel -->
-        <div id="panel-guide" class="panel-content">
-          <div class="guide-section">
-            <div class="guide-h1" data-i18n="guide.t1">1. Primers passos</div>
-            <p class="guide-li" data-i18n="guide.p1a">Connecta el TECLA a l'ordinador via USB-C.</p>
-            <p class="guide-li" data-i18n="guide.p1b">Si és la primera vegada, instal·la CircuitPython (pestanya Firmware → Pas 1).</p>
-            <p class="guide-li" data-i18n="guide.p1c">Instal·la la carpeta adafruit_midi a CIRCUITPY/lib/ (Pas 2).</p>
-            <div class="guide-note" data-i18n="guide.n1">El TECLA funciona com a interfície MIDI USB. No cal cap driver addicional a macOS i Linux.</div>
-          </div>
-          <div class="guide-section">
-            <div class="guide-h1" data-i18n="guide.t2">2. Programar amb blocs</div>
-            <p class="guide-li" data-i18n="guide.p2a">Arrossega blocs de la caixa d'eines a l'espai de treball.</p>
-            <p class="guide-li" data-i18n="guide.p2b">Encaixa els blocs per crear el teu programa.</p>
-            <p class="guide-li" data-i18n="guide.p2c">El codi CircuitPython es genera automàticament a la pestanya Codi.</p>
-            <div class="guide-h2" data-i18n="guide.t2b">Categories de blocs</div>
-            <p class="guide-li" data-i18n="guide.cat1">Música Bàsica: Notes MIDI, acords, escales</p>
-            <p class="guide-li" data-i18n="guide.cat2">Síntesi Avançada: Oscil·ladors, LFO, envelops</p>
-            <p class="guide-li" data-i18n="guide.cat3">Control Hardware: Botons i potenciòmetres del TECLA</p>
-            <p class="guide-li" data-i18n="guide.cat4">Efectes: Delay, reverb, filtres</p>
-            <p class="guide-li" data-i18n="guide.cat5">GPIO: Pins digitals, PWM, analògics</p>
-            <p class="guide-li" data-i18n="guide.cat6">Generatiu: Probabilitat, LFO per software, quantització</p>
-            <p class="guide-li" data-i18n="guide.cat7">Accions: Teclat USB, dreceres, media</p>
-            <p class="guide-li" data-i18n="guide.cat8">Pantalla i LEDs: OLED, NeoPixels, servos i motors</p>
-            <p class="guide-li" data-i18n="guide.cat9">Sensors i Sistema: temperatura, distància, llum, memòria</p>
-          </div>
-          <div class="guide-section">
-            <div class="guide-h1" data-i18n="guide.t3">3. Pujar al dispositiu</div>
-            <p class="guide-li" data-i18n="guide.p3a">Prem Connectar al header i selecciona el volum CIRCUITPY.</p>
-            <p class="guide-li" data-i18n="guide.p3b">Un cop connectat, prem Pujar per copiar el codi al dispositiu.</p>
-            <p class="guide-li" data-i18n="guide.p3c">El TECLA s'executa automàticament en reiniciar-se.</p>
-            <div class="guide-note" data-i18n="guide.n3">Requereix Chrome o Edge (File System Access API). A Safari, exporta el .py i copia'l manualment a CIRCUITPY.</div>
-          </div>
-          <div class="guide-section">
-            <div class="guide-h1" data-i18n="guide.t4">Exemples</div>
-            <div class="ex-btns">
-              <button class="btn" id="btn-ex-melody" data-i18n="ex.melody">Melodia</button>
-              <button class="btn" id="btn-ex-sequencer" data-i18n="ex.seq">Seqüenciador</button>
-              <button class="btn" id="btn-ex-buttons" data-i18n="ex.btns">Botons</button>
-              <button class="btn" id="btn-ex-complex" data-i18n="ex.synth">Sintetitzador</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Firmware panel -->
-        <div id="panel-firmware" class="panel-content">
-          <div class="status-card">
-            <div class="card-title" data-i18n="fw.status">Estat del dispositiu</div>
-            <div class="status-row"><span data-i18n="fw.device">Dispositiu</span><span class="status-val" id="fw-device-name">—</span></div>
-            <div class="status-row"><span data-i18n="fw.circuitpy">Volum CIRCUITPY</span><span class="status-val" id="fw-device-status" data-i18n-id="fw.disconn">desconnectat</span></div>
-          </div>
-          <button class="btn btn-success" id="btn-fw-upload" style="width:100%;margin-bottom:14px;justify-content:center" data-i18n="fw.push">Pujar codi al dispositiu</button>
-
-          <div class="fw-step">
-            <div class="fw-step-title"><span class="fw-step-num">1</span><span data-i18n="fw.t1">Instal·lar CircuitPython</span></div>
-            <p class="fw-step-desc">Entra al mode bootloader mantenint <strong>BOOTSEL</strong> mentre connectes el USB-C. El dispositiu apareixerà com <strong>RPI-RP2</strong>.</p>
-            <p class="fw-step-sub">Obre el Finder → arrossega el fitxer <strong>.uf2</strong> al volum <strong>RPI-RP2</strong>. El dispositiu es reiniciarà com <strong>CIRCUITPY</strong>.</p>
-            <a class="dl-link" href="https://circuitpython.org/board/raspberry_pi_pico/" target="_blank">
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M4 7l4 4 4-4"/><rect x="2" y="11" width="12" height="2" rx="1"/></svg>
-              <span data-i18n="fw.dl.fw">Descarregar CircuitPython (.uf2)</span>
-            </a>
-          </div>
-          <div class="fw-step">
-            <div class="fw-step-title"><span class="fw-step-num">2</span><span data-i18n="fw.t2">Instal·lar les llibreries</span></div>
-            <p class="fw-step-desc">Descarrega el <strong>bundle de llibreries</strong> de CircuitPython i copia la carpeta <strong>adafruit_midi</strong> dins <strong>CIRCUITPY/lib/</strong>.</p>
-            <p class="fw-step-sub">Cerca <em>adafruit-circuitpython-bundle</em> → descomprimeix → copia <strong>adafruit_midi/</strong> a <strong>CIRCUITPY/lib/</strong>.</p>
-            <p class="fw-step-sub">Segons els blocs que usis, copia també: <strong>adafruit_hid/</strong> (teclat i media), <strong>adafruit_ssd1306.mpy</strong> + <strong>adafruit_framebuf.mpy</strong> (pantalla OLED), <strong>neopixel.mpy</strong> (LEDs) i <strong>adafruit_motor/</strong> (servos).</p>
-            <a class="dl-link" href="https://github.com/adafruit/Adafruit_CircuitPython_Bundle/releases/latest" target="_blank">
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M4 7l4 4 4-4"/><rect x="2" y="11" width="12" height="2" rx="1"/></svg>
-              <span data-i18n="fw.dl.lib">Descarregar Bundle de Llibreries</span>
-            </a>
-          </div>
-          <div class="fw-step">
-            <div class="fw-step-title"><span class="fw-step-num">3</span><span data-i18n="fw.t3">Pujar el codi del projecte</span></div>
-            <p class="fw-step-desc">Un cop CIRCUITPY és visible, connecta el dispositiu amb el botó <strong>Connectar</strong> del header i prem <strong>Pujar</strong> per copiar el codi.</p>
-            <p class="fw-step-sub">El codi es copia a <strong>personalitats/blocks.py</strong> i el dispositiu arrenca com a TECLA Blocks. Les altres personalitats (Instrument, Macropad) es queden al seu lloc.</p>
-            <p class="fw-step-sub">Per tornar-hi, aguanta les <strong>quatre cantonades</strong> 3 segons: el dispositiu passa a la seg&uuml;ent (Instrument &rarr; Macropad &rarr; Blocks) i es reinicia. Si algun dia no respon a res, endolla&rsquo;l amb les quatre premudes: deixa-les anar per anar a la seg&uuml;ent, o aguanta-les 5 segons per tornar a l&rsquo;Instrument.</p>
-          </div>
-        </div>
-
-        <!-- Theme panel -->
-        <div id="panel-theme" class="panel-content">
-          <div class="card">
-            <div class="card-title" data-i18n="theme.title">Aparença</div>
-            <div class="theme-cards" id="theme-cards">
-              <div class="theme-card active" data-theme="dark"><div class="theme-swatches"><span style="background:#0c0c0c"></span><span style="background:#141414"></span><span style="background:#1c1c1c"></span><span style="background:#4a80f0"></span></div><div class="theme-card-name">Fosc</div></div>
-              <div class="theme-card" data-theme="light"><div class="theme-swatches"><span style="background:#f2f2f2"></span><span style="background:#fff"></span><span style="background:#ebebeb"></span><span style="background:#4a80f0"></span></div><div class="theme-card-name">Clar</div></div>
-              <div class="theme-card" data-theme="neon"><div class="theme-swatches"><span style="background:#080808"></span><span style="background:#0d0d0d"></span><span style="background:#121212"></span><span style="background:#00ffe0"></span></div><div class="theme-card-name">Neó</div></div>
-              <div class="theme-card" data-theme="warm"><div class="theme-swatches"><span style="background:#100c08"></span><span style="background:#1a1410"></span><span style="background:#231c16"></span><span style="background:#e08030"></span></div><div class="theme-card-name">Càlid</div></div>
-              <div class="theme-card" data-theme="purple"><div class="theme-swatches"><span style="background:#0d0b14"></span><span style="background:#14101e"></span><span style="background:#1e1830"></span><span style="background:#a070f0"></span></div><div class="theme-card-name">Lila</div></div>
-              <div class="theme-card" data-theme="ocean"><div class="theme-swatches"><span style="background:#07101a"></span><span style="background:#0d1824"></span><span style="background:#132030"></span><span style="background:#20c8f8"></span></div><div class="theme-card-name">Oceà</div></div>
-              <div class="theme-card" data-theme="forest"><div class="theme-swatches"><span style="background:#07100a"></span><span style="background:#0d1a10"></span><span style="background:#152018"></span><span style="background:#22c55e"></span></div><div class="theme-card-name">Bosc</div></div>
-              <div class="theme-card" data-theme="rose"><div class="theme-swatches"><span style="background:#120a0e"></span><span style="background:#1e1016"></span><span style="background:#281520"></span><span style="background:#f472b6"></span></div><div class="theme-card-name">Rosa</div></div>
-              <div class="theme-card" data-theme="ice"><div class="theme-swatches"><span style="background:#eff5ff"></span><span style="background:#fff"></span><span style="background:#e4eeff"></span><span style="background:#0ea5e9"></span></div><div class="theme-card-name">Gel</div></div>
-              <div class="theme-card" data-theme="carbon"><div class="theme-swatches"><span style="background:#080808"></span><span style="background:#111"></span><span style="background:#181818"></span><span style="background:#ef4444"></span></div><div class="theme-card-name">Carbó</div></div>
-              <div class="theme-card" data-theme="hc"><div class="theme-swatches"><span style="background:#000"></span><span style="background:#0d0d0d"></span><span style="background:#1a1a1a"></span><span style="background:#ffe000"></span></div><div class="theme-card-name">Alt Contrast</div></div>
-              <div class="theme-card" data-theme="crepuscle"><div class="theme-swatches"><span style="background:#100808"></span><span style="background:#1a100a"></span><span style="background:#24160c"></span><span style="background:#f97316"></span></div><div class="theme-card-name">Crepuscle</div></div>
-              <div class="theme-card" data-theme="cosmic"><div class="theme-swatches"><span style="background:#06050f"></span><span style="background:#0c0b1c"></span><span style="background:#13112c"></span><span style="background:#818cf8"></span></div><div class="theme-card-name">Còsmic</div></div>
-              <div class="theme-card" data-theme="mint"><div class="theme-swatches"><span style="background:#f0faf5"></span><span style="background:#fff"></span><span style="background:#dff2e9"></span><span style="background:#059669"></span></div><div class="theme-card-name">Menta</div></div>
-              <div class="theme-card" data-theme="slate"><div class="theme-swatches"><span style="background:#0a0e14"></span><span style="background:#111820"></span><span style="background:#18222e"></span><span style="background:#94a3b8"></span></div><div class="theme-card-name">Pissarra</div></div>
-              <div class="theme-card" data-theme="acid"><div class="theme-swatches"><span style="background:#060900"></span><span style="background:#0b1100"></span><span style="background:#131a00"></span><span style="background:#a3e635"></span></div><div class="theme-card-name">Àcid</div></div>
-              <div class="theme-card" data-theme="sand"><div class="theme-swatches"><span style="background:#fef7e8"></span><span style="background:#fffcf2"></span><span style="background:#fdefc5"></span><span style="background:#b45309"></span></div><div class="theme-card-name">Sorra</div></div>
-            </div>
-            <div style="border-top:1px solid var(--border);margin:20px 0 16px;position:relative">
-              <span style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--surface2);padding:0 12px;font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase" data-i18n="theme.editor">Editor de temes</span>
-            </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-              <div id="ct-mode-indicator" style="font-size:11px;color:var(--text3);font-weight:500"></div>
-              <button class="btn" id="btn-new-theme" style="font-size:11px" data-i18n="theme.newbtn">+ Nou tema</button>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-              <label style="font-size:12px;color:var(--text2);white-space:nowrap;min-width:36px" data-i18n="theme.name">Nom:</label>
-              <input type="text" id="ct-name" placeholder="Ex: El meu tema">
-              <button class="btn" id="btn-random-theme" data-i18n="theme.random">🎲 Aleatori</button>
-            </div>
-            <div class="custom-theme-grid">
-              <div class="ct-field"><input type="color" id="ct-bg" value="#0c0c0c"><label>Fons</label></div>
-              <div class="ct-field"><input type="color" id="ct-surface" value="#141414"><label>Superfície</label></div>
-              <div class="ct-field"><input type="color" id="ct-surface2" value="#1c1c1c"><label>Superf. 2</label></div>
-              <div class="ct-field"><input type="color" id="ct-text" value="#e0e0e0"><label>Text</label></div>
-              <div class="ct-field"><input type="color" id="ct-accent" value="#4a80f0"><label>Accent</label></div>
-            </div>
-            <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
-              <button class="btn btn-primary" id="btn-save-custom-theme" data-i18n="theme.save">Desa i aplica</button>
-              <button class="btn" id="btn-reset-custom-theme" data-i18n="theme.reset">Restablir</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Projects library panel -->
-        <div id="panel-projects" class="panel-content">
-          <!-- Exemples integrats (renderitzat per JS) -->
-          <div id="proj-examples-section"></div>
-          <div class="proj-divider"></div>
-          <!-- Els meus projectes -->
-          <div class="proj-sect-head">
-            <span class="proj-sect-title" data-i18n="proj.mine">Els meus projectes</span>
-          </div>
-          <div class="proj-topbar">
-            <button class="btn btn-sm btn-primary" id="btn-proj-save" data-i18n="btn.projsave">↓ Guardar actual</button>
-            <button class="btn btn-sm" id="btn-proj-import" data-i18n="btn.projimport">↑ Importar .tblocks</button>
-          </div>
-          <div id="proj-list" class="proj-list"></div>
-        </div>
-
-        <!-- Device config panel -->
-        <div id="panel-device" class="panel-content">
-          <!-- hardware representation rendered by JS -->
-          <div id="dev-hw-wrap" class="dev-hw-wrap">
-            <div id="dev-keys-grid" class="dev-keys-grid"></div>
-            <div id="dev-pots-col" class="dev-pots-col"></div>
-          </div>
-          <!-- contextual config area rendered by JS -->
-          <div id="dev-cfg-area" class="dev-cfg-area">
-            <div class="dev-cfg-hint">← Clica un botó o potenciòmetre per configurar-lo</div>
-          </div>
-          <div class="dev-export-bar">
-            <button class="btn btn-primary" id="btn-gen-device-code" style="flex:1;justify-content:center" data-i18n="dev.gencode">⬇ Generar codi.py</button>
-            <button class="btn btn-success" id="btn-upload-device-code" style="flex:1;justify-content:center" disabled data-i18n="dev.pushbtn">📤 Pujar</button>
-          </div>
-        </div>
+        <pre id="generatedCode" class="code-display"># El teu codi apareixerà aquí...</pre>
 
       </div>
     </div>
+  </div>
+
+  <!-- ══ DISPOSITIU (el diagrama de tecles i potes) ═════════════════ -->
+  <div class="tab-panel" id="tab-device">
+    <div class="config-main">
+      <div class="device-pane">
+        <div class="pots-row" id="device-pots"></div>
+        <div class="keys-grid" id="device-keys"></div>
+      </div>
+      <aside class="inspector" id="inspector">
+        <div class="insp-header">
+          <span class="drawer-title" id="dev-cfg-title">&#8212;</span>
+        </div>
+        <div class="insp-body" id="dev-cfg-area">
+          <div class="dev-cfg-hint" data-i18n="dev.hint">&larr; Clica un bot&oacute; o potenci&ograve;metre per configurar-lo</div>
+        </div>
+        <div class="insp-tools">
+          <button class="btn btn-primary" id="btn-gen-device-code" style="flex:1;justify-content:center" data-i18n="dev.gencode">&#8681; Generar codi.py</button>
+          <button class="btn btn-success" id="btn-upload-device-code" style="flex:1;justify-content:center" disabled data-i18n="dev.pushbtn">&#128228; Pujar</button>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-projects">
+    <div class="panel-inner"><div class="inner-w">
+      <!-- Exemples integrats (renderitzat per JS) -->
+      <div id="proj-examples-section"></div>
+      <div class="proj-divider"></div>
+      <!-- Els meus projectes -->
+      <div class="proj-sect-head">
+        <span class="proj-sect-title" data-i18n="proj.mine">Els meus projectes</span>
+      </div>
+      <div class="proj-topbar">
+        <button class="btn btn-sm btn-primary" id="btn-proj-save" data-i18n="btn.projsave">↓ Guardar actual</button>
+        <button class="btn btn-sm" id="btn-proj-import" data-i18n="btn.projimport">↑ Importar .tblocks</button>
+      </div>
+      <div id="proj-list" class="proj-list"></div>
+
+    </div></div>
+  </div>
+
+  <div class="tab-panel" id="tab-simulator">
+    <div class="panel-inner"><div class="inner-w">
+      <div class="midi-bar">
+        <span class="dot" id="midi-status-dot" style="background:var(--border-h)"></span>
+        <span id="midi-status-text" data-i18n="midi.disconn">MIDI: desconnectat</span>
+        <select id="midi-port-select"><option value="">— port MIDI —</option></select>
+        <button class="btn" id="btn-midi-connect">MIDI</button>
+      </div>
+      <span class="sim-label" data-i18n="sim.vis">Visualitzador</span>
+      <span class="sim-label" style="display:none" id="sim-label-midi"></span>
+      <div class="sim-section">
+        <div class="sim-canvas-wrap">
+          <canvas id="simulatorCanvas" width="388" height="200"></canvas>
+        </div>
+      </div>
+      <div class="sim-section">
+        <div class="sim-controls">
+          <button class="btn btn-primary" id="btn-simulate" data-i18n="btn.simulate">Executar</button>
+          <button class="btn" id="btn-stop-sim" disabled data-i18n="btn.stop">Aturar</button>
+        </div>
+      </div>
+      <span class="sim-label" data-i18n="sim.out">Sortida</span>
+      <div id="simulatorOutput" class="sim-terminal"></div>
+
+    </div></div>
+  </div>
+
+  <div class="tab-panel" id="tab-firmware">
+    <div class="panel-inner"><div class="inner-w">
+      <div class="status-card">
+        <div class="card-title" data-i18n="fw.status">Estat del dispositiu</div>
+        <div class="status-row"><span data-i18n="fw.device">Dispositiu</span><span class="status-val" id="fw-device-name">—</span></div>
+        <div class="status-row"><span data-i18n="fw.circuitpy">Volum CIRCUITPY</span><span class="status-val" id="fw-device-status" data-i18n-id="fw.disconn">desconnectat</span></div>
+      </div>
+      <button class="btn btn-success" id="btn-fw-upload" style="width:100%;margin-bottom:14px;justify-content:center" data-i18n="fw.push">Pujar codi al dispositiu</button>
+
+      <div class="fw-step">
+        <div class="fw-step-title"><span class="fw-step-num">1</span><span data-i18n="fw.t1">Instal·lar CircuitPython</span></div>
+        <p class="fw-step-desc">Entra al mode bootloader mantenint <strong>BOOTSEL</strong> mentre connectes el USB-C. El dispositiu apareixerà com <strong>RPI-RP2</strong>.</p>
+        <p class="fw-step-sub">Obre el Finder → arrossega el fitxer <strong>.uf2</strong> al volum <strong>RPI-RP2</strong>. El dispositiu es reiniciarà com <strong>CIRCUITPY</strong>.</p>
+        <a class="dl-link" href="https://circuitpython.org/board/raspberry_pi_pico/" target="_blank">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M4 7l4 4 4-4"/><rect x="2" y="11" width="12" height="2" rx="1"/></svg>
+          <span data-i18n="fw.dl.fw">Descarregar CircuitPython (.uf2)</span>
+        </a>
+      </div>
+      <div class="fw-step">
+        <div class="fw-step-title"><span class="fw-step-num">2</span><span data-i18n="fw.t2">Instal·lar les llibreries</span></div>
+        <p class="fw-step-desc">Descarrega el <strong>bundle de llibreries</strong> de CircuitPython i copia la carpeta <strong>adafruit_midi</strong> dins <strong>CIRCUITPY/lib/</strong>.</p>
+        <p class="fw-step-sub">Cerca <em>adafruit-circuitpython-bundle</em> → descomprimeix → copia <strong>adafruit_midi/</strong> a <strong>CIRCUITPY/lib/</strong>.</p>
+        <p class="fw-step-sub">Segons els blocs que usis, copia també: <strong>adafruit_hid/</strong> (teclat i media), <strong>adafruit_ssd1306.mpy</strong> + <strong>adafruit_framebuf.mpy</strong> (pantalla OLED), <strong>neopixel.mpy</strong> (LEDs) i <strong>adafruit_motor/</strong> (servos).</p>
+        <a class="dl-link" href="https://github.com/adafruit/Adafruit_CircuitPython_Bundle/releases/latest" target="_blank">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M4 7l4 4 4-4"/><rect x="2" y="11" width="12" height="2" rx="1"/></svg>
+          <span data-i18n="fw.dl.lib">Descarregar Bundle de Llibreries</span>
+        </a>
+      </div>
+      <div class="fw-step">
+        <div class="fw-step-title"><span class="fw-step-num">3</span><span data-i18n="fw.t3">Pujar el codi del projecte</span></div>
+        <p class="fw-step-desc">Un cop CIRCUITPY és visible, connecta el dispositiu amb el botó <strong>Connecta dispositiu</strong> del header i prem <strong>Pujar</strong> per copiar el codi.</p>
+        <p class="fw-step-sub">El codi es copia a <strong>personalitats/blocks.py</strong> i el dispositiu arrenca com a TECLA Blocks. Les altres personalitats (Instrument, Macropad) es queden al seu lloc.</p>
+        <p class="fw-step-sub">Per tornar-hi, aguanta les <strong>quatre cantonades</strong> 3 segons: el dispositiu passa a la seg&uuml;ent (Instrument &rarr; Macropad &rarr; Blocks) i es reinicia. Si algun dia no respon a res, endolla&rsquo;l amb les quatre premudes: deixa-les anar per anar a la seg&uuml;ent, o aguanta-les 5 segons per tornar a l&rsquo;Instrument.</p>
+      </div>
+
+    </div></div>
+  </div>
+
+  <div class="tab-panel" id="tab-theme">
+    <div class="panel-inner"><div class="inner-w">
+      <div class="card">
+        <div class="card-title" data-i18n="theme.title">Aparença</div>
+        <div class="theme-cards" id="theme-cards">
+          <div class="theme-card active" data-theme="dark"><div class="theme-swatches"><span style="background:#0c0c0c"></span><span style="background:#141414"></span><span style="background:#1c1c1c"></span><span style="background:#4a80f0"></span></div><div class="theme-card-name">Fosc</div></div>
+          <div class="theme-card" data-theme="light"><div class="theme-swatches"><span style="background:#f2f2f2"></span><span style="background:#fff"></span><span style="background:#ebebeb"></span><span style="background:#4a80f0"></span></div><div class="theme-card-name">Clar</div></div>
+          <div class="theme-card" data-theme="neon"><div class="theme-swatches"><span style="background:#080808"></span><span style="background:#0d0d0d"></span><span style="background:#121212"></span><span style="background:#00ffe0"></span></div><div class="theme-card-name">Neó</div></div>
+          <div class="theme-card" data-theme="warm"><div class="theme-swatches"><span style="background:#100c08"></span><span style="background:#1a1410"></span><span style="background:#231c16"></span><span style="background:#e08030"></span></div><div class="theme-card-name">Càlid</div></div>
+          <div class="theme-card" data-theme="purple"><div class="theme-swatches"><span style="background:#0d0b14"></span><span style="background:#14101e"></span><span style="background:#1e1830"></span><span style="background:#a070f0"></span></div><div class="theme-card-name">Lila</div></div>
+          <div class="theme-card" data-theme="ocean"><div class="theme-swatches"><span style="background:#07101a"></span><span style="background:#0d1824"></span><span style="background:#132030"></span><span style="background:#20c8f8"></span></div><div class="theme-card-name">Oceà</div></div>
+          <div class="theme-card" data-theme="forest"><div class="theme-swatches"><span style="background:#07100a"></span><span style="background:#0d1a10"></span><span style="background:#152018"></span><span style="background:#22c55e"></span></div><div class="theme-card-name">Bosc</div></div>
+          <div class="theme-card" data-theme="rose"><div class="theme-swatches"><span style="background:#120a0e"></span><span style="background:#1e1016"></span><span style="background:#281520"></span><span style="background:#f472b6"></span></div><div class="theme-card-name">Rosa</div></div>
+          <div class="theme-card" data-theme="ice"><div class="theme-swatches"><span style="background:#eff5ff"></span><span style="background:#fff"></span><span style="background:#e4eeff"></span><span style="background:#0ea5e9"></span></div><div class="theme-card-name">Gel</div></div>
+          <div class="theme-card" data-theme="carbon"><div class="theme-swatches"><span style="background:#080808"></span><span style="background:#111"></span><span style="background:#181818"></span><span style="background:#ef4444"></span></div><div class="theme-card-name">Carbó</div></div>
+          <div class="theme-card" data-theme="hc"><div class="theme-swatches"><span style="background:#000"></span><span style="background:#0d0d0d"></span><span style="background:#1a1a1a"></span><span style="background:#ffe000"></span></div><div class="theme-card-name">Alt Contrast</div></div>
+          <div class="theme-card" data-theme="crepuscle"><div class="theme-swatches"><span style="background:#100808"></span><span style="background:#1a100a"></span><span style="background:#24160c"></span><span style="background:#f97316"></span></div><div class="theme-card-name">Crepuscle</div></div>
+          <div class="theme-card" data-theme="cosmic"><div class="theme-swatches"><span style="background:#06050f"></span><span style="background:#0c0b1c"></span><span style="background:#13112c"></span><span style="background:#818cf8"></span></div><div class="theme-card-name">Còsmic</div></div>
+          <div class="theme-card" data-theme="mint"><div class="theme-swatches"><span style="background:#f0faf5"></span><span style="background:#fff"></span><span style="background:#dff2e9"></span><span style="background:#059669"></span></div><div class="theme-card-name">Menta</div></div>
+          <div class="theme-card" data-theme="slate"><div class="theme-swatches"><span style="background:#0a0e14"></span><span style="background:#111820"></span><span style="background:#18222e"></span><span style="background:#94a3b8"></span></div><div class="theme-card-name">Pissarra</div></div>
+          <div class="theme-card" data-theme="acid"><div class="theme-swatches"><span style="background:#060900"></span><span style="background:#0b1100"></span><span style="background:#131a00"></span><span style="background:#a3e635"></span></div><div class="theme-card-name">Àcid</div></div>
+          <div class="theme-card" data-theme="sand"><div class="theme-swatches"><span style="background:#fef7e8"></span><span style="background:#fffcf2"></span><span style="background:#fdefc5"></span><span style="background:#b45309"></span></div><div class="theme-card-name">Sorra</div></div>
+        </div>
+        <div style="border-top:1px solid var(--border);margin:20px 0 16px;position:relative">
+          <span style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--surface2);padding:0 12px;font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase" data-i18n="theme.editor">Editor de temes</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div id="ct-mode-indicator" style="font-size:11px;color:var(--text3);font-weight:500"></div>
+          <button class="btn" id="btn-new-theme" style="font-size:11px" data-i18n="theme.newbtn">+ Nou tema</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <label style="font-size:12px;color:var(--text2);white-space:nowrap;min-width:36px" data-i18n="theme.name">Nom:</label>
+          <input type="text" id="ct-name" placeholder="Ex: El meu tema">
+          <button class="btn" id="btn-random-theme" data-i18n="theme.random">🎲 Aleatori</button>
+        </div>
+        <div class="custom-theme-grid">
+          <div class="ct-field"><input type="color" id="ct-bg" value="#0c0c0c"><label>Fons</label></div>
+          <div class="ct-field"><input type="color" id="ct-surface" value="#141414"><label>Superfície</label></div>
+          <div class="ct-field"><input type="color" id="ct-surface2" value="#1c1c1c"><label>Superf. 2</label></div>
+          <div class="ct-field"><input type="color" id="ct-text" value="#e0e0e0"><label>Text</label></div>
+          <div class="ct-field"><input type="color" id="ct-accent" value="#4a80f0"><label>Accent</label></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+          <button class="btn btn-primary" id="btn-save-custom-theme" data-i18n="theme.save">Desa i aplica</button>
+          <button class="btn" id="btn-reset-custom-theme" data-i18n="theme.reset">Restablir</button>
+        </div>
+      </div>
+
+    </div></div>
+  </div>
+
+  <div class="tab-panel" id="tab-guide">
+    <div class="panel-inner"><div class="inner-w">
+      <div class="guide-section">
+        <div class="guide-h1" data-i18n="guide.t1">1. Primers passos</div>
+        <p class="guide-li" data-i18n="guide.p1a">Connecta el TECLA a l'ordinador via USB-C.</p>
+        <p class="guide-li" data-i18n="guide.p1b">Si és la primera vegada, instal·la CircuitPython (pestanya Firmware → Pas 1).</p>
+        <p class="guide-li" data-i18n="guide.p1c">Instal·la la carpeta adafruit_midi a CIRCUITPY/lib/ (Pas 2).</p>
+        <div class="guide-note" data-i18n="guide.n1">El TECLA funciona com a interfície MIDI USB. No cal cap driver addicional a macOS i Linux.</div>
+      </div>
+      <div class="guide-section">
+        <div class="guide-h1" data-i18n="guide.t2">2. Programar amb blocs</div>
+        <p class="guide-li" data-i18n="guide.p2a">Arrossega blocs de la caixa d'eines a l'espai de treball.</p>
+        <p class="guide-li" data-i18n="guide.p2b">Encaixa els blocs per crear el teu programa.</p>
+        <p class="guide-li" data-i18n="guide.p2c">El codi CircuitPython es genera automàticament a la pestanya Codi.</p>
+        <div class="guide-h2" data-i18n="guide.t2b">Categories de blocs</div>
+        <p class="guide-li" data-i18n="guide.cat1">Música Bàsica: Notes MIDI, acords, escales</p>
+        <p class="guide-li" data-i18n="guide.cat2">Síntesi Avançada: Oscil·ladors, LFO, envelops</p>
+        <p class="guide-li" data-i18n="guide.cat3">Control Hardware: Botons i potenciòmetres del TECLA</p>
+        <p class="guide-li" data-i18n="guide.cat4">Efectes: Delay, reverb, filtres</p>
+        <p class="guide-li" data-i18n="guide.cat5">GPIO: Pins digitals, PWM, analògics</p>
+        <p class="guide-li" data-i18n="guide.cat6">Generatiu: Probabilitat, LFO per software, quantització</p>
+        <p class="guide-li" data-i18n="guide.cat7">Accions: Teclat USB, dreceres, media</p>
+        <p class="guide-li" data-i18n="guide.cat8">Pantalla i LEDs: OLED, NeoPixels, servos i motors</p>
+        <p class="guide-li" data-i18n="guide.cat9">Sensors i Sistema: temperatura, distància, llum, memòria</p>
+      </div>
+      <div class="guide-section">
+        <div class="guide-h1" data-i18n="guide.t3">3. Pujar al dispositiu</div>
+        <p class="guide-li" data-i18n="guide.p3a">Prem Connectar al header i selecciona el volum CIRCUITPY.</p>
+        <p class="guide-li" data-i18n="guide.p3b">Un cop connectat, prem Pujar per copiar el codi al dispositiu.</p>
+        <p class="guide-li" data-i18n="guide.p3c">El TECLA s'executa automàticament en reiniciar-se.</p>
+        <div class="guide-note" data-i18n="guide.n3">Requereix Chrome o Edge (File System Access API). A Safari, exporta el .py i copia'l manualment a CIRCUITPY.</div>
+      </div>
+      <div class="guide-section">
+        <div class="guide-h1" data-i18n="guide.t4">Exemples</div>
+        <div class="ex-btns">
+          <button class="btn" id="btn-ex-melody" data-i18n="ex.melody">Melodia</button>
+          <button class="btn" id="btn-ex-sequencer" data-i18n="ex.seq">Seqüenciador</button>
+          <button class="btn" id="btn-ex-buttons" data-i18n="ex.btns">Botons</button>
+          <button class="btn" id="btn-ex-complex" data-i18n="ex.synth">Sintetitzador</button>
+        </div>
+      </div>
+
+    </div></div>
   </div>
 
   <footer>
@@ -1078,6 +1220,6 @@
   </xml>
 
   <!-- Block definitions & generators -->
-  <script src="app.min.js?v=8"></script>
+  <script src="app.min.js?v=9"></script>
 </body>
 </html>
