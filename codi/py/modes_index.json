@@ -17,6 +17,10 @@
       "file": "mode_beethoven.py"
     },
     {
+      "name": "Billar",
+      "file": "mode_billar.py"
+    },
+    {
       "name": "Bit",
       "file": "mode_bit.py"
     },

@@ -1,6 +1,6 @@
 {
   "version": "3.17.0",
-  "generated": "2026-08-29 20:11",
+  "generated": "2026-08-30 02:24",
   "files": [
     "boot.py",
     "code.py",
@@ -193,7 +193,7 @@
     "modes/__init__.py": "2c3cc6f1b76696eeb40fb4f025fa5908caafab9711b93d7267411b64c687b7fd",
     "modes/accompaniment.mpy": "37290c1a7c1a2f0a01f714d6c888774e2c9cedd5d9b8a81b91ba850adc8f9d0a",
     "modes/base_mode.mpy": "f3078736834a061aea48c32ddf28876ba33bddac0cb345a6b5dcf55db0c93316",
-    "modes/custom_modes_registry.json": "fb95090a0a4b01ae1fe2ab3675ca4b7ea904fe2cc156186dd239fc27675770d1",
+    "modes/custom_modes_registry.json": "6d5ede54d67f8514c3e58fc2398e066566fac5a74278eff0dabf13ee55690219",
     "modes/kbd_arp.mpy": "0c45d0284720673e2bc4f857e3a60edf3bc1affd87ff0ca8474e47c6c05c8dd0",
     "modes/kbd_buttons.mpy": "0886c7783288f6890065583349d019ef4fd792a4e6fb4764658b4c0a303f00d1",
     "modes/kbd_looper.mpy": "3f0b2d506920c47a43967ae30adfd08e69f3dfeb65f3c8a3a675c989c0766b28",
