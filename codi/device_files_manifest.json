@@ -1,6 +1,6 @@
 {
   "version": "3.17.0",
-  "generated": "2026-08-30 03:49",
+  "generated": "2026-08-30 04:25",
   "files": [
     "boot.py",
     "code.py",
@@ -52,6 +52,7 @@
     "lib/adafruit_midi/stop.mpy",
     "lib/adafruit_midi/system_exclusive.mpy",
     "lib/adafruit_midi/timing_clock.mpy",
+    "main.mpy",
     "main.py",
     "modes/__init__.py",
     "modes/accompaniment.mpy",
@@ -189,6 +190,7 @@
     "lib/adafruit_midi/stop.mpy": "3a50a373afdd08cd92efe9b964506e2d49503f3a0dba669b702c56870c958e04",
     "lib/adafruit_midi/system_exclusive.mpy": "242a523962592b465d54b7a4aef061497067dd39281c926cd143d07e64b20a23",
     "lib/adafruit_midi/timing_clock.mpy": "75404b10937dbbe84ba9193a4f51e1139238b7d04d3021e760e85f9cc0dd1149",
+    "main.mpy": "045e8c0bfac715b74c317d91ea799dfdc0a4650ead11b6fca1e68164799ec3a5",
     "main.py": "a2b61f4c1d8ef0e8dc827ebc70d1b4e538adfa19cb24c83f2fa15b457bd95dfe",
     "modes/__init__.py": "2c3cc6f1b76696eeb40fb4f025fa5908caafab9711b93d7267411b64c687b7fd",
     "modes/accompaniment.mpy": "37290c1a7c1a2f0a01f714d6c888774e2c9cedd5d9b8a81b91ba850adc8f9d0a",
