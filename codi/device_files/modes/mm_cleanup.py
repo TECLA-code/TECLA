@@ -64,15 +64,6 @@ def mm_stop_current_mode(mgr):
                         pass
             mgr.current_mode.active_drones.clear()
 
-        if hasattr(mgr.current_mode, 'active_layers'):
-            for layer_info in list(mgr.current_mode.active_layers):
-                if isinstance(layer_info, tuple) and len(layer_info) >= 1:
-                    try:
-                        mgr.midi_out.send(NoteOff(layer_info[0], 0))
-                    except Exception:
-                        pass
-            mgr.current_mode.active_layers.clear()
-
         if hasattr(mgr.current_mode, 'cleanup'):
             try:
                 mgr.current_mode.cleanup()
@@ -82,6 +73,31 @@ def mm_stop_current_mode(mgr):
     except Exception as e:
         print(f"Error aturant mode: {e}")
 
+
+
+def mm_all_notes_off(mgr):
+    """Xarxa de seguretat BARATA per al canvi de mode: CC120 (All Sound Off) +
+    CC123 (All Notes Off) als 16 canals, amb UN missatge reutilitzat.
+
+    32 missatges, no 192. mm_stop_all_sound() —que hi afegeix CC64, el pitch
+    bend i 128 NoteOff explícits— porta escrit al seu docstring que és per al
+    botó STOP i "mai al camí calent", i era exactament on estava: a CADA canvi
+    de mode. Els 128 NoteOff hi són per als AU que ignoren l'All Notes Off, i
+    aquest és un problema del pànic, no de passar de Dub a Grana.
+    """
+    if not mgr.midi_out:
+        return
+    try:
+        from adafruit_midi.control_change import ControlChange
+        cc = ControlChange(120, 0, channel=0)
+        for channel in range(16):
+            for ctrl in (120, 123):
+                cc.control = ctrl
+                cc.value = 0
+                cc.channel = channel
+                mgr.midi_out.send(cc)
+    except Exception as e:
+        print(f"Error all notes off: {e}")
 
 
 def mm_stop_all_sound(mgr):
@@ -97,16 +113,20 @@ def mm_stop_all_sound(mgr):
     try:
         from adafruit_midi.control_change import ControlChange
         from adafruit_midi.pitch_bend import PitchBend
+        # PRIMER el pedal i el pitch bend, DESPRÉS l'all-notes-off. L'ordre no
+        # és estètic: amb el sustain premut, un sinte que només faci cas del
+        # CC123 es queda les notes sonant fins que el pedal s'aixequi. Aixecar-lo
+        # abans és el que fa que el STOP talli de debò.
         cc = ControlChange(64, 0, channel=0)
         pb = PitchBend(8192, channel=0)
         for channel in range(16):
-            for ctrl in (64, 120, 123):
-                cc.control = ctrl
-                cc.value = 0
-                cc.channel = channel
-                mgr.midi_out.send(cc)
+            cc.channel = channel
+            mgr.midi_out.send(cc)
             pb.channel = channel
             mgr.midi_out.send(pb)
+        # I el CC120/123 dels 16 canals és el mateix bucle de mm_all_notes_off:
+        # no se'n tenen dues còpies.
+        mm_all_notes_off(mgr)
         # A més del CC120/123: NoteOff EXPLÍCIT per a les 128 notes al canal
         # de sortida configurat (on toquen el teclat i els modes). Molts
         # instruments de tercers (AUs dins un DAW) IGNOREN All Notes Off — amb
@@ -123,6 +143,30 @@ def mm_stop_all_sound(mgr):
     except Exception as e:
         print(f"Error panic: {e}")
 
+
+
+def mm_unload_all_modes(mgr):
+    """Descarrega TOTS els modes carregats (instància i bytecode). Retorna quants.
+
+    El ModeManager en manté fins a MAX_LOADED_MODES de vius alhora perquè
+    tornar a un mode recent sigui instantani. Això està bé mentre segueixes a
+    la capa de modes, però en SORTIR-NE és RAM retinguda per a res: passar a
+    una capa de teclat ha d'al·locar el KeyboardMode i els seus set mòduls
+    —vora 46 KB de bytecode— i fer-ho amb dos modes que ja no tornaràs a tocar
+    encara al heap és la diferència entre que hi càpiga i que no.
+
+    Es notava poc mentre hi havia tecles mortes: un mode que no es podia
+    carregar no ocupava res. En arreglar-les, `mgr.modes` s'omple de debò.
+    """
+    from modes.mm_lifecycle import mm_unload_mode
+    n = 0
+    for mode_name in [x for x in list(mgr.modes.keys()) if x != 'Teclat']:
+        try:
+            if mm_unload_mode(mgr, mode_name):
+                n += 1
+        except Exception:
+            pass
+    return n
 
 
 def mm_emergency_stop(mgr):
@@ -160,13 +204,7 @@ def mm_emergency_stop(mgr):
 
     mm_stop_all_sound(mgr)
 
-    modes_to_unload = [name for name in list(mgr.modes.keys()) if name != 'Teclat']
-    from modes.mm_lifecycle import mm_unload_mode
-    for mode_name in modes_to_unload:
-        try:
-            mm_unload_mode(mgr, mode_name)
-        except Exception:
-            pass
+    mm_unload_all_modes(mgr)
 
     mgr.current_mode = None
     mgr.current_mode_name = None
@@ -184,7 +222,6 @@ def mm_emergency_stop(mgr):
     mgr.pausa_mode = None
     mgr.pre_pausa_mode = None
     mgr.pre_pausa_mode_instance = None
-    mgr.hold_mode = None
 
     modules_to_remove = []
     for module_name in list(sys.modules.keys()):
@@ -205,10 +242,6 @@ def mm_cleanup(mgr):
     """Neteja tots els recursos dels modes."""
     from adafruit_midi.control_change import ControlChange
 
-    if mgr.hold_active and mgr.hold_mode:
-        if hasattr(mgr.hold_mode, 'cleanup'):
-            mgr.hold_mode.cleanup()
-        mgr.hold_active = False
 
     if mgr.sustain_active:
         mm_deactivate_sustain(mgr)

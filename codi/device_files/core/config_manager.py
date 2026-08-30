@@ -759,6 +759,27 @@ class ConfigManager:
     
     # ========== GESTIÓ D'EFECTES TEMPORALS GLOBALS ==========
     
+    def get_temporal_effects(self):
+        """Efectes temporals de la capa ACTUAL: {índex_de_tecla: nom_efecte}.
+
+        L'app els exporta DINS de cada banc (`bank.efectos_temporales`), i el
+        firmware només mirava el mapa global del primer nivell. Cap config
+        exportada el porta, així que requeia sempre al valor per defecte: la
+        tecla 15 feia Sustain encara que les tres capes diguessin Pausa.
+
+        Ordre: el banc primer, el global després (configs antigues), i el valor
+        de sempre si no n'hi ha cap.
+        """
+        try:
+            bank = self.get_current_bank() or {}
+            if isinstance(bank, dict):
+                efectes = bank.get('efectos_temporales')
+                if efectes:
+                    return efectes
+        except Exception:
+            pass
+        return self.get_global_temporal_effects()
+
     def get_global_temporal_effects(self):
         """Retorna els efectes temporals globals (botons 14 i 15)
         Aquests efectes s'apliquen a TOTS els bancs

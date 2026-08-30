@@ -1,6 +1,13 @@
 """Funcions de potenciòmetre per al Mode Teclat - mòdul separat per estalviar RAM"""
 
 
+
+try:
+    from core.pantalla import diu
+except Exception:                       # simulador i proves sense core/
+    def diu(text):
+        print(text)
+        return True
 def _try_free_cc(kbd, function, pot_value, threshold):
     """CC lliure: el número de CC viatja dins el nom de la funció.
     Format: 'CC Lliure (CC74)' → envia CC74. Retorna True si s'ha gestionat."""
@@ -70,7 +77,7 @@ def _report(kbd, nom, valor):
         if -3 < (v - c[nom]) < 3:
             return
         c[nom] = v
-        print("Pot %s: %d" % (nom, v))
+        diu("Pot %s: %d" % (nom, v))
     except Exception:
         pass
 
@@ -96,9 +103,9 @@ def _report_bpm(kbd, bpm, sub=1):
             return
         c['_bpm'] = v
         if sub > 1:
-            print("♩ %d BPM 1/%d" % (v, sub * 4))
+            diu("♩ %d BPM 1/%d" % (v, sub * 4))
         else:
-            print("♩ %d BPM" % v)
+            diu("♩ %d BPM" % v)
     except Exception:
         pass
 
@@ -219,7 +226,7 @@ def apply_pot_function(kbd, pot_name, pot_value, force_update=False):
             new_oct = min(8, max(0, round((pot_value / 127.0) * 8)))
             if new_oct != kbd.octave:
                 kbd.octave = new_oct
-                print("Octava: %d" % kbd.octave)
+                diu("Octava: %d" % kbd.octave)
 
     elif function == "Eix d'Harmonia":
         ids = kbd.available_neg_harm_ids if kbd.available_neg_harm_ids else list(range(8))
@@ -233,14 +240,14 @@ def apply_pot_function(kbd, pot_name, pot_value, force_update=False):
             if new_type != kbd.neg_harmony_type:
                 kbd.neg_harmony_type = new_type
                 _nh_names = ('Quinta', 'Unisonant', 'Terc.M', 'Terc.m', 'Tritó', 'Quarta', 'Sexta', 'Sept.m')
-                print("↕ Harmonia Negativa: %s" % _nh_names[new_type % 8])
+                diu("↕ Harmonia Negativa: %s" % _nh_names[new_type % 8])
 
     else:
         if not _try_synth_cc(kbd, function, pot_value, threshold):
             _try_free_cc(kbd, function, pot_value, threshold)
 
     if force_update and function not in ('Velocity/Arp Speed (dual)', 'Brillantor', 'Sustain', 'Modulació', 'Volum'):
-        print(f"🎹 Teclat Pot: {function}")
+        diu(f"🎹 Teclat Pot: {function}")
 
 
 def apply_arp_pot_function(kbd, pot_name, pot_value, force_update=False):
@@ -280,7 +287,7 @@ def apply_arp_pot_function(kbd, pot_name, pot_value, force_update=False):
                     kbd.arp_mode_index = new_mode
                     kbd.arp_index = 0
                     kbd.arp_direction = 1
-                    print("🎶 Arpegiador: %s" % kbd._get_arp_name(kbd.arp_mode_index))
+                    diu("🎶 Arpegiador: %s" % kbd._get_arp_name(kbd.arp_mode_index))
 
     elif function in ('Brillantor', 'Velocity'):
         kbd.velocity = max(20, min(127, pot_value))
@@ -320,7 +327,7 @@ def apply_arp_pot_function(kbd, pot_name, pot_value, force_update=False):
             _try_free_cc(kbd, function, pot_value, threshold)
 
     if force_update and function not in ('Velocitat (BPM)', 'Arp Speed (BPM)', 'Patró De Direcció', 'Arp Pattern Selector'):
-        print(f"🎹 Arp Pot: {function}")
+        diu(f"🎹 Arp Pot: {function}")
 
 
 # (apply_chord_pot_function i apply_neg_pot_function s'han retirat: les capes

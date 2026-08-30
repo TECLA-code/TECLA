@@ -93,10 +93,6 @@
       "file": "mode_hardtechno.py"
     },
     {
-      "name": "Illes",
-      "file": "mode_illes.py"
-    },
-    {
       "name": "Industrial",
       "file": "mode_industrial.py"
     },

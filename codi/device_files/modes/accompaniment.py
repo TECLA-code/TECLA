@@ -10,6 +10,13 @@ SEGONS (time.monotonic) en lloc de ms.
 Mòdul amb càrrega lazy: només s'importa si alguna tecla té un patró assignat.
 """
 
+
+try:
+    from core.pantalla import diu
+except Exception:                       # simulador i proves sense core/
+    def diu(text):
+        print(text)
+        return True
 # Cada patró: (n=pas global, ctx={'root','scale'}, rng) → llista de (note, dur, vel).
 # dur en PASSOS (corxeres de setze). El motor programa el note_off.
 
@@ -299,7 +306,7 @@ def handle_button(kbd, held, now):
         eng = getattr(kbd, '_accomp', None)
         if eng is not None:
             eng.clear()
-        print("Base OFF")
+        diu("Base OFF")
         return
     eng = _engine(kbd)
     customs = _custom_specs(kbd)
@@ -314,11 +321,11 @@ def handle_button(kbd, held, now):
     if idx < len(ACCOMP_PATTERN_IDS):
         eng.set_tempo(110)   # els integrats tornen al tempo estàndard
         eng.add_pattern(ACCOMP_PATTERN_IDS[idx], ACCOMP_CHANNEL, now)
-        print("Base: %s" % ACCOMP_PATTERN_NAMES[idx])
+        diu("Base: %s" % ACCOMP_PATTERN_NAMES[idx])
     else:
         spec = customs[idx - len(ACCOMP_PATTERN_IDS)]
         eng.add_custom(spec, ACCOMP_CHANNEL, now)
-        print("Base: %s" % spec.get('name', 'Custom'))
+        diu("Base: %s" % spec.get('name', 'Custom'))
 
 
 def stop(kbd):

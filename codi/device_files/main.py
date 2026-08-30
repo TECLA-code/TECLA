@@ -9,6 +9,12 @@ import analogio
 import usb_midi
 from adafruit_midi import MIDI
 from adafruit_midi.control_change import ControlChange
+try:
+    from core.pantalla import diu
+except Exception:                       # simulador i proves sense core/
+    def diu(text):
+        print(text)
+        return True
 
 # El to PWM intern s'ha retirat a la v3.16 (GP22 ara és el LED multicolor).
 # mode_manager i mode_keyboard s'importen de forma lazy dins main() per estalviar RAM a l'inici
@@ -30,6 +36,14 @@ class TeclaHardware:
         self.buttons = self._init_buttons()
         self.pots = self._init_pots()
         self.last_button_states = [False] * len(BUTTON_PINS)
+        # BÚFERS REUTILITZATS del camí calent. El bucle fa 500 voltes per segon
+        # i cada llista nova és brossa que acaba disparant un gc de 10-30 ms
+        # enmig del que estàs tocant. Contracte: qui rebi aquestes llistes les
+        # ha de LLEGIR a l'acte, mai guardar-se'n la referència (tots els modes
+        # fan `x, y, z = pot_values`; sim_link i potlayers en fan còpia).
+        self._buf_buttons = [False] * len(BUTTON_PINS)
+        self._buf_pots = [0] * len(POT_PINS)
+        self._buf_kb = [False] * 15      # els 15 que rep el mode teclat
         self.last_pot_read = 0
         self.midi_out = None
         self.button_press_times = [0.0] * len(BUTTON_PINS)
@@ -122,21 +136,21 @@ class TeclaHardware:
         return pots
     
     def read_buttons(self):
-        """Llegeix l'estat actual dels botons"""
-        return [btn.value if btn else False for btn in self.buttons]
+        """Llegeix l'estat actual dels botons. Retorna el BÚFER reutilitzat."""
+        buf = self._buf_buttons
+        for i, btn in enumerate(self.buttons):
+            buf[i] = btn.value if btn else False
+        return buf
     
     def read_pots(self):
-        """Llegeix i escala els valors dels potenciòmetres a 0-127"""
-        values = []
-        for pot in self.pots:
+        """Escala els potes a 0-127. Retorna el BÚFER reutilitzat."""
+        buf = self._buf_pots
+        for i, pot in enumerate(self.pots):
             if pot:
-                # Llegir i escalar el valor directament
-                raw_value = pot.value
-                scaled_value = max(0, min(127, raw_value * 127 // 65535))
-                values.append(scaled_value)
+                buf[i] = max(0, min(127, pot.value * 127 // 65535))
             else:
-                values.append(0)
-        return values
+                buf[i] = 0
+        return buf
     
     def _switch_layer(self, step):
         """Cicla a la capa (banc) següent/anterior i activa el motor del seu tipus.
@@ -156,7 +170,7 @@ class TeclaHardware:
             bank = self.config_manager.get_current_bank() or {}
             name = bank.get('name', '') or ('Capa %d' % (new_index + 1))
             btype = bank.get('type', 'modes')
-            print(f"🔁 Capa: {old_name} → {name} ({btype})")
+            diu(f"🔁 Capa: {old_name} → {name} ({btype})")
             self.display_event('show_layer', name)
             self.llum_de_capa(bank)          # el LED diu a quina capa ets
             self.keyboard_toggle_blocked_until = time.monotonic() + 0.5
@@ -187,30 +201,28 @@ class TeclaHardware:
         # teclat, el pedal CC64 continuaria premut al synth i la primera nota
         # del teclat quedaria enganxada. 'Config Modes' i 'Loop' es conserven.
         if self.mode_manager:
-            try:
-                from modes.mm_update import mm_deactivate_efecte_temporal, _clear_susp_flags
-                for _btn, _info in self.mode_manager.efectes_temporals.items():
-                    if _info['active'] and _info['tipus'] not in ('Config Modes', 'Loop'):
-                        mm_deactivate_efecte_temporal(self.mode_manager, _btn)
-                        _clear_susp_flags(self.mode_manager, _info['tipus'])
-            except Exception:
-                pass
+            from modes.mm_update import mm_deactivate_efectes_no_persistents
+            mm_deactivate_efectes_no_persistents(self.mode_manager)
         # Aturar i descarregar el mode actiu ABANS de crear el teclat: evita
         # notes penjades (el mode deixaria de rebre update() i no enviaria mai
         # els NoteOff) i allibera RAM per a la instància nova.
-        if self.mode_manager and self.mode_manager.current_mode:
-            prev_mode = self.mode_manager.current_mode_name
-            try:
-                self.mode_manager._stop_current_mode()
-            except Exception:
-                pass
-            self.mode_manager.current_mode = None
-            self.mode_manager.current_mode_name = None
-            if prev_mode and prev_mode != 'Teclat':
+        if self.mode_manager:
+            if self.mode_manager.current_mode:
                 try:
-                    self.mode_manager._unload_mode(prev_mode)
+                    self.mode_manager._stop_current_mode()
                 except Exception:
                     pass
+                self.mode_manager.current_mode = None
+                self.mode_manager.current_mode_name = None
+            # TOTS els modes, no només l'actiu. El ModeManager en manté fins a
+            # tres de vius perquè tornar-hi sigui instantani; en SORTIR de la
+            # capa de modes això és RAM retinguda per a res, i el que ve ara
+            # —KeyboardMode i els seus set mòduls— és l'al·locació més gran de
+            # tot el firmware.
+            try:
+                self.mode_manager.unload_all_modes()
+            except Exception:
+                pass
         self._all_notes_off()
         # RECREAR sempre el teclat: cada capa de teclat té la seva pròpia config
         # (config_manager la llegeix per-banc). Els bytecodes ja són a sys.modules,
@@ -231,6 +243,13 @@ class TeclaHardware:
                 config_manager=self.config_manager
             )
             self.keyboard_mode.setup()
+        except MemoryError:
+            # L'ÚNIC diagnòstic de memòria que es diu en veu alta, perquè només
+            # apareix quan alguna cosa ja ha fallat. Mentre tot vagi bé, la
+            # Pantalla no ha de saber res de RAM: és de l'usuari, no meva.
+            print("⚠ SENSE MEMÒRIA creant la capa de teclat")
+            self.keyboard_mode = None
+            raise
         except Exception as e:
             print(f"Error creant teclat: {e}")
         self.keyboard_mode_active = True
@@ -309,7 +328,7 @@ class TeclaHardware:
         
         # Botó 16 (index 15) - EMERGENCY STOP + NETEJA DE MEMÒRIA
         if button_states[15] and not self.last_button_states[15]:
-            print("ATURA!")
+            diu("ATURA!")
             self.display_event('show_stop')
             try:
                 # 1. PRIORITAT MÀXIMA: Aturar TOT el so immediatament
@@ -351,7 +370,7 @@ class TeclaHardware:
         # Si estem en mode teclat, no processar canvis de mode normal
         if self.keyboard_mode_active:
             # Actualizar el estado anterior
-            self.last_button_states = button_states.copy()
+            self.last_button_states[:] = button_states
             return None
         
         # Obtenir el banc actual i les seves assignacions (només si no estem en mode teclat)
@@ -377,10 +396,21 @@ class TeclaHardware:
                     break
                 
         # Actualizar el estado anterior
-        self.last_button_states = button_states.copy()
+        self.last_button_states[:] = button_states
         
         return mode_changed
     
+    def _kb_buttons(self, button_states):
+        """Els 15 botons del mode teclat, al BÚFER reutilitzat.
+
+        `button_states[:15]` era una llista nova a cada volta del bucle: 500
+        per segon només per retallar una llista que ja tenim."""
+        buf = self._buf_kb
+        n = len(button_states)
+        for i in range(15):
+            buf[i] = button_states[i] if i < n else False
+        return buf
+
     def update_keyboard_mode(self, pot_values, button_states):
         """Actualitza el mode teclat si està actiu"""
         if self.keyboard_mode_active:
@@ -399,7 +429,7 @@ class TeclaHardware:
                     print(f"🎹 Mode Teclat activat | Octava: {self.keyboard_octave}")
                     
                     # IMPORTANT: Cridar update() immediatament per sincronitzar potenciòmetres
-                    keyboard_buttons = button_states[:15]
+                    keyboard_buttons = self._kb_buttons(button_states)
                     self.keyboard_mode.update(pot_values, keyboard_buttons)
                     self.keyboard_octave = self.keyboard_mode.octave
                     return True
@@ -409,7 +439,7 @@ class TeclaHardware:
                     return False
             
             # Passar els botons 1-15 al mode teclat (octàva gestionada internament)
-            keyboard_buttons = button_states[:15]
+            keyboard_buttons = self._kb_buttons(button_states)
             try:
                 self.keyboard_mode.update(pot_values, keyboard_buttons)
                 if self.keyboard_mode.octave != self.keyboard_octave:
@@ -419,6 +449,40 @@ class TeclaHardware:
                 print(f"❌ Error update Mode Teclat: {e}")
             return True
         return False
+
+
+SENYAL_RECARREGA = '.config_reload'
+
+
+def senyal_de_recarrega(ultim, signal_file=SENYAL_RECARREGA):
+    """Hi ha senyal de recàrrega de configuració? Retorna (cal_recarregar, ultim).
+
+    L'app deixa aquest fitxer per dir "he canviat la config, torna-la a llegir",
+    i el firmware l'esborra en atendre'l. Però mentre el disc estigui muntat a
+    un ordinador, el sistema de fitxers és de NOMÉS LECTURA per al dispositiu:
+    l'os.remove falla, el senyal es queda posat i, sense guarda, la config es
+    recarregava SENCERA cada 0,5 s —registre, modes, mode actual reiniciat—
+    mentre el cable estigués endollat. Es notava com un dispositiu que va a
+    batzegades i no es podia atribuir a res.
+
+    Per això el senyal s'identifica pel seu CONTINGUT: un que ja s'ha atès no
+    es torna a atendre encara que el fitxer no s'hagi pogut esborrar.
+    """
+    try:
+        with open(signal_file, 'r') as f:
+            marca = f.read().strip()
+    except OSError:
+        return False, None          # no hi ha senyal: el següent sí que valdrà
+
+    nou = marca != ultim
+    if nou:
+        print("📡 Senyal de recàrrega detectada (timestamp: %s)" % marca)
+    try:
+        import os
+        os.remove(signal_file)
+        return nou, None
+    except OSError:
+        return nou, marca           # no s'ha pogut esborrar: recorda'l
 
 
 def main():
@@ -593,6 +657,7 @@ def main():
     # Variable para detectar cambios en la configuración
     last_config_check_time = time.monotonic()
     config_check_interval = 0.5  # Comprovar canvis cada 0.5s (redueix I/O de filesystem; imperceptible)
+    ultim_senyal = None          # senyal de recàrrega ja atès (vegeu senyal_de_recarrega)
     last_config_hash = config_manager.get_config_hash()
 
     # Detectar el simulador UN SOL COP (evita reintentar l'import 10x/s al hardware real)
@@ -724,8 +789,7 @@ def main():
                 # Comprobar si ha habido cambios en la configuración (desde la GUI u otra fuente)
                 if current_time - last_config_check_time > config_check_interval:
                     try:
-                        # Comprovar si existeix fitxer de senyal de recàrrega
-                        signal_file = '.config_reload'
+                        signal_file = SENYAL_RECARREGA
                         config_changed = False
                         
                         # SUPORT SIMULADOR: Comprovar flag config_reload_requested
@@ -734,21 +798,15 @@ def main():
                             config_changed = True
                             _sim_shared_state.config_reload_requested = False  # Reset flag
                         
-                        try:
-                            # Si el fitxer de senyal existeix, recarregar configuració
-                            with open(signal_file, 'r') as f:
-                                timestamp = f.read().strip()
-                                print(f"📡 Senyal de recàrrega detectada (timestamp: {timestamp})")
-                                config_changed = True
-                                
-                            # Eliminar el fitxer de senyal després de processar-lo
-                            try:
-                                import os
-                                os.remove(signal_file)
-                            except OSError:
-                                pass
-                        except OSError:
-                            # El fitxer no existeix, comprovar hash normal
+                        hi_ha_senyal, ultim_senyal = senyal_de_recarrega(
+                            ultim_senyal, signal_file)
+                        if hi_ha_senyal:
+                            config_changed = True
+                        else:
+                            # Sempre, encara que hi hagi un senyal ENCALLAT que ja
+                            # s'ha atès: si no, un senyal que no es pot esborrar
+                            # (disc muntat a un ordinador) tapava per sempre
+                            # l'altra via de detectar canvis.
                             current_config_hash = config_manager.get_config_hash()
                             if current_config_hash != last_config_hash:
                                 config_changed = True

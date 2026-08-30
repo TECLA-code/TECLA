@@ -50,13 +50,35 @@ class BaseMode:
         self.iteration += 1
         return {}
 
+    # note_on()/note_off() retornen el missatge DEL POOL, mutat. Abans cada
+    # crida feia un `import` dins de la funció i al·locava un NoteOn/NoteOff
+    # nou; el comentari de dalt deia que el pool eliminava les al·locacions "de
+    # TOTS els modes" i no era cert: només les de qui feia servir
+    # send_note_on()/send_note_off(), que són 6 modes de 65. Els altres 59 —i
+    # 21 dels 22 instal·lats al dispositiu— seguien al·locant per nota, i cada
+    # al·locació pot disparar un gc de 10-40 ms enmig del que estàs tocant.
+    #
+    # És segur perquè send() serialitza SÍNCRONAMENT: cap receptor no es queda
+    # amb la referència. El patró de tot el codi és
+    # `self.midi_out.send(self.note_on(...))`, mai acumular missatges en una
+    # llista (comprovat a tots els modes) ni enviar-ne una llista de cop.
+    #
+    # channel=None a cada crida perquè send() el sobreescriu amb out_channel
+    # quan és None, i el missatge del pool se'l quedaria per sempre.
+
     def note_on(self, note, velocity=127):
-        from adafruit_midi.note_on import NoteOn
-        return NoteOn(note & 0x7F, velocity & 0x7F)
+        msg = _note_on_msg()
+        msg.note = note & 0x7F
+        msg.velocity = velocity & 0x7F
+        msg.channel = None
+        return msg
 
     def note_off(self, note, velocity=0):
-        from adafruit_midi.note_off import NoteOff
-        return NoteOff(note & 0x7F, velocity & 0x7F)
+        msg = _note_off_msg()
+        msg.note = note & 0x7F
+        msg.velocity = velocity & 0x7F
+        msg.channel = None
+        return msg
 
     # ── Tracking unificat de notes ───────────────────────────────────────────
     # Preferiu aquests helpers a note_on()/note_off() + send manual: registren

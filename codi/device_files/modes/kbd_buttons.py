@@ -1,5 +1,11 @@
 """Processament de botons per al Mode Teclat - modul separat per estalviar RAM"""
 import time
+try:
+    from core.pantalla import diu
+except Exception:                       # simulador i proves sense core/
+    def diu(text):
+        print(text)
+        return True
 
 _NEG_HARM_AXES = (3.5, 0.0, 2.0, 1.5, 6.0, 2.5, 4.5, 5.5)
 _NEG_HARM_NAMES = ('Quinta', 'Unisonant', 'Tercera M', 'Tercera m', 'Trito', 'Quarta', 'Sexta M', 'Septima m')
@@ -112,10 +118,10 @@ def process_keyboard_buttons(kbd, button_states):
                 # Toggle latch al moment de prémer (resposta immediata en directe)
                 kbd.latch_active = not kbd.latch_active
                 if kbd.latch_active:
-                    print("∞ Latch ACTIVAT (les notes es mantenen en deixar anar)")
+                    diu("∞ Latch ACTIVAT (les notes es mantenen en deixar anar)")
                 else:
                     kbd.stop_all_notes()
-                    print("∞ Latch DESACTIVAT")
+                    diu("∞ Latch DESACTIVAT")
             elif btn_idx == kbd._fn_looper_btn or btn_idx == kbd._fn_looper_q_btn:
                 kbd._looper_btn_press_time = current_time
             elif btn_idx == kbd._fn_looper_dub_btn:
@@ -132,17 +138,17 @@ def process_keyboard_buttons(kbd, button_states):
                 kbd._synth_wave_idx = idx
                 kbd._send_cc(70, idx * 32)
                 _wn = ('Sinus', 'Dent de serra', 'Triangle', 'Quadrada')
-                print(f"∿ Forma d'ona: {_wn[idx]}")
+                diu(f"∿ Forma d'ona: {_wn[idx]}")
             elif btn_idx < len(kbd.btn_functions) and kbd.btn_functions[btn_idx] == 'synth_cfg':
                 # Config àudio (DUPLICABLE: cada tecla és un preset). Commuta: mentre
                 # activa, els 3 potes editen el so segons el mapatge d'aquesta tecla.
                 if getattr(kbd, '_audio_cfg_key', -1) == btn_idx:
                     kbd._audio_cfg_key = -1
-                    print("🎛 Config àudio OFF")
+                    diu("🎛 Config àudio OFF")
                 else:
                     kbd._audio_cfg_key = btn_idx
                     m = kbd.audio_pot_functions.get(str(btn_idx)) or {'x': 'Filtre', 'y': 'Ressonància', 'z': "Forma d'ona"}
-                    print("🎛 Config àudio K%d: X=%s Y=%s Z=%s" % (btn_idx + 1, m.get('x'), m.get('y'), m.get('z')))
+                    diu("🎛 Config àudio K%d: X=%s Y=%s Z=%s" % (btn_idx + 1, m.get('x'), m.get('y'), m.get('z')))
 
         elif not cur and prv:
             if btn_idx == kbd._fn_scale_btn:
@@ -158,14 +164,14 @@ def process_keyboard_buttons(kbd, button_states):
                     if actual_scale_id >= 2000:
                         cs = kbd.config_manager.get_custom_scale_by_scale_id(actual_scale_id) if kbd.config_manager else None
                         sname = cs.get('name', 'Sense nom') if cs else f'#{actual_scale_id - 2000}'
-                        print(f"🎼{d} Escala: {sname} ({kbd.scale_mode_index + 1}/{len(kbd.available_scales)})")
+                        diu(f"🎼{d} Escala: {sname} ({kbd.scale_mode_index + 1}/{len(kbd.available_scales)})")
                     elif actual_scale_id >= 1000:
                         pg = kbd.config_manager.get_progression_by_scale_id(actual_scale_id) if kbd.config_manager else None
                         pname = pg.get('name', 'Sense nom') if pg else f'#{actual_scale_id - 1000}'
-                        print(f"♪{d} Progressió: {pname} ({kbd.scale_mode_index + 1}/{len(kbd.available_scales)})")
+                        diu(f"♪{d} Progressió: {pname} ({kbd.scale_mode_index + 1}/{len(kbd.available_scales)})")
                     else:
                         sname = _SCALE_NAMES[actual_scale_id] if actual_scale_id < len(_SCALE_NAMES) else f'#{actual_scale_id}'
-                        print(f"🎼{d} {sname} ({kbd.scale_mode_index + 1}/{len(kbd.available_scales)})")
+                        diu(f"🎼{d} {sname} ({kbd.scale_mode_index + 1}/{len(kbd.available_scales)})")
                     if getattr(kbd, '_accomp_active', False):
                         from modes.accompaniment import sync_context
                         sync_context(kbd)
@@ -177,7 +183,7 @@ def process_keyboard_buttons(kbd, button_states):
                 if nk > 0:
                     kbd.key_index = (kbd.key_index + (-1 if backward else 1)) % nk
                     d = '◀' if backward else '▶'
-                    print(f"🎵{d} Tonalitat: {kbd.available_keys[kbd.key_index]}")
+                    diu(f"🎵{d} Tonalitat: {kbd.available_keys[kbd.key_index]}")
                     if getattr(kbd, '_accomp_active', False):
                         from modes.accompaniment import sync_context
                         sync_context(kbd)
@@ -192,7 +198,7 @@ def process_keyboard_buttons(kbd, button_states):
                     kbd.arp_notes = []
                     kbd.arp_button_order = []
                     kbd._arp_just_activated = False
-                    print("🎶 Arpeggiador DESACTIVAT")
+                    diu("🎶 Arpeggiador DESACTIVAT")
                 elif not kbd.arp_mode_active:
                     kbd.arp_mode_active = True
                     kbd.arp_notes = []
@@ -201,7 +207,7 @@ def process_keyboard_buttons(kbd, button_states):
                     kbd._arp_just_activated = True
                     if kbd.arp_mode_index not in kbd.available_arp_modes:
                         kbd.arp_mode_index = kbd.available_arp_modes[0] if kbd.available_arp_modes else 2
-                    print(f"🎶 Arpeggiador: {kbd._get_arp_name(kbd.arp_mode_index)}")
+                    diu(f"🎶 Arpeggiador: {kbd._get_arp_name(kbd.arp_mode_index)}")
                 elif since_last < 0.4 and not kbd._arp_just_activated:
                     kbd._arp_just_activated = False
                     if kbd.available_arp_modes:
@@ -212,7 +218,7 @@ def process_keyboard_buttons(kbd, button_states):
                             kbd.arp_mode_index = kbd.available_arp_modes[-1]
                         kbd.arp_index = 0; kbd.arp_direction = 1
                         kbd.arp_button_order = []; kbd._arp_pat_sel_last_val = None
-                        print(f"🎶◀ Arpeggiador: {kbd._get_arp_name(kbd.arp_mode_index)}")
+                        diu(f"🎶◀ Arpeggiador: {kbd._get_arp_name(kbd.arp_mode_index)}")
                 else:
                     kbd._arp_just_activated = False
                     if kbd.available_arp_modes:
@@ -223,7 +229,7 @@ def process_keyboard_buttons(kbd, button_states):
                             kbd.arp_mode_index = kbd.available_arp_modes[0]
                         kbd.arp_index = 0; kbd.arp_direction = 1
                         kbd.arp_button_order = []; kbd._arp_pat_sel_last_val = None
-                        print(f"🎶▶ Arpeggiador: {kbd._get_arp_name(kbd.arp_mode_index)}")
+                        diu(f"🎶▶ Arpeggiador: {kbd._get_arp_name(kbd.arp_mode_index)}")
                 kbd._reapply_active_ccs()
 
             elif btn_idx == kbd._fn_neg_harm_btn:
@@ -235,19 +241,19 @@ def process_keyboard_buttons(kbd, button_states):
                     # natural en alliberar el botó (evita el tall brusc en directe).
                     kbd.neg_harmony_active = False
                     kbd._neg_harm_just_activated = False
-                    print("↕ Harmonia Negativa DESACTIVADA")
+                    diu("↕ Harmonia Negativa DESACTIVADA")
                 elif not kbd.neg_harmony_active:
                     kbd.neg_harmony_active = True
                     kbd._neg_harm_just_activated = True
-                    print(f"↕ Harmonia Negativa: {_NEG_HARM_NAMES[kbd.neg_harmony_type % len(_NEG_HARM_AXES)]}")
+                    diu(f"↕ Harmonia Negativa: {_NEG_HARM_NAMES[kbd.neg_harmony_type % len(_NEG_HARM_AXES)]}")
                 elif since_last < 0.4 and not kbd._neg_harm_just_activated:
                     kbd._neg_harm_just_activated = False
                     kbd.neg_harmony_type = kbd._cycle_neg_harm_type(-2)
-                    print(f"↕◀ H.Neg: {_NEG_HARM_NAMES[kbd.neg_harmony_type % len(_NEG_HARM_AXES)]}")
+                    diu(f"↕◀ H.Neg: {_NEG_HARM_NAMES[kbd.neg_harmony_type % len(_NEG_HARM_AXES)]}")
                 else:
                     kbd._neg_harm_just_activated = False
                     kbd.neg_harmony_type = kbd._cycle_neg_harm_type(1)
-                    print(f"↕▶ H.Neg: {_NEG_HARM_NAMES[kbd.neg_harmony_type % len(_NEG_HARM_AXES)]}")
+                    diu(f"↕▶ H.Neg: {_NEG_HARM_NAMES[kbd.neg_harmony_type % len(_NEG_HARM_AXES)]}")
 
             elif btn_idx == kbd._fn_voice_lead_btn:
                 # Tap = activa / cicla la forma de conducció · llarga = desactiva
@@ -255,17 +261,17 @@ def process_keyboard_buttons(kbd, button_states):
                 vl_ids = getattr(kbd, 'available_vl_types', None) or ('proximitat',)
                 if elapsed >= 0.5 and getattr(kbd, 'voice_lead_active', False):
                     kbd.voice_lead_active = False
-                    print("Conduccio de veus DESACTIVADA")
+                    diu("Conduccio de veus DESACTIVADA")
                 elif not getattr(kbd, 'voice_lead_active', False):
                     kbd.voice_lead_active = True
                     kbd._vl_prev_chord = None
                     kbd._vl_type_idx = 0
                     kbd._vl_type = vl_ids[0]
-                    print("Conduccio: %s" % kbd._vl_type)
+                    diu("Conduccio: %s" % kbd._vl_type)
                 else:
                     kbd._vl_type_idx = (getattr(kbd, '_vl_type_idx', 0) + 1) % len(vl_ids)
                     kbd._vl_type = vl_ids[kbd._vl_type_idx]
-                    print("Conduccio: %s" % kbd._vl_type)
+                    diu("Conduccio: %s" % kbd._vl_type)
 
             elif btn_idx == kbd._fn_accomp_btn:
                 # Base d'acompanyament (mòdul lazy: només s'importa si s'usa)
@@ -292,11 +298,11 @@ def process_keyboard_buttons(kbd, button_states):
                 if elapsed >= 0.5:
                     # NO tallar el so: les notes sonant es deixen anar en alliberar el botó.
                     kbd.diatonic_fn_idx = -1
-                    print("Δ Funcions Harmòniques DESACTIVAT")
+                    diu("Δ Funcions Harmòniques DESACTIVAT")
                 else:
                     kbd.diatonic_fn_idx = (kbd.diatonic_fn_idx + 1) % len(fns)
                     fn_name = _DIATONIC_FN_NAMES.get(fns[kbd.diatonic_fn_idx], fns[kbd.diatonic_fn_idx])
-                    print(f"Δ {fn_name} ({kbd.diatonic_fn_idx + 1}/{len(fns)})")
+                    diu(f"Δ {fn_name} ({kbd.diatonic_fn_idx + 1}/{len(fns)})")
 
             elif btn_idx == kbd._fn_chord_btn:
                 elapsed = current_time - kbd.chord_btn_press_time
@@ -307,28 +313,35 @@ def process_keyboard_buttons(kbd, button_states):
                     kbd.chord_mode_active = False
                     kbd.chord_type_index = 0
                     kbd._chord_just_activated = False
-                    print("Mode Acords DESACTIVAT")
+                    diu("Mode Acords DESACTIVAT")
                 elif not kbd.chord_mode_active:
                     kbd.chord_mode_active = True
                     kbd._chord_just_activated = True
                     ct = kbd.available_chord_types[kbd.chord_type_index] if kbd.available_chord_types else 'Major'
-                    print(f"Mode Acords ACTIVAT ({ct})")
+                    diu(f"Mode Acords ACTIVAT ({ct})")
                 elif since_last < 0.4 and not kbd._chord_just_activated:
                     kbd._chord_just_activated = False
                     if kbd.available_chord_types:
                         nct = len(kbd.available_chord_types)
                         kbd.chord_type_index = (kbd.chord_type_index - 2) % nct
-                        print(f"Acord: {kbd.available_chord_types[kbd.chord_type_index]}")
+                        diu(f"Acord: {kbd.available_chord_types[kbd.chord_type_index]}")
                 else:
                     kbd._chord_just_activated = False
                     if kbd.available_chord_types:
                         kbd.chord_type_index = (kbd.chord_type_index + 1) % len(kbd.available_chord_types)
-                        print(f"Acord: {kbd.available_chord_types[kbd.chord_type_index]}")
+                        diu(f"Acord: {kbd.available_chord_types[kbd.chord_type_index]}")
                 kbd._reapply_active_ccs()
 
     if kbd.arp_mode_active:
-        note_states = [button_states[i] if i < len(button_states) else False
-                       for i in kbd._note_buttons]
+        # Búfer reutilitzat: amb l'arpegiador actiu això era una llista nova
+        # més a cada volta, i l'arpegiador és de les capes que més es fan servir.
+        note_states = kbd.__dict__.get('_buf_note_states')
+        if note_states is None or len(note_states) != len(kbd._note_buttons):
+            note_states = [False] * len(kbd._note_buttons)
+            kbd._buf_note_states = note_states
+        n = len(button_states)
+        for k, i in enumerate(kbd._note_buttons):
+            note_states[k] = button_states[i] if i < n else False
         kbd._process_arpeggiator(note_states, current_time)
     else:
         for slot, btn_idx in enumerate(kbd._note_buttons):
@@ -355,4 +368,11 @@ def process_keyboard_buttons(kbd, button_states):
         if kbd.gate_enabled:
             kbd._process_gate(current_time)
 
-    kbd.last_button_states = list(button_states[:15])
+    # Còpia SENSE al·locar: `list(button_states[:15])` eren DUES llistes noves
+    # per volta de bucle —el tall i la còpia— i el bucle fa 500 voltes per
+    # segon. Era el que més brossa generava de tot el camí del teclat, i la
+    # brossa acaba en recollides de 10-30 ms enmig del que estàs tocant.
+    lbs = kbd.last_button_states
+    n = len(button_states)
+    for i in range(15):
+        lbs[i] = button_states[i] if i < n else False

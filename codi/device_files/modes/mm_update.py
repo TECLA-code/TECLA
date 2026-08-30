@@ -1,6 +1,12 @@
 """mm_update.py - Bucle d'actualització del ModeManager i gestió d'efectes temporals."""
 import time
 from adafruit_midi.control_change import ControlChange
+try:
+    from core.pantalla import diu
+except Exception:                       # simulador i proves sense core/
+    def diu(text):
+        print(text)
+        return True
 
 # Presets de "Config àudio" (capa modes, tecles 14/15): NO prenen el control del
 # mode (segueix sonant), només redirigeixen els 3 potes segons un mapatge
@@ -94,7 +100,7 @@ def _report_mode_pots(mgr, pot_values):
     Els noms són els FÍSICS del dispositiu (X=pots[1], Y=pots[0], Z=pots[2]),
     els mateixos que fa servir la capa de teclat: girar el pot X ha de dir "X"."""
     try:
-        from modes.kbd_notes import _console_on
+        from modes.kbd_notes import _console_on, testimoni
         if not _console_on():
             return
         c = getattr(mgr, '_pot_report_cache', None)
@@ -111,7 +117,7 @@ def _report_mode_pots(mgr, pot_values):
             if -3 < (v - c[nom]) < 3:
                 continue
             c[nom] = v
-            print("Pot %s: %d" % (nom, v))
+            testimoni("Pot %s: %d" % (nom, v))
     except Exception:
         pass
 
@@ -150,7 +156,7 @@ def _report_mode_bpm(mgr):
     exacte quan es deixa el pot quiet. Primer valor de cada mode en silenci:
     no ha de tapar el nom del mode que s'acaba d'activar."""
     try:
-        from modes.kbd_notes import _console_on
+        from modes.kbd_notes import _console_on, testimoni
         if not _console_on():
             return
         t = mode_tempo(mgr.current_mode)
@@ -166,9 +172,9 @@ def _report_mode_bpm(mgr):
             return
         mgr._bpm_report_last = (bpm, sub)
         if sub > 1:
-            print("♩ %d BPM 1/%d" % (bpm, sub * 4))
+            testimoni("♩ %d BPM 1/%d" % (bpm, sub * 4))
         else:
-            print("♩ %d BPM" % bpm)
+            testimoni("♩ %d BPM" % bpm)
     except Exception:
         pass
 
@@ -177,7 +183,16 @@ def mm_update(mgr, pot_values, button_states):
     """Actualitza el mode actual i processa botons d'efecte."""
     change_mode = None
     try:
-        status = {'change_mode': None}
+        # Diccionari REUTILITZAT: a 500 voltes per segon, un dict nou per volta
+        # és brossa que acaba pagant-se en gc enmig del que estàs tocant. El
+        # bucle principal el llegeix dins de la mateixa volta i no se'l guarda.
+        status = mgr.__dict__.get('_status')
+        if status is None:
+            status = {}
+            mgr._status = status
+        else:
+            status.clear()
+        status['change_mode'] = None
         current_time = time.monotonic()
         if mgr.current_mode is not None:
             _report_mode_pots(mgr, pot_values)
@@ -187,11 +202,12 @@ def mm_update(mgr, pot_values, button_states):
         if _lp is not None and _lp.state != 0:
             _lp.tick(mgr.effect_manager.midi, current_time)
 
-        # === PRIORITAT 1: Canvis de capa (botons 13 i 16) ===
-        if isinstance(button_states, list) and len(button_states) > 15:
-            layer_changed = mgr.layer_manager.process_layer_buttons(button_states)
-            if layer_changed:
-                status['layer'] = mgr.layer_manager.current_layer
+        # (Aquí hi havia una PRIORITAT 1 que cridava core/layer_manager a cada
+        #  volta. Era una màquina d'estats PARAL·LELA: el canvi de capa de debò
+        #  el fa main._switch_layer, i el seu `current_layer` no s'actualitzava
+        #  mai. Anava per NIVELL i no per flanc, imprimia «Botó 13: Activant
+        #  capa 'teclat'» quan no canviava res, i tot plegat només omplia un
+        #  camp de l'estat que no llegeix ningú.)
 
         # === PRIORITAT 2: Botons d'efecte (14 i 15) ===
         # Gest: TAP curt = commuta el latch (l'efecte es queda actiu sense mantenir
@@ -202,18 +218,32 @@ def mm_update(mgr, pot_values, button_states):
                 if len(button_states) <= efecte_button:
                     continue
                 efecte_info = mgr.efectes_temporals[efecte_button]
-                current_state = bool(button_states[efecte_button])
+                raw = bool(button_states[efecte_button])
 
-                if current_state != efecte_info['last_state']:
-                    # Debounce: ignora rebots massa ràpids
-                    if (current_time - efecte_info.get('last_change_time', 0)) < mgr.debounce_time:
-                        continue
-                    efecte_info['last_change_time'] = current_time
-                    efecte_info['last_state'] = current_state
-                    if current_state:
-                        efecte_info['press_time'] = current_time
+                # Filtre de rebots per ESTABILITAT del nivell cru: un canvi val
+                # quan el nivell s'ha mantingut `debounce_time` seguits.
+                #
+                # L'anterior rebutjava el FLANC i prou, amb una finestra de
+                # 200 ms, i deixava `last_state` encallat al valor vell: un toc
+                # de 80 ms no feia res, i el release empassat tornava a sortir
+                # mig segon més tard amb un `held` inflat que passava el llindar
+                # de premuda llarga i CICLAVA L'EFECTE tot sol. Qualsevol toc
+                # més curt de 200 ms feia això.
+                if raw != efecte_info.get('raw_state', False):
+                    efecte_info['raw_state'] = raw
+                    efecte_info['raw_since'] = current_time
+
+                if (raw != efecte_info['last_state'] and
+                        (current_time - efecte_info.get('raw_since', 0)) >= mgr.debounce_time):
+                    vora = efecte_info.get('raw_since', current_time)
+                    efecte_info['last_state'] = raw
+                    current_state = raw
+                    if raw:
+                        # El temps del FLANC, no el del moment en què el filtre
+                        # el confirma: si no, cada premuda perdria `debounce_time`.
+                        efecte_info['press_time'] = vora
                     else:
-                        held = (current_time - efecte_info['press_time']
+                        held = (vora - efecte_info['press_time']
                                 if efecte_info['press_time'] > 0 else 0)
                         if held >= mgr.effect_long_press:
                             # CLICK LLARG: cicla l'efecte (desactiva el latch si calia)
@@ -229,9 +259,9 @@ def mm_update(mgr, pot_values, button_states):
                             lay.cycle(pot_values)
                             efecte_info['active'] = lay.active
                             if lay.active:
-                                print("🎚 Pots→mode: %s" % lay.name())
+                                diu("🎚 Pots→mode: %s" % lay.name())
                             else:
-                                print("🎚 Pots→normal")
+                                diu("🎚 Pots→normal")
                         elif efecte_info['tipus'] == 'Loop':
                             # TAP: grava → tanca i sona → atura+esborra. El loop
                             # repeteix el MIDI del mode i s'hi pot tocar a sobre.
@@ -239,14 +269,14 @@ def mm_update(mgr, pot_values, button_states):
                             st = lp.tap(current_time)
                             efecte_info['active'] = st != 0
                             if st == 1:
-                                print("● Loop: gravant…")
+                                diu("● Loop: gravant…")
                             elif st == 2:
-                                print("⟳ Loop: sonant (%.1fs)" % lp.loop_len)
+                                diu("⟳ Loop: sonant (%.1fs)" % lp.loop_len)
                             else:
-                                print("⟳ Loop: esborrat")
+                                diu("⟳ Loop: esborrat")
                         elif efecte_info['active']:
                             # TAP amb latch actiu: desactiva
-                            print(f"{efecte_info['tipus']} OFF")
+                            diu(f"{efecte_info['tipus']} OFF")
                             mm_deactivate_efecte_temporal(mgr, efecte_button)
                             _clear_susp_flags(mgr, efecte_info['tipus'])
                         else:
@@ -311,7 +341,18 @@ def mm_update(mgr, pot_values, button_states):
 
         if not algun_efecte_actiu:
             if mgr.current_mode:
-                filtered = list(button_states) if isinstance(button_states, (list, tuple)) else button_states
+                # Còpia dels botons en un búfer REUTILITZAT: cal una còpia
+                # (s'hi emmascaren les tecles d'efecte i s'hi injecta
+                # l'harmonia negativa) però no cal que sigui nova cada volta.
+                if isinstance(button_states, (list, tuple)):
+                    filtered = mgr.__dict__.get('_filtered')
+                    if filtered is None or len(filtered) != len(button_states):
+                        filtered = list(button_states)
+                        mgr._filtered = filtered
+                    else:
+                        filtered[:] = button_states
+                else:
+                    filtered = button_states
                 if isinstance(filtered, list) and len(filtered) > 14:
                     filtered[13] = False
                     filtered[14] = False
@@ -345,17 +386,39 @@ def mm_update(mgr, pot_values, button_states):
         if change_mode and change_mode in mgr.modes:
             mgr.set_mode(change_mode)
 
-        status['mode'] = mgr.current_mode_name
-        status['layer'] = mgr.layer_manager.current_layer
-        status['pausa_active'] = mgr.pausa_active
-        status['sustain_active'] = mgr.sustain_active
-        status['mode_octave'] = mgr.mode_octave
+        # Cinc camps decoratius menys per volta: `main.py` assigna el que torna
+        # update() i no en llegeix res. L'únic que se'n fa servir de debò és
+        # 'change_mode', que ve del mode.
         return status
 
     except Exception as e:
         print(f"Error update mode '{mgr.current_mode_name}': {e}")
         import sys; sys.print_exception(e)
         return {'mode': 'Error'}
+
+
+def mm_deactivate_efectes_no_persistents(mgr):
+    """Desactiva els efectes temporals que NO sobreviuen un canvi de mode o de
+    capa, cridant el seu on_deactivate. Retorna quants n'ha apagat.
+
+    Ha de ser `on_deactivate` i no un `active = False`: el Sustain, per
+    exemple, ha d'aixecar el pedal (CC64=0) o les notes següents queden
+    enganxades al sinte. 'Config Modes' i 'Loop' es conserven a posta —la
+    gràcia del Loop és canviar de mode i tocar-hi a sobre.
+
+    Això vivia DUPLICAT a mm_set_mode i a main._activate_keyboard_layer, amb
+    el mateix bucle i la mateixa llista d'excepcions escrits dos cops.
+    """
+    n = 0
+    try:
+        for btn, info in mgr.efectes_temporals.items():
+            if info['active'] and info['tipus'] not in ('Config Modes', 'Loop'):
+                mm_deactivate_efecte_temporal(mgr, btn)
+                _clear_susp_flags(mgr, info['tipus'])
+                n += 1
+    except Exception as e:
+        print(f"Error desactivant efectes: {e}")
+    return n
 
 
 def _clear_susp_flags(mgr, efecte_tipus):
@@ -382,7 +445,7 @@ def mm_activate_efecte_temporal(mgr, efecte_button):
     if efecte_tipus == 'Harmonia Negativa':
         # Transformació: no pren el control (s'injecta a filtered[15]). El mode segueix.
         efecte_info['active'] = True
-        print("Harmonia Negativa ON (latch)")
+        diu("Harmonia Negativa ON (latch)")
         return
     if mgr.current_mode_name in ['Sustain', 'Pausa']:
         return
@@ -391,7 +454,7 @@ def mm_activate_efecte_temporal(mgr, efecte_button):
     if mgr.effect_manager.activate(efecte_tipus):
         efecte_info['active'] = True
         efecte_info['mode_instance'] = None
-        print(f"{efecte_tipus} ON (latch)")
+        diu(f"{efecte_tipus} ON (latch)")
         if efecte_tipus == 'Sustain':
             mgr.sustain_active = True
         elif efecte_tipus == 'Pausa':
@@ -417,7 +480,7 @@ def mm_deactivate_efecte_temporal(mgr, efecte_button):
             lp.clear(mgr.effect_manager.midi)
         efecte_info['active'] = False
         return
-    print(f"Desactivant efecte {efecte_info['tipus']}")
+    diu(f"Desactivant efecte {efecte_info['tipus']}")
     try:
         mgr.effect_manager.deactivate()
     except Exception as e:
@@ -450,44 +513,7 @@ def mm_cycle_effect(mgr, button_index):
             mgr.config_manager.config['efectos_temporales'][str(button_index)] = new_effect
         except Exception as e:
             print(f"Error guardant efecte: {e}")
-    print(f"[EFECTE] Botó {button_index+1}: {current_effect} -> {new_effect}")
+    diu(f"[EFECTE] Botó {button_index+1}: {current_effect} -> {new_effect}")
 
 
-def mm_change_mode_octave(mgr, delta):
-    """Canvia l'octava global dels modes."""
-    try:
-        mgr.mode_octave = max(-4, min(4, mgr.mode_octave + (1 if delta > 0 else -1)))
-        print(f"Octava modes: {mgr.mode_octave}")
-        if mgr.current_mode:
-            if hasattr(mgr.current_mode, 'set_octave_shift'):
-                try:
-                    mgr.current_mode.set_octave_shift(mgr.mode_octave)
-                except Exception:
-                    pass
-            elif hasattr(mgr.current_mode, 'set_octave'):
-                try:
-                    mgr.current_mode.set_octave(mgr.mode_octave)
-                except Exception:
-                    pass
-    except Exception as e:
-        print(f"Error octava: {e}")
 
-
-def mm_activate_mode(mgr, mode_name, captured_state=None):
-    """Activa un mode sense netejar el mode anterior."""
-    if mode_name not in mgr.modes:
-        print(f"No es pot activar {mode_name}: no trobat")
-        return False
-    mgr.current_mode = mgr.modes[mode_name]
-    mgr.current_mode_name = mode_name
-    if hasattr(mgr.current_mode, 'cleanup'):
-        try:
-            mgr.current_mode.cleanup()
-        except Exception:
-            pass
-    if hasattr(mgr.current_mode, 'setup'):
-        try:
-            mgr.current_mode.setup()
-        except Exception as e:
-            print(f"Error setup {mode_name}: {e}")
-    return True

@@ -25,6 +25,12 @@ Mòdul amb càrrega lazy: només s'importa si alguna funció looper s'usa.
 """
 from adafruit_midi.note_on import NoteOn
 from adafruit_midi.note_off import NoteOff
+try:
+    from core.pantalla import diu
+except Exception:                       # simulador i proves sense core/
+    def diu(text):
+        print(text)
+        return True
 
 # Estats de kbd.loop_state (0 = IDLE definit a mode_keyboard sense importar res)
 IDLE, ARMED, RECORDING, PLAYING, PAUSED = 0, 1, 2, 3, 4
@@ -104,7 +110,7 @@ def handle_button(kbd, held_time, now, quantized=False):
         kbd._dub_layers = []
         kbd._loop_had_arp = False
         kbd._loop_had_sustain = False
-        print("🔁 Looper ESBORRAT")
+        diu("🔁 Looper ESBORRAT")
         return
 
     if st == IDLE:
@@ -114,11 +120,11 @@ def handle_button(kbd, held_time, now, quantized=False):
         kbd.loop_quantized = False  # es decideix al toc que tanca la gravació
         kbd._loop_had_arp = False   # es marca si l'arp grava durant la presa
         kbd._loop_had_sustain = False
-        print("🔁 Looper ARMAT — toca per començar a gravar"
+        diu("🔁 Looper ARMAT — toca per començar a gravar"
               + (" (quantitzat)" if quantized else ""))
     elif st == ARMED:
         kbd.loop_state = IDLE
-        print("🔁 Looper cancel·lat")
+        diu("🔁 Looper cancel·lat")
     elif st == RECORDING:
         kbd.loop_length = now - kbd.loop_t0
         # Tancar esdeveniments oberts (botons encara premuts en acabar)
@@ -128,7 +134,7 @@ def handle_button(kbd, held_time, now, quantized=False):
         if not kbd.loop_events or kbd.loop_length < MIN_LOOP_LEN:
             kbd.loop_state = IDLE
             kbd.loop_events = []
-            print("🔁 Looper: res a gravar")
+            diu("🔁 Looper: res a gravar")
         else:
             # Fixa el sustain a les durades si s'ha gravat amb el pedal actiu, perquè
             # el loop sigui INDEPENDENT del sustain en directe. En segons, abans de
@@ -143,16 +149,16 @@ def handle_button(kbd, held_time, now, quantized=False):
             kbd.loop_t0 = now
             kbd.loop_pos_idx = 0
             if kbd.loop_quantized:
-                print(f"🔁♩ Loop quantitzat: {len(kbd.loop_events)} acords, "
+                diu(f"🔁♩ Loop quantitzat: {len(kbd.loop_events)} acords, "
                       f"{int(kbd.loop_length)} passos (BPM viu amb el pot d'arp)")
             else:
-                print(f"🔁 Loop en marxa: {len(kbd.loop_events)} acords, {kbd.loop_length:.1f}s")
+                diu(f"🔁 Loop en marxa: {len(kbd.loop_events)} acords, {kbd.loop_length:.1f}s")
     elif st == PLAYING:
         if kbd.loop_overdub:
             _end_overdub(kbd)
         _silence(kbd)
         kbd.loop_state = PAUSED
-        print("🔁 Loop en pausa")
+        diu("🔁 Loop en pausa")
     elif st == PAUSED:
         kbd.loop_state = PLAYING
         kbd.loop_t0 = now
@@ -161,9 +167,9 @@ def handle_button(kbd, held_time, now, quantized=False):
             # Refrescar el tempo amb l'arp_speed actual: la represa és el
             # moment deliberat de canviar el tempo del loop
             kbd.loop_grid = _grid(kbd)
-            print(f"🔁 Loop reprès (pas de {kbd.loop_grid * 1000:.0f}ms)")
+            diu(f"🔁 Loop reprès (pas de {kbd.loop_grid * 1000:.0f}ms)")
         else:
-            print("🔁 Loop reprès")
+            diu("🔁 Loop reprès")
 
 
 def record_press(kbd, btn_idx, now):
@@ -172,7 +178,7 @@ def record_press(kbd, btn_idx, now):
     if kbd.loop_state == ARMED:
         kbd.loop_state = RECORDING
         kbd.loop_t0 = now
-        print("🔴 Gravant...")
+        diu("🔴 Gravant...")
     if kbd.loop_state == RECORDING:
         notes = tuple(kbd.button_notes.get(btn_idx, ()))
         if not notes or len(kbd.loop_events) >= MAX_EVENTS:
@@ -216,7 +222,7 @@ def record_live_note(kbd, note, vel, now):
     if kbd.loop_state == ARMED:
         kbd.loop_state = RECORDING
         kbd.loop_t0 = now
-        print("🔴 Gravant...")
+        diu("🔴 Gravant...")
     if len(kbd.loop_events) >= MAX_EVENTS:
         return
     if kbd.loop_state == RECORDING:
@@ -267,10 +273,10 @@ def _end_overdub(kbd):
     kbd._loop_open = {}
     if kbd._dub_current:
         kbd._dub_layers.append(kbd._dub_current)
-        print(f"➕ Capa {len(kbd._dub_layers)} afegida: {len(kbd._dub_current)} esdeveniments "
+        diu(f"➕ Capa {len(kbd._dub_layers)} afegida: {len(kbd._dub_current)} esdeveniments "
               "(toc llarg: desfer-la | toc molt llarg: desfer-les totes)")
     else:
-        print("➕ Overdub tancat (sense canvis)")
+        diu("➕ Overdub tancat (sense canvis)")
     kbd._dub_current = []
 
 
@@ -291,7 +297,7 @@ def handle_dub_button(kbd, held_time, now):
         if not kbd.loop_overdub:
             kbd.loop_overdub = True
             kbd._dub_current = []
-            print("➕ Overdub ACTIU — el que toquis s'afegeix al loop")
+            diu("➕ Overdub ACTIU — el que toquis s'afegeix al loop")
         else:
             _end_overdub(kbd)
     elif kbd.loop_state == PAUSED:
@@ -302,9 +308,9 @@ def handle_dub_button(kbd, held_time, now):
             kbd.loop_grid = _grid(kbd)
         kbd.loop_overdub = True
         kbd._dub_current = []
-        print("➕ Loop reprès amb Overdub actiu")
+        diu("➕ Loop reprès amb Overdub actiu")
     else:
-        print("➕ Overdub: primer grava un loop amb el botó looper")
+        diu("➕ Overdub: primer grava un loop amb el botó looper")
 
 
 def _remove_events(kbd, events, now):
@@ -338,10 +344,10 @@ def undo_last_layer(kbd, now):
     elif kbd._dub_layers:
         layer = kbd._dub_layers.pop()
     else:
-        print("➕ Overdub: cap capa per desfer")
+        diu("➕ Overdub: cap capa per desfer")
         return
     _remove_events(kbd, layer, now)
-    print(f"➖ Capa desfeta ({len(layer)} esdeveniments) | en queden {len(kbd._dub_layers)}")
+    diu(f"➖ Capa desfeta ({len(layer)} esdeveniments) | en queden {len(kbd._dub_layers)}")
 
 
 def clear_all_layers(kbd, now):
@@ -353,13 +359,13 @@ def clear_all_layers(kbd, now):
     for layer in kbd._dub_layers:
         tots.extend(layer)
     if not tots:
-        print("➕ Overdub: cap capa per esborrar")
+        diu("➕ Overdub: cap capa per esborrar")
         return
     n_capes = len(kbd._dub_layers) + (1 if kbd._dub_current else 0)
     kbd._dub_current = []
     kbd._dub_layers = []
     _remove_events(kbd, tots, now)
-    print(f"🧹 {n_capes} capes esborrades ({len(tots)} esdeveniments) — només queda el loop base")
+    diu(f"🧹 {n_capes} capes esborrades ({len(tots)} esdeveniments) — només queda el loop base")
 
 
 def _quantize(kbd):
@@ -440,7 +446,7 @@ def pause_for_panic(kbd):
             _end_overdub(kbd)
         _silence(kbd)
         kbd.loop_state = PAUSED
-        print("🔁 Loop en pausa (STOP)")
+        diu("🔁 Loop en pausa (STOP)")
     elif kbd.loop_state in (ARMED, RECORDING):
         kbd.loop_state = IDLE
         kbd.loop_events = []

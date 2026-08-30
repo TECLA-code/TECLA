@@ -11,11 +11,6 @@ from effects.base_effect import BaseEffect
 
 
 class EffectAudioCfg(BaseEffect):
-    def on_activate(self):
-        pass
-
-    def on_deactivate(self):
-        pass
-
-    def update_params(self, x=0, y=0, z=0):
-        pass  # el routing es fa a mm_update segons el mapatge del preset
+    # Ni una línia més: BaseEffect ja té on_activate/on_deactivate/update_params
+    # buits, i reescriure'ls amb `pass` només afegia bytecode.
+    pass

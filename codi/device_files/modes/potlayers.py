@@ -11,6 +11,12 @@ evita salts de volum per la posició física del pot. Mòdul amb càrrega lazy:
 només s'importa si l'efecte s'usa.
 """
 from adafruit_midi.control_change import ControlChange
+try:
+    from core.pantalla import diu
+except Exception:                       # simulador i proves sense core/
+    def diu(text):
+        print(text)
+        return True
 
 # Vocabulari de funcions → CC (subset del de kbd_pots + mescla estàndard MIDI)
 MODE_POT_CC = {
@@ -125,6 +131,6 @@ class PotLayers:
             try:
                 from modes.kbd_notes import _console_on
                 if _console_on():
-                    print("Pot %s: %d" % (layer.get(axis_key) or ('CC%d' % cc), v))
+                    diu("Pot %s: %d" % (layer.get(axis_key) or ('CC%d' % cc), v))
             except Exception:
                 pass

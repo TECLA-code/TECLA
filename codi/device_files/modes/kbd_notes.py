@@ -31,6 +31,19 @@ def _console_on():
         return False
 
 
+# Els testimonis per a la Pantalla van pel canal de core/pantalla.py, que
+# escriu SENSE ESPERAR: si el navegador no llegeix, la línia es perd i
+# l'instrument segueix. Amb print() el bucle principal s'aturava a esperar i
+# el retard es notava tocant.
+def testimoni(text):
+    """Testimoni per a la Pantalla. Mai bloqueja i mai llança."""
+    try:
+        from core.pantalla import diu
+        return diu(text)
+    except Exception:
+        return False
+
+
 def note_name(n):
     """Nom de nota amb l'octava TAL COM LA NUMERA EL DISPOSITIU (l'octava N
     del teclat comença a la nota MIDI N*12): a l'octava 5, 60 → 'C5'."""
@@ -248,11 +261,7 @@ def _send_chord(kbd, chord_notes, btn_idx):
     if final_notes:
         # Testimoni per a la pantalla virtual: NOMENCLATURA de l'acord
         # ("▣ Fm7", "▣ C/E") — cost zero sense consola connectada.
-        if _console_on():
-            try:
-                print("▣ " + chord_label(final_notes))
-            except Exception:
-                pass
+        testimoni("▣ " + chord_label(final_notes))
 
 
 _MINOR_SCALE = (0, 2, 3, 5, 7, 8, 10)
@@ -431,7 +440,7 @@ def generate_chord_for_button(kbd, slot, btn_idx):
         fn = fns[fn_idx] if fns and fn_idx < len(fns) else 'diatonic'
         root_offset, chord_type = _apply_harmonic_fn(scale_intervals, scale_degree, fn, current_scale_id)
         root_note += root_offset
-        print(f"Δ grau {scale_degree}: {fn} → {chord_type}")
+        testimoni(f"Δ grau {scale_degree}: {fn} → {chord_type}")
     else:
         chord_type = kbd.available_chord_types[kbd.chord_type_index] if kbd.available_chord_types else 'Major'
     if isinstance(chord_type, tuple):

@@ -10,7 +10,6 @@ EFFECT_INDEX = {
     'Pausa': ('effects.effect_pausa', 'EffectPausa'),
     # Efectes simples i robustos
     'Gate': ('effects.effect_gate', 'EffectGate'),
-    'Expression': ('effects.effect_expression', 'EffectExpression'),
     'Modulation': ('effects.effect_modulation', 'EffectModulation'),
     'PitchBend': ('effects.effect_pitchbend', 'EffectPitchBend'),
     # Config àudio (presets duplicables): els potes editen el so, el mode segueix.

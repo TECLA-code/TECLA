@@ -7,6 +7,12 @@ Activat pel botó 13, amb controls de potenciòmetres per personalitzar
 import time
 from adafruit_midi.control_change import ControlChange
 from adafruit_midi.pitch_bend import PitchBend
+try:
+    from core.pantalla import diu
+except Exception:                       # simulador i proves sense core/
+    def diu(text):
+        print(text)
+        return True
 # (NoteOn/NoteOff ja no s'importen: tot el camí calent usa els missatges
 #  POOLED de modes.base_mode — zero al·locacions per nota.)
 
@@ -195,7 +201,7 @@ class KeyboardMode:
         self._previous_gate_enabled = False
         self._previous_gate_period = 0.2
         
-        print("🎹 Mode Teclat")
+        diu("🎹 Mode Teclat")
     
     @property
     def scale_mode(self):
@@ -259,7 +265,7 @@ class KeyboardMode:
         if self._previous_gate_enabled:
             self.gate_enabled = self._previous_gate_enabled
             self.gate_period = self._previous_gate_period
-            print(f"🎛️ Gate restaurat: enabled={self.gate_enabled}, period={self.gate_period:.2f}s")
+            diu(f"🎛️ Gate restaurat: enabled={self.gate_enabled}, period={self.gate_period:.2f}s")
         
         # IMPORTANT: Inicialitzar tots els CC MIDI a valors per defecte
         # Això assegura que no hi ha efectes residuals del sintetitzador
@@ -296,7 +302,7 @@ class KeyboardMode:
             pass
         
 
-        print("🎹 Mode Teclat desactivat")
+        diu("🎹 Mode Teclat desactivat")
         
     def pause_looper(self):
         """Pausa el looper i silencia les seves notes (cridat per l'STOP general).
@@ -500,12 +506,8 @@ class KeyboardMode:
             # connectada (cost zero en directe) i mai per als passos de
             # l'arpegiador (button_index -1), que inundarien el monitor.
             if button_index >= 0:
-                from modes.kbd_notes import _console_on, note_name
-                if _console_on():
-                    try:
-                        print("♪ " + note_name(note))
-                    except Exception:
-                        pass
+                from modes.kbd_notes import note_name, testimoni
+                testimoni("♪ " + note_name(note))
             
             # Gate funciona amb CC11 Expression, no necessita tracking de notes
             
@@ -516,7 +518,7 @@ class KeyboardMode:
                 key_name = self.available_keys[self.key_index]
                 context = f"BTN{button_index+1}" if button_index >= 0 else "ARP"
                 mode = "Acords" if self.chord_mode_active else ("Arp" if self.arp_mode_active else "Normal")
-                print(f"🎵 {note_name} | {key_name} {scale_name} | {mode} | Vel:{self.velocity}")
+                diu(f"🎵 {note_name} | {key_name} {scale_name} | {mode} | Vel:{self.velocity}")
             
         except Exception as e:
             print(f"Error enviant NoteOn: {e}")
@@ -556,7 +558,7 @@ class KeyboardMode:
                 if rt != self.sustain_release_time:
                     self.sustain_release_time = rt
                     self.sustain_hold_enabled = rt < 0
-                    print("Sustain: %s" % nom)
+                    diu("Sustain: %s" % nom)
                 break
         if self._sustain_pending:
             rt = self.sustain_release_time
@@ -698,13 +700,13 @@ class KeyboardMode:
         """Canvia l'octava (+1 o -1)"""
         if direction > 0 and self.octave < 8:
             self.octave += 1
-            print(f"🎹 Octava pujada a {self.octave}")
+            diu(f"🎹 Octava pujada a {self.octave}")
         elif direction < 0 and self.octave > 0:
             self.octave -= 1
-            print(f"🎹 Octava baixada a {self.octave}")
+            diu(f"🎹 Octava baixada a {self.octave}")
         else:
             limit = "màxima (8)" if direction > 0 else "mínima (0)"
-            print(f"🎹 Ja estàs a l'octava {limit}")
+            diu(f"🎹 Ja estàs a l'octava {limit}")
         if getattr(self, '_accomp_active', False):
             from modes.accompaniment import sync_context
             sync_context(self)

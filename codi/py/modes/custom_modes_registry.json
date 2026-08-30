@@ -208,10 +208,6 @@
     "Wolfram": {
       "file_name": "mode_wolfram",
       "class_name": "ModeWolfram"
-    },
-    "Illes": {
-      "file_name": "mode_illes",
-      "class_name": "ModeIlles"
     }
   }
 }
