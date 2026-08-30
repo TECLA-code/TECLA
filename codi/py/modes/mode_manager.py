@@ -122,6 +122,10 @@ class ModeManager:
         from modes.mm_cleanup import mm_stop_current_mode
         mm_stop_current_mode(self)
 
+    def enter_modes_layer(self):
+        from modes.mm_cleanup import mm_enter_modes_layer
+        return mm_enter_modes_layer(self)
+
     def unload_all_modes(self):
         from modes.mm_cleanup import mm_unload_all_modes
         return mm_unload_all_modes(self)

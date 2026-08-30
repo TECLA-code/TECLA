@@ -341,8 +341,23 @@ def mm_load_mode(mgr, mode_name):
         print(f"✓ Mode {mode_name} carregat")
         return True
 
+    except MemoryError:
+        # VISIBLE. Abans queia al `except Exception` de sota i es deia amb
+        # `{e}` — i un MemoryError té `str` BUIT: sortia «✗ Error carregant
+        # OnaPols: » per consola i prou. El prefix `✗` tampoc no és cap dels
+        # que la Pantalla reconeix com a error (`^(Error|❌|⚠|⛑)`), o sigui
+        # que la tecla emmudia sense dir-ho ENLLOC. Amb `⚠` hi arriba, i va
+        # per print() perquè un error no es pot permetre perdre's.
+        mgr.last_mode_error = "sense memòria: %s" % mode_name
+        print("⚠ SENSE MEMÒRIA carregant %s" % mode_name)
+        import gc
+        gc.collect()
+        return False
+
     except Exception as e:
-        print(f"✗ Error carregant {mode_name}: {e}")
+        # repr(): hi ha excepcions amb `str` buit i el motiu quedava invisible.
+        mgr.last_mode_error = "error carregant %s: %r" % (mode_name, e)
+        print(f"⚠ Error carregant {mode_name}: {e!r}")
         return False
 
 

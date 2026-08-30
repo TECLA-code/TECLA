@@ -169,6 +169,102 @@ def mm_unload_all_modes(mgr):
     return n
 
 
+# Mòduls que NOMÉS serveixen a una capa de TECLAT. Mentre ets en una capa de
+# modes no els pot cridar ningú i són 44 KB de bytecode al heap per a res —
+# amb 17 KB lliures al dispositiu, són la diferència entre que hi càpiga el
+# proper mode i que no.
+#
+# `negharm` NO hi és: l'importa `base_mode`, o sigui TOTS els modes.
+# `modeloop` tampoc: és l'efecte 'Loop' de la capa de MODES (mm_update).
+#
+# Tots s'importen de forma lazy dins de funcions, així que treure'ls de
+# sys.modules només vol dir que el proper ús els torna a llegir del flash.
+# Cap d'ells té estat de mòdul mutable: només taules constants.
+MODULS_DEL_TECLAT = (
+    'modes.mode_keyboard', 'modes.kbd_notes', 'modes.kbd_buttons',
+    'modes.kbd_looper', 'modes.kbd_pots', 'modes.kbd_arp',
+    'modes.kbd_voicelead', 'modes.accompaniment',
+)
+
+
+def _oblida_modul(nom_complet):
+    """Treu un mòdul de sys.modules I del seu paquet.
+
+    Les dues coses, sempre. L'import penja el submòdul com a ATRIBUT del
+    paquet (`modes.kbd_notes` → `modes.kbd_notes`), i amb l'atribut viu el
+    bytecode queda referenciat encara que sys.modules ja no el tingui: el
+    `del sys.modules[...]` tot sol no allibera ni un byte. És la mateixa
+    trampa que documenta mm_unload_mode com a «CLAU DE RAM».
+    """
+    import sys
+    tret = False
+    if nom_complet in sys.modules:
+        try:
+            del sys.modules[nom_complet]
+            tret = True
+        except Exception:
+            pass
+    paquet, _, fill = nom_complet.rpartition('.')
+    if paquet and fill:
+        try:
+            pkg = sys.modules.get(paquet)
+            if pkg is not None and hasattr(pkg, fill):
+                delattr(pkg, fill)
+                tret = True
+        except Exception:
+            pass
+    return tret
+
+
+def mm_purga_modules_teclat():
+    """Allibera el bytecode de la capa de teclat. Retorna quants n'ha tret."""
+    return sum(1 for m in MODULS_DEL_TECLAT if _oblida_modul(m))
+
+
+def mm_enter_modes_layer(mgr):
+    """Entra en una capa de MODES: atura el que sonava, allibera la capa que
+    deixes i carrega la config del banc nou. Retorna quants modes ha alliberat.
+
+    Per què existeix: `main._activate_modes_layer` posava `current_mode = None`
+    i prou. `mm_set_mode` només descarrega l'anterior si `mgr.current_mode` és
+    cert, o sigui que aquell mode ja no el descarregava NINGÚ: es quedava viu a
+    `mgr.modes` i el seu bytecode penjat de `sys.modules` i del paquet `modes`
+    fins que no passaves per una capa de teclat.
+
+    La branca del teclat (`_activate_keyboard_layer`) ja feia
+    `unload_all_modes()` amb aquest mateix argument escrit al docstring de
+    `mm_unload_all_modes`. Això és la mateixa regla per a l'altra branca: els
+    modes de la capa que deixes no els pot disparar cap tecla de la capa nova,
+    o sigui que retenir-los és RAM regalada, i justament al moment en què n'hi
+    ha menys.
+    """
+    if mgr.current_mode is not None:
+        try:
+            mm_stop_current_mode(mgr)
+        except Exception:
+            pass
+    mgr.current_mode = None
+    mgr.current_mode_name = None
+    alliberats = mm_unload_all_modes(mgr)
+    try:
+        mgr.load_config()
+    except Exception as e:
+        print("Error carregant config de modes: %s" % e)
+    # L'ORDRE amaga RAM: mentre corre l'unload, un efecte actiu encara pot
+    # referenciar la instància del mode per `pre_mode_instance`, i una
+    # instància viva manté viva la seva classe i, amb ella, el MÒDUL sencer —
+    # o sigui que el bytecode no es pot alliberar per més que el traguem de
+    # sys.modules. Qui deixa anar aquella referència és el `load_config` d'aquí
+    # sobre, que reconstrueix els botons d'efecte amb `pre_mode_instance` a
+    # None. Sense aquest collect final, ningú no escombra el que acaba
+    # d'alliberar-se i el heap se'l queda fins al proper cicle de 30 s.
+    # I els 44 KB de la capa de teclat, que aquí no els pot fer servir ningú.
+    mm_purga_modules_teclat()
+    import gc
+    gc.collect()
+    return alliberats
+
+
 def mm_emergency_stop(mgr):
     """Atura COMPLETAMENT el so i descarrega tots els modes de la memòria."""
     import gc

@@ -268,8 +268,10 @@ class TeclaHardware:
             print("⚠ Capa de modes no disponible")
             return
         self.keyboard_mode_active = False
-        # Cleanup i destruir la instància del teclat (es manté el bytecode:
-        # evita recompilar 29KB en tornar a una capa de teclat)
+        # Cleanup i destruir la INSTÀNCIA del teclat. El bytecode se l'endú
+        # després mm_enter_modes_layer (mm_purga_modules_teclat): l'ordre
+        # importa, perquè mentre la instància visqui el mòdul queda referenciat
+        # per la seva classe i purgar-lo no alliberaria res.
         if self.keyboard_mode:
             try:
                 self.keyboard_mode.cleanup()
@@ -278,19 +280,15 @@ class TeclaHardware:
             self.keyboard_mode = None
         import gc
         gc.collect()
-        # Netejar l'estat del mode actual i carregar els del banc nou
-        if self.mode_manager.current_mode:
-            try:
-                if hasattr(self.mode_manager.current_mode, 'cleanup'):
-                    self.mode_manager.current_mode.cleanup()
-            except Exception:
-                pass
-            self.mode_manager.current_mode = None
-            self.mode_manager.current_mode_name = None
+        # Atura el mode que sonava, ALLIBERA la capa que deixes i carrega la
+        # config del banc nou. L'alliberament és el que faltava: sense ell el
+        # mode actiu quedava orfe (mm_set_mode només descarrega l'anterior si
+        # `current_mode` és cert) i el seu bytecode es quedava al heap fins que
+        # no passaves per una capa de teclat. Vegeu mm_enter_modes_layer.
         try:
-            self.mode_manager.load_config()
+            self.mode_manager.enter_modes_layer()
         except Exception as e:
-            print(f"Error carregant config de modes: {e}")
+            print(f"Error entrant a la capa de modes: {e}")
         print("Capa de modes activa")
         self._all_notes_off()
 
@@ -702,6 +700,8 @@ def main():
     # Bucle principal
     _ctrl_c_count = 0
     _last_ctrl_c_time = 0
+    _mem_fails = 0          # MemoryError empassats al bucle (abans, en silenci)
+    _last_mem_warn = 0
     
     boot_ok_at = time.monotonic() + 10   # 10s vius = boot consolidat (crashguard)
 
@@ -909,8 +909,21 @@ def main():
                     time.sleep(target_cycle_time - elapsed)
                     
             except MemoryError:
+                # NO en silenci. Aquest `except` sense veu és el que feia que
+                # el dispositiu es degradés sense explicar-ho: modes que no
+                # carreguen, tecles que no fan res i cap pista a la Pantalla.
+                # Va amb prefix `⚠` perquè la Pantalla el reconegui com a error
+                # i amb un sostre d'un avís cada 3 s: el bucle va a 500 Hz i
+                # dir-ho a cada volta ompliria el CDC i bloquejaria l'instrument
+                # —que és exactament el que la regla diu()/print() evita.
+                _mem_fails += 1
                 if gc:
                     gc.collect()
+                if current_time - _last_mem_warn > 3.0:
+                    _last_mem_warn = current_time
+                    _lliure = gc.mem_free() if (gc and hasattr(gc, 'mem_free')) else -1
+                    print("⚠ SENSE MEMÒRIA al bucle (%d cops) | lliure: %d"
+                          % (_mem_fails, _lliure))
             except KeyboardInterrupt:
                 # Permetre interrupció manual amb 3x Ctrl+C en 2 segons
                 if current_time - _last_ctrl_c_time < 2.0:
