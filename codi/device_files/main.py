@@ -444,7 +444,18 @@ class TeclaHardware:
                     self.keyboard_octave = self.keyboard_mode.octave
                     self.display_event('show_keyboard', self.keyboard_octave)
             except Exception as e:
-                print(f"❌ Error update Mode Teclat: {e}")
+                # AMB SOSTRE. Aquest `print` era a cada volta d'un bucle de
+                # 500 Hz: quan el teclat es queda sense RAM en surten centenars
+                # de línies seguides (360 mesurades en un minut), i cada una
+                # CONSTRUEIX una cadena nova just quan no queda memòria i
+                # bloqueja escrivint al CDC. El gestor d'errors s'afegia al
+                # problema que reportava. Un avís cada 3 s, amb el recompte.
+                self._kb_err_n = getattr(self, '_kb_err_n', 0) + 1
+                _ara = time.monotonic()
+                if _ara - getattr(self, '_kb_err_t', 0) > 3.0:
+                    self._kb_err_t = _ara
+                    print("❌ Error update Mode Teclat (%d cops): %r"
+                          % (self._kb_err_n, e))
             return True
         return False
 

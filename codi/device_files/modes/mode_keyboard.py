@@ -643,7 +643,22 @@ class KeyboardMode:
             off = _note_off_msg()
             off.velocity = 0
             off.channel = None
+            # Si hi ha loop sonant, cal saber quines altures sosté ell: deixar
+            # anar una tecla que el loop també toca li tallava la SEVA nota
+            # (MIDI no compta propietaris: un NoteOff apaga i prou). L'import
+            # és lazy i només quan hi ha loop, o sigui que el camí normal no
+            # el paga mai.
+            _sostinguda = None
+            if self.loop_state:
+                try:
+                    from modes.kbd_looper import loop_sostenint as _sostinguda
+                except Exception:
+                    _sostinguda = None
             for note in list(notes_set):
+                if _sostinguda is not None and _sostinguda(self, note):
+                    # El loop la sosté: la tancarà el seu note-off programat.
+                    self.active_notes.discard(note)
+                    continue
                 try:
                     off.note = note
                     self.midi.send(off)

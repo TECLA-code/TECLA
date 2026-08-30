@@ -169,24 +169,6 @@ def mm_unload_all_modes(mgr):
     return n
 
 
-# Mòduls que NOMÉS serveixen a una capa de TECLAT. Mentre ets en una capa de
-# modes no els pot cridar ningú i són 44 KB de bytecode al heap per a res —
-# amb 17 KB lliures al dispositiu, són la diferència entre que hi càpiga el
-# proper mode i que no.
-#
-# `negharm` NO hi és: l'importa `base_mode`, o sigui TOTS els modes.
-# `modeloop` tampoc: és l'efecte 'Loop' de la capa de MODES (mm_update).
-#
-# Tots s'importen de forma lazy dins de funcions, així que treure'ls de
-# sys.modules només vol dir que el proper ús els torna a llegir del flash.
-# Cap d'ells té estat de mòdul mutable: només taules constants.
-MODULS_DEL_TECLAT = (
-    'modes.mode_keyboard', 'modes.kbd_notes', 'modes.kbd_buttons',
-    'modes.kbd_looper', 'modes.kbd_pots', 'modes.kbd_arp',
-    'modes.kbd_voicelead', 'modes.accompaniment',
-)
-
-
 def _oblida_modul(nom_complet):
     """Treu un mòdul de sys.modules I del seu paquet.
 
@@ -214,11 +196,6 @@ def _oblida_modul(nom_complet):
         except Exception:
             pass
     return tret
-
-
-def mm_purga_modules_teclat():
-    """Allibera el bytecode de la capa de teclat. Retorna quants n'ha tret."""
-    return sum(1 for m in MODULS_DEL_TECLAT if _oblida_modul(m))
 
 
 def mm_enter_modes_layer(mgr):
@@ -258,8 +235,6 @@ def mm_enter_modes_layer(mgr):
     # sobre, que reconstrueix els botons d'efecte amb `pre_mode_instance` a
     # None. Sense aquest collect final, ningú no escombra el que acaba
     # d'alliberar-se i el heap se'l queda fins al proper cicle de 30 s.
-    # I els 44 KB de la capa de teclat, que aquí no els pot fer servir ningú.
-    mm_purga_modules_teclat()
     import gc
     gc.collect()
     return alliberats
@@ -319,16 +294,17 @@ def mm_emergency_stop(mgr):
     mgr.pre_pausa_mode = None
     mgr.pre_pausa_mode_instance = None
 
-    modules_to_remove = []
+    # Amb _oblida_modul, no amb `del sys.modules[...]` a seques: l'import penja
+    # el submòdul com a ATRIBUT del paquet `modes`, i amb l'atribut viu el
+    # bytecode queda referenciat encara que sys.modules ja no el tingui. Fins
+    # ara aquesta purga no alliberava ni un byte, i és el botó d'emergència
+    # justament per quan no queda RAM. Mesurat al dispositiu: un mòdul ocupa
+    # al heap ~1,4 vegades la mida del seu .mpy (kbd_looper, 4,8 KB → 6.720 B).
     for module_name in list(sys.modules.keys()):
         if (module_name.startswith('modes.mode_') and
-                module_name not in ['modes.mode_keyboard', 'modes.base_mode', 'modes.mode_manager']):
-            modules_to_remove.append(module_name)
-    for module_name in modules_to_remove:
-        try:
-            del sys.modules[module_name]
-        except Exception:
-            pass
+                module_name not in ('modes.mode_keyboard', 'modes.base_mode',
+                                    'modes.mode_manager')):
+            _oblida_modul(module_name)
 
     gc.collect()
     return True

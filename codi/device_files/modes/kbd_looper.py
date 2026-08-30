@@ -414,9 +414,19 @@ def tick(kbd, now):
 
     if kbd._loop_note_offs:
         kept = []
+        vives = kbd.active_notes          # el que el músic té premut ARA
         for end_t, notes in kbd._loop_note_offs:
             if now >= end_t:
                 for n in notes:
+                    # Tocar A SOBRE del loop: si el músic sosté aquesta mateixa
+                    # altura, el note-off del loop li mataria la SEVA nota —
+                    # MIDI no compta propietaris, un NoteOff apaga i prou. Qui
+                    # la va disparar l'últim és ell, i qui l'ha d'apagar també:
+                    # se salta, i el seu release ja l'enviarà. L'entrada es
+                    # CONSUMEIX igualment (no es torna a `kept`) o ho tornaríem
+                    # a provar a cada volta mentre la tingués premuda.
+                    if n in vives:
+                        continue
                     try:
                         kbd.midi.send(NoteOff(n, 0))
                     except Exception:
@@ -424,6 +434,22 @@ def tick(kbd, now):
             else:
                 kept.append((end_t, notes))
         kbd._loop_note_offs = kept
+
+
+def loop_sostenint(kbd, note):
+    """El loop té ara mateix aquesta altura sonant, amb el note-off pendent?
+
+    És l'altra meitat de la col·lisió: deixar anar una tecla que el loop també
+    està tocant li tallava la nota al loop. Aquí es diu que no l'apagui, i el
+    note-off que el loop ja té programat la tancarà al seu moment — o sigui
+    que sempre queda algú que l'apaga i cap nota no es penja.
+    """
+    if not getattr(kbd, 'loop_state', 0):
+        return False
+    for _end_t, notes in getattr(kbd, '_loop_note_offs', ()):
+        if note in notes:
+            return True
+    return False
 
 
 def _silence(kbd):
