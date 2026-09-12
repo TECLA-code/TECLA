@@ -5,7 +5,15 @@ Funcions potenciòmetres basades en mode teclat
 """
 import time
 from modes.base_mode import BaseMode
+# Qualitats del drone: nom i intervals sobre la fonamental
+_QUALITATS = (('Quinta', (0, 7)), ('Major', (0, 4, 7)), ('Menor', (0, 3, 7)),
+              ('Sus4', (0, 5, 7)), ('Obert', (0, 7, 12, 19)))
+
+
 class ModeToDrone(BaseMode):
+    PARAMS = ('Gate', 'Octava', 'Brillantor', 'Qualitat', 'Duty', 'Tonalitat')
+    POTS = ('Gate', 'Modulació (CC1)', 'Octava')
+
     def __init__(self, midi_out, config=None):
         super().__init__(midi_out, config)
         self.name = "ToDrone"
@@ -41,6 +49,44 @@ class ModeToDrone(BaseMode):
             11: 127,  # Expression (màxim per defecte)
             1: 0      # Modulació (CC1)
         }
+        self.qualitat = 0             # índex a _QUALITATS
+
+    def set_param(self, nom, v):
+        f = v / 127.0
+        if nom == 'Gate':
+            if v < 10:
+                if self.gate_enabled:
+                    self.gate_enabled = False
+                    self._send_cc(11, 127)        # restaurar expressió en desactivar
+            else:
+                self.gate_enabled = True
+                self.gate_period = 0.5 - f * 0.45  # de 0,5 s (lent) a 0,05 s (ràpid)
+                self.gate_min_expr = 0
+        elif nom == 'Octava':
+            o = 2 + int(f * 4.99)                    # 2 a 6
+            if o != self.base_octave:
+                self.base_octave = o
+                self._start_drone()
+        elif nom == 'Brillantor':
+            vel = 30 + int(f * 97)
+            if abs(vel - self.velocity) >= 4:
+                self.velocity = vel
+                self._start_drone()
+        elif nom == 'Qualitat':
+            q = min(len(_QUALITATS) - 1, int(f * len(_QUALITATS)))
+            if q != self.qualitat:
+                self.qualitat = q
+                self._start_drone()
+        elif nom == 'Duty':
+            self.gate_duty = 0.1 + f * 0.8
+        elif nom == 'Tonalitat':
+            k = min(11, int(f * 12))
+            if k != self.key_index:
+                self.key_index = k
+                self._start_drone()
+        else:
+            return False
+        return True
         
     def setup(self):
         self.initialized = True
@@ -59,7 +105,7 @@ class ModeToDrone(BaseMode):
         
         # Drone amb tònica + quinta (sostre harmònic simple i constant)
         # Notes: tònica (I), quinta (V)
-        drone_intervals = [0, 7]  # Quinta perfecta
+        drone_intervals = _QUALITATS[self.qualitat][1]
         
         self.active_drone_notes = []
         for interval in drone_intervals:
@@ -79,36 +125,7 @@ class ModeToDrone(BaseMode):
         current_time = time.monotonic()
         dt = current_time - self.last_update
         self.last_update = current_time
-        x, y, z = pot_values
-        
-        # POT X: Gate (efecte temporal amb CC11 Expression)
-        if x < 10:
-            # Pot a 0: gate OFF
-            if self.gate_enabled:
-                self.gate_enabled = False
-                # Restaurar expressió a màxim quan es desactiva
-                self._send_cc(11, 127)
-        else:
-            # Pot > 0: gate actiu
-            self.gate_enabled = True
-            # Velocitat: 0.5s (lent) a 0.05s (ràpid)
-            self.gate_period = 0.5 - (x / 127.0) * 0.45
-            # Profunditat fixa: silenci total en fase baixa
-            self.gate_min_expr = 0
-            # Duty cycle fix: 50% high, 50% low
-            self.gate_duty = 0.5
-        
-        # POT Y: Modulació (CC1) - igual que al mode teclat
-        self._send_cc(1, y)
-        
-        # POT Z: Octava (rang greu a agut)
-        # Mapejar potenciòmetre a rang d'octaves: 2-6
-        new_octave = 2 + int((z / 127.0) * 4.99)  # 2, 3, 4, 5, 6
-        if new_octave != self.base_octave:
-            self.base_octave = new_octave
-            # CRÍTIC: Reiniciar drone només quan canvia octava
-            # Això és acceptable perquè és un canvi intencionat gros
-            self._start_drone()
+        self.potes(pot_values)
         
         # Processar Gate: modulació temporal de CC11 (Expression)
         if self.gate_enabled:

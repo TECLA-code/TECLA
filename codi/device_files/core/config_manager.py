@@ -4,6 +4,10 @@ ConfigManager - Gestiona la configuració i els temes del TECLA
 import json
 import os
 
+# Prou per adonar-se que la config ha canviat, i prou petit perquè el `* 31`
+# del hash es quedi dins de l'enter PETIT de MicroPython i no al·loqui res.
+_MASCARA = 0xFFFFF
+
 class ConfigManager:
     # Límit dur de capes (banks): tota la config viu en RAM i cada capa de
     # teclat pot pesar 1-2KB de JSON; 6 capes deixen marge còmode per carregar
@@ -304,6 +308,31 @@ class ConfigManager:
     def get_config_hash(self):
         """Genera un hash del CONTINGUT de la configuració (tots els bancs).
 
+        COSTA MOLT POC A POSTA: el bucle principal el crida DUES VEGADES PER
+        SEGON, i mesurat en un TECLA real amb 6 capes en costava **47,9 ms** per
+        crida. Era el 14% de tot el temps del dispositiu i el pic de 86 ms que
+        feia que el ritme no caigués igual: cada nota podia arribar fins a 86 ms
+        tard, dos terços de semicorxera a 120 BPM.
+
+        Dues coses el feien tan car, i totes dues eren evitables:
+
+        - Recorria uns 950 caràcters EN PYTHON (`for char in nom: ...`). Ara fa
+          servir el `hash()` del llenguatge, que va en C: de ~950 voltes de
+          bucle a ~72.
+        - `hash_value * 31` amb una màscara de 32 bits se sortia de l'enter
+          PETIT de MicroPython i al·locava un bignum a cada lletra. La màscara
+          és ara de 20 bits, que amb el `* 31` es queda folgadament dins de
+          l'enter petit: zero al·locacions.
+
+        20 bits són un milió de valors. Per a la feina que fa —adonar-se que la
+        configuració ha canviat— hi ha de sobres, i el senyal de recàrrega és
+        de tota manera la via principal; això n'és la xarxa.
+
+        El hash NO ha de ser estable entre arrencades: només es compara amb el
+        valor que el bucle principal té a la mà de la volta anterior. (El
+        `hash()` de MicroPython tampoc no ho seria: és una funció del contingut,
+        no aleatòria, però no és cap contracte.)
+
         IMPORTANT: el hash ha de ser INDEPENDENT del banc actiu (current_bank_index).
         Si depengués del banc actual, un simple canvi de capa (botó 13) faria
         creure al bucle principal que el fitxer ha canviat i recarregaria la
@@ -319,18 +348,12 @@ class ConfigManager:
             for bank in banks:
                 if not bank:
                     continue
-                bank_name = bank.get('name', '') or ''
-                for char in bank_name:
-                    hash_value = (hash_value * 31 + ord(char)) & 0xFFFFFFFF
+                hash_value = (hash_value * 31 + hash(bank.get('name', '') or '')) & _MASCARA
                 for mode in (bank.get('modes', []) or []):
-                    if not mode:
-                        # slot buit (None / '') -> separador per mantenir posició
-                        hash_value = (hash_value * 31 + 35) & 0xFFFFFFFF  # '#'
-                        continue
-                    for char in mode:
-                        hash_value = (hash_value * 31 + ord(char)) & 0xFFFFFFFF
+                    # slot buit (None / '') -> separador per mantenir posició
+                    hash_value = (hash_value * 31 + (hash(mode) if mode else 35)) & _MASCARA
                 # separador entre bancs per evitar col·lisions
-                hash_value = (hash_value * 31 + 124) & 0xFFFFFFFF  # '|'
+                hash_value = (hash_value * 31 + 124) & _MASCARA
 
             return hash_value
         except Exception as e:
@@ -920,6 +943,23 @@ class ConfigManager:
             layers = bank.get('mode_pot_layers') or self.config.get('mode_pot_layers')
             if isinstance(layers, list) and layers:
                 return layers
+        except Exception:
+            pass
+        return None
+
+    def get_comandaments(self, mode_name):
+        """L'ordre de comandaments que l'app ha desat per a un mode (llista de
+        noms: els tres primers als potes X/Y/Z, la resta de tres en tres a
+        cada TAP de 'Config Modes'). Primer al banc actual, després a la
+        config global; None si no n'hi ha (el mode porta els seus defectes).
+        Vegeu SPEC_VARIABLES_FAMILIA.md."""
+        try:
+            bank = self.get_current_bank() or {}
+            for font in (bank.get('comandaments'), self.config.get('comandaments')):
+                if isinstance(font, dict):
+                    l = font.get(mode_name)
+                    if isinstance(l, list) and l:
+                        return l
         except Exception:
             pass
         return None

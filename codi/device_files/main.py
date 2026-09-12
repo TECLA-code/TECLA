@@ -7,6 +7,10 @@ import board
 import digitalio
 import analogio
 import usb_midi
+try:
+    from core import llum as _llum
+except Exception:
+    _llum = None
 from adafruit_midi import MIDI
 from adafruit_midi.control_change import ControlChange
 try:
@@ -101,11 +105,12 @@ class TeclaHardware:
             from core import llum
             b = bank if bank is not None else (self.config_manager.get_current_bank() or {})
             rgb = b.get('color')
+            mode_led = b.get('led', 'fix')       # fix · pols · to (core/llum)
             if rgb and len(rgb) == 3:
-                llum.color(int(rgb[0]), int(rgb[1]), int(rgb[2]))
+                llum.capa(rgb, mode_led)
                 return
             from core import personalitat
-            llum.personalitat(personalitat.actual())
+            llum.capa(llum.COLORS[int(personalitat.actual()) % len(llum.COLORS)], mode_led)
         except Exception:
             pass
 
@@ -201,7 +206,7 @@ class TeclaHardware:
         # teclat, el pedal CC64 continuaria premut al synth i la primera nota
         # del teclat quedaria enganxada. 'Config Modes' i 'Loop' es conserven.
         if self.mode_manager:
-            from modes.mm_update import mm_deactivate_efectes_no_persistents
+            from motor.mm_update import mm_deactivate_efectes_no_persistents
             mm_deactivate_efectes_no_persistents(self.mode_manager)
         # Aturar i descarregar el mode actiu ABANS de crear el teclat: evita
         # notes penjades (el mode deixaria de rebre update() i no enviaria mai
@@ -236,12 +241,13 @@ class TeclaHardware:
         import gc
         gc.collect()
         try:
-            from modes.mode_keyboard import KeyboardMode
+            from motor.mode_keyboard import KeyboardMode
             self.keyboard_mode = KeyboardMode(
                 self.midi_out,
                 {'octave': self.keyboard_octave},
                 config_manager=self.config_manager
             )
+            self.keyboard_mode.mode_manager = self.mode_manager   # per al mode de fons
             self.keyboard_mode.setup()
         except MemoryError:
             # L'ÚNIC diagnòstic de memòria que es diu en veu alta, perquè només
@@ -268,10 +274,10 @@ class TeclaHardware:
             print("⚠ Capa de modes no disponible")
             return
         self.keyboard_mode_active = False
-        # Cleanup i destruir la INSTÀNCIA del teclat. El bytecode se l'endú
-        # després mm_enter_modes_layer (mm_purga_modules_teclat): l'ordre
-        # importa, perquè mentre la instància visqui el mòdul queda referenciat
-        # per la seva classe i purgar-lo no alliberaria res.
+        # Cleanup i destruir la INSTÀNCIA del teclat. El seu BYTECODE es
+        # queda: purgar-lo va deixar el teclat mort a la primera volta (són
+        # ~60 KB i en una capa de modes no n'hi ha ni la meitat de lliures).
+        # Vegeu tests/test_memoria_canvi_de_capa.py.
         if self.keyboard_mode:
             try:
                 self.keyboard_mode.cleanup()
@@ -342,6 +348,9 @@ class TeclaHardware:
                         if _acc is not None:
                             _acc.clear()
                             self.keyboard_mode._accomp_active = False
+                        if getattr(self.keyboard_mode, '_fons', None) is not None:
+                            from motor.kbd_fons import atura as _fons_atura
+                            _fons_atura(self.keyboard_mode)
                         self.keyboard_mode.stop_all_notes()
                     except:
                         pass
@@ -417,7 +426,7 @@ class TeclaHardware:
                 try:
                     print("🎹 Inicialitzant Mode Teclat...")
                     import gc; gc.collect()
-                    from modes.mode_keyboard import KeyboardMode
+                    from motor.mode_keyboard import KeyboardMode
                     self.keyboard_mode = KeyboardMode(
                         self.midi_out,
                         {'octave': self.keyboard_octave},
@@ -555,9 +564,13 @@ def main():
                                (last_crash or 'REINSTALLA')[:11])
 
 
-    # Inicialitzar sortida MIDI
+    # Inicialitzar sortida MIDI. El port avisa el LED de cada NoteOn que surt
+    # (teclat, modes, looper, acompanyament, fons: tot passa per aquí), i el
+    # LED decideix si hi fa res segons el mode de la capa (core/llum).
     try:
         midi_out = MIDI(midi_out=usb_midi.ports[1])
+        if _llum is not None:
+            midi_out = _llum.PortAmbLlum(midi_out)
     except Exception:
         print("Error: No s'ha pogut inicialitzar MIDI")
         return
@@ -598,7 +611,7 @@ def main():
     if gc:
         gc.collect()
     try:
-        from modes.mode_keyboard import KeyboardMode
+        from motor.mode_keyboard import KeyboardMode
         hardware.keyboard_mode = KeyboardMode(
             midi_out,
             {'octave': hardware.keyboard_octave},
@@ -623,11 +636,13 @@ def main():
         print("⛑ MODE SEGUR: modes desactivats en aquesta arrencada")
     else:
         try:
-            from modes.mode_manager import ModeManager
+            from motor.mode_manager import ModeManager
             if gc:
                 gc.collect()
             mode_manager = ModeManager(midi_out, config_manager=hardware.config_manager)
             hardware.mode_manager = mode_manager
+            if hardware.keyboard_mode is not None:
+                hardware.keyboard_mode.mode_manager = mode_manager   # per al mode de fons
             mode_names = mode_manager.get_available_modes()
             print(f"Modes: {len(mode_names)} disponibles")
         except MemoryError:
@@ -716,9 +731,43 @@ def main():
     
     boot_ok_at = time.monotonic() + 10   # 10s vius = boot consolidat (crashguard)
 
+    # ── El POLS del bucle: el sostre de precisió de tot l'instrument ────────
+    #
+    # El rellotge dels modes ja no perd el tempo —suma la fase en comptes de
+    # llegir-la (motor/rellotge.py)—, però cap pas no pot caure abans que la
+    # volta on li toca. O sigui que el JITTER de tot l'instrument és, com a
+    # màxim, la durada d'una volta d'aquest bucle. Una volta de 2 ms no es
+    # nota; una recollida de memòria de 30 ms enmig d'un compàs, sí.
+    #
+    # Es mesura sempre perquè costa dues restes d'enters per volta, i perquè
+    # un instrument que diu que va com un rellotge ha de poder-ho ensenyar.
+    # Va amb ticks_ms (enters, sense al·locar) i no amb time.monotonic(), que
+    # és un float de precisió simple i es degrada amb les hores enceses.
+    try:
+        from motor.rellotge import ara as _tick, diferencia as _tickdif
+    except Exception:
+        _tick = None
+    _pols_voltes = 0
+    _pols_pitjor = 0
+    _pols_5 = 0
+    _pols_15 = 0
+    _pols_ant = _tick() if _tick else 0
+
     try:
         while True:
             current_time = time.monotonic()
+
+            if _tick:
+                _t = _tick()
+                _d = _tickdif(_t, _pols_ant)
+                _pols_ant = _t
+                _pols_voltes += 1
+                if _d > _pols_pitjor:
+                    _pols_pitjor = _d
+                if _d >= 5:
+                    _pols_5 += 1
+                    if _d >= 15:
+                        _pols_15 += 1
 
             try:
                 # Refrescar el watchdog (si està actiu)
@@ -794,6 +843,9 @@ def main():
                 elif mode_manager and mode_manager.current_mode:
                     # Mode normal actiu
                     status = mode_manager.update(pot_values, button_states)
+
+                if _llum is not None:
+                    _llum.tick(current_time)       # el LED reactiu cau sol
                     
                     # Sense pantalla - no cal actualitzar animacions
                 
@@ -897,6 +949,16 @@ def main():
                         if ram_watermark is None or _free < ram_watermark:
                             ram_watermark = _free
                         print(f"[RAM] lliure post-gc: {_free} | mínim post-gc: {ram_watermark}")
+                    if _tick and _pols_voltes:
+                        # El gc.collect() d'aquesta mateixa volta es comptarà a
+                        # la següent: es reporta el que ha passat, no el que
+                        # aquesta línia està causant.
+                        print("[POLS] %d voltes/s | pitjor %d ms | >=5ms: %d | >=15ms: %d"
+                              % (_pols_voltes // 30, _pols_pitjor, _pols_5, _pols_15))
+                        _pols_voltes = 0
+                        _pols_pitjor = 0
+                        _pols_5 = 0
+                        _pols_15 = 0
 
                 # Sincronització periòdica del sistema de fitxers (cada ~5 min).
                 # Basat en temps, no en cycle_count: la condició antiga
@@ -962,9 +1024,9 @@ def main():
         if crashguard:
             crashguard.record_crash(e)
         try:
-            import sys
-            sys.print_exception(e)  # Més detall en CircuitPython
-        except ImportError:
+            import traceback
+            traceback.print_exception(e)  # Més detall en CircuitPython
+        except Exception:
             pass
     finally:
         # Assegurar que sempre es neteja correctament

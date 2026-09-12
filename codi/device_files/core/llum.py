@@ -107,6 +107,133 @@ def apaga():
     color(0, 0, 0)
 
 
+# ── El LED reactiu al so ────────────────────────────────────────────────────
+# Cada capa tria com va el LED (`bank['led']`):
+#   'fix'   el color de la capa, quiet (el de sempre)
+#   'pols'  el color de la capa, que batega amb cada nota: puja amb la força
+#           de la nota i cau en un quart de segon fins a un repòs tènue
+#   'to'    a més, la nota li dona el color: dotze tons pel cercle cromàtic,
+#           blanc per a la percussió; en repòs torna al color de la capa
+# Totes les notes passen per aquí (main embolcalla el port MIDI), també les
+# del looper, l'acompanyament i el mode de fons. Costa el que costa: en
+# repòs `tick` surt a la primera línia i no escriu res al PWM; mentre cau,
+# només escriu quan el color quantitzat a 8 bits canvia.
+MODES_LED = ('fix', 'pols', 'to')
+_REPOS = 0.22           # fracció del color de capa que queda en repòs
+_TAU = 0.22             # segons: la caiguda de cada nota
+_TONS = ((255, 40, 40), (255, 120, 0), (255, 200, 0), (170, 255, 0),
+         (40, 255, 60), (0, 230, 160), (0, 200, 255), (40, 110, 255),
+         (110, 60, 255), (190, 40, 255), (255, 40, 190), (255, 60, 110))
+_capa = (0, 90, 255)
+_mode = 'fix'
+_nivell = 0.0
+_t = 0.0
+_to = None
+_ultim = None
+
+
+def capa(rgb, mode='fix'):
+    """El color de la capa activa i com s'hi comporta el LED."""
+    global _capa, _mode, _nivell, _to, _ultim
+    try:
+        _capa = (int(rgb[0]), int(rgb[1]), int(rgb[2]))
+    except Exception:
+        _capa = COLORS[0]
+    _mode = mode if mode in MODES_LED else 'fix'
+    _nivell = 0.0
+    _to = None
+    _ultim = None
+    if _mode == 'fix':
+        color(*_capa)
+    else:
+        _pinta(0.0)
+
+
+def nota(note, velocity, channel=0):
+    """Una nota acaba de sonar: el LED puja (i, amb 'to', pren el seu color)."""
+    global _nivell, _t, _to
+    if _mode == 'fix' or velocity <= 0:
+        return
+    n = 0.35 + 0.65 * (velocity if velocity < 127 else 127) / 127.0
+    if n > _nivell:
+        _nivell = n
+    try:
+        import time
+        _t = time.monotonic()
+    except Exception:
+        _t = 0.0
+    if _mode == 'to':
+        _to = (255, 255, 255) if channel == 9 else _TONS[int(note) % 12]
+    _pinta(_nivell)
+
+
+def tick(now):
+    """Cada volta del bucle: la caiguda. En repòs no fa res."""
+    global _nivell, _t
+    if _mode == 'fix' or _nivell <= 0.0:
+        return
+    dt = now - _t
+    if dt < 0.004:
+        return                  # sense moure _t: si no, un bucle ràpid no cau mai
+    _t = now
+    _nivell -= _nivell * (dt / _TAU if dt < _TAU else 1.0)
+    if _nivell < 0.04:
+        _nivell = 0.0
+    _pinta(_nivell)
+
+
+class PortAmbLlum:
+    """El port MIDI de sortida embolcallat: a cada NoteOn amb força avisa el
+    LED i passa el missatge tal qual. Llegir o escriure qualsevol altra cosa
+    (out_channel…) va a parar al port de debò."""
+
+    # Res de __setattr__ ni de object.__setattr__: a CircuitPython no hi són.
+    # El canal de sortida, que main i el canvi de config escriuen, és una
+    # propietat que va al port de debò; la resta de lectures, per __getattr__.
+
+    def __init__(self, port):
+        self._port = port
+
+    @property
+    def out_channel(self):
+        return self._port.out_channel
+
+    @out_channel.setter
+    def out_channel(self, v):
+        self._port.out_channel = v
+
+    def send(self, msg, channel=None):
+        try:
+            if type(msg).__name__.endswith('NoteOn') and msg.velocity > 0:
+                c = channel if channel is not None else msg.channel
+                if c is None:
+                    c = self._port.out_channel
+                nota(msg.note, msg.velocity, c)
+        except Exception:
+            pass
+        return self._port.send(msg, channel)
+
+    def __getattr__(self, nom):
+        return getattr(self._port, nom)
+
+
+def _pinta(n):
+    """El color de la capa (o el de la nota) a la fracció n, quantitzat: només
+    escriu al PWM si el color de 8 bits ha canviat."""
+    global _ultim
+    base = _capa
+    if _mode == 'to' and _to is not None:
+        base = (int(_capa[0] + (_to[0] - _capa[0]) * n),
+                int(_capa[1] + (_to[1] - _capa[1]) * n),
+                int(_capa[2] + (_to[2] - _capa[2]) * n))
+    k = _REPOS + (1.0 - _REPOS) * n
+    rgb = (int(base[0] * k), int(base[1] * k), int(base[2] * k))
+    if rgb == _ultim:
+        return
+    _ultim = rgb
+    color(*rgb)
+
+
 def personalitat(i):
     """El color de la personalitat i (0..2)."""
     try:

@@ -6,20 +6,49 @@ import random
 from modes.base_mode import BaseMode
 
 class ModeMandelbrot(BaseMode):
+    PARAMS = ('Part real', 'Part imaginària', 'Força', 'Zoom', 'Iteracions', 'Octava')
+    POTS = ('Part real', 'Part imaginària', 'Força')
+
     def __init__(self, midi_out, config=None):
         super().__init__(midi_out, config)
         self.name = "Mandelbrot"
         self.iteration = 0
         self.notes_playing = set()
-        
+        self.cx = 64
+        self.cy = 64
+        self.forca = 64
+        self.zoom = 1.0
+        self.max_iter = 100
+        self.octava = 0               # desplaçament en semitons
+
+    def set_param(self, nom, v):
+        f = v / 127.0
+        if nom == 'Part real':
+            self.cx = v
+        elif nom == 'Part imaginària':
+            self.cy = v
+        elif nom == 'Força':
+            self.forca = v
+        elif nom == 'Zoom':
+            self.zoom = 1.0 + f * 5.0
+        elif nom == 'Iteracions':
+            self.max_iter = 20 + int(f * 180)
+        elif nom == 'Octava':
+            self.octava = (int(f * 2.99) - 1) * 12
+        else:
+            return False
+        return True
+
     def mandelbrot_to_midi(self, cx, cy, max_iter=100):
         """
         Versió optimitzada del càlcul de Mandelbrot per a generació MIDI.
         Usa aritmètica de nombres enters per a millor rendiment.
         """
         # Escalar les entrades per a obtenir valors interessants al conjunt de Mandelbrot
-        x0 = (cx / 127.0) * 3.5 - 2.5
-        y0 = (cy / 127.0) * 2.0 - 1.0
+        # El zoom estreny la finestra al voltant del punt (−0,75, 0), la vora del conjunt
+        z = self.zoom
+        x0 = -0.75 + ((cx / 127.0) * 3.5 - 1.75) / z
+        y0 = ((cy / 127.0) * 2.0 - 1.0) / z
         
         x = 0.0
         y = 0.0
@@ -50,13 +79,16 @@ class ModeMandelbrot(BaseMode):
         self.notes_playing = set()
     
     def update(self, pot_values, button_states):
-        x, y, z = pot_values
+        self.potes(pot_values)
+        x, y, z = self.cx, self.cy, self.forca
         
         # Actualitzar iteració per a animació
         self.iteration += 1
         
         # Generar nota basada en la posició dels potenciòmetres
-        note = self.mandelbrot_to_midi(x, y)
+        note = self.mandelbrot_to_midi(x, y, self.max_iter)
+        if note > 0:
+            note = max(0, min(127, note + self.octava))
         
         # Si s'ha generat una nota vàlida
         if note > 0:

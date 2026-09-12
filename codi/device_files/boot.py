@@ -195,3 +195,30 @@ try:
     print("TECLA boot: personalitat %d%s" % (_pers, _com))
 except Exception:
     pass
+
+# D'ON VE EL MOTOR: de la flash (congelat dins de la UF2) o del sistema de
+# fitxers. Ho llegeix l'instal·lador del `boot_out.txt` per decidir si ha
+# d'enviar `core/`, `effects/` i `music_constants` o si ha de treure'ls del
+# mig — perquè el sys.path del dispositiu és ['', '/', '.frozen', '/lib'] i
+# un fitxer a l'ARREL tapa el mòdul congelat del mateix nom. Enviar-los a un
+# dispositiu amb el motor a la flash no és inofensiu: li retorna els 25.680 B
+# que justament havia guanyat.
+#
+# `.frozen` només surt al sys.path si la UF2 porta mòduls congelats: en el
+# CircuitPython oficial no hi és. Per això no cal cap fitxer marca ni cap
+# número de versió que se'ns pugui desincronitzar.
+try:
+    import sys as _sys
+    if ".frozen" in _sys.path:
+        try:
+            import tecla_motor as _tm
+            _quin = "flash %s" % _tm.EMPREMTA
+        except Exception:
+            # UF2 amb mòduls congelats però sense empremta: es tracta com a
+            # desconeguda, i l'instal·lador enviarà els fitxers igualment.
+            _quin = "flash desconeguda"
+    else:
+        _quin = "disc"
+    print("TECLA motor: %s" % _quin)
+except Exception:
+    pass

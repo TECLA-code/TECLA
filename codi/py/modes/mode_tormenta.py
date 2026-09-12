@@ -9,6 +9,9 @@ from adafruit_midi.note_on import NoteOn
 from adafruit_midi.note_off import NoteOff
 
 class ModeTormenta(BaseMode):
+    PARAMS = ('Trons', 'Llamps', 'Fons', 'Intensitat')
+    POTS = ('Trons', 'Llamps', 'Fons')
+
     def __init__(self, midi_out, config=None):
         super().__init__(midi_out, config)
         self.name = "Tempesta"
@@ -25,6 +28,23 @@ class ModeTormenta(BaseMode):
         self.last_thunder = 0
         self.notes_playing = set()
         self.last_update = time.monotonic()
+        self.trons = 64
+        self.llamps = 64
+        self.fons = 64
+        self.intensitat = 1.0
+
+    def set_param(self, nom, v):
+        if nom == 'Trons':
+            self.trons = v
+        elif nom == 'Llamps':
+            self.llamps = v
+        elif nom == 'Fons':
+            self.fons = v
+        elif nom == 'Intensitat':
+            self.intensitat = 0.3 + (v / 127.0) * 0.7
+        else:
+            return False
+        return True
 
     def generate_storm_sounds(self, x, y, z):
         current_time = time.monotonic()
@@ -82,13 +102,13 @@ class ModeTormenta(BaseMode):
         for sound in storm_sounds:
             if sound['time'] <= current_time:
                 if sound['note'] not in self.notes_playing:
-                    self.midi_out.send(NoteOn(sound['note'], sound['velocity']))
+                    self.midi_out.send(NoteOn(sound['note'], max(1, min(127, int(sound['velocity'] * self.intensitat)))))
                     self.notes_playing.add(sound['note'])
 
     def update(self, pot_values, button_states=None):
-        x, y, z = pot_values
+        self.potes(pot_values)
         current_time = time.monotonic()
-        storm_sounds = self.generate_storm_sounds(x, y, z)
+        storm_sounds = self.generate_storm_sounds(self.trons, self.llamps, self.fons)
         self.play_storm_sounds(storm_sounds, current_time)
         to_stop = []
         for note in self.notes_playing:
