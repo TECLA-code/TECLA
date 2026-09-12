@@ -1261,6 +1261,12 @@
   </xml>
 
   <!-- Block definitions & generators -->
+  <!-- El tutorial interactiu: motor compartit amb l'Instrument i amb el
+       Macropad (tutorial/motor.js) i guió propi. -->
+  <script type="module">
+    import { munta } from '../codi/tutorial/blocks.js';
+    try { munta(); } catch (e) { console.warn('[tutorial]', e); }
+  </script>
   <script src="app.min.js?v=9"></script>
 </body>
 </html>
