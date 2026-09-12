@@ -1,6 +1,6 @@
 {
   "version": "3.17.0",
-  "generated": "2026-09-12 16:34",
+  "generated": "2026-09-12 18:29",
   "files": [
     "boot.py",
     "code.py",
@@ -106,8 +106,8 @@
     "core/animations/sinusoidal.mpy": "f21825c26038d08ada1c138ff1a4f95ce4ef5b778056a7d4339a01d4f3bb3922",
     "core/config_manager.mpy": "d0514b438cf7271a69c2178e72c587bb33eef5ddda43c3bf0e2bf03f1efec7fe",
     "core/crashguard.mpy": "ccd57dca5648fb9a7e8c26f63eef6ec84cf778db41eae43ec83ff74d2dd469f9",
-    "core/display_manager.mpy": "389291617bab2d1624a5986a4bdd35396b21d95eb1894687b43939d54656aa15",
-    "core/llum.mpy": "c1dc4e84db32e4bb4760188394dd24a9d2760a82b74b047e0d8ec1323e3e8c28",
+    "core/display_manager.mpy": "bf98187ec4a17679431045e6e46bea279f0693d4b837121d3ddbd52f255af19c",
+    "core/llum.mpy": "e34009d351c8a2e34a94dc69c902095f91ce01fdf997ed671c977ba6e1621ff0",
     "core/pantalla.mpy": "f32983a6f1ae6a850a7ead98319750000be98ffc49be0afd54ca3df390c5237a",
     "core/personalitat.mpy": "9f52f7325f6cfbafd37ad59afbb67ee135071d2c33bf14720210e0c60c3afd9d",
     "core/sim_link.mpy": "39495eb0de0c208545550688999e49b0047d331498a3050058778fe0df15495e",
@@ -252,5 +252,5 @@
     "effects",
     "motor"
   ],
-  "congelats_empremta": "fbad4ce565e28300"
+  "congelats_empremta": "03d588970e630d88"
 }

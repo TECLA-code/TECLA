@@ -374,7 +374,7 @@
     <div class="layer-chips" id="layer-chips"></div>
     <div class="bank-actions">
       <!-- Color del LED de la capa ACTIVA. El dispositiu porta un LED
-           multicolor a GP19/GP20/GP21 i el pinta en entrar a la capa: així
+           multicolor a GP20/GP21/GP22 i el pinta en entrar a la capa: així
            saps a quina ets sense mirar la pantalla. Va aquí, tocant les
            pastilles, i no només a la biblioteca de capes: és una propietat de
            la capa que estàs editant. -->
@@ -2008,7 +2008,7 @@ LAYER_COUNT = ${layers.length}
 `);const M=layers.map(o=>Array.isArray(o.color)&&o.color.length===3?o.color.map(r=>Math.max(0,Math.min(255,r|0))):_COLOR_CAPA_DEF);c+=`
 # --- LED RGB de capa (R, G, B) ---
 `,c+=`import pwmio
-`,c+=`LED_PINS = (board.GP20, board.GP19, board.GP21)
+`,c+=`LED_PINS = (board.GP20, board.GP21, board.GP22)
 `,c+=`LED_CATODE_COMU = True   # False si el teu RGB es d'anode comu
 `,c+=`LED_BRILL = 0.35
 `,c+=`COLORS_CAPA = [${M.map(o=>`(${o[0]}, ${o[1]}, ${o[2]})`).join(", ")}]

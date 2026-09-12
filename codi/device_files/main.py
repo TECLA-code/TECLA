@@ -20,7 +20,7 @@ except Exception:                       # simulador i proves sense core/
         print(text)
         return True
 
-# El to PWM intern s'ha retirat a la v3.16 (GP22 ara és el LED multicolor).
+# El to PWM intern s'ha retirat a la v3.16 (GP22 ara és el blau del LED).
 # mode_manager i mode_keyboard s'importen de forma lazy dins main() per estalviar RAM a l'inici
 
 # Configuració de pins
@@ -602,9 +602,9 @@ def main():
     # Fins a la v3.16 GP22 era la sortida d'àudio (minijack) i el firmware hi
     # feia un to PWM monofònic a cada nota del teclat. El maquinari ha canviat:
     # ara hi ha un LED multicolor i el to intern s'ha retirat sencer
-    # (core/tone.py). El LED està soldat a GP19/GP20/GP21 — no a GP22, que ha
-    # quedat lliure. Els seus pins són de core/llum.py i de ningú més: dos amos
-    # al mateix pin volia dir soroll al LED a cada tecla.
+    # (core/tone.py). El LED de la placa va a GP20/GP21/GP22, o sigui que GP22
+    # hi ha tornat com a BLAU. Els seus pins són de core/llum.py i de ningú
+    # més: dos amos al mateix pin volia dir soroll al LED a cada tecla.
     hardware.audio = None
 
     # CRÍTIC: Crear KeyboardMode ANTES de ModeManager mentre la memòria és neta

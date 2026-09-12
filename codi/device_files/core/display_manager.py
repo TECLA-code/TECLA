@@ -27,9 +27,10 @@ _HEIGHT = 64
 
 # Parelles (SDA, SCL) candidates, per nom d'atribut de `board`.
 # Només pins lliures al hardware TECLA i vàlids al mux I2C del RP2040.
+# GP20/GP21/GP22 són del LED RGB (core/llum.py): la parella GP20/GP21 que hi
+# havia aquí li hauria pres el vermell i el verd. Queden aquestes dues.
 _I2C_PIN_PAIRS = (
     ("GP16", "GP17"),  # I2C0
-    ("GP20", "GP21"),  # I2C0
     ("GP18", "GP19"),  # I2C1
 )
 _I2C_ADDRS = (0x3C, 0x3D)
