@@ -618,14 +618,14 @@
             <h3 data-i18n="code.title">Codi Python generat</h3>
             <button class="btn" id="btn-copy-code" data-i18n="btn.copy">Copiar</button>
           </div>
-          <pre id="generatedCode" class="code-display"># El teu codi apareixerà aquí...</pre>
+          <pre id="generatedCode" class="code-display" data-i18n="x.el_teu_codi_apareixer_aqu"># El teu codi apareixerà aquí...</pre>
         </div>
 
         <div class="side-view" id="view-sim">
           <div class="midi-bar">
             <span class="dot" id="midi-status-dot" style="background:var(--border-h)"></span>
             <span id="midi-status-text" data-i18n="midi.disconn">MIDI: desconnectat</span>
-            <select id="midi-port-select"><option value="">&mdash; port MIDI &mdash;</option></select>
+            <select id="midi-port-select"><option value="" data-i18n="x.port_midi">&mdash; port MIDI &mdash;</option></select>
             <button class="btn" id="btn-midi-connect">MIDI</button>
           </div>
           <span class="sim-label" style="display:none" id="sim-label-midi"></span>
@@ -710,7 +710,7 @@
       </div>
       <div class="fw-step">
         <div class="fw-step-title"><span class="fw-step-num">2</span><span data-i18n="fw.t2">Instal·lar les llibreries</span></div>
-        <p class="fw-step-desc">Descarrega el <strong>bundle de llibreries</strong> de CircuitPython i copia la carpeta <strong>adafruit_midi</strong> dins <strong>CIRCUITPY/lib/</strong>.</p>
+        <p class="fw-step-desc">Descarrega el <strong data-i18n="x.bundle_de_llibreries">bundle de llibreries</strong> de CircuitPython i copia la carpeta <strong>adafruit_midi</strong> dins <strong>CIRCUITPY/lib/</strong>.</p>
         <p class="fw-step-sub">Cerca <em>adafruit-circuitpython-bundle</em> → descomprimeix → copia <strong>adafruit_midi/</strong> a <strong>CIRCUITPY/lib/</strong>.</p>
         <p class="fw-step-sub">Segons els blocs que usis, copia també: <strong>adafruit_hid/</strong> (teclat i media), <strong>adafruit_ssd1306.mpy</strong> + <strong>adafruit_framebuf.mpy</strong> (pantalla OLED), <strong>neopixel.mpy</strong> (LEDs) i <strong>adafruit_motor/</strong> (servos).</p>
         <a class="dl-link" href="https://github.com/adafruit/Adafruit_CircuitPython_Bundle/releases/latest" target="_blank">
@@ -720,9 +720,9 @@
       </div>
       <div class="fw-step">
         <div class="fw-step-title"><span class="fw-step-num">3</span><span data-i18n="fw.t3">Pujar el codi del projecte</span></div>
-        <p class="fw-step-desc">Un cop CIRCUITPY és visible, connecta el dispositiu amb el botó <strong>Connecta dispositiu</strong> del header i prem <strong>Pujar</strong> per copiar el codi.</p>
+        <p class="fw-step-desc">Un cop CIRCUITPY és visible, connecta el dispositiu amb el botó <strong data-i18n="x.connecta_dispositiu">Connecta dispositiu</strong> del header i prem <strong data-i18n="x.pujar">Pujar</strong> per copiar el codi.</p>
         <p class="fw-step-sub">El codi es copia a <strong>personalitats/blocks.py</strong> i el dispositiu arrenca com a TECLA Blocs. Les altres personalitats (Instrument, Macropad) es queden al seu lloc.</p>
-        <p class="fw-step-sub">Per tornar-hi, aguanta les <strong>quatre cantonades</strong> 3 segons: el dispositiu passa a la seg&uuml;ent (Instrument &rarr; Macropad &rarr; Blocs) i es reinicia. Si algun dia no respon a res, endolla&rsquo;l amb les quatre premudes: deixa-les anar per anar a la seg&uuml;ent, o aguanta-les 5 segons per tornar a l&rsquo;Instrument.</p>
+        <p class="fw-step-sub">Per tornar-hi, aguanta les <strong data-i18n="x.quatre_cantonades">quatre cantonades</strong> 3 segons: el dispositiu passa a la seg&uuml;ent (Instrument &rarr; Macropad &rarr; Blocs) i es reinicia. Si algun dia no respon a res, endolla&rsquo;l amb les quatre premudes: deixa-les anar per anar a la seg&uuml;ent, o aguanta-les 5 segons per tornar a l&rsquo;Instrument.</p>
       </div>
 
     </div></div>
@@ -733,23 +733,23 @@
       <div class="card">
         <div class="card-title" data-i18n="theme.title">Aparença</div>
         <div class="theme-cards" id="theme-cards">
-          <div class="theme-card active" data-theme="dark"><div class="theme-swatches"><span style="background:#0c0c0c"></span><span style="background:#141414"></span><span style="background:#1c1c1c"></span><span style="background:#4a80f0"></span></div><div class="theme-card-name">Fosc</div></div>
-          <div class="theme-card" data-theme="light"><div class="theme-swatches"><span style="background:#f2f2f2"></span><span style="background:#fff"></span><span style="background:#ebebeb"></span><span style="background:#4a80f0"></span></div><div class="theme-card-name">Clar</div></div>
-          <div class="theme-card" data-theme="neon"><div class="theme-swatches"><span style="background:#080808"></span><span style="background:#0d0d0d"></span><span style="background:#121212"></span><span style="background:#00ffe0"></span></div><div class="theme-card-name">Neó</div></div>
-          <div class="theme-card" data-theme="warm"><div class="theme-swatches"><span style="background:#100c08"></span><span style="background:#1a1410"></span><span style="background:#231c16"></span><span style="background:#e08030"></span></div><div class="theme-card-name">Càlid</div></div>
-          <div class="theme-card" data-theme="purple"><div class="theme-swatches"><span style="background:#0d0b14"></span><span style="background:#14101e"></span><span style="background:#1e1830"></span><span style="background:#a070f0"></span></div><div class="theme-card-name">Lila</div></div>
-          <div class="theme-card" data-theme="ocean"><div class="theme-swatches"><span style="background:#07101a"></span><span style="background:#0d1824"></span><span style="background:#132030"></span><span style="background:#20c8f8"></span></div><div class="theme-card-name">Oceà</div></div>
-          <div class="theme-card" data-theme="forest"><div class="theme-swatches"><span style="background:#07100a"></span><span style="background:#0d1a10"></span><span style="background:#152018"></span><span style="background:#22c55e"></span></div><div class="theme-card-name">Bosc</div></div>
-          <div class="theme-card" data-theme="rose"><div class="theme-swatches"><span style="background:#120a0e"></span><span style="background:#1e1016"></span><span style="background:#281520"></span><span style="background:#f472b6"></span></div><div class="theme-card-name">Rosa</div></div>
-          <div class="theme-card" data-theme="ice"><div class="theme-swatches"><span style="background:#eff5ff"></span><span style="background:#fff"></span><span style="background:#e4eeff"></span><span style="background:#0ea5e9"></span></div><div class="theme-card-name">Gel</div></div>
-          <div class="theme-card" data-theme="carbon"><div class="theme-swatches"><span style="background:#080808"></span><span style="background:#111"></span><span style="background:#181818"></span><span style="background:#ef4444"></span></div><div class="theme-card-name">Carbó</div></div>
-          <div class="theme-card" data-theme="hc"><div class="theme-swatches"><span style="background:#000"></span><span style="background:#0d0d0d"></span><span style="background:#1a1a1a"></span><span style="background:#ffe000"></span></div><div class="theme-card-name">Alt Contrast</div></div>
-          <div class="theme-card" data-theme="crepuscle"><div class="theme-swatches"><span style="background:#100808"></span><span style="background:#1a100a"></span><span style="background:#24160c"></span><span style="background:#f97316"></span></div><div class="theme-card-name">Crepuscle</div></div>
-          <div class="theme-card" data-theme="cosmic"><div class="theme-swatches"><span style="background:#06050f"></span><span style="background:#0c0b1c"></span><span style="background:#13112c"></span><span style="background:#818cf8"></span></div><div class="theme-card-name">Còsmic</div></div>
-          <div class="theme-card" data-theme="mint"><div class="theme-swatches"><span style="background:#f0faf5"></span><span style="background:#fff"></span><span style="background:#dff2e9"></span><span style="background:#059669"></span></div><div class="theme-card-name">Menta</div></div>
-          <div class="theme-card" data-theme="slate"><div class="theme-swatches"><span style="background:#0a0e14"></span><span style="background:#111820"></span><span style="background:#18222e"></span><span style="background:#94a3b8"></span></div><div class="theme-card-name">Pissarra</div></div>
-          <div class="theme-card" data-theme="acid"><div class="theme-swatches"><span style="background:#060900"></span><span style="background:#0b1100"></span><span style="background:#131a00"></span><span style="background:#a3e635"></span></div><div class="theme-card-name">Àcid</div></div>
-          <div class="theme-card" data-theme="sand"><div class="theme-swatches"><span style="background:#fef7e8"></span><span style="background:#fffcf2"></span><span style="background:#fdefc5"></span><span style="background:#b45309"></span></div><div class="theme-card-name">Sorra</div></div>
+          <div class="theme-card active" data-theme="dark"><div class="theme-swatches"><span style="background:#0c0c0c"></span><span style="background:#141414"></span><span style="background:#1c1c1c"></span><span style="background:#4a80f0"></span></div><div class="theme-card-name" data-i18n="x.fosc">Fosc</div></div>
+          <div class="theme-card" data-theme="light"><div class="theme-swatches"><span style="background:#f2f2f2"></span><span style="background:#fff"></span><span style="background:#ebebeb"></span><span style="background:#4a80f0"></span></div><div class="theme-card-name" data-i18n="x.clar">Clar</div></div>
+          <div class="theme-card" data-theme="neon"><div class="theme-swatches"><span style="background:#080808"></span><span style="background:#0d0d0d"></span><span style="background:#121212"></span><span style="background:#00ffe0"></span></div><div class="theme-card-name" data-i18n="x.ne">Neó</div></div>
+          <div class="theme-card" data-theme="warm"><div class="theme-swatches"><span style="background:#100c08"></span><span style="background:#1a1410"></span><span style="background:#231c16"></span><span style="background:#e08030"></span></div><div class="theme-card-name" data-i18n="x.c_lid">Càlid</div></div>
+          <div class="theme-card" data-theme="purple"><div class="theme-swatches"><span style="background:#0d0b14"></span><span style="background:#14101e"></span><span style="background:#1e1830"></span><span style="background:#a070f0"></span></div><div class="theme-card-name" data-i18n="x.lila">Lila</div></div>
+          <div class="theme-card" data-theme="ocean"><div class="theme-swatches"><span style="background:#07101a"></span><span style="background:#0d1824"></span><span style="background:#132030"></span><span style="background:#20c8f8"></span></div><div class="theme-card-name" data-i18n="x.oce">Oceà</div></div>
+          <div class="theme-card" data-theme="forest"><div class="theme-swatches"><span style="background:#07100a"></span><span style="background:#0d1a10"></span><span style="background:#152018"></span><span style="background:#22c55e"></span></div><div class="theme-card-name" data-i18n="x.bosc">Bosc</div></div>
+          <div class="theme-card" data-theme="rose"><div class="theme-swatches"><span style="background:#120a0e"></span><span style="background:#1e1016"></span><span style="background:#281520"></span><span style="background:#f472b6"></span></div><div class="theme-card-name" data-i18n="x.rosa">Rosa</div></div>
+          <div class="theme-card" data-theme="ice"><div class="theme-swatches"><span style="background:#eff5ff"></span><span style="background:#fff"></span><span style="background:#e4eeff"></span><span style="background:#0ea5e9"></span></div><div class="theme-card-name" data-i18n="x.gel">Gel</div></div>
+          <div class="theme-card" data-theme="carbon"><div class="theme-swatches"><span style="background:#080808"></span><span style="background:#111"></span><span style="background:#181818"></span><span style="background:#ef4444"></span></div><div class="theme-card-name" data-i18n="x.carb">Carbó</div></div>
+          <div class="theme-card" data-theme="hc"><div class="theme-swatches"><span style="background:#000"></span><span style="background:#0d0d0d"></span><span style="background:#1a1a1a"></span><span style="background:#ffe000"></span></div><div class="theme-card-name" data-i18n="x.alt_contrast">Alt Contrast</div></div>
+          <div class="theme-card" data-theme="crepuscle"><div class="theme-swatches"><span style="background:#100808"></span><span style="background:#1a100a"></span><span style="background:#24160c"></span><span style="background:#f97316"></span></div><div class="theme-card-name" data-i18n="x.crepuscle">Crepuscle</div></div>
+          <div class="theme-card" data-theme="cosmic"><div class="theme-swatches"><span style="background:#06050f"></span><span style="background:#0c0b1c"></span><span style="background:#13112c"></span><span style="background:#818cf8"></span></div><div class="theme-card-name" data-i18n="x.c_smic">Còsmic</div></div>
+          <div class="theme-card" data-theme="mint"><div class="theme-swatches"><span style="background:#f0faf5"></span><span style="background:#fff"></span><span style="background:#dff2e9"></span><span style="background:#059669"></span></div><div class="theme-card-name" data-i18n="x.menta">Menta</div></div>
+          <div class="theme-card" data-theme="slate"><div class="theme-swatches"><span style="background:#0a0e14"></span><span style="background:#111820"></span><span style="background:#18222e"></span><span style="background:#94a3b8"></span></div><div class="theme-card-name" data-i18n="x.pissarra">Pissarra</div></div>
+          <div class="theme-card" data-theme="acid"><div class="theme-swatches"><span style="background:#060900"></span><span style="background:#0b1100"></span><span style="background:#131a00"></span><span style="background:#a3e635"></span></div><div class="theme-card-name" data-i18n="x.cid">Àcid</div></div>
+          <div class="theme-card" data-theme="sand"><div class="theme-swatches"><span style="background:#fef7e8"></span><span style="background:#fffcf2"></span><span style="background:#fdefc5"></span><span style="background:#b45309"></span></div><div class="theme-card-name" data-i18n="x.sorra">Sorra</div></div>
         </div>
         <div style="border-top:1px solid var(--border);margin:20px 0 16px;position:relative">
           <span style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--surface2);padding:0 12px;font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase" data-i18n="theme.editor">Editor de temes</span>
@@ -764,11 +764,11 @@
           <button class="btn" id="btn-random-theme" data-i18n="theme.random">Aleatori</button>
         </div>
         <div class="custom-theme-grid">
-          <div class="ct-field"><input type="color" id="ct-bg" value="#0c0c0c"><label>Fons</label></div>
-          <div class="ct-field"><input type="color" id="ct-surface" value="#141414"><label>Superfície</label></div>
-          <div class="ct-field"><input type="color" id="ct-surface2" value="#1c1c1c"><label>Superf. 2</label></div>
-          <div class="ct-field"><input type="color" id="ct-text" value="#e0e0e0"><label>Text</label></div>
-          <div class="ct-field"><input type="color" id="ct-accent" value="#4a80f0"><label>Accent</label></div>
+          <div class="ct-field"><input type="color" id="ct-bg" value="#0c0c0c"><label data-i18n="x.fons">Fons</label></div>
+          <div class="ct-field"><input type="color" id="ct-surface" value="#141414"><label data-i18n="x.superf_cie">Superfície</label></div>
+          <div class="ct-field"><input type="color" id="ct-surface2" value="#1c1c1c"><label data-i18n="x.superf_2">Superf. 2</label></div>
+          <div class="ct-field"><input type="color" id="ct-text" value="#e0e0e0"><label data-i18n="x.text">Text</label></div>
+          <div class="ct-field"><input type="color" id="ct-accent" value="#4a80f0"><label data-i18n="x.accent">Accent</label></div>
         </div>
         <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
           <button class="btn btn-primary" id="btn-save-custom-theme" data-i18n="theme.save">Desa i aplica</button>
@@ -828,7 +828,7 @@
     <div class="status-left">
       <span id="status-blocks">Blocs: 0</span>
     </div>
-    <span id="status-message">Llest per programar</span>
+    <span id="status-message" data-i18n="x.llest_per_programar">Llest per programar</span>
   </footer>
 
   <!-- Toast -->
@@ -840,7 +840,7 @@
 
   <!-- Toolbox XML -->
   <xml id="toolbox" style="display:none">
-    <category name="Música Bàsica" colour="#ff1a6c">
+    <category name="Música Bàsica" data-i18n-cat="cat.m_sica_b_sica" colour="#ff1a6c">
       <block type="tecla_play_note">
         <value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value>
         <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
@@ -850,7 +850,7 @@
       <block type="tecla_play_scale"></block>
       <block type="tecla_set_octave"></block>
     </category>
-    <category name="Síntesi Avançada" colour="#d500f9">
+    <category name="Síntesi Avançada" data-i18n-cat="cat.s_ntesi_avan_ada" colour="#d500f9">
       <block type="tecla_oscillator">
         <value name="FREQUENCY"><shadow type="math_number"><field name="NUM">440</field></shadow></value>
         <value name="AMPLITUDE"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
@@ -874,13 +874,13 @@
         <value name="AMOUNT"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
       </block>
     </category>
-    <category name="Control Hardware" colour="#2979ff">
+    <category name="Control Hardware" data-i18n-cat="cat.control_hardware" colour="#2979ff">
       <block type="tecla_read_button"></block>
       <block type="tecla_read_pot"></block>
       <block type="tecla_pot_change"></block>
       <block type="tecla_on_button_press"></block>
     </category>
-    <category name="Efectes Àudio" colour="#e040fb">
+    <category name="Efectes Àudio" data-i18n-cat="cat.efectes_udio" colour="#e040fb">
       <block type="tecla_effect_delay"></block>
       <block type="tecla_effect_reverb"></block>
       <block type="tecla_effect_filter"></block>
@@ -888,7 +888,7 @@
       <block type="tecla_set_volume"><value name="VOLUME"><shadow type="math_number"><field name="NUM">100</field></shadow></value></block>
       <block type="tecla_set_pan"><value name="PAN"><shadow type="math_number"><field name="NUM">64</field></shadow></value></block>
     </category>
-    <category name="GPIO (Pins)" colour="#00f0ff">
+    <category name="GPIO (Pins)" data-i18n-cat="cat.gpio_pins" colour="#00f0ff">
       <block type="tecla_digital_write"></block>
       <block type="tecla_digital_read"></block>
       <block type="tecla_analog_write"><value name="VALUE"><shadow type="math_number"><field name="NUM">32768</field></shadow></value></block>
@@ -902,7 +902,7 @@
         <value name="DUTY"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
       </block>
     </category>
-    <category name="Pantalla OLED" colour="#00f0ff">
+    <category name="Pantalla OLED" data-i18n-cat="cat.pantalla_oled" colour="#00f0ff">
       <block type="tecla_display_setup"></block>
       <block type="tecla_display_text">
         <value name="TEXT"><shadow type="text"><field name="TEXT">Hola TECLA!</field></shadow></value>
@@ -927,7 +927,7 @@
         <value name="HEIGHT"><shadow type="math_number"><field name="NUM">20</field></shadow></value>
       </block>
     </category>
-    <category name="LEDs NeoPixel" colour="#f472b6">
+    <category name="LEDs NeoPixel" data-i18n-cat="cat.leds_neopixel" colour="#f472b6">
       <block type="tecla_neopixel_setup">
         <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
         <value name="COUNT"><shadow type="math_number"><field name="NUM">8</field></shadow></value>
@@ -944,7 +944,7 @@
         <value name="OFFSET"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
       </block>
     </category>
-    <category name="Servos i Motors" colour="#fb923c">
+    <category name="Servos i Motors" data-i18n-cat="cat.servos_i_motors" colour="#fb923c">
       <block type="tecla_servo_setup">
         <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
       </block>
@@ -960,7 +960,7 @@
         <value name="SPEED"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
       </block>
     </category>
-    <category name="Sensors" colour="#4ade80">
+    <category name="Sensors" data-i18n-cat="cat.sensors" colour="#4ade80">
       <block type="tecla_sensor_temperature"></block>
       <block type="tecla_sensor_light">
         <value name="PIN"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
@@ -980,7 +980,7 @@
       <block type="tecla_sensor_distance"></block>
       <block type="tecla_system_voltage"></block>
     </category>
-    <category name="Temps i Bucles" colour="#ff9100">
+    <category name="Temps i Bucles" data-i18n-cat="cat.temps_i_bucles" colour="#ff9100">
       <block type="tecla_wait"><value name="TIME"><shadow type="math_number"><field name="NUM">1.0</field></shadow></value></block>
       <block type="tecla_sleep_ms"><value name="TIME"><shadow type="math_number"><field name="NUM">500</field></shadow></value></block>
       <block type="tecla_repeat_forever"></block>
@@ -995,7 +995,7 @@
       <block type="tecla_time_now"></block>
       <block type="tecla_time_millis"></block>
     </category>
-    <category name="Generatiu" colour="#ff1a6c">
+    <category name="Generatiu" data-i18n-cat="cat.generatiu" colour="#ff1a6c">
       <block type="tecla_probability"><value name="PERCENT"><shadow type="math_number"><field name="NUM">50</field></shadow></value></block>
       <block type="tecla_software_lfo">
         <value name="RATE"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
@@ -1012,7 +1012,7 @@
         <value name="STEPS"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
       </block>
     </category>
-    <category name="Lògica" colour="#00e676">
+    <category name="Lògica" data-i18n-cat="cat.l_gica" colour="#00e676">
       <block type="controls_if"></block>
       <block type="controls_ifelse"></block>
       <block type="logic_compare"></block>
@@ -1024,7 +1024,7 @@
       </block>
       <block type="tecla_try_except"></block>
     </category>
-    <category name="Matemàtiques" colour="#00e676">
+    <category name="Matemàtiques" data-i18n-cat="cat.matem_tiques" colour="#00e676">
       <block type="math_number"></block>
       <block type="math_arithmetic">
         <value name="A"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
@@ -1066,7 +1066,7 @@
         <value name="B"><shadow type="math_number"><field name="NUM">3</field></shadow></value>
       </block>
     </category>
-    <category name="Text" colour="#ffe500">
+    <category name="Text" data-i18n-cat="cat.text" colour="#ffe500">
       <block type="text"></block>
       <block type="tecla_text_join">
         <value name="TEXT1"><shadow type="text"><field name="TEXT">Hola </field></shadow></value>
@@ -1104,7 +1104,7 @@
         <value name="TEXT"><shadow type="text"><field name="TEXT">Hola consola!</field></shadow></value>
       </block>
     </category>
-    <category name="Llistes" colour="#ff6e40">
+    <category name="Llistes" data-i18n-cat="cat.llistes" colour="#ff6e40">
       <block type="tecla_list_create"></block>
       <block type="tecla_list_add">
         <value name="ITEM"><shadow type="math_number"><field name="NUM">60</field></shadow></value>
@@ -1117,7 +1117,7 @@
         <value name="SEPARATOR"><shadow type="text"><field name="TEXT">, </field></shadow></value>
       </block>
     </category>
-    <category name="MIDI Avançat" colour="#40c8ff">
+    <category name="MIDI Avançat" data-i18n-cat="cat.midi_avan_at" colour="#40c8ff">
       <block type="tecla_midi_cc">
         <value name="CC_NUM"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
         <value name="CC_VAL"><shadow type="math_number"><field name="NUM">64</field></shadow></value>
@@ -1131,7 +1131,7 @@
       </block>
       <block type="tecla_midi_all_notes_off"></block>
     </category>
-    <category name="Live Coding" colour="#ff3d00">
+    <category name="Live Coding" data-i18n-cat="cat.live_coding" colour="#ff3d00">
       <block type="tecla_note_on_only">
         <value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value>
         <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
@@ -1154,7 +1154,7 @@
       </block>
       <block type="tecla_riff_repeat"></block>
     </category>
-    <category name="Seqüenciador" colour="#00ffc8">
+    <category name="Seqüenciador" data-i18n-cat="cat.seq_enciador" colour="#00ffc8">
       <block type="tecla_note_name"></block>
       <block type="tecla_seq_grid"></block>
       <block type="tecla_seq_play_steps">
@@ -1174,12 +1174,12 @@
         <value name="BEATS_DUR"><shadow type="math_number"><field name="NUM">1.0</field></shadow></value>
       </block>
     </category>
-    <category name="Variables" colour="#FF6F00" custom="VARIABLE"></category>
-    <category name="Funcions" colour="#76ff03">
+    <category name="Variables" data-i18n-cat="cat.variables" colour="#FF6F00" custom="VARIABLE"></category>
+    <category name="Funcions" data-i18n-cat="cat.funcions" colour="#76ff03">
       <block type="tecla_function_define"></block>
       <block type="tecla_function_call"></block>
     </category>
-    <category name="Accions" colour="#ff6d00">
+    <category name="Accions" data-i18n-cat="cat.accions" colour="#ff6d00">
       <block type="tecla_key_press"></block>
       <block type="tecla_key_combo"></block>
       <block type="tecla_type_text"></block>
@@ -1190,7 +1190,7 @@
       </block>
       <block type="tecla_open_app"></block>
     </category>
-    <category name="Sistema" colour="#94a3b8">
+    <category name="Sistema" data-i18n-cat="cat.sistema" colour="#94a3b8">
       <block type="tecla_storage_write">
         <value name="KEY"><shadow type="text"><field name="TEXT">comptador</field></shadow></value>
         <value name="VALUE"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
@@ -1208,13 +1208,13 @@
       <block type="tecla_system_reset"></block>
     </category>
     <sep></sep>
-    <category name="Events Scratch" colour="#FFBF00">
+    <category name="Events Scratch" data-i18n-cat="cat.events_scratch" colour="#FFBF00">
       <block type="scratch_when_flag_clicked"></block>
       <block type="scratch_when_key_pressed"></block>
       <block type="scratch_broadcast"><field name="MESSAGE">missatge1</field></block>
       <block type="scratch_when_receive"><field name="MESSAGE">missatge1</field></block>
     </category>
-    <category name="Control Scratch" colour="#FFAB19">
+    <category name="Control Scratch" data-i18n-cat="cat.control_scratch" colour="#FFAB19">
       <block type="scratch_stop"></block>
       <block type="scratch_say">
         <value name="MESSAGE"><shadow type="text"><field name="TEXT">Hola!</field></shadow></value>
@@ -1231,7 +1231,7 @@
       </block>
       <block type="scratch_show_variable"></block>
     </category>
-    <category name="Operadors Scratch" colour="#59C059">
+    <category name="Operadors Scratch" data-i18n-cat="cat.operadors_scratch" colour="#59C059">
       <block type="scratch_join">
         <value name="STRING1"><shadow type="text"><field name="TEXT">poma </field></shadow></value>
         <value name="STRING2"><shadow type="text"><field name="TEXT">pera</field></shadow></value>
