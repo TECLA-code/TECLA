@@ -12,7 +12,13 @@ class ConfigManager:
     # Límit dur de capes (banks): tota la config viu en RAM i cada capa de
     # teclat pot pesar 1-2KB de JSON; 6 capes deixen marge còmode per carregar
     # modes a la Pico 1. L'app aplica el mateix límit en crear capes.
-    MAX_BANKS = 6
+    # Capes que el dispositiu carrega. Mesurat al maquinari (DEVICE_PENDING.md,
+    # «Sostre de capes»): una capa de teclat costa ~1,3 KB (+1,7 al transitori
+    # de recàrrega) i una de modes ~0,65 KB; 24 capes arrenquen i 48 de teclat
+    # ja no (la recàrrega en calent peta). Dotze és el que va córrer una marató
+    # de 3 h sense cap MemoryError. L'app té el mateix límit (DEVICE_MAX_LAYERS
+    # a index.html) i tests/js/limit_de_capes.test.mjs vigila que coincideixin.
+    MAX_BANKS = 12
 
     def __init__(self, config_path='config/tecla_config.json'):
         """Inicialitza el gestor de configuració"""
@@ -114,8 +120,8 @@ class ConfigManager:
                 try:
                     banks = config.get('banks', [])
                     # LÍMIT DUR de capes (RAM): tota la config viu en memòria i
-                    # cada capa de teclat pot pesar 1-2KB. Més enllà de MAX_BANKS
-                    # el marge per carregar modes es fa perillós → es retallen
+                    # cada capa de teclat pesa 1-2 KB. Més enllà de MAX_BANKS el
+                    # marge per carregar modes es fa perillós → es retallen
                     # (l'app té el mateix límit; això és l'última xarxa).
                     if len(banks) > self.MAX_BANKS:
                         print(f"Avís: {len(banks)} capes; es retallen a {self.MAX_BANKS} (límit de RAM)")

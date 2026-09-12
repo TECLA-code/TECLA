@@ -1,6 +1,6 @@
 {
   "version": "3.17.0",
-  "generated": "2026-09-12 18:29",
+  "generated": "2026-09-12 18:48",
   "files": [
     "boot.py",
     "code.py",
@@ -104,7 +104,7 @@
     "core/animations/base.mpy": "bb2df08b778575559d0f702eb861248edaea39de33c97ba1bcf786e22795be0c",
     "core/animations/mandelbrot.mpy": "845b6324afb6cbdb0112b9abc1c0f24cb4c70c99f50cac579a1160586f50da02",
     "core/animations/sinusoidal.mpy": "f21825c26038d08ada1c138ff1a4f95ce4ef5b778056a7d4339a01d4f3bb3922",
-    "core/config_manager.mpy": "d0514b438cf7271a69c2178e72c587bb33eef5ddda43c3bf0e2bf03f1efec7fe",
+    "core/config_manager.mpy": "47fbff45d20d062104d82f915da985f9e2bed92afeb887061e0dfba5fc07d055",
     "core/crashguard.mpy": "ccd57dca5648fb9a7e8c26f63eef6ec84cf778db41eae43ec83ff74d2dd469f9",
     "core/display_manager.mpy": "bf98187ec4a17679431045e6e46bea279f0693d4b837121d3ddbd52f255af19c",
     "core/llum.mpy": "e34009d351c8a2e34a94dc69c902095f91ce01fdf997ed671c977ba6e1621ff0",
@@ -252,5 +252,5 @@
     "effects",
     "motor"
   ],
-  "congelats_empremta": "03d588970e630d88"
+  "congelats_empremta": "534bb7ff5aa6b0f0"
 }
