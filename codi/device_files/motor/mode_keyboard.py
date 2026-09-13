@@ -233,15 +233,25 @@ class KeyboardMode:
         
     def setup(self):
         """Configuració inicial del mode"""
-        # Pre-carregar mòduls pesats ara que la memòria és lliure
-        import gc; gc.collect()
-        try:
-            import motor.kbd_notes
-            import motor.kbd_arp
-            import motor.kbd_pots
-        except Exception:
-            pass
-        gc.collect()
+        # `main._activate_keyboard_layer` ja ha fet gc.collect() just abans de
+        # construir-nos, i els mòduls pesats solen ser ja a sys.modules després
+        # del primer ús. Els dos gc.collect() incondicionals d'abans (~8 ms cada
+        # un al TECLA) eren, en el cas normal, redundants: només val la pena
+        # recol·lectar si de debò importem algun mòdul nou (la brossa d'un import
+        # fresc no s'ha de quedar al heap fragmentant-lo; si són calents, no n'hi
+        # ha). Amb els mòduls carregats, això treu ~15 ms del canvi de capa.
+        import sys
+        _nous = [m for m in ('motor.kbd_notes', 'motor.kbd_arp', 'motor.kbd_pots')
+                 if m not in sys.modules]
+        if _nous:
+            import gc
+            try:
+                import motor.kbd_notes    # noqa: F401
+                import motor.kbd_arp      # noqa: F401
+                import motor.kbd_pots     # noqa: F401
+            except Exception:
+                pass
+            gc.collect()
         self.stop_all_notes()
         self.active_notes.clear()
         

@@ -19,6 +19,13 @@ except Exception:                       # simulador i proves sense core/
         return True
 # Cada patró: (n=pas global, ctx={'root','scale'}, rng) → llista de (note, dur, vel).
 # dur en PASSOS (corxeres de setze). El motor programa el note_off.
+#
+# REGISTRE: tots els patrons sonen PER SOTA del teclat. El teclat toca de
+# root a root+12 (els vuit graus), i la base va de root-24 a root-1: mai la
+# mateixa nota. Amb un DAW que escolta tots els canals en un sol instrument
+# (el que fan per defecte), un note-off de la base sobre una nota que el
+# teclat aguanta la tallava, i l'arpegi que passava per la tònica ho feia a
+# cada compàs. La base segueix el teclat quan canvia d'octava (sync_context).
 
 
 def _pat_pols(n, ctx, rng):
@@ -29,30 +36,30 @@ def _pat_pols(n, ctx, rng):
 
 
 def _pat_baix(n, ctx, rng):
-    """Baix: tònica/quinta/octava de la tonalitat, una nota per negra."""
+    """Baix: tònica/quinta/tònica/quinta greu, una nota per negra, sota el teclat."""
     if n % 4 != 0:
         return ()
-    offs = (0, 7, 0, 12)
+    offs = (0, 7, 0, -5)
     return ((ctx['root'] - 12 + offs[(n >> 2) % 4], 3, 100),)
 
 
 def _pat_arpegi(n, ctx, rng):
-    """Arpegi/Pad: arpegia la tríada diatònica (graus 0,2,4 de l'escala)."""
+    """Arpegi/Pad: arpegia la tríada diatònica (graus 0,2,4), una octava sota el teclat."""
     if n % 2 != 0:
         return ()
     sc = ctx['scale']
     triad = (sc[0], sc[2 % len(sc)], sc[4 % len(sc)])
-    return ((ctx['root'] + triad[(n >> 1) % 3], 2, 85),)
+    return ((ctx['root'] - 12 + triad[(n >> 1) % 3], 2, 85),)
 
 
 def _pat_sequencia(n, ctx, rng):
-    """Seqüència: melodia generativa dins l'escala (determinista via rng)."""
+    """Seqüència: línia generativa dins l'escala (determinista via rng), una octava sota el teclat."""
     if n % 2 != 0:
         return ()
     deg = int(rng() * len(ctx['scale']))
     if deg >= len(ctx['scale']):
         deg = len(ctx['scale']) - 1
-    return ((ctx['root'] + 12 + ctx['scale'][deg], 1, 90),)
+    return ((ctx['root'] - 12 + ctx['scale'][deg], 1, 90),)
 
 
 PATTERNS = {

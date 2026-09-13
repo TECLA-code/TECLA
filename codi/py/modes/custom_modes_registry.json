@@ -294,6 +294,162 @@
         "Estàtica",
         "Escombrat"
       ]
+    },
+    "Blues": {
+      "file_name": "mode_blues",
+      "class_name": "ModeBlues",
+      "params": [
+        "Tempo",
+        "Swing",
+        "Densitat",
+        "Registre",
+        "Baix",
+        "Tonalitat"
+      ],
+      "pots": [
+        "Tempo",
+        "Swing",
+        "Densitat"
+      ]
+    },
+    "Clave": {
+      "file_name": "mode_clave",
+      "class_name": "ModeClave",
+      "params": [
+        "Tempo",
+        "Clave",
+        "Densitat",
+        "Baix",
+        "Força",
+        "Tonalitat"
+      ],
+      "pots": [
+        "Tempo",
+        "Clave",
+        "Densitat"
+      ]
+    },
+    "Coral": {
+      "file_name": "mode_coral",
+      "class_name": "ModeCoral",
+      "params": [
+        "Tempo",
+        "Mode",
+        "Registre",
+        "Cadència",
+        "Articulació",
+        "Tonalitat"
+      ],
+      "pots": [
+        "Tempo",
+        "Mode",
+        "Registre"
+      ]
+    },
+    "Eixam": {
+      "file_name": "mode_eixam",
+      "class_name": "ModeEixam",
+      "params": [
+        "Densitat",
+        "Dispersió",
+        "Centre",
+        "Durada",
+        "Escala",
+        "Vagareig",
+        "Ràfegues",
+        "Tonalitat"
+      ],
+      "pots": [
+        "Densitat",
+        "Dispersió",
+        "Centre"
+      ]
+    },
+    "Marea": {
+      "file_name": "mode_marea",
+      "class_name": "ModeMarea",
+      "params": [
+        "Període",
+        "Amplitud",
+        "Onatge",
+        "Escala",
+        "Registre",
+        "Marea",
+        "Tonalitat"
+      ],
+      "pots": [
+        "Període",
+        "Amplitud",
+        "Onatge"
+      ]
+    },
+    "Markov": {
+      "file_name": "mode_markov",
+      "class_name": "ModeMarkov",
+      "params": [
+        "Tempo",
+        "Caràcter",
+        "Inèrcia",
+        "Registre",
+        "Articulació",
+        "Tonalitat"
+      ],
+      "pots": [
+        "Tempo",
+        "Caràcter",
+        "Inèrcia"
+      ]
+    },
+    "Núvol": {
+      "file_name": "mode_nuvol",
+      "class_name": "ModeNuvol",
+      "params": [
+        "Densitat",
+        "Color",
+        "Cruixent",
+        "Centre",
+        "Amplada",
+        "Força"
+      ],
+      "pots": [
+        "Densitat",
+        "Color",
+        "Cruixent"
+      ]
+    },
+    "Raga": {
+      "file_name": "mode_raga",
+      "class_name": "ModeRaga",
+      "params": [
+        "Tempo",
+        "Raga",
+        "Ornament",
+        "Registre",
+        "Drone",
+        "Tonalitat"
+      ],
+      "pots": [
+        "Tempo",
+        "Raga",
+        "Ornament"
+      ]
+    },
+    "Tambura": {
+      "file_name": "mode_tambura",
+      "class_name": "ModeTambura",
+      "params": [
+        "Tempo",
+        "Ressonància",
+        "Octava",
+        "Afinació",
+        "Respiració",
+        "Tonalitat"
+      ],
+      "pots": [
+        "Tempo",
+        "Ressonància",
+        "Octava"
+      ]
     }
   }
 }

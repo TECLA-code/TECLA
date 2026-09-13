@@ -201,10 +201,22 @@ def _recollida(kbd, pot_values, force_update):
         congelats = [None, None, None]
         kbd._pot_congelats = congelats
     if force_update:
-        # Primera volta del mode: s'ha d'aplicar tot, i encara no hi ha cap
-        # capa anterior de la qual protegir-se.
+        # Primera volta del mode (entrar a la capa): els potes es queden on
+        # són, congelats, fins que els mous. Abans s'aplicava tot de cop, i
+        # la Pantalla ensenyava «Sustain: Llarg» o «Teclat Pot: Octava» en
+        # comptes del nom de la capa que acabaves de triar; i el pot manava
+        # sense que l'haguessis tocat. Un pot només es llegeix si s'usa
+        # (demanat 2026-09-13): la mateixa regla que en canviar de capa de
+        # potes, aplicada també a l'entrada.
         kbd._pot_capa = capa
-        congelats[0] = congelats[1] = congelats[2] = None
+        for i in range(3):
+            congelats[i] = pot_values[i]
+        # La funció Octava té la seva pròpia memòria («només actua quan el pot
+        # es mou»): s'hi apunta la posició d'entrada, perquè la primera moguda
+        # que el descongela ja mani, i no calgui moure'l dues vegades.
+        for nom, i in (('pot_x', 1), ('pot_y', 0), ('pot_z', 2)):
+            if getattr(kbd, nom + '_function', None) == 'Octava':
+                kbd._oct_pot_last_val = pot_values[i]
         return congelats
     if getattr(kbd, '_pot_capa', None) != capa:
         kbd._pot_capa = capa

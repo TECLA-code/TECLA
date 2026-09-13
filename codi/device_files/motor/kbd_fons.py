@@ -43,14 +43,28 @@ _LLARGA = 0.6                           # segons de premuda per aturar
 class MidiCanal:
     """Embolcall de la sortida MIDI que porta al canal del fons tot el que el
     mode envia pel canal per defecte. La percussió (canal 9) es queda com és:
-    allà l'alçada és l'instrument."""
+    allà l'alçada és l'instrument.
+
+    El VOLUM del fons (la primera capa de comandaments) no surt com a CC7: es
+    queda aquí i escala la velocitat de cada nota del mode. Un CC7 pel canal
+    del fons, en un DAW que escolta tots els canals en un sol instrument (el
+    que fan per defecte), abaixava també el teclat, i no hi havia manera de
+    deixar el fons fluix i tocar-hi a sobre fort."""
 
     def __init__(self, midi, canal):
         self.midi = midi
         self.canal = canal
+        self.volum = 127                # 0-127: escala la velocitat del fons
 
     def send(self, msg, channel=None):
         try:
+            if getattr(msg, 'control', None) == 7:
+                self.volum = int(getattr(msg, 'value', 127))
+                return None             # no viatja: és del fons, no de l'instrument
+            if self.volum < 127 and type(msg).__name__.endswith('NoteOn'):
+                vel = int(getattr(msg, 'velocity', 0))
+                if vel > 0:
+                    msg.velocity = max(1, (vel * self.volum) // 127)
             c = getattr(msg, 'channel', None)
             if c is None or c == 0:
                 msg.channel = self.canal
@@ -70,6 +84,7 @@ class Fons:
         self.lay = None
         self.pots = None                # els potes congelats que veu el mode
         self.mgr = getattr(kbd, 'mode_manager', None)
+        self._midi_real = None          # la sortida del gestor mentre el fons hi posa l'embolcall
 
     @property
     def actiu(self):
@@ -83,11 +98,21 @@ class Fons:
         if self.mgr is None:
             diu("⚠ Fons: sense gestor de modes")
             return False
+        # El fons surt pel seu canal: el gestor rep l'embolcall ABANS de
+        # carregar el mode, perquè el mode neix amb ell i el seu setup() ja
+        # hi passa. Abans s'embolcallava després: el drone que Raga engega
+        # a setup() sortia pel canal del teclat, i el seu note-off (ja per
+        # l'embolcall) pel canal 1, o sigui que es quedava sonant per sempre.
+        # I les escombrades del gestor en aturar (notes registrades, CC123)
+        # també van així pel canal del fons, no pel del teclat.
+        if self._midi_real is None:
+            self._midi_real = self.mgr.midi_out
+            self.mgr.midi_out = MidiCanal(self._midi_real, FONS_CHANNEL)
         if not self.mgr.set_mode(nom):
+            self._restaura_midi()
             return False
         mode = self.mgr.current_mode
-        # El fons surt pel seu canal, i veu els potes congelats on són ara
-        mode.midi_out = MidiCanal(self.mgr.midi_out, FONS_CHANNEL)
+        mode.midi_out = self.mgr.midi_out
         self.nom = nom
         self.btn = btn
         self.pots = list(pot_values) if pot_values else [64, 64, 64]
@@ -131,10 +156,17 @@ class Fons:
             except Exception:
                 pass
             diu("Fons OFF")
+        self._restaura_midi()
         self._retorna_teclat()
         self.nom = None
         self.btn = -1
         self.lay = None
+
+    def _restaura_midi(self):
+        """El gestor torna a la sortida de debò (la capa de modes la vol tal qual)."""
+        if self._midi_real is not None and self.mgr is not None:
+            self.mgr.midi_out = self._midi_real
+        self._midi_real = None
 
     def tick(self, pot_values):
         """Cada volta del bucle, després del teclat."""

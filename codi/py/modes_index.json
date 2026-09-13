@@ -1,44 +1,12 @@
 {
   "modes": [
     {
-      "name": "Mandelbrot",
-      "file": "mode_mandelbrot.py"
+      "name": "Autòmat",
+      "file": "mode_automat.py"
     },
     {
-      "name": "Tempesta",
-      "file": "mode_tormenta.py"
-    },
-    {
-      "name": "Dinamo",
-      "file": "mode_dinamo.py"
-    },
-    {
-      "name": "Industrial",
-      "file": "mode_industrial.py"
-    },
-    {
-      "name": "Sinusoidal",
-      "file": "mode_ona_sinusoidal.py"
-    },
-    {
-      "name": "ToDrone",
-      "file": "mode_todrone.py"
-    },
-    {
-      "name": "Contrapunt",
-      "file": "mode_contrapunt.py"
-    },
-    {
-      "name": "Cançó",
-      "file": "mode_canco.py"
-    },
-    {
-      "name": "Progressió",
-      "file": "mode_progressio.py"
-    },
-    {
-      "name": "Polirítmia",
-      "file": "mode_poliritmia.py"
+      "name": "Blues",
+      "file": "mode_blues.py"
     },
     {
       "name": "Breakdown",
@@ -49,24 +17,92 @@
       "file": "mode_campanar.py"
     },
     {
+      "name": "Cançó",
+      "file": "mode_canco.py"
+    },
+    {
       "name": "Caos",
       "file": "mode_caos.py"
+    },
+    {
+      "name": "Clave",
+      "file": "mode_clave.py"
+    },
+    {
+      "name": "Contrapunt",
+      "file": "mode_contrapunt.py"
+    },
+    {
+      "name": "Coral",
+      "file": "mode_coral.py"
+    },
+    {
+      "name": "Dinamo",
+      "file": "mode_dinamo.py"
+    },
+    {
+      "name": "Eixam",
+      "file": "mode_eixam.py"
+    },
+    {
+      "name": "Industrial",
+      "file": "mode_industrial.py"
+    },
+    {
+      "name": "Mandelbrot",
+      "file": "mode_mandelbrot.py"
+    },
+    {
+      "name": "Marea",
+      "file": "mode_marea.py"
+    },
+    {
+      "name": "Markov",
+      "file": "mode_markov.py"
+    },
+    {
+      "name": "Núvol",
+      "file": "mode_nuvol.py"
     },
     {
       "name": "Pluja",
       "file": "mode_pluja.py"
     },
     {
-      "name": "Autòmat",
-      "file": "mode_automat.py"
+      "name": "Polirítmia",
+      "file": "mode_poliritmia.py"
     },
     {
-      "name": "Vida",
-      "file": "mode_vida.py"
+      "name": "Progressió",
+      "file": "mode_progressio.py"
+    },
+    {
+      "name": "Raga",
+      "file": "mode_raga.py"
     },
     {
       "name": "Ràdio",
       "file": "mode_radio.py"
+    },
+    {
+      "name": "Sinusoidal",
+      "file": "mode_ona_sinusoidal.py"
+    },
+    {
+      "name": "Tambura",
+      "file": "mode_tambura.py"
+    },
+    {
+      "name": "Tempesta",
+      "file": "mode_tormenta.py"
+    },
+    {
+      "name": "ToDrone",
+      "file": "mode_todrone.py"
+    },
+    {
+      "name": "Vida",
+      "file": "mode_vida.py"
     }
   ]
 }

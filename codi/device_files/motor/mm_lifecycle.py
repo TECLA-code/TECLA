@@ -106,13 +106,29 @@ def _build_mode_info_cache(mgr, configured_modes):
 
 def _resol_mode(mgr, mode_name):
     """(fitxer, classe) d'un mode, o None. Mateix ordre de sempre: registre
-    estàtic → cache del banc → registre del disc."""
+    estàtic → cache del banc → registre del disc.
+
+    El que es llegeix del disc es DESA al cache. Llegir i parsejar
+    `custom_modes_registry.json` de la flash costa ~60 ms (mesurat al TECLA),
+    i el camí del mode de fons hi passava DUES vegades per càrrega —una a
+    `mm_mode_disponible`, una a `mm_load_mode`— perquè a la capa de teclat el
+    cache està buit (només l'omple l'entrada a una capa de modes). Amb dues
+    lectures i l'import, prémer la tecla de fons congelava el teclat ~0,2-0,3 s.
+    Desant el resultat, la segona lectura de la mateixa càrrega i totes les
+    següents són gratis. El registre no canvia en calent (només a un redesplegament
+    + reinici), o sigui que cachejar-lo per sessió és segur —és el que ja fa
+    `_build_mode_info_cache` per a les capes de modes."""
     if mode_name in MODE_CLASSES:
         return MODE_CLASSES[mode_name]
     cache = getattr(mgr, 'mode_info_cache', None)
     if cache and mode_name in cache:
         return cache[mode_name]
-    return _get_mode_info_from_registry(mode_name)
+    info = _get_mode_info_from_registry(mode_name)
+    if info is not None:
+        if cache is None:
+            cache = mgr.mode_info_cache = {}
+        cache[mode_name] = info
+    return info
 
 
 def mm_mode_disponible(mgr, mode_name):
