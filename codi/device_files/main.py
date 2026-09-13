@@ -33,6 +33,30 @@ BUTTON_PINS = [
 ]
 POT_PINS = [board.A0, board.A1, board.A2]
 
+# ── Lectura dels potes: calibratge viu ───────────────────────────────────────
+# L'ADC del RP2040 no arriba als extrems i CADA pot té el seu recorregut: en un
+# TECLA real un pot toca a 256 counts i un altre a 1488 (mesurat), i amunt no
+# arriben a 65535. L'escala crua `raw * 127 // 65535` feia que el mínim físic
+# donés 1-2 en comptes de 0 i el màxim 126 en comptes de 127. Com que els terres
+# són diferents entre pots i entre unitats (hi ha maquinari al carrer), no serveix
+# un marge fix: se segueix el recorregut OBSERVAT de cada pot (mínim i màxim que
+# ha donat) i s'escala contra ell. Mentre el pot no s'ha mogut prou, s'usa l'escala
+# clàssica [0, 65535] (cap regressió a l'arrencada); en girar-lo de banda a banda
+# un cop, el seu mínim passa a 0 i el màxim a 127, exactes. Es recalibra sol amb
+# l'ús; només viu a la RAM (es refà en segons en tornar a arrencar).
+POT_ADC_MAX = 65535
+POT_SPAN_MIN = 8000        # recorregut observat mínim per fiar-se'n
+
+def escala_pot(raw, lo, hi):
+    """raw ADC (0-65535) → 0-127 contra el recorregut observat [lo, hi]. Fins que
+    [lo, hi] no cobreix POT_SPAN_MIN s'usa l'escala clàssica sobre tot el rang."""
+    if hi - lo < POT_SPAN_MIN:
+        lo = 0
+        hi = POT_ADC_MAX
+    v = (raw - lo) * 127 // (hi - lo)
+    return 0 if v < 0 else (127 if v > 127 else v)
+
+
 class TeclaHardware:
     """Classe per gestionar el maquinari de TECLA"""
     
@@ -47,6 +71,11 @@ class TeclaHardware:
         # fan `x, y, z = pot_values`; sim_link i potlayers en fan còpia).
         self._buf_buttons = [False] * len(BUTTON_PINS)
         self._buf_pots = [0] * len(POT_PINS)
+        # Calibratge viu del recorregut de cada pot (vegeu escala_pot). Es
+        # sembra "girat del revés" (lo alt, hi baix) perquè la primera lectura
+        # de cada pot l'estableixi i, a partir d'aquí, només s'eixampla.
+        self._pot_lo = [POT_ADC_MAX] * len(POT_PINS)
+        self._pot_hi = [0] * len(POT_PINS)
         self._buf_kb = [False] * 15      # els 15 que rep el mode teclat
         self.last_pot_read = 0
         self.midi_out = None
@@ -148,11 +177,19 @@ class TeclaHardware:
         return buf
     
     def read_pots(self):
-        """Escala els potes a 0-127. Retorna el BÚFER reutilitzat."""
+        """Escala els potes a 0-127 contra el recorregut viu de cada un. Retorna
+        el BÚFER reutilitzat."""
         buf = self._buf_pots
+        lo = self._pot_lo
+        hi = self._pot_hi
         for i, pot in enumerate(self.pots):
             if pot:
-                buf[i] = max(0, min(127, pot.value * 127 // 65535))
+                raw = pot.value
+                if raw < lo[i]:
+                    lo[i] = raw
+                if raw > hi[i]:
+                    hi[i] = raw
+                buf[i] = escala_pot(raw, lo[i], hi[i])
             else:
                 buf[i] = 0
         return buf
