@@ -24,7 +24,13 @@
        és més alta que la de teclat i, sense això, la barra apareixia en
        canviar de capa i estrenyia la pàgina uns píxels, i el diagrama de
        tecles es movia. tests/js/paritat_diagrames.test.mjs ho vigila. */
-    html { scrollbar-gutter: stable }
+    /* La barra de desplaçament ocupa lloc SEMPRE (overflow-y:scroll), tant si
+       la pàgina desborda com si no. `scrollbar-gutter: stable` sol bastar, però
+       en canviar entre una capa curta (teclat) i una de llarga (modes) no
+       reservava l'espai a la curta i el diagrama es movia uns píxels. Amb la
+       barra sempre present, l'amplada de la finestra és idèntica a totes dues
+       capes: els botons i els potes no es mouen ni canvien de mida. */
+    html { scrollbar-gutter: stable; overflow-y: scroll }
 
     :root {
       --bg: #0c0c0c;
@@ -72,7 +78,6 @@
     /* Reserva sempre el carril de la barra de desplaçament: així el contingut no
        salta 2px en canviar de capa/pestanya quan l'alçada de la pàgina creua el
        llindar d'aparició de la barra. */
-    html { scrollbar-gutter: stable }
 
     body {
       font-family: var(--font);
