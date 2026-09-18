@@ -622,9 +622,10 @@ class KeyboardMode:
                 record_live_note(self, note, self.velocity, time.monotonic())
             
 
-            # Testimoni per a la consola virtual de l'app: només amb consola
-            # connectada (cost zero en directe) i mai per als passos de
-            # l'arpegiador (button_index -1), que inundarien el monitor.
+            # Testimoni per a la Pantalla de l'app: només amb consola
+            # connectada (cost zero en directe). Els passos de l'arpegiador
+            # (button_index -1) no van d'un en un: kbd_arp._testimoni_pas en
+            # diu UNA línia per pas amb totes les veus («♫ C4 E4»).
             if button_index >= 0:
                 from motor.kbd_notes import note_name, testimoni
                 testimoni("♪ " + note_name(note))

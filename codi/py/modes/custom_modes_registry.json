@@ -450,6 +450,120 @@
         "Ressonància",
         "Octava"
       ]
+    },
+    "Balada": {
+      "file_name": "mode_balada",
+      "class_name": "ModeBalada",
+      "params": [
+        "Tempo",
+        "Emoció",
+        "Registre",
+        "Arpegi",
+        "Pedal",
+        "Frase",
+        "Acord de fons",
+        "Tonalitat"
+      ],
+      "pots": [
+        "Tempo",
+        "Emoció",
+        "Registre"
+      ]
+    },
+    "Bossa": {
+      "file_name": "mode_bossa",
+      "class_name": "ModeBossa",
+      "params": [
+        "Tempo",
+        "Jazz",
+        "Registre",
+        "Síncope",
+        "Densitat",
+        "Frase",
+        "Acord de fons",
+        "Tonalitat"
+      ],
+      "pots": [
+        "Tempo",
+        "Jazz",
+        "Registre"
+      ]
+    },
+    "Bressol": {
+      "file_name": "mode_bressol",
+      "class_name": "ModeBressol",
+      "params": [
+        "Tempo",
+        "Son",
+        "Registre",
+        "Balanceig",
+        "Articulació",
+        "Frase",
+        "Acord de fons",
+        "Tonalitat"
+      ],
+      "pots": [
+        "Tempo",
+        "Son",
+        "Registre"
+      ]
+    },
+    "Dansa": {
+      "file_name": "mode_dansa",
+      "class_name": "ModeDansa",
+      "params": [
+        "Tempo",
+        "Ornament",
+        "Registre",
+        "Mode",
+        "Bordó",
+        "Frase",
+        "Articulació",
+        "Tonalitat"
+      ],
+      "pots": [
+        "Tempo",
+        "Ornament",
+        "Registre"
+      ]
+    },
+    "Havanera": {
+      "file_name": "mode_havanera",
+      "class_name": "ModeHavanera",
+      "params": [
+        "Tempo",
+        "Veus",
+        "Registre",
+        "Onatge",
+        "Tornada",
+        "Frase",
+        "Articulació",
+        "Tonalitat"
+      ],
+      "pots": [
+        "Tempo",
+        "Veus",
+        "Registre"
+      ]
+    },
+    "Vals": {
+      "file_name": "mode_vals",
+      "class_name": "ModeVals",
+      "params": [
+        "Tempo",
+        "Vol",
+        "Registre",
+        "Balanç",
+        "Rubato",
+        "Frase",
+        "Acord de fons",
+        "Tonalitat"
+      ],
+      "pots": [
+        "Tempo",
+        "Vol",
+        "Registre"
+      ]
     }
   }
 }

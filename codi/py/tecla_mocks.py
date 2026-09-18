@@ -146,7 +146,11 @@ def install_mocks():
 
     # usb_midi
     um = _create_mod('usb_midi')
-    um.ports = [None, "MOCK_PORT"]
+    # ports[0] és l'ENTRADA: main.py la buida a cada volta (readinto → 0 = res).
+    class _MockMidiIn:
+        def readinto(self, buf):
+            return 0
+    um.ports = [_MockMidiIn(), "MOCK_PORT"]
 
     # adafruit_midi + submòduls
     am = _create_mod('adafruit_midi')

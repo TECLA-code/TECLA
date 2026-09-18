@@ -624,6 +624,30 @@ def main():
         pass
     hardware.midi_out = midi_out
 
+    # L'ENTRADA MIDI s'ha de buidar encara que l'Instrument no la faci servir.
+    # Quan un programa del PC tria el dispositiu (Resolume, Ableton...), li
+    # envia MIDI de retorn —rellotge, feedback dels controls. Si ningú no ho
+    # llegeix mai, la cua del port s'omple, l'ordinador es queda esperant i el
+    # programa es penja en triar-lo. Un buidatge per volta del bucle, i prou.
+    _midi_in = None
+    _midi_in_buf = bytearray(64)
+    try:
+        _midi_in = usb_midi.ports[0] if len(usb_midi.ports) > 0 else None
+        if not hasattr(_midi_in, 'readinto'):
+            _midi_in = None
+    except Exception:
+        _midi_in = None
+
+    def _midi_drain():
+        if _midi_in is None:
+            return
+        try:
+            for _ in range(8):
+                if not _midi_in.readinto(_midi_in_buf):
+                    break
+        except Exception:
+            pass
+
     # SEMPRE arrencar a la PRIMERA capa (ordre previsible en connectar): la
     # config porta el 'current_bank' que l'app tenia seleccionat en guardar
     # (s'usa per al hot-reload mentre edites), però una arrencada freda ha de
@@ -793,6 +817,7 @@ def main():
     try:
         while True:
             current_time = time.monotonic()
+            _midi_drain()          # que el PC mai no es quedi amb la cua plena
 
             if _tick:
                 _t = _tick()

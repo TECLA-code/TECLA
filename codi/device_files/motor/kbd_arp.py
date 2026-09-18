@@ -177,12 +177,33 @@ def process_arpeggiator(kbd, button_states, current_time):
 
         if kbd.arp_notes:
             play_arp_pattern(kbd, arp_direction)
+            _testimoni_pas(kbd)
             # Avança el rellotge per PASSOS EXACTES d'arp_speed (no 'now'): si es fa
             # servir 'now', la granularitat del bucle acumula error i els passos cauen
             # a múltiples desiguals d'arp_speed → el loop gravat surt amb SWING.
             kbd.last_arp_time += kbd.arp_speed
             if current_time - kbd.last_arp_time >= kbd.arp_speed:
                 kbd.last_arp_time = current_time  # resync (1r dispar, canvi de tempo, pausa…)
+
+
+def _testimoni_pas(kbd):
+    """El pas de l'arpegi per a la Pantalla: «♫ C4», o «♫ C4 E4 G4» quan el
+    patró toca més d'una veu alhora (Block, Octaves, Vals).
+
+    Els passos de l'arp no passen pel testimoni de `_note_on` (que és per
+    tecla i callava expressament amb button_index -1): aquí en surt UNA línia
+    per pas, amb totes les veus juntes, i així la Pantalla dibuixa la nota
+    que l'arpegi trepitja sense que un Block a 240 BPM es mengi el sostre de
+    línies per segon de core/pantalla.py. `arp_sounding` és exactament el
+    que acaba de sonar: `stop_arp_notes()` el buida just abans del pas.
+    Només amb consola connectada: en directe no arriba ni a formatar."""
+    try:
+        from motor.kbd_notes import _console_on, note_name, testimoni
+        if not kbd.arp_sounding or not _console_on():
+            return
+        testimoni("♫ " + " ".join([note_name(n) for n in sorted(kbd.arp_sounding)]))
+    except Exception:
+        pass
 
 
 def play_arp_pattern(kbd, direction):

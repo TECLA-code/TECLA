@@ -5,12 +5,24 @@
       "file": "mode_automat.py"
     },
     {
+      "name": "Balada",
+      "file": "mode_balada.py"
+    },
+    {
       "name": "Blues",
       "file": "mode_blues.py"
     },
     {
+      "name": "Bossa",
+      "file": "mode_bossa.py"
+    },
+    {
       "name": "Breakdown",
       "file": "mode_breakdown.py"
+    },
+    {
+      "name": "Bressol",
+      "file": "mode_bressol.py"
     },
     {
       "name": "Campanar",
@@ -37,12 +49,20 @@
       "file": "mode_coral.py"
     },
     {
+      "name": "Dansa",
+      "file": "mode_dansa.py"
+    },
+    {
       "name": "Dinamo",
       "file": "mode_dinamo.py"
     },
     {
       "name": "Eixam",
       "file": "mode_eixam.py"
+    },
+    {
+      "name": "Havanera",
+      "file": "mode_havanera.py"
     },
     {
       "name": "Industrial",
@@ -99,6 +119,10 @@
     {
       "name": "ToDrone",
       "file": "mode_todrone.py"
+    },
+    {
+      "name": "Vals",
+      "file": "mode_vals.py"
     },
     {
       "name": "Vida",
