@@ -95,9 +95,14 @@ def mm_stop_current_mode(mgr):
 
 
 
-def mm_all_notes_off(mgr):
+def mm_all_notes_off(mgr, loops=True):
     """Xarxa de seguretat BARATA per al canvi de mode: CC120 (All Sound Off) +
     CC123 (All Notes Off) als 16 canals, amb UN missatge reutilitzat.
+
+    Amb `loops=False` (canvi de mode) es salta els canals dels loops: el loop
+    de modes «continua sonant en canviar de mode», i aquest CC123 li tallava
+    les notes que tenia obertes. L'STOP hi passa amb tot (els loops ja s'han
+    esborrat abans, i si en quedés res penjat, l'ha d'apagar).
 
     32 missatges, no 192. mm_stop_all_sound() —que hi afegeix CC64, el pitch
     bend i 128 NoteOff explícits— porta escrit al seu docstring que és per al
@@ -110,7 +115,13 @@ def mm_all_notes_off(mgr):
     try:
         from adafruit_midi.control_change import ControlChange
         cc = ControlChange(120, 0, channel=0)
+        salta = ()
+        if not loops:
+            from motor.modeloop import canals_auxiliars
+            salta = canals_auxiliars(mgr.midi_out)[1:]
         for channel in range(16):
+            if channel in salta:
+                continue
             for ctrl in (120, 123):
                 cc.control = ctrl
                 cc.value = 0
@@ -139,8 +150,8 @@ _PERC = (35, 82)       # percussió GM: Acoustic Bass Drum … Open Triangle
 _ESCOMBRAT = (
     (None, 0, 128),    # canal de sortida: teclat i modes melòdics, tot el rang
     (9, _PERC[0], _PERC[1]),
-    (1, 24, 121),      # ACCOMP_CHANNEL: l'acompanyament (24-96) i el MODE DE FONS (kbd_fons)
-)
+    ('base', 24, 121), # la base: l'acompanyament (24-96) i el MODE DE FONS (kbd_fons)
+)                      # ('base' → modeloop.canals_auxiliars, segons el canal de sortida)
 
 
 def mm_stop_all_sound(mgr):
@@ -192,7 +203,11 @@ def mm_stop_all_sound(mgr):
         # 3×128 missatges, ~360 ms un sol cop en prémer STOP. La versió antiga
         # d'aquest pànic n'enviava més de 500 i bloquejava més d'un segon; la
         # diferència és que ara cada missatge serveix per a alguna cosa.
+        from motor.modeloop import canals_auxiliars
+        _base = canals_auxiliars(mgr.midi_out)[0]
         for canal, primera, ultima in _ESCOMBRAT:
+            if canal == 'base':
+                canal = _base
             for note in range(primera, ultima):
                 off.note = note
                 off.channel = canal
@@ -320,6 +335,12 @@ def mm_emergency_stop(mgr):
         mgr.effect_manager.deactivate()   # per si l'estat s'havia desincronitzat
     except Exception:
         pass
+    # Els flags globals els neteja qui crida mm_deactivate_efecte_temporal, no
+    # ella. Aquí no ho feia ningú: amb Sustain latched, STOP deixava
+    # sustain_active=True i mm_update no cridava mai més update() de cap mode
+    # («tot mut fins a tocar Sustain dos cops»).
+    mgr.sustain_active = False
+    mgr.pausa_active = False
 
     mm_stop_all_sound(mgr)
 

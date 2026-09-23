@@ -57,6 +57,7 @@ COLORS = (
 )
 
 _canals = None          # [PWMOut, PWMOut, PWMOut]
+_intensitat = 1.0       # 0..1, la de la capa activa (`bank['llum']`): escala BRILLANTOR
 _taula = None           # corba de gamma, 256 entrades
 
 
@@ -100,7 +101,7 @@ def color(r, g, b):
             # no es veia. La brillantor és una escala lineal de sortida, no un
             # color.
             v = int(max(0, min(255, v)) * CALIBRAT[i])
-            duty = int(taula[max(0, min(255, v))] * BRILLANTOR)
+            duty = int(taula[max(0, min(255, v))] * BRILLANTOR * _intensitat)
             c[i].duty_cycle = duty if CATODE_COMU else 65535 - duty
     except Exception:
         pass
@@ -135,9 +136,15 @@ _to = None
 _ultim = None
 
 
-def capa(rgb, mode='fix'):
-    """El color de la capa activa i com s'hi comporta el LED."""
-    global _capa, _mode, _nivell, _to, _ultim
+def capa(rgb, mode='fix', intensitat=None):
+    """El color de la capa activa, com s'hi comporta el LED i, si es diu,
+    amb quina intensitat (0..1, per sobre de BRILLANTOR: 1 = la de sempre)."""
+    global _capa, _mode, _nivell, _to, _ultim, _intensitat
+    if intensitat is not None:
+        try:
+            _intensitat = max(0.0, min(1.0, float(intensitat)))
+        except Exception:
+            _intensitat = 1.0
     try:
         _capa = (int(rgb[0]), int(rgb[1]), int(rgb[2]))
     except Exception:

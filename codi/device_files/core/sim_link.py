@@ -18,6 +18,12 @@ INTEGRITAT: cap error de serial/JSON/OLED pot llançar cap al bucle principal.
 POT_DEADBAND = 2      # ignora moviments de pot < 2 (soroll de l'ADC)
 HEARTBEAT = 0.5       # s — reenvia l'estat encara que no canviï
 RX_LIMIT = 256        # protecció: descarta brossa sense '\n'
+# Qui hi ha a l'altra banda? En obrir el port, l'app es presenta:
+#   {"s":"sim"}       → el simulador: mode controlador (com sempre)
+#   {"s":"pantalla"}  → la Pantalla de l'app: només hi van les línies de
+#                       core/pantalla; el dispositiu segueix sonant sol.
+# Sense presentació al cap d'HOLA_S (un amfitrió antic), es dóna per simulador.
+HOLA_S = 1.0
 
 
 def encode_input(mask, pots):
@@ -32,6 +38,11 @@ def handle_oled(display, line):
         return None
     try:
         import json
+        # A CircuitPython json.loads vol una CADENA: amb els bytes del port
+        # llançava (en silenci) i cap trama del navegador —ni la presentació,
+        # ni el diag— no s'entenia mai.
+        if not isinstance(line, str):
+            line = str(line, 'utf-8')
         d = json.loads(line)
     except Exception:
         return None
@@ -64,13 +75,15 @@ class SimLink:
             serial.timeout = 0          # lectures no bloquejants
         except Exception:
             pass
-        self._rx = bytearray()
+        self._rx = b''
         self._last_mask = -1
         self._last_pots = [-1, -1, -1]
         self._last_send = 0.0
         # El host ha demanat diagnòstic ({"s":"diag"}); el main el consumeix
         # i respon amb send_diag() (ell té accés a runner/gc/crashguard).
         self.diag_requested = False
+        self.mode = None            # None (esperant «hola») · 'sim' · 'pantalla'
+        self._obert = None          # quan s'ha obert el port (per a HOLA_S)
 
     def send_diag(self, info):
         """Respon el diagnòstic: línia "D <json>". Mai llança."""
@@ -89,13 +102,45 @@ class SimLink:
 
     def reset(self):
         """En entrar al mode controlador: força el primer enviament complet."""
-        self._rx = bytearray()
+        self._rx = b''
         self._last_mask = -1
         self._last_pots = [-1, -1, -1]
         self._last_send = 0.0
+        self.mode = None
+        self._obert = None
 
     def pump(self, mask, pots, now):
-        """Un cicle del mode controlador: envia canvis (+heartbeat) i pinta l'OLED."""
+        """Un cicle amb el port obert: llegeix el que arriba (la presentació
+        de l'app, trames OLED, diag) i, si l'altra banda és el simulador,
+        envia l'estat (canvis + heartbeat). Torna `self.mode`."""
+        if self._obert is None:
+            self._obert = now
+        # ── Trames entrants (abans d'enviar: la presentació decideix què som) ──
+        # RES de `del self._rx[:i]`: a CircuitPython un bytearray no admet
+        # esborrar per tall (TypeError), i com que aquí tot va embolcallat,
+        # cap línia del navegador no s'havia entès MAI al dispositiu (ni les
+        # trames OLED, ni el diag). tests/test_pantalla_qualsevol_port ho vigila.
+        try:
+            n = self.serial.in_waiting
+            if n:
+                rx = self._rx + self.serial.read(n)
+                while True:
+                    i = rx.find(b'\n')
+                    if i < 0:
+                        break
+                    s = handle_oled(self.display, bytes(rx[:i]))
+                    rx = rx[i + 1:]
+                    if s == 'diag':
+                        self.diag_requested = True
+                    elif s == 'sim' or s == 'pantalla':
+                        self.mode = s
+                self._rx = b'' if len(rx) > RX_LIMIT else rx
+        except Exception:
+            pass
+        if self.mode is None and now - self._obert >= HOLA_S:
+            self.mode = 'sim'           # amfitrió antic: no es presenta
+        if self.mode != 'sim':
+            return self.mode
         # ── Enviar estat (canvis o heartbeat) ──
         changed = (mask != self._last_mask)
         if not changed:
@@ -111,18 +156,4 @@ class SimLink:
                 self._last_send = now
             except Exception:
                 pass
-        # ── Trames OLED entrants ──
-        try:
-            n = self.serial.in_waiting
-            if n:
-                self._rx += self.serial.read(n)
-                while b'\n' in self._rx:
-                    i = self._rx.index(b'\n')
-                    piece = bytes(self._rx[:i])
-                    del self._rx[:i + 1]
-                    if handle_oled(self.display, piece) == 'diag':
-                        self.diag_requested = True
-                if len(self._rx) > RX_LIMIT:
-                    del self._rx[:]
-        except Exception:
-            pass
+        return self.mode

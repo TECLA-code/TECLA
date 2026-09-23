@@ -779,7 +779,9 @@ class ConfigManager:
         if 'available_effects' in self.config:
             return self.config['available_effects']
         # Valor per defecte si no existeix - Efectes seleccionats
-        return ['Sustain', 'Pausa', 'Gate', 'Modulation', 'Pitch Bend']
+        # 'PitchBend' és com el registra effects/effect_manager.EFFECT_INDEX;
+        # amb 'Pitch Bend' (espai) el cicle hi arribava i el botó quedava mort.
+        return ['Sustain', 'Pausa', 'Gate', 'Modulation', 'PitchBend']
     
     def set_available_effects(self, effects):
         """Estableix la llista d'efectes disponibles"""

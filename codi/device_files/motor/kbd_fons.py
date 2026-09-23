@@ -107,8 +107,16 @@ class Fons:
         # també van així pel canal del fons, no pel del teclat.
         if self._midi_real is None:
             self._midi_real = self.mgr.midi_out
-            self.mgr.midi_out = MidiCanal(self._midi_real, FONS_CHANNEL)
-        if not self.mgr.set_mode(nom):
+            from motor.modeloop import canals_auxiliars
+            self.mgr.midi_out = MidiCanal(self._midi_real, canals_auxiliars(self._midi_real)[0])
+        # Els potes directes del fons van congelats (mana la capa de sota):
+        # el gestor no ha de dir «🎚 Pots: …», que aquí no seria veritat.
+        self.mgr._diu_potes = False
+        try:
+            ok = self.mgr.set_mode(nom)
+        finally:
+            self.mgr._diu_potes = True
+        if not ok:
             self._restaura_midi()
             return False
         mode = self.mgr.current_mode

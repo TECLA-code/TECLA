@@ -51,6 +51,10 @@ class EffectManager:
         """Activa un efecte pel seu nom (desactiva qualsevol altre)."""
         if self.active_name == name:
             return True
+        if name not in EFFECT_INDEX:
+            # 'Loop', 'Config Modes', 'Harmonia Negativa' no són del gestor:
+            # no es pot desactivar l'efecte real per un nom que no es carregarà.
+            return False
         # Deactivate current
         self.deactivate()
         # Activate new

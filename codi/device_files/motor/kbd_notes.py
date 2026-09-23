@@ -24,11 +24,17 @@ _NOTE_NAMES = ('C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B')
 
 
 def _console_on():
+    """Algú escolta la Pantalla? Consola oberta O el port de dades fent de
+    pantalla (core/pantalla.escolten): tots els testimonis passen per aquí."""
     try:
-        import supervisor
-        return supervisor.runtime.serial_connected
+        from core.pantalla import escolten
+        return escolten()
     except Exception:
-        return False
+        try:
+            import supervisor
+            return supervisor.runtime.serial_connected
+        except Exception:
+            return False
 
 
 # Els testimonis per a la Pantalla van pel canal de core/pantalla.py, que

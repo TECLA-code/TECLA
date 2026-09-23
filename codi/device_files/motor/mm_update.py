@@ -97,34 +97,57 @@ def _modeloop(mgr):
 
 
 def _report_mode_pots(mgr, pot_values):
-    """Testimoni de potes per a la PANTALLA (animacions dels modes): "Pot X: 64".
-    Primera lectura en silenci (sync), llindar 3, i mai no llança.
-    Els noms són els FÍSICS del dispositiu (X=pots[1], Y=pots[0], Z=pots[2]),
-    els mateixos que fa servir la capa de teclat: girar el pot X ha de dir "X"."""
+    """Testimoni dels potes DIRECTES del mode per a la PANTALLA, amb el nom
+    de la VARIABLE que toquen: «Pot Densitat: 64». Els noms són els tres
+    primers comandaments del mode (X=pots[1], Y=pots[0], Z=pots[2]), els
+    mateixos que l'app ensenya en triar-lo («🎚 Pots: …»).
+
+    Es diu el valor que el mode fa servir: si el mode recull els potes
+    (base_mode.potes: cap pot mana fins que es mou 4 passos), un pot que
+    encara no s'ha recollit no es diu. Abans es deia «Pot X: 64» abans de la
+    recollida, i el número de la pantalla no era el que sonava.
+    Regles del ritme a motor/potdit. Mai no llança."""
     try:
-        from motor.kbd_notes import _console_on, testimoni
-        if not _console_on():
-            return
         _lay = getattr(mgr, '_potcfg', None)
         if _lay is not None and _lay.active:
             return                      # la capa ja diu "Pot Volum: 96"
-        c = getattr(mgr, '_pot_report_cache', None)
-        if c is None:
-            c = {}
-            mgr._pot_report_cache = c
-        for i, nom in ((1, 'X'), (0, 'Y'), (2, 'Z')):
-            if i >= len(pot_values):
+        mode = mgr.current_mode
+        dit = getattr(mgr, '_potdit', None)
+        if dit is None:
+            from motor.potdit import PotDit
+            dit = mgr._potdit = PotDit()
+        cmds = mode.comandaments() if hasattr(mode, 'comandaments') else ()
+        llavor = getattr(mgr, '_potdit_llavor', False)
+        mgr._potdit_llavor = False
+        r = getattr(mode, '_recull', None)
+        neg = getattr(mode, 'neg_active', False)
+        for ax, i in ((0, 1), (1, 0), (2, 2)):
+            if ax >= len(cmds) or i >= len(pot_values):
                 break
-            v = int(pot_values[i])
-            if nom not in c:
-                c[nom] = v
+            nom = cmds[ax]
+            if not nom or nom == '—':
                 continue
-            if -3 < (v - c[nom]) < 3:
+            if llavor:
+                dit.llavor(nom, int(pot_values[i]))   # acaba d'entrar: on el vas deixar
                 continue
-            c[nom] = v
-            testimoni("Pot %s: %d" % (nom, v))
+            if r is not None and r.get(ax, -999) != -1:
+                continue                # el mode encara no l'ha recollit
+            if ax == 2 and neg:
+                continue                # Z tria l'eix d'harmonia negativa
+            dit.mou(nom, int(pot_values[i]))
     except Exception:
         pass
+
+
+def noms_potes(mode):
+    """«A · B · C»: els tres potes directes del mode, per a la Pantalla."""
+    try:
+        cmds = list(mode.comandaments())[:3] if hasattr(mode, 'comandaments') else []
+    except Exception:
+        cmds = []
+    while len(cmds) < 3:
+        cmds.append('—')
+    return ' · '.join((c if c else '—') for c in cmds)
 
 
 def mode_tempo(mode):
@@ -159,27 +182,37 @@ def _report_mode_bpm(mgr):
     """Testimoni de TEMPO del mode per a la PANTALLA: "♩ 96 BPM". Es dispara
     amb el canvi de tempo (no amb el moviment del pot), així el número queda
     exacte quan es deixa el pot quiet. Primer valor de cada mode en silenci:
-    no ha de tapar el nom del mode que s'acaba d'activar."""
+    no ha de tapar el nom del mode que s'acaba d'activar.
+
+    Passa pel testimoni de potes (motor/potdit): abans deia una línia per
+    cada 2 BPM sense cap límit de ritme, i girar el pot de Tempo eren 50
+    línies en un segon contra el sostre de 30 de core/pantalla: s'hi perdien
+    els valors del pot i el tempo final. Llindar 2 BPM, com abans."""
     try:
-        from motor.kbd_notes import _console_on, testimoni
+        from motor.kbd_notes import _console_on
         if not _console_on():
             return
         t = mode_tempo(mgr.current_mode)
         if t is None:
             return
         bpm, sub = t
-        last = getattr(mgr, '_bpm_report_last', None)
-        if last is None or getattr(mgr, '_bpm_report_mode', None) != mgr.current_mode_name:
-            mgr._bpm_report_mode = mgr.current_mode_name
-            mgr._bpm_report_last = (bpm, sub)
+        dit = getattr(mgr, '_potdit', None)
+        if dit is None:
+            from motor.potdit import PotDit
+            dit = mgr._potdit = PotDit()
+        nou = getattr(mgr, '_bpm_report_mode', None) != mgr.current_mode_name
+        canvi_sub = getattr(mgr, '_bpm_report_sub', None) != sub
+        mgr._bpm_report_mode = mgr.current_mode_name
+        mgr._bpm_report_sub = sub
+        if nou:
+            dit.llavor('_bpm', bpm)
             return
-        if sub == last[1] and -2 < (bpm - last[0]) < 2:
-            return
-        mgr._bpm_report_last = (bpm, sub)
+        if canvi_sub:
+            dit.oblida('_bpm')          # la subdivisió canvia: es diu encara que el número no
         if sub > 1:
-            testimoni("♩ %d BPM 1/%d" % (bpm, sub * 4))
+            dit.mou('_bpm', bpm, "♩ %%d BPM 1/%d" % (sub * 4))
         else:
-            testimoni("♩ %d BPM" % bpm)
+            dit.mou('_bpm', bpm, "♩ %d BPM")
     except Exception:
         pass
 
@@ -217,8 +250,9 @@ def mm_update(mgr, pot_values, button_states):
                 _pm[0] = pot_values[0]; _pm[1] = pot_values[1]; _pm[2] = pot_values[2]
         _volta = (getattr(mgr, '_volta', 0) + 1) & 7
         mgr._volta = _volta
-        if mgr.current_mode is not None and potes_moguts:
-            _report_mode_pots(mgr, pot_values)
+        _dit = getattr(mgr, '_potdit', None)
+        if _dit is not None:
+            _dit.tick()                 # el pot aturat diu on ha quedat
 
         # Motor del loop MIDI (només si s'ha fet servir; el mòdul és lazy)
         _lp = getattr(mgr, '_modeloop', None)
@@ -402,6 +436,10 @@ def mm_update(mgr, pot_values, button_states):
                     mgr._frozen_pots = None
                     pots_for_mode = pot_values
                 mode_status = mgr.current_mode.update(pots_for_mode, filtered)
+                if potes_moguts or getattr(mgr, '_potdit_llavor', False):
+                    # DESPRÉS de l'update: el mode ja ha recollit (o no) el pot,
+                    # i el que es diu és el que fa servir.
+                    _report_mode_pots(mgr, pot_values)
                 if potes_moguts or _volta == 0:
                     _report_mode_bpm(mgr)   # el tempo ja és el d'aquest gir de pot
                 if isinstance(mode_status, dict):

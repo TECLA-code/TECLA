@@ -118,7 +118,10 @@ class _MockMIDI:
         elif t in ('_ControlChange', 'ControlChange'):
             _js_midi_send('control_change', int(msg.control), int(msg.value), ch)
         elif t in ('_PitchBend', 'PitchBend'):
-            _js_midi_send('pitchwheel', int(msg.pitch_bend), 0, ch)
+            # MIDI: 0..16383 amb el centre a 8192 · webMidi.send('pitchwheel'):
+            # -8192..8191 amb el centre a 0. Sense restar, tot valor >= 8191
+            # (el centre inclòs) arribava com a bend a fons amunt.
+            _js_midi_send('pitchwheel', int(msg.pitch_bend) - 8192, 0, ch)
 
 
 # ── Instal·lar tots els mocks ─────────────────────────────────────────────────

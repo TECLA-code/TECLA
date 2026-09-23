@@ -327,6 +327,13 @@ class KeyboardMode:
                 _accomp_stop(self)
             except Exception:
                 pass
+        # La progressió en una tecla
+        if getattr(self, '_prog', None) is not None:
+            try:
+                from motor.kbd_progressio import atura as _prog_atura
+                _prog_atura(self)
+            except Exception:
+                pass
         # I el mode de fons (canvi de capa: es descarrega)
         if getattr(self, '_fons', None) is not None:
             try:
@@ -334,6 +341,8 @@ class KeyboardMode:
                 _fons_atura(self)
             except Exception:
                 pass
+        # (abans de stop_all_notes, que oblida el bend per al proper update)
+        _torcat = getattr(self, '_last_pitch_bend', None) not in (None, 8192)
         self.stop_all_notes()
         self.active_notes.clear()
         for i in range(15):
@@ -345,6 +354,16 @@ class KeyboardMode:
             self.midi.send(ControlChange(64, 0))  # Sustain OFF
             self.midi.send(ControlChange(91, 0))  # Reverb OFF
             self.midi.send(ControlChange(93, 0))  # Chorus OFF
+            # El gate deixava CC11 on li tocava (a 0 la meitat de les vegades)
+            # i la capa de modes següent sonava MUDA fins que algú tornés a
+            # enviar expressió; i el pot de Pitch Bend deixava el canal torçat
+            # (els modes sonaven dos semitons amunt fins a l'STOP).
+            if self.gate_enabled:
+                self.gate_enabled = False
+                self.midi.send(ControlChange(11, 127))
+            if _torcat:
+                self.midi.send(PitchBend(8192))
+            self._last_pitch_bend = None
         except Exception:
             pass
         
@@ -392,18 +411,10 @@ class KeyboardMode:
             if notes_set:
                 _viva |= notes_set
 
-        _sostinguda = None
-        if self.loop_state:
-            try:
-                from motor.kbd_looper import loop_sostenint as _sostinguda
-            except Exception:
-                _sostinguda = None
-
+        # (El loop no hi compta: sona pel seu canal i aquest NoteOff no l'afecta.)
         for note in self.arp_sounding:
             if note in _viva:
                 continue        # una tecla la sosté: l'apagarà ella
-            if _sostinguda is not None and _sostinguda(self, note):
-                continue        # el loop la sosté: l'apagarà el seu note-off
             try:
                 off.note = note
                 self.midi.send(off)
@@ -427,6 +438,10 @@ class KeyboardMode:
             oblida(self)
         except Exception:
             pass
+        # El pànic (mm_stop_all_sound) centra el bend a tots els canals: la
+        # memòria del dedupe s'oblida perquè el pot, en tornar-se a aplicar,
+        # torni a sortir (si no, el synth es quedava centrat amb el pot torçat).
+        self._last_pitch_bend = None
         # Primer, desactivar sustain per assegurar que cap nota queda enganxada
         try:
             self.midi.send(ControlChange(64, 0))  # Sustain OFF (per si el synth en tenia)
@@ -486,6 +501,10 @@ class KeyboardMode:
         # Rellotge de la base d'acompanyament (només si s'ha creat el motor)
         if self._accomp is not None:
             self._accomp.tick(time.monotonic())
+        # I el de la progressió en una tecla (kbd_progressio, mandrós)
+        _pg = getattr(self, '_prog', None)
+        if _pg is not None:
+            _pg.tick(time.monotonic())
 
         # El mode de fons, si n'hi ha (kbd_fons, mandrós: no costa res si no s'usa)
         _f = getattr(self, '_fons', None)
@@ -525,13 +544,17 @@ class KeyboardMode:
             pass
     
     def _send_pitch_bend(self, pitch_value):
-        """Envia un PitchBend MIDI a tots els canals
+        """Envia un PitchBend MIDI pel canal del teclat.
         Args:
-            pitch_value: Valor de pitch bend (-8192 a +8191, 0 = centrat)
+            pitch_value: valor MIDI de 14 bits, 0..16383 (8192 = centrat, afinat)
+        El loop del teclat sona pel seu canal, o sigui que aquest bend no el
+        torça; però si s'està gravant (o en overdub), el bend queda dins del
+        loop i es repetirà amb ell.
         """
         # NOMÉS quan el valor canvia. Abans s'enviava a cada volta del bucle
         # (500 per segon amb el pot quiet): inundava la sortida USB-MIDI i les
         # notes sortien darrere de la cua — el "retard" que es notava tocant.
+        pitch_value = max(0, min(16383, int(pitch_value)))
         if getattr(self, '_last_pitch_bend', None) == pitch_value:
             return
         self._last_pitch_bend = pitch_value
@@ -541,6 +564,10 @@ class KeyboardMode:
         except Exception as e:
             if self.debug:
                 print(f"Error enviant PitchBend: {e}")
+        if self.loop_state:
+            # Import lazy: només amb loop, i només quan el pot es mou
+            from motor.kbd_looper import record_bend
+            record_bend(self, pitch_value, time.monotonic())
             
     def _build_fn_mappings(self):
         from motor.kbd_buttons import build_fn_mappings
@@ -705,14 +732,17 @@ class KeyboardMode:
         off = _note_off_msg()
         off.velocity = 0
         off.channel = None
+        premudes = self._altures_daltres_botons(-1)
         for note in due:
+            self._sustain_pending.pop(note, None)
+            if note in premudes:
+                continue                # tornada a prémer: l'apagarà el seu botó
             try:
                 off.note = note
                 self.midi.send(off)
             except Exception:
                 pass
             self.active_notes.discard(note)
-            self._sustain_pending.pop(note, None)
 
     def _flush_sustain_pending(self):
         """Atura immediatament totes les notes amb release ajornat."""
@@ -728,6 +758,14 @@ class KeyboardMode:
                 pass
             self.active_notes.discard(note)
         self._sustain_pending = {}
+
+    def _altures_daltres_botons(self, button_index):
+        """Les altures que algun ALTRE botó té premudes ara mateix."""
+        altres = set()
+        for i, notes in self.button_notes.items():
+            if i != button_index and notes:
+                altres |= notes
+        return altres
 
     def _note_off_for_button(self, button_index, from_release=False):
         """Para totes les notes associades a un botó específic
@@ -749,7 +787,10 @@ class KeyboardMode:
             if notes_set:
                 off_t = None if self.sustain_release_time < 0 else (
                     time.monotonic() + self.sustain_release_time)
+                altres = self._altures_daltres_botons(button_index)
                 for note in list(notes_set):
+                    if note in altres:
+                        continue        # un altre botó la sosté: l'apagarà ell
                     self._sustain_pending[note] = off_t
                 notes_set.clear()
             return
@@ -758,28 +799,24 @@ class KeyboardMode:
             notes_set = self.button_notes.get(button_index, set())
             if not notes_set:
                 return
+            # Dos acords que comparteixen una altura (Do i Sol comparteixen el
+            # Sol; en diatònic passa a cada canvi): deixar anar el primer
+            # tallava la nota que el segon encara sosté. MIDI no compta
+            # propietaris: qui encara la té premuda és qui l'ha d'apagar.
+            altres = self._altures_daltres_botons(button_index)
 
             # Missatge POOLED: cap al·locació al camí calent (vegeu _note_on)
             from motor.base_mode import _note_off_msg
             off = _note_off_msg()
             off.velocity = 0
             off.channel = None
-            # Si hi ha loop sonant, cal saber quines altures sosté ell: deixar
-            # anar una tecla que el loop també toca li tallava la SEVA nota
-            # (MIDI no compta propietaris: un NoteOff apaga i prou). L'import
-            # és lazy i només quan hi ha loop, o sigui que el camí normal no
-            # el paga mai.
-            _sostinguda = None
-            if self.loop_state:
-                try:
-                    from motor.kbd_looper import loop_sostenint as _sostinguda
-                except Exception:
-                    _sostinguda = None
+            # El loop sona pel SEU canal (kbd_looper.LOOP_CHANNEL): aquest
+            # NoteOff, pel canal del teclat, no li pot tallar cap nota encara
+            # que sigui la mateixa altura. Abans compartien canal i calia
+            # mirar qui sostenia què.
             for note in list(notes_set):
-                if _sostinguda is not None and _sostinguda(self, note):
-                    # El loop la sosté: la tancarà el seu note-off programat.
-                    self.active_notes.discard(note)
-                    continue
+                if note in altres:
+                    continue            # segueix viva: és d'un altre botó
                 try:
                     off.note = note
                     self.midi.send(off)

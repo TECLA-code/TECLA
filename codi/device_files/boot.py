@@ -154,11 +154,19 @@ except Exception:
     pass
 
 # ── 4. Etiqueta del disc i nom del producte ────────────────────────────────
+# Sense `disk_label.txt` el disc es diu TECLA: un sistema de fitxers creat per
+# un CircuitPython d'abans (el d'un TECLA antic) conserva «CIRCUITPY» encara
+# que la UF2 del motor ja porti TECLA de fàbrica. Només s'escriu si canvia:
+# posar l'etiqueta és una escriptura a la flash a cada arrencada.
+label = 'TECLA'
 try:
     with open('/config/disk_label.txt', 'r') as f:
-        label = f.read().strip()[:11].upper()
-    if label:
-        m = storage.getmount("/")
+        label = f.read().strip()[:11].upper() or 'TECLA'
+except Exception:
+    pass
+try:
+    m = storage.getmount("/")
+    if m.label != label:
         m.label = label
 except Exception:
     pass

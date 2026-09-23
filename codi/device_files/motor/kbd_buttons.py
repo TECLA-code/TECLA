@@ -46,6 +46,7 @@ def build_fn_mappings(kbd):
     kbd._fn_accomp_btn = -1
     kbd._fn_fons_btn = -1
     kbd._fn_fons_btns = ()          # TOTES les tecles 'mode': cada una amb el seu fons
+    kbd._fn_prog_btns = ()          # TOTES les tecles 'progression': cada una amb la seva
     kbd._note_buttons = []
     kbd._note_btn_to_slot = {}
     slot = 0
@@ -91,6 +92,8 @@ def build_fn_mappings(kbd):
             if kbd._fn_fons_btn < 0:
                 kbd._fn_fons_btn = i
             kbd._fn_fons_btns = kbd._fn_fons_btns + (i,)
+        elif f == 'progression':
+            kbd._fn_prog_btns = kbd._fn_prog_btns + (i,)
 
 
 def process_keyboard_buttons(kbd, button_states):
@@ -155,6 +158,11 @@ def process_keyboard_buttons(kbd, button_states):
             elif btn_idx in kbd._fn_fons_btns:
                 # Mode de FONS (kbd_fons): gest al deixar anar
                 kbd._fons_btn_press_time = current_time
+            elif btn_idx in kbd._fn_prog_btns:
+                # Progressió sencera en una tecla (mòdul mandrós): en PRÉMER,
+                # perquè l'acord caigui on el toques
+                from motor.kbd_progressio import handle_button as _prog_gesture
+                _prog_gesture(kbd, btn_idx, current_time)
             elif btn_idx == kbd._fn_synth_wave_btn:
                 # Cada clic cicla la forma d'ona del sinte (CC70 → motor d'àudio)
                 idx = (getattr(kbd, '_synth_wave_idx', 0) + 1) % 4
@@ -223,6 +231,13 @@ def process_keyboard_buttons(kbd, button_states):
                     kbd._arp_just_activated = False
                     diu("🎶 Arpeggiador DESACTIVAT")
                 elif not kbd.arp_mode_active:
+                    # Les tecles que ja sonen passen a mans de l'arp: els seus
+                    # NoteOn s'apaguen ARA, o no els apagaria ningú (la branca
+                    # de l'arp no crida _note_off_for_button en deixar-les anar,
+                    # i stop_arp_notes respecta el que és a button_notes).
+                    for _i in kbd._note_buttons:
+                        if kbd.button_notes.get(_i):
+                            kbd._note_off_for_button(_i)
                     kbd.arp_mode_active = True
                     kbd.arp_notes = []
                     kbd.arp_button_order = []

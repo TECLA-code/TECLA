@@ -167,6 +167,18 @@ class Accompaniment:
             self._next_t = now
         return True
 
+    def add_fn(self, fn, channel, now=0.0, tipus='fn'):
+        """Un patró qualsevol, (n, ctx, rng) → ((nota, dur, vel), …): el que
+        fa servir la funció 'progression' (motor/kbd_progressio.py)."""
+        self.remove_pattern(channel)
+        self.patterns.append({'type': tipus, 'fn': fn, 'channel': channel,
+                              'rng': _mulberry(0x9E37 + channel * 131)})
+        if not self._running:
+            self._running = True
+            self._step = 0
+            self._next_t = now
+        return True
+
     def remove_pattern(self, channel):
         self._channel_off(channel)
         self.patterns = [p for p in self.patterns if p['channel'] != channel]
@@ -263,7 +275,17 @@ class Accompaniment:
 
 ACCOMP_PATTERN_IDS = ('pols', 'baix', 'arpegi', 'sequencia')
 ACCOMP_PATTERN_NAMES = ('Pols', 'Baix', 'Arpegi', 'Sequencia')
-ACCOMP_CHANNEL = 1   # canal MIDI 0-indexat (el teclat toca pel 0)
+ACCOMP_CHANNEL = 1   # canal MIDI 0-indexat amb el canal de sortida per defecte (0)
+
+
+def _canal(kbd):
+    """El canal de la base segons el canal de sortida configurat (el mateix
+    que el mode de fons: motor/modeloop.canals_auxiliars)."""
+    try:
+        from motor.modeloop import canals_auxiliars
+        return canals_auxiliars(kbd.midi)[0]
+    except Exception:
+        return ACCOMP_CHANNEL
 
 _KEY_OFFSET = {'C': 0, 'C#': 1, 'D': 2, 'Eb': 3, 'E': 4, 'F': 5,
                'F#': 6, 'G': 7, 'Ab': 8, 'A': 9, 'Bb': 10, 'B': 11}
@@ -331,11 +353,11 @@ def handle_button(kbd, held, now):
     sync_context(kbd)
     if idx < len(ACCOMP_PATTERN_IDS):
         eng.set_tempo(110)   # els integrats tornen al tempo estàndard
-        eng.add_pattern(ACCOMP_PATTERN_IDS[idx], ACCOMP_CHANNEL, now)
+        eng.add_pattern(ACCOMP_PATTERN_IDS[idx], _canal(kbd), now)
         diu("Base: %s" % ACCOMP_PATTERN_NAMES[idx])
     else:
         spec = customs[idx - len(ACCOMP_PATTERN_IDS)]
-        eng.add_custom(spec, ACCOMP_CHANNEL, now)
+        eng.add_custom(spec, _canal(kbd), now)
         diu("Base: %s" % spec.get('name', 'Custom'))
 
 

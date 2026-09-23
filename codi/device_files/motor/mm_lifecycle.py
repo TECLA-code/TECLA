@@ -239,7 +239,7 @@ def mm_load_config(mgr):
         from motor.mm_cleanup import mm_stop_current_mode, mm_all_notes_off
         previous_mode_name = mgr.current_mode_name
         mm_stop_current_mode(mgr)
-        mm_all_notes_off(mgr)
+        mm_all_notes_off(mgr, loops=False)
         if previous_mode_name and previous_mode_name != 'Teclat':
             mm_unload_mode(mgr, previous_mode_name)
         mgr.current_mode = None
@@ -296,7 +296,15 @@ def mm_load_config(mgr):
             for btn, efecte_data in efectes_preservats.items():
                 if btn in mgr.efectes_temporals and \
                         mgr.efectes_temporals[btn]['tipus'] == efecte_data['tipus']:
-                    activat = mgr.effect_manager.activate(efecte_data['tipus'])
+                    tipus = efecte_data['tipus']
+                    if tipus in ('Loop', 'Config Modes', 'Harmonia Negativa'):
+                        # No són del gestor d'efectes: el seu estat viu a part
+                        # (el loop, les capes de potes, el botó 16). Es conserva
+                        # el latch i prou; passar-los per activate() desactivava
+                        # l'efecte de debò (Sustain) sense tocar el seu latch.
+                        activat = True
+                    else:
+                        activat = mgr.effect_manager.activate(tipus)
                     if activat:
                         mgr.efectes_temporals[btn]['active'] = True
                         mgr.efectes_temporals[btn]['pre_mode'] = efecte_data['pre_mode']
@@ -461,7 +469,7 @@ def mm_set_mode(mgr, mode_name, force_reload=False, capture_state=True):
             mm_stop_current_mode(mgr)
             # Xarxa de seguretat de 32 missatges, no el pànic de 192: el pànic
             # sencer és del botó STOP (vegeu mm_all_notes_off).
-            mm_all_notes_off(mgr)
+            mm_all_notes_off(mgr, loops=False)
             mgr.current_mode = None
             mgr.current_mode_name = None
             if previous_mode and previous_mode != 'Teclat':
@@ -485,6 +493,7 @@ def mm_set_mode(mgr, mode_name, force_reload=False, capture_state=True):
         # la pantalla era «Crackle | RAM lliure: 45000». La Pantalla és de
         # l'usuari; els diagnòstics van a una altra banda.
         diu(f"Mode: {mode_name}")
+        mgr._potdit_llavor = True       # els potes són on els vas deixar (mm_update)
         mgr.current_mode = mgr.modes[mode_name]
         mgr.current_mode_name = mode_name
         mgr.last_mode_change = time.monotonic()
@@ -508,6 +517,13 @@ def mm_set_mode(mgr, mode_name, force_reload=False, capture_state=True):
                 _lay.set_mode(mgr.current_mode)
                 if _lay.active:
                     diu("🎚 Pots→mode: %s" % _lay.name())
+            # Sense capa activa, els potes manen sobre el mode: es diu QUÈ
+            # toquen («🎚 Pots: Tempo · Swing · Densitat»), com fan els modes
+            # de fons, per saber què s'està modificant. Un mode de fons ho
+            # calla (els seus potes directes van congelats: kbd_fons).
+            if (_lay is None or not _lay.active) and getattr(mgr, '_diu_potes', True):
+                from motor.mm_update import noms_potes
+                diu("🎚 Pots: %s" % noms_potes(mgr.current_mode))
         except Exception as e:
             print(f"Error comandaments {mode_name}: {e}")
 

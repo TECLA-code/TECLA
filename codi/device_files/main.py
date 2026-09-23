@@ -135,11 +135,16 @@ class TeclaHardware:
             b = bank if bank is not None else (self.config_manager.get_current_bank() or {})
             rgb = b.get('color')
             mode_led = b.get('led', 'fix')       # fix · pols · to (core/llum)
+            # La intensitat de la capa, 0-100 (%). Sense la clau, la de sempre.
+            try:
+                intens = max(0, min(100, int(b.get('llum', 100)))) / 100.0
+            except Exception:
+                intens = 1.0
             if rgb and len(rgb) == 3:
-                llum.capa(rgb, mode_led)
+                llum.capa(rgb, mode_led, intens)
                 return
             from core import personalitat
-            llum.capa(llum.COLORS[int(personalitat.actual()) % len(llum.COLORS)], mode_led)
+            llum.capa(llum.COLORS[int(personalitat.actual()) % len(llum.COLORS)], mode_led, intens)
         except Exception:
             pass
 
@@ -245,6 +250,15 @@ class TeclaHardware:
         if self.mode_manager:
             from motor.mm_update import mm_deactivate_efectes_no_persistents
             mm_deactivate_efectes_no_persistents(self.mode_manager)
+            # El loop de modes es conserva (continua sonant des del bucle
+            # principal), però una presa OBERTA es tanca: si no, gravaria el
+            # teclat fins a tornar a la capa de modes.
+            _lp = getattr(self.mode_manager, '_modeloop', None)
+            if _lp is not None:
+                try:
+                    _lp.tanca_presa(time.monotonic())
+                except Exception:
+                    pass
         # Aturar i descarregar el mode actiu ABANS de crear el teclat: evita
         # notes penjades (el mode deixaria de rebre update() i no enviaria mai
         # els NoteOff) i allibera RAM per a la instància nova.
@@ -759,6 +773,8 @@ def main():
     # En desconnectar, el firmware reprèn el funcionament autònom.
     _simlink = None
     _sim_ctrl_active = False
+    _sim_obert = False          # el port de dades és obert (encara no se sap qui)
+    _pantalla_dades = False     # …i és la Pantalla de l'app (core/pantalla.dades)
     try:
         import usb_cdc as _usb_cdc
         if _usb_cdc.data is not None:
@@ -766,6 +782,40 @@ def main():
             _simlink = SimLink(_usb_cdc.data, hardware.display_manager)
     except Exception:
         _simlink = None
+
+    # ── La Pantalla de l'app: TECLA es presenta a qui s'hi connecta ────────
+    # TECLA exposa dos ports USB que des de l'ordinador són iguals (a Windows,
+    # dos «COM»). Abans la Pantalla només servia per la consola i l'havia
+    # d'endevinar per descart; ara qualsevol port val: la consola s'anuncia
+    # quan algú l'obre (DTR), i el port de dades quan l'app hi diu
+    # {"s":"pantalla"}. La presentació és «⌁ TECLA v…» + la capa i el mode.
+    _versio = ''
+    try:
+        with open('tecla_version.txt') as _fv:
+            _versio = _fv.read().strip()
+    except Exception:
+        pass
+    _consola_ant = False
+    try:
+        import supervisor as _sup
+    except Exception:
+        _sup = None
+
+    def _anuncia(via):
+        try:
+            from core import pantalla as _pant
+            _capa = ''
+            try:
+                _capa = config_manager.get_current_bank().get('name', '')
+            except Exception:
+                pass
+            _mode = None
+            if (mode_manager is not None and not hardware.keyboard_mode_active
+                    and getattr(mode_manager, 'current_mode', None) is not None):
+                _mode = mode_manager.current_mode_name
+            _pant.anuncia(_versio, _capa, _mode, via)
+        except Exception:
+            pass
 
     # Gest de canvi de PERSONALITAT: les quatre cantonades, 3 s. Tota la
     # lògica és a core/personalitat.vigila() i les tres personalitats hi
@@ -852,39 +902,83 @@ def main():
                     # Si el gest es completa, vigila() no torna: reinicia en dur.
                     _pers_mod.vigila(button_states, current_time, _silencia)
 
-                # ── Mode CONTROLADOR: el simulador de l'app està connectat ──
+                # ── L'entrada de la consola es BUIDA: ningú no la llegeix ──
+                # mentre l'instrument corre, i el FIFO USB (256 bytes) es
+                # quedava ple per sempre amb el que qualsevol programa hi
+                # hagués escrit un dia. Ple, el port ja no accepta res: ni el
+                # Ctrl-C ×3 per aturar. Es llegeix i es llença (cada 8 voltes).
+                if (_pols_voltes & 7) == 0:
+                    try:
+                        _nc = _usb_cdc.console.in_waiting
+                        if _nc:
+                            _usb_cdc.console.read(_nc)
+                    except Exception:
+                        pass
+
+                # ── La consola: qui l'obre (DTR) rep la presentació ────────
+                try:
+                    _sc = bool(_sup.runtime.serial_connected) if _sup else False
+                except Exception:
+                    _sc = False
+                if _sc != _consola_ant:
+                    _consola_ant = _sc
+                    if _sc:
+                        _anuncia('consola')
+
+                # ── El port de dades: simulador (mode controlador) o Pantalla ──
                 if _simlink is not None:
                     if _simlink.connected:
-                        if not _sim_ctrl_active:
-                            _sim_ctrl_active = True
+                        if not _sim_obert:
+                            _sim_obert = True
                             _simlink.reset()
-                            # Silenciar el so local: mentre el simulador mana,
-                            # el que sona és el navegador (mirall exacte).
-                            try:
-                                if hardware.keyboard_mode:
-                                    hardware.keyboard_mode.stop_all_notes()
-                                if mode_manager:
-                                    mode_manager.stop_all_sound()
-                            except Exception:
-                                pass
-                            print("Simulador connectat: mode controlador")
                         _mask = 0
                         for _bi in range(min(16, len(button_states))):
                             if button_states[_bi]:
                                 _mask |= (1 << _bi)
-                        _simlink.pump(_mask, pot_values, current_time)
-                        if _simlink.diag_requested:
-                            _simlink.diag_requested = False
+                        _qui = _simlink.pump(_mask, pot_values, current_time)
+                        if _qui == 'sim':
+                            if not _sim_ctrl_active:
+                                _sim_ctrl_active = True
+                                # Silenciar el so local: mentre el simulador mana,
+                                # el que sona és el navegador (mirall exacte).
+                                try:
+                                    if hardware.keyboard_mode:
+                                        hardware.keyboard_mode.stop_all_notes()
+                                    if mode_manager:
+                                        mode_manager.stop_all_sound()
+                                except Exception:
+                                    pass
+                                print("Simulador connectat: mode controlador")
+                            if _simlink.diag_requested:
+                                _simlink.diag_requested = False
+                                try:
+                                    _simlink.send_diag({
+                                        'v': '3.2', 'ram': gc.mem_free() if gc else 0})
+                                except Exception:
+                                    pass
+                            time.sleep(0.005)
+                            continue
+                        elif _qui == 'pantalla' and not _pantalla_dades:
+                            _pantalla_dades = True
                             try:
-                                _simlink.send_diag({
-                                    'v': '3.2', 'ram': gc.mem_free() if gc else 0})
+                                from core import pantalla as _pant
+                                _pant.dades(_usb_cdc.data)
                             except Exception:
                                 pass
-                        time.sleep(0.005)
-                        continue
-                    elif _sim_ctrl_active:
-                        _sim_ctrl_active = False
-                        print("Simulador desconnectat: mode autònom")
+                            _anuncia('dades')
+                        # (esperant la presentació: el dispositiu segueix sonant)
+                    elif _sim_obert:
+                        _sim_obert = False
+                        if _sim_ctrl_active:
+                            _sim_ctrl_active = False
+                            print("Simulador desconnectat: mode autònom")
+                        if _pantalla_dades:
+                            _pantalla_dades = False
+                            try:
+                                from core import pantalla as _pant
+                                _pant.dades(None)
+                            except Exception:
+                                pass
 
                 # Comprovar canvis de mode (inclou gestió del botó teclat)
                 new_mode = hardware.check_mode_change(mode_names, button_states)
@@ -899,12 +993,25 @@ def main():
                         hardware.display_event('show_mode', new_mode, _bn)
                 
                 # Actualitzar el mode teclat si està actiu
+                _mm_ha_girat = False
                 if hardware.update_keyboard_mode(pot_values, button_states):
                     # Mode teclat actiu - no processar altres modes
                     pass
                 elif mode_manager and mode_manager.current_mode:
                     # Mode normal actiu
                     status = mode_manager.update(pot_values, button_states)
+                    _mm_ha_girat = True
+                if mode_manager and not _mm_ha_girat:
+                    # El loop de modes «continua sonant en canviar de mode o de
+                    # capa»: mm_update només gira amb un mode carregat i fora
+                    # de la capa de teclat. Sense això, al teclat el loop es
+                    # quedava congelat amb les notes obertes al canal 3.
+                    _lp = getattr(mode_manager, '_modeloop', None)
+                    if _lp is not None and _lp.state:
+                        try:
+                            _lp.tick(mode_manager.effect_manager.midi, current_time)
+                        except Exception:
+                            pass
 
                 if _llum is not None:
                     _llum.tick(current_time)       # el LED reactiu cau sol

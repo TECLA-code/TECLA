@@ -19,7 +19,9 @@ class EffectPitchBend(BaseEffect):
         self._last_val = None
 
     def _bend_all(self, val):
-        """Pitch bend (0..16383, 8192 centre) a tots els canals, missatge únic."""
+        """Pitch bend (0..16383, 8192 centre) a tots els canals, missatge únic.
+        Tots MENYS els dels loops: el que ja està gravat no s'ha de torçar amb
+        el bend en viu (el loop porta els seus propis bends, si n'hi ha)."""
         if not PitchBend:
             return
         val = max(0, min(16383, int(val)))
@@ -31,6 +33,8 @@ class EffectPitchBend(BaseEffect):
         except Exception:
             return
         for ch in range(16):
+            if ch in self._salta:
+                continue
             msg.channel = ch
             try:
                 self.midi.send(msg)

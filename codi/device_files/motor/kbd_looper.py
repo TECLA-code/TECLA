@@ -21,10 +21,25 @@ Es graven les notes MIDI resultants (acord, inversió i harmonia negativa ja
 aplicades). Canviar d'escala, tonalitat o capa després NO altera el loop:
 està pensat per gravar una progressió i tocar notes soltes a sobre.
 
+El loop sona pel SEU canal MIDI (modeloop.canals_auxiliars: el 2 amb el canal de
+sortida per defecte), no pel del teclat. Dues coses en depenen:
+
+  · El pitch bend en viu (pot 'Pitch Bend') va pel canal del teclat i NO torça
+    el loop: es pot bendejar una nota a sobre d'una progressió que no es mou.
+  · El pitch bend fet MENTRE es grava (o en overdub) queda dins del loop, com
+    una nota més, i es repeteix amb ell pel seu canal. A cada volta el canal
+    del loop torna al bend que hi havia en començar la presa.
+
+I una de gratis: el looper i el teclat ja no es trepitgen les notes (un
+NoteOff del loop no pot apagar la nota que el músic sosté, ni a l'inrevés),
+perquè un NoteOff només apaga el seu canal.
+
 Mòdul amb càrrega lazy: només s'importa si alguna funció looper s'usa.
 """
 from adafruit_midi.note_on import NoteOn
 from adafruit_midi.note_off import NoteOff
+from adafruit_midi.pitch_bend import PitchBend
+from motor.modeloop import canals_auxiliars, BEND_CENTER
 try:
     from core.pantalla import diu
 except Exception:                       # simulador i proves sense core/
@@ -38,8 +53,14 @@ IDLE, ARMED, RECORDING, PLAYING, PAUSED = 0, 1, 2, 3, 4
 LONG_PRESS = 0.8       # segons: esborrar loop (botó looper) / desfer UNA capa (botó overdub)
 CLEAR_ALL_PRESS = 1.6  # segons (el doble): esborrar TOTES les capes d'overdub de cop
 MAX_EVENTS = 64      # límit de seguretat de RAM (un loop normal en té 4-16)
+MAX_BENDS = 48       # pressupost a part per als pitch bend (no mengen el de notes)
+BEND_MIN_GAP = 0.03  # segons: dos bends més seguits es fusionen en un (escombrat de pot)
 MIN_LOOP_LEN = 0.2   # segons mínims perquè un loop sigui vàlid
 QUANT_STEPS_PER_BEAT = 4  # graella: l'offset es quantitza a passos d'arp
+
+# Cada esdeveniment és [offset, durada, notes, velocitat]. Un pitch bend és un
+# esdeveniment amb `notes` BUIT: [offset, 0, (), valor 0..16383]. Així el motor
+# de reproducció, l'overdub i el desfer de capes els tracten com la resta.
 
 
 def _ensure(kbd):
@@ -61,6 +82,12 @@ def _ensure(kbd):
         kbd._loop_had_sustain = False  # True si s'ha gravat amb sustain (CC64) actiu:
                                        # "fixa" el sustain a les durades (lligat) perquè el
                                        # loop NO depengui del pedal en directe en reproduir
+        kbd._loop_bends = 0        # pitch bends gravats al loop (pressupost propi)
+        kbd._loop_bend_last = None # últim bend gravat: els que vénen massa seguits s'hi fusionen
+        kbd._loop_bend_last_t = 0.0
+        kbd._loop_bend0 = BEND_CENTER  # bend viu en començar la presa: on torna cada volta
+        kbd._loop_bend_out = None  # últim bend enviat pel canal del loop (per no repetir-lo)
+        kbd._loop_ch = canals_auxiliars(kbd.midi)[1]  # el canal del loop, segons el de sortida
 
 
 def _grid(kbd):
@@ -74,17 +101,81 @@ def _sustain_on(kbd):
             or getattr(kbd, 'sustain_level', 0) >= 64)
 
 
+def _es_bend(ev):
+    return not ev[2]
+
+
+def _te_notes(evs):
+    for ev in evs:
+        if ev[2]:
+            return True
+    return False
+
+
+def _ple(kbd):
+    """El pressupost de NOTES és ple (els bends no hi compten)."""
+    return len(kbd.loop_events) - kbd._loop_bends >= MAX_EVENTS
+
+
+def _bend_viu(kbd):
+    """El pitch bend que el teclat té enviat ara mateix (centre si cap)."""
+    v = getattr(kbd, '_last_pitch_bend', None)
+    return BEND_CENTER if v is None else v
+
+
+def _bend_loop(kbd, value):
+    """Pitch bend pel canal del loop, només si canvia."""
+    value = max(0, min(16383, int(value)))
+    if kbd._loop_bend_out == value:
+        return
+    kbd._loop_bend_out = value
+    try:
+        kbd.midi.send(PitchBend(value, channel=kbd._loop_ch))
+    except Exception:
+        pass
+
+
+def _volta(kbd):
+    """Comença una volta del loop: el seu canal torna al bend d'inici de presa."""
+    if kbd._loop_bends:
+        _bend_loop(kbd, kbd._loop_bend0)
+
+
+def _comenca_presa(kbd, now):
+    """ARMAT -> GRAVANT amb la primera nota. Es pren nota del bend viu: el loop
+    hi tornarà a cada volta (el que passi durant la presa es grava a sobre)."""
+    kbd.loop_state = RECORDING
+    kbd.loop_t0 = now
+    kbd._loop_bend0 = _bend_viu(kbd)
+    kbd._loop_bend_last = None
+    diu("🔴 Gravant...")
+
+
+def _reset_presa(kbd):
+    kbd.loop_events = []
+    kbd._loop_open = {}
+    kbd._loop_bends = 0
+    kbd._loop_bend_last = None
+
+
 def _bake_sustain(kbd):
     """Fixa el sustain a la gravació: cada esdeveniment se sosté fins que comença
     el següent (lligat). Així el loop sona sostingut PER SI MATEIX —les notes les
     aguanta el seu propi NoteOn/NoteOff, no el pedal en directe— i modificar el
     sustain després NO altera el loop. S'aplica en segons, ABANS de quantitzar.
     Es deixa un marge petit perquè el NoteOff surti abans del NoteOn següent i no
-    talli notes comunes entre acords."""
+    talli notes comunes entre acords. Els bends no són "el següent": es lliga
+    fins a la següent NOTA."""
     evs = kbd.loop_events
     n = len(evs)
     for i in range(n):
-        nxt = evs[i + 1][0] if i + 1 < n else kbd.loop_length
+        if _es_bend(evs[i]):
+            continue
+        nxt = kbd.loop_length
+        for j in range(i + 1, n):
+            if not _es_bend(evs[j]):
+                nxt = evs[j][0]
+                break
         gap = nxt - evs[i][0]
         if gap <= 0:
             continue
@@ -103,8 +194,7 @@ def handle_button(kbd, held_time, now, quantized=False):
     if held_time >= LONG_PRESS:
         _silence(kbd)
         kbd.loop_state = IDLE
-        kbd.loop_events = []
-        kbd._loop_open = {}
+        _reset_presa(kbd)
         kbd.loop_overdub = False
         kbd._dub_current = []
         kbd._dub_layers = []
@@ -115,8 +205,7 @@ def handle_button(kbd, held_time, now, quantized=False):
 
     if st == IDLE:
         kbd.loop_state = ARMED
-        kbd.loop_events = []
-        kbd._loop_open = {}
+        _reset_presa(kbd)
         kbd.loop_quantized = False  # es decideix al toc que tanca la gravació
         kbd._loop_had_arp = False   # es marca si l'arp grava durant la presa
         kbd._loop_had_sustain = False
@@ -131,9 +220,11 @@ def handle_button(kbd, held_time, now, quantized=False):
         for ev in kbd._loop_open.values():
             ev[1] = max(0.05, kbd.loop_length - ev[0])
         kbd._loop_open = {}
-        if not kbd.loop_events or kbd.loop_length < MIN_LOOP_LEN:
+        kbd._loop_bend_last = None
+        if not _te_notes(kbd.loop_events) or kbd.loop_length < MIN_LOOP_LEN:
+            # Un loop només de bends no és un loop: no hi ha res que sostingui
             kbd.loop_state = IDLE
-            kbd.loop_events = []
+            _reset_presa(kbd)
             diu("🔁 Looper: res a gravar")
         else:
             # Fixa el sustain a les durades si s'ha gravat amb el pedal actiu, perquè
@@ -148,11 +239,13 @@ def handle_button(kbd, held_time, now, quantized=False):
             kbd.loop_state = PLAYING
             kbd.loop_t0 = now
             kbd.loop_pos_idx = 0
+            _volta(kbd)
             if kbd.loop_quantized:
-                diu(f"🔁♩ Loop quantitzat: {len(kbd.loop_events)} acords, "
+                diu(f"🔁♩ Loop quantitzat: {len(kbd.loop_events) - kbd._loop_bends} acords, "
                       f"{int(kbd.loop_length)} passos (BPM viu amb el pot d'arp)")
             else:
-                diu(f"🔁 Loop en marxa: {len(kbd.loop_events)} acords, {kbd.loop_length:.1f}s")
+                diu(f"🔁 Loop en marxa: {len(kbd.loop_events) - kbd._loop_bends} acords, "
+                      f"{kbd.loop_length:.1f}s")
     elif st == PLAYING:
         if kbd.loop_overdub:
             _end_overdub(kbd)
@@ -170,18 +263,17 @@ def handle_button(kbd, held_time, now, quantized=False):
             diu(f"🔁 Loop reprès (pas de {kbd.loop_grid * 1000:.0f}ms)")
         else:
             diu("🔁 Loop reprès")
+        _volta(kbd)
 
 
 def record_press(kbd, btn_idx, now):
     """Captura un acord/nota acabat de generar (cridat des de kbd_buttons)."""
     _ensure(kbd)
     if kbd.loop_state == ARMED:
-        kbd.loop_state = RECORDING
-        kbd.loop_t0 = now
-        diu("🔴 Gravant...")
+        _comenca_presa(kbd, now)
     if kbd.loop_state == RECORDING:
         notes = tuple(kbd.button_notes.get(btn_idx, ()))
-        if not notes or len(kbd.loop_events) >= MAX_EVENTS:
+        if not notes or _ple(kbd):
             return
         if _sustain_on(kbd):
             kbd._loop_had_sustain = True
@@ -190,7 +282,7 @@ def record_press(kbd, btn_idx, now):
         kbd._loop_open[btn_idx] = ev
     elif kbd.loop_state == PLAYING and kbd.loop_overdub:
         notes = tuple(kbd.button_notes.get(btn_idx, ()))
-        if not notes or len(kbd.loop_events) >= MAX_EVENTS:
+        if not notes or _ple(kbd):
             return
         ev = [_dub_offset(kbd, now), None, notes, kbd.velocity]
         _insert_dub_event(kbd, ev)
@@ -220,10 +312,8 @@ def record_live_note(kbd, note, vel, now):
     La durada és un pas d'arp (90%, amb un petit espai, com sona l'arp)."""
     _ensure(kbd)
     if kbd.loop_state == ARMED:
-        kbd.loop_state = RECORDING
-        kbd.loop_t0 = now
-        diu("🔴 Gravant...")
-    if len(kbd.loop_events) >= MAX_EVENTS:
+        _comenca_presa(kbd, now)
+    if _ple(kbd):
         return
     if kbd.loop_state == RECORDING:
         kbd._loop_had_arp = True  # marca la presa per auto-quantitzar en tancar
@@ -239,11 +329,52 @@ def record_live_note(kbd, note, vel, now):
         _insert_dub_event(kbd, [_dub_offset(kbd, now), dur, (note,), vel])
 
 
+def record_bend(kbd, value, now):
+    """Captura un pitch bend del teclat (valor MIDI 0..16383, 8192 = centre):
+    durant la presa s'afegeix al loop, en overdub a la capa en curs. Fora
+    d'això no fa res: un bend amb el loop ARMAT no comença la gravació (la
+    comença la primera nota) però sí que queda com a bend d'inici de presa,
+    via _bend_viu, quan arribi.
+
+    Els bends que arriben a menys de BEND_MIN_GAP del darrer s'hi fusionen
+    (un escombrat del pot en genera desenes per segon): el darrer bend acaba
+    sempre amb el valor final, i el loop queda on el músic ha deixat el pot.
+    Passat el pressupost MAX_BENDS, també: es conserva el moviment però no
+    se n'afegeixen més punts."""
+    _ensure(kbd)
+    st = kbd.loop_state
+    if st == RECORDING:
+        off = now - kbd.loop_t0
+    elif st == PLAYING and kbd.loop_overdub:
+        off = _dub_offset(kbd, now, fi=True)
+    else:
+        return
+    last = kbd._loop_bend_last
+    if last is not None and ((now - kbd._loop_bend_last_t) < BEND_MIN_GAP
+                             or kbd._loop_bends >= MAX_BENDS):
+        last[3] = value
+        return
+    if kbd._loop_bends >= MAX_BENDS:
+        return
+    ev = [off, 0, (), value]
+    if st == RECORDING:
+        kbd.loop_events.append(ev)
+    else:
+        _insert_dub_event(kbd, ev)
+    kbd._loop_bend_last = ev
+    kbd._loop_bend_last_t = now
+    kbd._loop_bends += 1
+
+
 # ── Overdub ──────────────────────────────────────────────────────────────────
 
-def _dub_offset(kbd, now):
-    """Posició actual dins del loop, en les unitats del loop (segons o passos)."""
+def _dub_offset(kbd, now, fi=False):
+    """Posició actual dins del loop, en les unitats del loop (segons o passos).
+    Amb `fi`, un loop quantitzat retorna passos FRACCIONARIS: els bends no es
+    quantitzen (un escombrat aixafat a la graella sona a graons)."""
     if kbd.loop_quantized:
+        if fi:
+            return ((now - kbd.loop_t0) / kbd.loop_grid) % kbd.loop_length
         return int(round((now - kbd.loop_t0) / kbd.loop_grid)) % int(kbd.loop_length)
     return (now - kbd.loop_t0) % kbd.loop_length
 
@@ -266,6 +397,7 @@ def _insert_dub_event(kbd, ev):
 def _end_overdub(kbd):
     """Tanca la capa d'overdub en curs."""
     kbd.loop_overdub = False
+    kbd._loop_bend_last = None
     # Tancar durades de botons encara premuts
     for ev in list(kbd._loop_open.values()):
         if ev[1] is None:
@@ -297,6 +429,7 @@ def handle_dub_button(kbd, held_time, now):
         if not kbd.loop_overdub:
             kbd.loop_overdub = True
             kbd._dub_current = []
+            kbd._loop_bend_last = None
             diu("➕ Overdub ACTIU — el que toquis s'afegeix al loop")
         else:
             _end_overdub(kbd)
@@ -308,6 +441,8 @@ def handle_dub_button(kbd, held_time, now):
             kbd.loop_grid = _grid(kbd)
         kbd.loop_overdub = True
         kbd._dub_current = []
+        kbd._loop_bend_last = None
+        _volta(kbd)
         diu("➕ Loop reprès amb Overdub actiu")
     else:
         diu("➕ Overdub: primer grava un loop amb el botó looper")
@@ -320,6 +455,12 @@ def _remove_events(kbd, events, now):
             kbd.loop_events.remove(ev)
         except ValueError:
             pass
+    n = 0
+    for ev in kbd.loop_events:
+        if _es_bend(ev):
+            n += 1
+    kbd._loop_bends = n
+    kbd._loop_bend_last = None
     if kbd.loop_state == PLAYING:
         sl = kbd.loop_grid if kbd.loop_quantized else 1.0
         t = now - kbd.loop_t0
@@ -369,16 +510,24 @@ def clear_all_layers(kbd, now):
 
 
 def _quantize(kbd):
-    """Converteix offsets/durades de segons a PASSOS de graella (enters)."""
+    """Converteix offsets/durades de segons a PASSOS de graella (enters). Els
+    bends passen a passos FRACCIONARIS: conserven la posició fina, perquè un
+    escombrat aixafat a la graella sonaria a graons."""
     sl = _grid(kbd)
     for ev in kbd.loop_events:
+        if _es_bend(ev):
+            ev[0] = ev[0] / sl
+            continue
         ev[0] = round(ev[0] / sl)                      # offset en passos
         ev[1] = max(1, round((ev[1] or 0.1) / sl))     # durada en passos
     kbd.loop_length = max(1.0, round(kbd.loop_length / sl))  # llargada en passos
     # Garantir que cap esdeveniment cau fora del loop
     for ev in kbd.loop_events:
         if ev[0] >= kbd.loop_length:
-            ev[0] = int(kbd.loop_length) - 1
+            ev[0] = (kbd.loop_length - 0.01) if _es_bend(ev) else int(kbd.loop_length) - 1
+    # Arrodonir les notes pot avançar-les per davant d'un bend: l'ordre per
+    # offset és el que el motor de reproducció exigeix (sort estable).
+    kbd.loop_events.sort(key=lambda e: e[0])
     kbd.loop_quantized = True
     kbd.loop_grid = sl  # tempo del loop FIXAT en aquest moment
 
@@ -388,7 +537,8 @@ def tick(kbd, now):
     El tempo d'un loop quantitzat és kbd.loop_grid: es FIXA en arrencar o
     reprendre (no segueix el pot en viu — si no, activar la capa arp
     segrestaria el tempo del loop amb la posició física del pot de BPM).
-    Per canviar el tempo: pausa -> ajusta el BPM -> represa."""
+    Per canviar el tempo: pausa -> ajusta el BPM -> represa.
+    Tot surt pel canal del loop: notes, note-offs i bends."""
     if kbd.loop_state != PLAYING:
         return
     sl = getattr(kbd, 'loop_grid', 1.0) if kbd.loop_quantized else 1.0
@@ -400,35 +550,31 @@ def tick(kbd, now):
         kbd.loop_t0 += length_s
         kbd.loop_pos_idx = 0
         t = now - kbd.loop_t0
+        _volta(kbd)
 
     evs = kbd.loop_events
     while kbd.loop_pos_idx < len(evs) and evs[kbd.loop_pos_idx][0] * sl <= t:
         offset, dur, notes, vel = evs[kbd.loop_pos_idx]
+        kbd.loop_pos_idx += 1
+        if not notes:
+            _bend_loop(kbd, vel)
+            continue
         for n in notes:
             try:
-                kbd.midi.send(NoteOn(n, vel))
+                kbd.midi.send(NoteOn(n, vel, channel=kbd._loop_ch))
             except Exception:
                 pass
         kbd._loop_note_offs.append((kbd.loop_t0 + (offset + (dur or 0.1)) * sl, notes))
-        kbd.loop_pos_idx += 1
 
     if kbd._loop_note_offs:
         kept = []
-        vives = kbd.active_notes          # el que el músic té premut ARA
         for end_t, notes in kbd._loop_note_offs:
             if now >= end_t:
+                # Pel canal del loop: no pot tocar la nota que el músic sosté
+                # pel del teclat, encara que sigui la mateixa altura.
                 for n in notes:
-                    # Tocar A SOBRE del loop: si el músic sosté aquesta mateixa
-                    # altura, el note-off del loop li mataria la SEVA nota —
-                    # MIDI no compta propietaris, un NoteOff apaga i prou. Qui
-                    # la va disparar l'últim és ell, i qui l'ha d'apagar també:
-                    # se salta, i el seu release ja l'enviarà. L'entrada es
-                    # CONSUMEIX igualment (no es torna a `kept`) o ho tornaríem
-                    # a provar a cada volta mentre la tingués premuda.
-                    if n in vives:
-                        continue
                     try:
-                        kbd.midi.send(NoteOff(n, 0))
+                        kbd.midi.send(NoteOff(n, 0, channel=kbd._loop_ch))
                     except Exception:
                         pass
             else:
@@ -436,31 +582,18 @@ def tick(kbd, now):
         kbd._loop_note_offs = kept
 
 
-def loop_sostenint(kbd, note):
-    """El loop té ara mateix aquesta altura sonant, amb el note-off pendent?
-
-    És l'altra meitat de la col·lisió: deixar anar una tecla que el loop també
-    està tocant li tallava la nota al loop. Aquí es diu que no l'apagui, i el
-    note-off que el loop ja té programat la tancarà al seu moment — o sigui
-    que sempre queda algú que l'apaga i cap nota no es penja.
-    """
-    if not getattr(kbd, 'loop_state', 0):
-        return False
-    for _end_t, notes in getattr(kbd, '_loop_note_offs', ()):
-        if note in notes:
-            return True
-    return False
-
-
 def _silence(kbd):
-    """Envia NoteOff de totes les notes del loop que sonen ara mateix."""
+    """Envia NoteOff de totes les notes del loop que sonen ara mateix, i deixa
+    el canal del loop afinat si el loop l'havia bendejat."""
     for _end_t, notes in kbd._loop_note_offs:
         for n in notes:
             try:
-                kbd.midi.send(NoteOff(n, 0))
+                kbd.midi.send(NoteOff(n, 0, channel=kbd._loop_ch))
             except Exception:
                 pass
     kbd._loop_note_offs = []
+    if kbd._loop_bend_out not in (None, BEND_CENTER):
+        _bend_loop(kbd, BEND_CENTER)
 
 
 def pause_for_panic(kbd):
@@ -475,5 +608,4 @@ def pause_for_panic(kbd):
         diu("🔁 Loop en pausa (STOP)")
     elif kbd.loop_state in (ARMED, RECORDING):
         kbd.loop_state = IDLE
-        kbd.loop_events = []
-        kbd._loop_open = {}
+        _reset_presa(kbd)

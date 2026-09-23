@@ -34,17 +34,57 @@ toques sense l'app oberta.
 PER_SEGON = 30
 
 _canal = None      # None = per provar · False = no n'hi ha · Serial = a punt
+_dades = None      # el port de DADES quan l'app hi ha dit «pantalla» (main)
 _finestra = 0.0
 _gastats = 0
 
 
 def _console_on():
-    """Hi ha algú escoltant? Sense consola, tot això no s'ha ni de plantejar."""
+    """Hi ha la consola oberta (DTR)? És on va tot per defecte."""
     try:
         import supervisor
         return supervisor.runtime.serial_connected
     except Exception:
         return False
+
+
+def escolten():
+    """Hi ha algú escoltant, per la consola o pel port de dades? Sense ningú,
+    els testimonis no s'han ni de formatar. ÚNICA porta: motor/kbd_notes
+    (`_console_on`) hi delega, i tots els testimonis passen per allà."""
+    return _dades is not None or _console_on()
+
+
+def dades(canal):
+    """El port de dades passa a ser (o deixa de ser) una Pantalla: l'app hi ha
+    dit {"s":"pantalla"} (core/sim_link) i des d'ara hi van les mateixes
+    línies que a la consola. TECLA exposa dos ports USB iguals i des de
+    Windows no es distingeixen: així la Pantalla funciona amb QUALSEVOL dels
+    dos. `None` en desconnectar."""
+    global _dades
+    _dades = canal
+    if canal is not None:
+        try:
+            canal.write_timeout = 0      # mai esperar el navegador
+        except Exception:
+            pass
+
+
+def anuncia(versio, capa=None, mode=None, via='consola'):
+    """La presentació que TECLA fa a la Pantalla en connectar-s'hi: qui és
+    (l'app la reconeix per «⌁ TECLA» i sap que ha trobat el port bo, sigui
+    quin sigui) i on és (la capa, i el mode si en sona un), perquè la
+    pantalla no comenci en blanc fins al primer gest."""
+    v = str(versio or '').strip()
+    if v[:5].upper() == 'TECLA':          # tecla_version.txt diu «TECLA v3.17.0»
+        v = v[5:].strip()
+    if v[:1] in ('v', 'V'):
+        v = v[1:]
+    diu("⌁ TECLA v%s · %s" % (v or '?', via))
+    if capa:
+        diu("Capa actual: %s" % capa)
+    if mode:
+        diu("Mode: %s" % mode)
 
 
 def _obre():
@@ -74,7 +114,8 @@ def diu(text):
     """
     global _finestra, _gastats
     try:
-        if not _console_on():
+        consola = _console_on()
+        if not consola and _dades is None:
             return False
         import time
         ara = time.monotonic()
@@ -84,19 +125,29 @@ def diu(text):
         if _gastats >= PER_SEGON:
             return False
         _gastats += 1
-        c = _obre()
-        if c is False:
-            print(text)
-            return True
-        c.write((text + '\n').encode())
-        return True
+        fet = False
+        if _dades is not None:
+            try:
+                _dades.write((text + '\n').encode())
+                fet = True
+            except Exception:
+                pass
+        if consola:
+            c = _obre()
+            if c is False:
+                print(text)
+            else:
+                c.write((text + '\n').encode())
+            fet = True
+        return fet
     except Exception:
         return False
 
 
 def _reinicia():
     """Per a les proves: torna a l'estat de sortida."""
-    global _canal, _finestra, _gastats
+    global _canal, _dades, _finestra, _gastats
     _canal = None
+    _dades = None
     _finestra = 0.0
     _gastats = 0

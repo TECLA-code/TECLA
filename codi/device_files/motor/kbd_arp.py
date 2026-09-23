@@ -12,7 +12,22 @@ except ImportError:
     def get_chord(n): return (0, 4, 7)
     def note_offset(n): return 0
 
-KEY_OFFSETS = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
+KEY_OFFSETS = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)   # (legacy: índex = semitons)
+try:
+    from motor.kbd_notes import _KEY_OFFSET      # al carregar, mai al pas de l'arp
+except Exception:
+    _KEY_OFFSET = {}
+
+
+def _key_offset(kbd):
+    """Semitons de la tonalitat ACTUAL, com ho fa kbd_notes: `key_index` indexa
+    `available_keys` (la llista que l'usuari ha triat i ordenat a l'app), no
+    el cercle cromàtic. Amb tonalitats [C, F, G] i l'F triat, KEY_OFFSETS[1]
+    era un Do# i l'arp tocava en una altra tonalitat que el teclat."""
+    try:
+        return _KEY_OFFSET.get(kbd.available_keys[kbd.key_index], 0)
+    except Exception:
+        return KEY_OFFSETS[kbd.key_index % 12]
 
 
 def _arp_notes_for_button(kbd, btn_idx, scale_intervals, key_offset, scale_id):
@@ -153,7 +168,7 @@ def process_arpeggiator(kbd, button_states, current_time):
 
     else:
         scale_intervals = SCALES[current_scale_id]
-        key_offset = KEY_OFFSETS[kbd.key_index]
+        key_offset = _key_offset(kbd)
         for btn_idx in pressed_buttons:
             all_notes.extend(_arp_notes_for_button(kbd, btn_idx, scale_intervals, key_offset, current_scale_id))
 
@@ -161,7 +176,7 @@ def process_arpeggiator(kbd, button_states, current_time):
 
     if arp_direction == 'order' and current_scale_id < 1000:
         scale_intervals = SCALES[current_scale_id]
-        key_offset = KEY_OFFSETS[kbd.key_index]
+        key_offset = _key_offset(kbd)
         ordered_notes = []
         for btn_idx in kbd.arp_button_order:
             ordered_notes.extend(_arp_notes_for_button(kbd, btn_idx, scale_intervals, key_offset, current_scale_id))

@@ -56,28 +56,22 @@ def _try_synth_cc(kbd, function, pot_value, threshold):
     return True
 
 
+def _potdit(kbd):
+    """El testimoni de potes del teclat (motor/potdit): un per instrument."""
+    d = getattr(kbd, '_potdit', None)
+    if d is None:
+        from motor.potdit import PotDit
+        d = kbd._potdit = PotDit()
+    return d
+
+
 def _report(kbd, nom, valor):
     """Testimoni de pot per a la PANTALLA virtual de l'app: "Pot Nom: valor".
-    Només amb consola connectada (cost zero en directe) i amb llindar per no
-    inundar (el valor ha de moure's ≥3 passos). MAI pot llançar: un testimoni
-    no pot trencar el so (i res de kbd.__dict__ — a CircuitPython no és fiable
-    i trencava update() sencer amb la Pantalla connectada)."""
+    Regles a motor/potdit (el primer gest es diu, sense inundar, mai es deixa
+    l'últim valor). MAI pot llançar: un testimoni no pot trencar el so (i res
+    de kbd.__dict__ — a CircuitPython no és fiable)."""
     try:
-        from motor.kbd_notes import _console_on
-        if not _console_on():
-            return
-        c = getattr(kbd, '_pot_report_cache', None)
-        if c is None:
-            c = {}
-            kbd._pot_report_cache = c
-        v = int(valor)
-        if nom not in c:
-            c[nom] = v      # primera lectura = sync de capa: silenci
-            return
-        if -3 < (v - c[nom]) < 3:
-            return
-        c[nom] = v
-        diu("Pot %s: %d" % (nom, v))
+        _potdit(kbd).mou(nom, valor)
     except Exception:
         pass
 
@@ -85,27 +79,12 @@ def _report(kbd, nom, valor):
 def _report_bpm(kbd, bpm, sub=1):
     """Testimoni de TEMPO per a la PANTALLA: "♩ 120 BPM 1/16". El tempo es diu
     en NEGRES per minut, com un metrònom o un DAW, i la fracció diu què s'hi
-    trepitja (sub=4 → semicorxeres). Mateixes regles que _report (primera
-    lectura en silenci, llindar, i mai llança)."""
+    trepitja (sub=4 → semicorxeres). Mateixes regles que _report."""
     try:
-        from motor.kbd_notes import _console_on
-        if not _console_on():
-            return
-        c = getattr(kbd, '_pot_report_cache', None)
-        if c is None:
-            c = {}
-            kbd._pot_report_cache = c
-        v = int(bpm + 0.5)
-        if '_bpm' not in c:
-            c['_bpm'] = v
-            return
-        if -2 < (v - c['_bpm']) < 2:
-            return
-        c['_bpm'] = v
-        if sub > 1:
-            diu("♩ %d BPM 1/%d" % (v, sub * 4))
-        else:
-            diu("♩ %d BPM" % v)
+        fmt = "♩ %%d BPM 1/%d" % (sub * 4) if sub > 1 else "♩ %d BPM"
+        # Llindar 1: el pot del tempo ja té histèresi (_set_bpm), i 1 BPM de
+        # diferència a la pantalla és una diferència que es llegeix.
+        _potdit(kbd).mou('_bpm', int(bpm + 0.5), fmt, 1)
     except Exception:
         pass
 
@@ -118,6 +97,27 @@ def _apply_audio_cfg_pots(kbd, pot_values, force_update):
     _try_synth_cc(kbd, m.get('x', ''), pot_values[1], threshold)
     _try_synth_cc(kbd, m.get('y', ''), pot_values[0], threshold)
     _try_synth_cc(kbd, m.get('z', ''), pot_values[2], threshold)
+
+
+BPM_MIN = 40.0
+BPM_MAX = 240.0
+
+
+def bpm_de_pot(pot_value):
+    """Tempo de l'arpegiador segons el pot: corba EXPONENCIAL de 40 a 240.
+
+    Abans era lineal (40 + v/127·200): a mig recorregut ja anava a 140 BPM en
+    semicorxeres (més de nou notes per segon) i els tres quarts de dalt del pot
+    només servien per anar «de molt ràpid a massa ràpid». Reportat: «quan
+    arribem a la meitat del recorregut l'arpegi va molt ràpid, massa».
+
+    El tempo es percep per PROPORCIÓ (de 60 a 120 és el mateix salt que de
+    120 a 240), o sigui que cada quart de pot multiplica el tempo pel mateix
+    factor (×1,57): 40 · 63 · 99 · 155 · 240. La meitat del pot és ~99 BPM,
+    un tempo de cançó, i encara queda mig recorregut per pujar. Mirall a
+    index.html (_applyPotFn) i a tests/test_tempo_bpm."""
+    f = max(0, min(127, pot_value)) / 127.0
+    return BPM_MIN * (BPM_MAX / BPM_MIN) ** f
 
 
 def _set_bpm(kbd, pot_value, force_update=False, sub=4):
@@ -138,10 +138,13 @@ def _set_bpm(kbd, pot_value, force_update=False, sub=4):
     last_val) >= 3` al selector de patró). Aquesta branca s'ho havia saltat.
     """
     last = getattr(kbd, '_bpm_pot_last', None)
-    if not force_update and last is not None and abs(pot_value - last) < 2:
+    # Els extrems sempre entren: amb la histèresi sola, el pot a fons es
+    # quedava a 126 (237 BPM) perquè l'últim pas era «soroll».
+    if (not force_update and last is not None and abs(pot_value - last) < 2
+            and 0 < pot_value < 127):
         return
     kbd._bpm_pot_last = pot_value
-    bpm = 40 + (max(0, min(127, pot_value)) / 127.0) * 200
+    bpm = bpm_de_pot(pot_value)
     kbd.arp_speed = 15.0 / bpm            # 60/bpm/4 = una semicorxera
     _report_bpm(kbd, bpm, sub)
 
@@ -149,6 +152,10 @@ def _set_bpm(kbd, pot_value, force_update=False, sub=4):
 def update_parameters(kbd, pot_values, force_update=False):
     if len(pot_values) < 3:
         return
+    # El pot que s'ha aturat després de girar de pressa diu on ha quedat.
+    d = getattr(kbd, '_potdit', None)
+    if d is not None:
+        d.tick()
     # Config àudio té prioritat: mentre activa, els potes editen el sinte (el
     # teclat segueix tocant amb la resta de paràmetres congelats de facto).
     if getattr(kbd, '_audio_cfg_key', -1) >= 0:
@@ -304,10 +311,14 @@ def apply_pot_function(kbd, pot_name, pot_value, force_update=False):
         _report(kbd, 'Modulació', pot_value)
 
     elif function == 'Pitch Bend':
+        # 14 bits amb el CENTRE a 8192: pot en repòs = afinat, i puja fins a
+        # +2 semitons (el rang per defecte dels sintes), com al simulador.
+        # Abans enviava 0..8191, que en MIDI va de bend A FONS AVALL fins al
+        # centre: el pot en repòs deixava el teclat dos semitons per sota.
         if pot_value < 5:
-            pitch_value = 0
+            pitch_value = 8192
         else:
-            pitch_value = int((pot_value / 127.0) * 8191)
+            pitch_value = 8192 + int((pot_value / 127.0) * 8191)
         kbd._send_pitch_bend(pitch_value)
         _report(kbd, 'Pitch Bend', pot_value)
 
@@ -437,10 +448,14 @@ def apply_arp_pot_function(kbd, pot_name, pot_value, force_update=False):
         _report(kbd, 'Modulació', pot_value)
 
     elif function == 'Pitch Bend':
+        # 14 bits amb el CENTRE a 8192: pot en repòs = afinat, i puja fins a
+        # +2 semitons (el rang per defecte dels sintes), com al simulador.
+        # Abans enviava 0..8191, que en MIDI va de bend A FONS AVALL fins al
+        # centre: el pot en repòs deixava el teclat dos semitons per sota.
         if pot_value < 5:
-            pitch_value = 0
+            pitch_value = 8192
         else:
-            pitch_value = int((pot_value / 127.0) * 8191)
+            pitch_value = 8192 + int((pot_value / 127.0) * 8191)
         kbd._send_pitch_bend(pitch_value)
         _report(kbd, 'Pitch Bend', pot_value)
 
@@ -456,6 +471,20 @@ def apply_arp_pot_function(kbd, pot_name, pot_value, force_update=False):
             kbd.gate_min_expr = 0
             kbd.gate_duty = 0.5
         _report(kbd, 'Gate', pot_value)
+
+    elif function == 'Octava':
+        # L'app l'ofereix a la capa de l'arp (ARP_POT_FNS) i el simulador
+        # l'aplica; aquí no hi era i el pot no feia res. Mateixa regla que al
+        # teclat: canvia només si el pot s'ha mogut 3 unitats.
+        last_val = getattr(kbd, '_oct_pot_last_val', None)
+        if last_val is None:
+            kbd._oct_pot_last_val = pot_value
+        elif abs(pot_value - last_val) >= 3:
+            kbd._oct_pot_last_val = pot_value
+            new_oct = min(8, max(0, round((pot_value / 127.0) * 8)))
+            if new_oct != kbd.octave:
+                kbd.octave = new_oct
+                diu("Octava: %d" % kbd.octave)
 
     else:
         if not _try_synth_cc(kbd, function, pot_value, threshold):

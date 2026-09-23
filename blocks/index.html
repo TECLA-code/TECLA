@@ -259,6 +259,14 @@
     .status-row:last-child { border-bottom: none; }
     .status-val { color: var(--text2); }
     .status-val.ok { color: var(--green); font-weight: 500; }
+    /* El botó únic «Actualitzar TECLA» (codi/instalador/motor.js): un punt, un títol, una frase */
+    .fw-estat { display: flex; gap: 10px; align-items: flex-start; margin: 4px 0 10px; }
+    .fw-punt { width: 10px; height: 10px; border-radius: 50%; flex: none; margin-top: 5px; background: var(--text3); }
+    .fw-punt.ok { background: var(--green); }
+    .fw-punt.cal { background: var(--accent); }
+    .fw-punt.err { background: #f05252; }
+    .fw-estat-txt { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.4; }
+    .fw-msg { font-size: 11.5px; color: var(--text2); margin-top: 7px; min-height: 18px; }
     .dl-link { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--accent); text-decoration: none; padding: 4px 8px; border-radius: var(--radius); border: 1px solid rgba(74,128,240,.3); background: rgba(74,128,240,.07); transition: background .15s; margin-top: 8px; }
     .dl-link:hover { background: rgba(74,128,240,.15); }
 
@@ -697,6 +705,23 @@
         <div class="status-row"><span data-i18n="fw.device">Dispositiu</span><span class="status-val" id="fw-device-name">—</span></div>
         <div class="status-row"><span data-i18n="fw.circuitpy">Volum CIRCUITPY</span><span class="status-val" id="fw-device-status" data-i18n-id="fw.disconn">desconnectat</span></div>
       </div>
+      <!-- UNA SOLA COSA A FER: el mateix botó que l'Instrument i el Macropad
+           (codi/instalador/motor.js). Mira què li falta a TECLA —motor a la
+           flash, repartidor, nucli, llibreries— i ho fa en l'ordre que toca;
+           en acabar, hi puja el codi d'aquest projecte. -->
+      <div class="status-card">
+        <div class="card-title" data-i18n="fw.update">Actualitzar TECLA</div>
+        <div class="fw-estat">
+          <span class="fw-punt" id="act-punt"></span>
+          <span class="fw-estat-txt" id="act-estat" data-i18n="fw.estat.connecta">Connecta TECLA per començar</span>
+        </div>
+        <p id="act-msg" class="fw-step-desc" style="min-height:1.2em" data-i18n="fw.ajuda.connecta">Connecta TECLA amb el botó «connecta dispositiu» de dalt a la dreta.</p>
+        <button class="btn btn-primary" id="btn-actualitza" data-i18n="fw.boto.actualitza">⟳ Actualitzar TECLA</button>
+        <div id="fw-feina" hidden style="margin-top:12px">
+          <progress id="fw-progress" value="0" max="100" style="width:100%"></progress>
+          <div class="fw-msg" id="fw-progress-msg"></div>
+        </div>
+      </div>
       <button class="btn btn-success" id="btn-fw-upload" style="width:100%;margin-bottom:14px;justify-content:center" data-i18n="fw.push">Pujar codi al dispositiu</button>
 
       <div class="fw-step">
@@ -840,7 +865,7 @@
 
   <!-- Toolbox XML -->
   <xml id="toolbox" style="display:none">
-    <category name="Música Bàsica" data-i18n-cat="cat.m_sica_b_sica" colour="#ff1a6c">
+    <category name="Música" data-i18n-cat="cat.m_sica_b_sica" colour="#ff1a6c">
       <block type="tecla_play_note">
         <value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value>
         <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
@@ -850,7 +875,34 @@
       <block type="tecla_play_scale"></block>
       <block type="tecla_set_octave"></block>
     </category>
-    <category name="Síntesi Avançada" data-i18n-cat="cat.s_ntesi_avan_ada" colour="#d500f9">
+    <category name="Tecles i potes" data-i18n-cat="cat.control_hardware" colour="#2979ff">
+      <block type="tecla_read_button"></block>
+      <block type="tecla_read_pot"></block>
+      <block type="tecla_pot_change"></block>
+      <block type="tecla_on_button_press"></block>
+    </category>
+    <category name="MIDI" data-i18n-cat="cat.midi_avan_at" colour="#40c8ff">
+      <label text="Controls (CC) i canvi de programa" data-i18n-label="lbl.midi_controls"></label>
+      <block type="tecla_midi_cc">
+        <value name="CC_NUM"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+        <value name="CC_VAL"><shadow type="math_number"><field name="NUM">64</field></shadow></value>
+      </block>
+      <block type="tecla_midi_pitch_bend">
+        <value name="AMOUNT"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+      </block>
+      <block type="tecla_midi_sustain"></block>
+      <block type="tecla_midi_expression">
+        <value name="VALUE"><shadow type="math_number"><field name="NUM">127</field></shadow></value>
+      </block>
+      <block type="tecla_midi_all_notes_off"></block>
+      <block type="tecla_set_instrument"></block>
+      <block type="tecla_set_volume"><value name="VOLUME"><shadow type="math_number"><field name="NUM">100</field></shadow></value></block>
+      <block type="tecla_set_pan"><value name="PAN"><shadow type="math_number"><field name="NUM">64</field></shadow></value></block>
+      <label text="Efectes del DAW (CC 91, 93 i 74)" data-i18n-label="lbl.midi_fx"></label>
+      <block type="tecla_effect_delay"></block>
+      <block type="tecla_effect_reverb"></block>
+      <block type="tecla_effect_filter"></block>
+      <label text="Sintetitzador del DAW (CC 20 a 28: cal mapar-los)" data-i18n-label="lbl.midi_synth"></label>
       <block type="tecla_oscillator">
         <value name="FREQUENCY"><shadow type="math_number"><field name="NUM">440</field></shadow></value>
         <value name="AMPLITUDE"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
@@ -865,120 +917,6 @@
         <value name="SUSTAIN"><shadow type="math_number"><field name="NUM">70</field></shadow></value>
         <value name="RELEASE"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
       </block>
-      <block type="tecla_modulation">
-        <value name="CARRIER"><shadow type="math_number"><field name="NUM">440</field></shadow></value>
-        <value name="MODULATOR"><shadow type="math_number"><field name="NUM">220</field></shadow></value>
-        <value name="DEPTH"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
-      </block>
-      <block type="tecla_waveshaper">
-        <value name="AMOUNT"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
-      </block>
-    </category>
-    <category name="Control Hardware" data-i18n-cat="cat.control_hardware" colour="#2979ff">
-      <block type="tecla_read_button"></block>
-      <block type="tecla_read_pot"></block>
-      <block type="tecla_pot_change"></block>
-      <block type="tecla_on_button_press"></block>
-    </category>
-    <category name="Efectes Àudio" data-i18n-cat="cat.efectes_udio" colour="#e040fb">
-      <block type="tecla_effect_delay"></block>
-      <block type="tecla_effect_reverb"></block>
-      <block type="tecla_effect_filter"></block>
-      <block type="tecla_set_instrument"></block>
-      <block type="tecla_set_volume"><value name="VOLUME"><shadow type="math_number"><field name="NUM">100</field></shadow></value></block>
-      <block type="tecla_set_pan"><value name="PAN"><shadow type="math_number"><field name="NUM">64</field></shadow></value></block>
-    </category>
-    <category name="GPIO (Pins)" data-i18n-cat="cat.gpio_pins" colour="#00f0ff">
-      <block type="tecla_digital_write"></block>
-      <block type="tecla_digital_read"></block>
-      <block type="tecla_analog_write"><value name="VALUE"><shadow type="math_number"><field name="NUM">32768</field></shadow></value></block>
-      <block type="tecla_analog_read"></block>
-      <block type="tecla_pwm_setup">
-        <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
-        <value name="FREQ"><shadow type="math_number"><field name="NUM">1000</field></shadow></value>
-      </block>
-      <block type="tecla_pwm_duty">
-        <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
-        <value name="DUTY"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
-      </block>
-    </category>
-    <category name="Pantalla OLED" data-i18n-cat="cat.pantalla_oled" colour="#00f0ff">
-      <block type="tecla_display_setup"></block>
-      <block type="tecla_display_text">
-        <value name="TEXT"><shadow type="text"><field name="TEXT">Hola TECLA!</field></shadow></value>
-        <value name="X"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
-        <value name="Y"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
-      </block>
-      <block type="tecla_display_clear"></block>
-      <block type="tecla_display_pixel">
-        <value name="X"><shadow type="math_number"><field name="NUM">64</field></shadow></value>
-        <value name="Y"><shadow type="math_number"><field name="NUM">32</field></shadow></value>
-      </block>
-      <block type="tecla_display_line">
-        <value name="X1"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
-        <value name="Y1"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
-        <value name="X2"><shadow type="math_number"><field name="NUM">127</field></shadow></value>
-        <value name="Y2"><shadow type="math_number"><field name="NUM">63</field></shadow></value>
-      </block>
-      <block type="tecla_display_rect">
-        <value name="X"><shadow type="math_number"><field name="NUM">10</field></shadow></value>
-        <value name="Y"><shadow type="math_number"><field name="NUM">10</field></shadow></value>
-        <value name="WIDTH"><shadow type="math_number"><field name="NUM">40</field></shadow></value>
-        <value name="HEIGHT"><shadow type="math_number"><field name="NUM">20</field></shadow></value>
-      </block>
-    </category>
-    <category name="LEDs NeoPixel" data-i18n-cat="cat.leds_neopixel" colour="#f472b6">
-      <block type="tecla_neopixel_setup">
-        <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
-        <value name="COUNT"><shadow type="math_number"><field name="NUM">8</field></shadow></value>
-      </block>
-      <block type="tecla_neopixel_set">
-        <value name="INDEX"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
-        <value name="R"><shadow type="math_number"><field name="NUM">255</field></shadow></value>
-        <value name="G"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
-        <value name="B"><shadow type="math_number"><field name="NUM">128</field></shadow></value>
-      </block>
-      <block type="tecla_neopixel_show"></block>
-      <block type="tecla_neopixel_clear"></block>
-      <block type="tecla_neopixel_rainbow">
-        <value name="OFFSET"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
-      </block>
-    </category>
-    <category name="Servos i Motors" data-i18n-cat="cat.servos_i_motors" colour="#fb923c">
-      <block type="tecla_servo_setup">
-        <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
-      </block>
-      <block type="tecla_servo_angle">
-        <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
-        <value name="ANGLE"><shadow type="math_number"><field name="NUM">90</field></shadow></value>
-      </block>
-      <block type="tecla_motor_setup">
-        <value name="PIN1"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
-        <value name="PIN2"><shadow type="math_number"><field name="NUM">17</field></shadow></value>
-      </block>
-      <block type="tecla_motor_speed">
-        <value name="SPEED"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
-      </block>
-    </category>
-    <category name="Sensors" data-i18n-cat="cat.sensors" colour="#4ade80">
-      <block type="tecla_sensor_temperature"></block>
-      <block type="tecla_sensor_light">
-        <value name="PIN"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
-      </block>
-      <block type="tecla_sensor_sound">
-        <value name="PIN"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
-      </block>
-      <block type="tecla_sensor_moisture">
-        <value name="PIN"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
-      </block>
-      <block type="tecla_sensor_pir">
-        <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
-      </block>
-      <block type="tecla_sensor_button_external">
-        <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
-      </block>
-      <block type="tecla_sensor_distance"></block>
-      <block type="tecla_system_voltage"></block>
     </category>
     <category name="Temps i Bucles" data-i18n-cat="cat.temps_i_bucles" colour="#ff9100">
       <block type="tecla_wait"><value name="TIME"><shadow type="math_number"><field name="NUM">1.0</field></shadow></value></block>
@@ -1011,6 +949,49 @@
         <value name="PULSES"><shadow type="math_number"><field name="NUM">4</field></shadow></value>
         <value name="STEPS"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
       </block>
+    </category>
+    <category name="Seqüenciador" data-i18n-cat="cat.seq_enciador" colour="#00ffc8">
+      <block type="tecla_note_name"></block>
+      <block type="tecla_seq_grid"></block>
+      <block type="tecla_seq_play_steps">
+        <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+        <value name="STEP_DUR"><shadow type="math_number"><field name="NUM">0.25</field></shadow></value>
+      </block>
+      <block type="tecla_arpeggio_dir">
+        <value name="SPEED"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value>
+      </block>
+      <block type="tecla_drum_hit">
+        <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+      </block>
+      <block type="tecla_drum_pattern">
+        <value name="STEP_DUR"><shadow type="math_number"><field name="NUM">0.125</field></shadow></value>
+      </block>
+      <block type="tecla_chord_progression">
+        <value name="BEATS_DUR"><shadow type="math_number"><field name="NUM">1.0</field></shadow></value>
+      </block>
+    </category>
+    <category name="Live Coding" data-i18n-cat="cat.live_coding" colour="#ff3d00">
+      <block type="tecla_note_on_only">
+        <value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value>
+        <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+      </block>
+      <block type="tecla_note_off_only">
+        <value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value>
+      </block>
+      <block type="tecla_transpose">
+        <value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value>
+        <value name="SEMITONES"><shadow type="math_number"><field name="NUM">7</field></shadow></value>
+      </block>
+      <block type="tecla_humanize_vel">
+        <value name="BASE_VEL"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+        <value name="SPREAD"><shadow type="math_number"><field name="NUM">12</field></shadow></value>
+      </block>
+      <block type="tecla_crescendo">
+        <value name="FROM_VAL"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        <value name="TO_VAL"><shadow type="math_number"><field name="NUM">127</field></shadow></value>
+        <value name="DURATION"><shadow type="math_number"><field name="NUM">4.0</field></shadow></value>
+      </block>
+      <block type="tecla_riff_repeat"></block>
     </category>
     <category name="Lògica" data-i18n-cat="cat.l_gica" colour="#00e676">
       <block type="controls_if"></block>
@@ -1117,63 +1098,6 @@
         <value name="SEPARATOR"><shadow type="text"><field name="TEXT">, </field></shadow></value>
       </block>
     </category>
-    <category name="MIDI Avançat" data-i18n-cat="cat.midi_avan_at" colour="#40c8ff">
-      <block type="tecla_midi_cc">
-        <value name="CC_NUM"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
-        <value name="CC_VAL"><shadow type="math_number"><field name="NUM">64</field></shadow></value>
-      </block>
-      <block type="tecla_midi_pitch_bend">
-        <value name="AMOUNT"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
-      </block>
-      <block type="tecla_midi_sustain"></block>
-      <block type="tecla_midi_expression">
-        <value name="VALUE"><shadow type="math_number"><field name="NUM">127</field></shadow></value>
-      </block>
-      <block type="tecla_midi_all_notes_off"></block>
-    </category>
-    <category name="Live Coding" data-i18n-cat="cat.live_coding" colour="#ff3d00">
-      <block type="tecla_note_on_only">
-        <value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value>
-        <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
-      </block>
-      <block type="tecla_note_off_only">
-        <value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value>
-      </block>
-      <block type="tecla_transpose">
-        <value name="NOTE"><shadow type="math_number"><field name="NUM">60</field></shadow></value>
-        <value name="SEMITONES"><shadow type="math_number"><field name="NUM">7</field></shadow></value>
-      </block>
-      <block type="tecla_humanize_vel">
-        <value name="BASE_VEL"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
-        <value name="SPREAD"><shadow type="math_number"><field name="NUM">12</field></shadow></value>
-      </block>
-      <block type="tecla_crescendo">
-        <value name="FROM_VAL"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
-        <value name="TO_VAL"><shadow type="math_number"><field name="NUM">127</field></shadow></value>
-        <value name="DURATION"><shadow type="math_number"><field name="NUM">4.0</field></shadow></value>
-      </block>
-      <block type="tecla_riff_repeat"></block>
-    </category>
-    <category name="Seqüenciador" data-i18n-cat="cat.seq_enciador" colour="#00ffc8">
-      <block type="tecla_note_name"></block>
-      <block type="tecla_seq_grid"></block>
-      <block type="tecla_seq_play_steps">
-        <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
-        <value name="STEP_DUR"><shadow type="math_number"><field name="NUM">0.25</field></shadow></value>
-      </block>
-      <block type="tecla_arpeggio_dir">
-        <value name="SPEED"><shadow type="math_number"><field name="NUM">0.12</field></shadow></value>
-      </block>
-      <block type="tecla_drum_hit">
-        <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
-      </block>
-      <block type="tecla_drum_pattern">
-        <value name="STEP_DUR"><shadow type="math_number"><field name="NUM">0.125</field></shadow></value>
-      </block>
-      <block type="tecla_chord_progression">
-        <value name="BEATS_DUR"><shadow type="math_number"><field name="NUM">1.0</field></shadow></value>
-      </block>
-    </category>
     <category name="Variables" data-i18n-cat="cat.variables" colour="#FF6F00" custom="VARIABLE"></category>
     <category name="Funcions" data-i18n-cat="cat.funcions" colour="#76ff03">
       <block type="tecla_function_define"></block>
@@ -1190,79 +1114,145 @@
       </block>
       <block type="tecla_open_app"></block>
     </category>
-    <category name="Sistema" data-i18n-cat="cat.sistema" colour="#94a3b8">
-      <block type="tecla_storage_write">
-        <value name="KEY"><shadow type="text"><field name="TEXT">comptador</field></shadow></value>
-        <value name="VALUE"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
-      </block>
-      <block type="tecla_storage_read">
-        <value name="KEY"><shadow type="text"><field name="TEXT">comptador</field></shadow></value>
-      </block>
-      <block type="tecla_storage_exists">
-        <value name="KEY"><shadow type="text"><field name="TEXT">comptador</field></shadow></value>
-      </block>
-      <block type="tecla_storage_delete">
-        <value name="KEY"><shadow type="text"><field name="TEXT">comptador</field></shadow></value>
-      </block>
-      <block type="tecla_system_memory"></block>
-      <block type="tecla_system_reset"></block>
-    </category>
-    <sep></sep>
-    <category name="Events Scratch" data-i18n-cat="cat.events_scratch" colour="#FFBF00">
-      <block type="scratch_when_flag_clicked"></block>
-      <block type="scratch_when_key_pressed"></block>
-      <block type="scratch_broadcast"><field name="MESSAGE">missatge1</field></block>
-      <block type="scratch_when_receive"><field name="MESSAGE">missatge1</field></block>
-    </category>
-    <category name="Control Scratch" data-i18n-cat="cat.control_scratch" colour="#FFAB19">
-      <block type="scratch_stop"></block>
-      <block type="scratch_say">
-        <value name="MESSAGE"><shadow type="text"><field name="TEXT">Hola!</field></shadow></value>
-        <value name="SECONDS"><shadow type="math_number"><field name="NUM">2</field></shadow></value>
-      </block>
-      <block type="scratch_think">
-        <value name="MESSAGE"><shadow type="text"><field name="TEXT">Hmm...</field></shadow></value>
-        <value name="SECONDS"><shadow type="math_number"><field name="NUM">2</field></shadow></value>
-      </block>
-      <block type="scratch_timer"></block>
-      <block type="scratch_reset_timer"></block>
-      <block type="scratch_change_var">
-        <value name="VALUE"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
-      </block>
-      <block type="scratch_show_variable"></block>
-    </category>
-    <category name="Operadors Scratch" data-i18n-cat="cat.operadors_scratch" colour="#59C059">
-      <block type="scratch_join">
-        <value name="STRING1"><shadow type="text"><field name="TEXT">poma </field></shadow></value>
-        <value name="STRING2"><shadow type="text"><field name="TEXT">pera</field></shadow></value>
-      </block>
-      <block type="scratch_letter_of">
-        <value name="LETTER"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
-        <value name="STRING"><shadow type="text"><field name="TEXT">poma</field></shadow></value>
-      </block>
-      <block type="scratch_length_of">
-        <value name="STRING"><shadow type="text"><field name="TEXT">poma</field></shadow></value>
-      </block>
-      <block type="scratch_contains">
-        <value name="STRING1"><shadow type="text"><field name="TEXT">poma</field></shadow></value>
-        <value name="STRING2"><shadow type="text"><field name="TEXT">o</field></shadow></value>
-      </block>
-      <block type="scratch_mod">
-        <value name="NUM1"><shadow type="math_number"><field name="NUM">10</field></shadow></value>
-        <value name="NUM2"><shadow type="math_number"><field name="NUM">3</field></shadow></value>
-      </block>
-      <block type="scratch_round">
-        <value name="NUM"><shadow type="math_number"><field name="NUM">3.5</field></shadow></value>
-      </block>
-      <block type="scratch_mathop">
-        <value name="NUM"><shadow type="math_number"><field name="NUM">9</field></shadow></value>
-      </block>
+    <category name="Maquinari extern" data-i18n-cat="cat.maquinari_extern" colour="#94a3b8">
+      <label text="Cal cablatge extra: TECLA no ho porta de sèrie" data-i18n-label="lbl.extern"></label>
+      <category name="GPIO (Pins)" data-i18n-cat="cat.gpio_pins" colour="#00f0ff">
+        <block type="tecla_digital_write"></block>
+        <block type="tecla_digital_read"></block>
+        <block type="tecla_analog_write"><value name="VALUE"><shadow type="math_number"><field name="NUM">32768</field></shadow></value></block>
+        <block type="tecla_analog_read"></block>
+        <block type="tecla_pwm_setup">
+          <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+          <value name="FREQ"><shadow type="math_number"><field name="NUM">1000</field></shadow></value>
+        </block>
+        <block type="tecla_pwm_duty">
+          <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+          <value name="DUTY"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
+        </block>
+      </category>
+      <category name="Pantalla OLED" data-i18n-cat="cat.pantalla_oled" colour="#00f0ff">
+        <block type="tecla_display_setup"></block>
+        <block type="tecla_display_text">
+          <value name="TEXT"><shadow type="text"><field name="TEXT">Hola TECLA!</field></shadow></value>
+          <value name="X"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+          <value name="Y"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        </block>
+        <block type="tecla_display_clear"></block>
+        <block type="tecla_display_pixel">
+          <value name="X"><shadow type="math_number"><field name="NUM">64</field></shadow></value>
+          <value name="Y"><shadow type="math_number"><field name="NUM">32</field></shadow></value>
+        </block>
+        <block type="tecla_display_line">
+          <value name="X1"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+          <value name="Y1"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+          <value name="X2"><shadow type="math_number"><field name="NUM">127</field></shadow></value>
+          <value name="Y2"><shadow type="math_number"><field name="NUM">63</field></shadow></value>
+        </block>
+        <block type="tecla_display_rect">
+          <value name="X"><shadow type="math_number"><field name="NUM">10</field></shadow></value>
+          <value name="Y"><shadow type="math_number"><field name="NUM">10</field></shadow></value>
+          <value name="WIDTH"><shadow type="math_number"><field name="NUM">40</field></shadow></value>
+          <value name="HEIGHT"><shadow type="math_number"><field name="NUM">20</field></shadow></value>
+        </block>
+      </category>
+      <category name="LEDs NeoPixel" data-i18n-cat="cat.leds_neopixel" colour="#f472b6">
+        <block type="tecla_neopixel_setup">
+          <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+          <value name="COUNT"><shadow type="math_number"><field name="NUM">8</field></shadow></value>
+        </block>
+        <block type="tecla_neopixel_set">
+          <value name="INDEX"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+          <value name="R"><shadow type="math_number"><field name="NUM">255</field></shadow></value>
+          <value name="G"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+          <value name="B"><shadow type="math_number"><field name="NUM">128</field></shadow></value>
+        </block>
+        <block type="tecla_neopixel_show"></block>
+        <block type="tecla_neopixel_clear"></block>
+        <block type="tecla_neopixel_rainbow">
+          <value name="OFFSET"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        </block>
+      </category>
+      <category name="Servos i Motors" data-i18n-cat="cat.servos_i_motors" colour="#fb923c">
+        <block type="tecla_servo_setup">
+          <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+        </block>
+        <block type="tecla_servo_angle">
+          <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+          <value name="ANGLE"><shadow type="math_number"><field name="NUM">90</field></shadow></value>
+        </block>
+        <block type="tecla_motor_setup">
+          <value name="PIN1"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+          <value name="PIN2"><shadow type="math_number"><field name="NUM">17</field></shadow></value>
+        </block>
+        <block type="tecla_motor_speed">
+          <value name="SPEED"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+        </block>
+      </category>
+      <category name="Sensors" data-i18n-cat="cat.sensors" colour="#4ade80">
+        <block type="tecla_sensor_temperature"></block>
+        <block type="tecla_sensor_light">
+          <value name="PIN"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        </block>
+        <block type="tecla_sensor_sound">
+          <value name="PIN"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        </block>
+        <block type="tecla_sensor_moisture">
+          <value name="PIN"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        </block>
+        <block type="tecla_sensor_pir">
+          <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+        </block>
+        <block type="tecla_sensor_button_external">
+          <value name="PIN"><shadow type="math_number"><field name="NUM">16</field></shadow></value>
+        </block>
+        <block type="tecla_sensor_distance"></block>
+        <block type="tecla_system_voltage"></block>
+      </category>
+      <category name="Sistema" data-i18n-cat="cat.sistema" colour="#94a3b8">
+        <block type="tecla_storage_write">
+          <value name="KEY"><shadow type="text"><field name="TEXT">comptador</field></shadow></value>
+          <value name="VALUE"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        </block>
+        <block type="tecla_storage_read">
+          <value name="KEY"><shadow type="text"><field name="TEXT">comptador</field></shadow></value>
+        </block>
+        <block type="tecla_storage_exists">
+          <value name="KEY"><shadow type="text"><field name="TEXT">comptador</field></shadow></value>
+        </block>
+        <block type="tecla_storage_delete">
+          <value name="KEY"><shadow type="text"><field name="TEXT">comptador</field></shadow></value>
+        </block>
+        <block type="tecla_system_memory"></block>
+        <block type="tecla_system_reset"></block>
+      </category>
     </category>
   </xml>
 
   <!-- Block definitions & generators -->
   <!-- El tutorial interactiu: motor compartit amb l'Instrument i amb el
        Macropad (tutorial/motor.js) i guió propi. -->
+  <!-- L'actualitzador de TECLA: el mateix de l'Instrument i del Macropad
+       (codi/instalador/motor.js). Instal·la la UF2 del motor, el repartidor,
+       el nucli i les llibreries des d'aquí mateix i, en acabar, hi puja el
+       codi del projecte. -->
+  <script type="module">
+    import { munta, discDesDeCarpeta, queHiHa, etiquetaFirmware } from '../codi/instalador/motor.js';
+    window.TeclaInstalador = { discDesDeCarpeta, queHiHa, etiquetaFirmware };
+    let _nansa = null, _disc = null;
+    try {
+      munta({
+        arrel: '../codi/',
+        disc: () => {
+          const h = window._teclaDirHandle?.();
+          if (!h) { _nansa = null; _disc = null; return null; }
+          if (h !== _nansa) { _nansa = h; _disc = discDesDeCarpeta(h); }
+          return _disc;
+        },
+        idioma: () => localStorage.getItem('tecla-blk-lang') || 'ca',
+        enAcabar: async () => { await window._teclaEscriuCalaix?.(); },
+      });
+    } catch (e) { console.warn('[actualitzador]', e); }
+  </script>
   <script type="module">
     import { munta } from '../codi/tutorial/blocks.js';
     try { munta(); } catch (e) { console.warn('[tutorial]', e); }
