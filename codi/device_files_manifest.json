@@ -1,6 +1,6 @@
 {
-  "version": "3.18.2",
-  "generated": "2026-09-24 01:50",
+  "version": "3.18.3",
+  "generated": "2026-09-24 02:05",
   "files": [
     "boot.py",
     "code.py",
@@ -162,7 +162,7 @@
     "lib/adafruit_midi/stop.mpy": "3a50a373afdd08cd92efe9b964506e2d49503f3a0dba669b702c56870c958e04",
     "lib/adafruit_midi/system_exclusive.mpy": "242a523962592b465d54b7a4aef061497067dd39281c926cd143d07e64b20a23",
     "lib/adafruit_midi/timing_clock.mpy": "75404b10937dbbe84ba9193a4f51e1139238b7d04d3021e760e85f9cc0dd1149",
-    "main.mpy": "49a4b2ec03b386036c78f58567f90419416f18f8e48c46d72707d6e03fe7aea7",
+    "main.mpy": "e294a56c83a717b67556134b11fcad9503c30cd895b952d107e4700ab4e0a41b",
     "modes/__init__.py": "d2b650669d780996f4957ca37741a25e4d987b3c8e772f7bd895f59e4b06b528",
     "modes/custom_modes_registry.json": "661d7105743abffc3517ac254e1ddafd4e86010f833f33b85e7cb7d6f6446db3",
     "modes/mode_automat.mpy": "cbfd3bd3e39cf5e28b05a53ce31e246e3bdc92d7bd9b631b09999538ec37cad5",
@@ -198,22 +198,22 @@
     "modes/mode_vals.mpy": "21480ea10e4f3524a236b4bc041fd56902e9b240a0787e18f5b529acde9b212c",
     "modes/mode_vida.mpy": "da4192eed39e362c155957527d5c05c90164133b75ff2a8603c3e924912de79a",
     "motor/__init__.py": "cc5ca50ea6c5bbd87478ade6eed8db4fafba379b229618959eb9e962987e9faa",
-    "motor/accompaniment.mpy": "4e5a398546e859ad0f94f714f2bb335ee7ae9305746004e5b5f6bd01070bc472",
+    "motor/accompaniment.mpy": "0c75e906d9565075ec0513ea9f0151b82b6c65a674dc26a03db674c51009ea64",
     "motor/base_mode.mpy": "7c59e9460c8a0c783e09dfe042f0a172d4ab8529fb2d18f93bc3e103d564fe5d",
     "motor/kbd_arp.mpy": "a6c591e92640b9b3c5b212928c56bb5c6b31fe69f5bf1e65c834f83a02ad6b3a",
-    "motor/kbd_buttons.mpy": "5e97dcf573cee7df0fcd2b0debc45dda7de5ed56812904c5d49ee0f403634d61",
+    "motor/kbd_buttons.mpy": "e68b278ada821a928f99e08c776cdc7f61e021915b6966627d34bc50d09871cd",
     "motor/kbd_fons.mpy": "dec3b3c44d4cdff2233de3fc818a9dc470da1e0c8013c8da4e7981ed9d481345",
     "motor/kbd_looper.mpy": "c58cd69889e5b884c85b190681fc8fd62a9e0350a14ad771e37ee1f925f84f54",
     "motor/kbd_notes.mpy": "735c2ca58be88219fbe231b27e9c0bf98b139caa87d68ef05f7efee4139b8cb6",
     "motor/kbd_pots.mpy": "54ffb83072fc4f5190899274059344091e54ba3bee37670b80929f085cc5e110",
-    "motor/kbd_progressio.mpy": "6c7227fb653693e32c73e27294a856fd5a23acc4d899be0c29570059a41806a4",
+    "motor/kbd_progressio.mpy": "eef4812d22291a1cda4275114623a51c085f0524bc9549bf456986b6073072a1",
     "motor/kbd_voicelead.mpy": "0a1f9fca138ab6769a234b439a1774739c1433a9a866822bf9a41291d3c0806b",
     "motor/mm_cleanup.mpy": "7abbf68a18d29662f6f5188927134add1c328587ef0988b6e745c6bc1a7a0308",
     "motor/mm_lifecycle.mpy": "05dcda7c4d52357d83d6599e264c01f1ce4176d6b3ea1b0bc507704e8a599dce",
     "motor/mm_update.mpy": "4e418b1cea2a8ed4344ee109e45bd6cf1442797662619eec4a9c7c13d44d081e",
     "motor/mode_keyboard.mpy": "568ea17319ee018298e4169ee690d38d98c100995c3fd07437a7a4f40d93d90c",
     "motor/mode_manager.mpy": "7c6c82c13182beafcf04c6390526ff143d1af1039e6314a72c5d3b5e08431ae5",
-    "motor/modeloop.mpy": "38add5f1aa78b8401663bcac291449dfd1b09c445e680088a70f8eaa3af1b988",
+    "motor/modeloop.mpy": "8e1ab392e02591f3c1c27a27d64bd662998fd4ee72a44696a7f52a46a8edd475",
     "motor/negharm.mpy": "cf962cdca14c27f8dde45ff037c9a963fe5a85eb047433532b716e11d885d529",
     "motor/potdit.mpy": "d46a06667e890434b2452dd1c56df8e52425fcbe5ffe47505f0c822fe5d16853",
     "motor/potlayers.mpy": "0347e930e2cd0461be50425c9d1283d625cff8aa231e26258263c102fe414957",
@@ -288,5 +288,5 @@
     "effects",
     "motor"
   ],
-  "congelats_empremta": "5d7498530dd0ffeb"
+  "congelats_empremta": "4127fe9f4c32ad94"
 }

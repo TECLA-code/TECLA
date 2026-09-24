@@ -9,9 +9,11 @@ acord, 'bpm': tempo}. Gest, en PRÉMER (resposta immediata, com el latch):
     tecla que sona     → l'atura
     una altra tecla    → canvia a la progressió d'aquella (des del principi)
 
-Els acords sonen sostinguts pel canal de la base, una octava per sota de com
-sonen a les tecles de nota, i el teclat queda lliure per tocar-hi a sobre. Si
-la base (funció 'accomp') també sona, segueix la fonamental de cada acord.
+Els acords sonen sostinguts pel SEU canal (motor/modeloop.canal_progressio:
+el 4 amb el canal de sortida per defecte), una octava per sota de com sonen a
+les tecles de nota, i el teclat queda lliure per tocar-hi a sobre. Si la base
+(funció 'accomp') també sona, segueix la fonamental de cada acord, i en aturar
+la progressió torna a la tonalitat del teclat.
 El rellotge és el de l'acompanyament (motor/accompaniment.py) en una
 instància pròpia: la base i la progressió conviuen. Mòdul mandrós.
 """
@@ -103,14 +105,15 @@ def handle_button(kbd, btn_idx, now):
     ac = acords(prog, getattr(kbd, 'octave', 4))
     if not ac:
         return
-    from motor.accompaniment import Accompaniment, _canal
+    from motor.accompaniment import Accompaniment
+    from motor.modeloop import canal_progressio
     eng = getattr(kbd, '_prog', None)
     if eng is None:
         eng = Accompaniment(kbd.midi)
         kbd._prog = eng
     eng.clear()
     eng.set_tempo(bpm)
-    eng.add_fn(_patro(kbd, ac, temps), _canal(kbd), now, 'progressio')
+    eng.add_fn(_patro(kbd, ac, temps), canal_progressio(kbd.midi), now, 'progressio')
     kbd._prog_btn = btn_idx
     diu("Progressio: %s" % prog.get('name', ''))
 
@@ -124,3 +127,11 @@ def atura(kbd):
         except Exception:
             pass
     kbd._prog_btn = -1
+    # La base, si sona, torna a la tonalitat del teclat (la progressió li
+    # havia anat posant la fonamental de cada acord)
+    if getattr(kbd, '_accomp_active', False):
+        try:
+            from motor.accompaniment import sync_context
+            sync_context(kbd)
+        except Exception:
+            pass

@@ -226,6 +226,8 @@ class Accompaniment:
 
     # ── Note-offs programats ─────────────────────────────────────────────────
     def _flush_offs(self, now):
+        if not self._note_offs:
+            return                  # el cas de cada volta: res pendent, res a al·locar
         kept = []
         for t, note, ch in self._note_offs:
             if now >= t:

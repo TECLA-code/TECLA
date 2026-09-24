@@ -73,6 +73,26 @@ def canals_auxiliars(midi_out):
     return res[0], res[1], res[2]
 
 
+def canal_progressio(midi_out):
+    """El canal de la funció 'progression' (motor/kbd_progressio): el QUART
+    canal lliure, amb la mateixa regla que canals_auxiliars (4 amb el canal de
+    sortida per defecte). Propi i no el de la base: amb un canal compartit, el
+    NoteOff d'una nota de la base tallava la mateixa nota sostinguda de
+    l'acord de la progressió."""
+    try:
+        out = int(getattr(midi_out, 'out_channel', 0) or 0)
+    except Exception:
+        out = 0
+    n = 0
+    c = 1
+    while True:
+        if c != out and c != 9:
+            n += 1
+            if n == 4:
+                return c
+        c = (c + 1) & 15
+
+
 class ModeLoop:
     def __init__(self):
         self.state = IDLE

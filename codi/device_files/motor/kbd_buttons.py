@@ -161,8 +161,11 @@ def process_keyboard_buttons(kbd, button_states):
             elif btn_idx in kbd._fn_prog_btns:
                 # Progressió sencera en una tecla (mòdul mandrós): en PRÉMER,
                 # perquè l'acord caigui on el toques
-                from motor.kbd_progressio import handle_button as _prog_gesture
-                _prog_gesture(kbd, btn_idx, current_time)
+                try:
+                    from motor.kbd_progressio import handle_button as _prog_gesture
+                    _prog_gesture(kbd, btn_idx, current_time)
+                except Exception as e:
+                    diu("Progressio: %s" % e)
             elif btn_idx == kbd._fn_synth_wave_btn:
                 # Cada clic cicla la forma d'ona del sinte (CC70 → motor d'àudio)
                 idx = (getattr(kbd, '_synth_wave_idx', 0) + 1) % 4

@@ -402,6 +402,11 @@ class TeclaHardware:
                         if getattr(self.keyboard_mode, '_fons', None) is not None:
                             from motor.kbd_fons import atura as _fons_atura
                             _fons_atura(self.keyboard_mode)
+                        # I la progressió en una tecla: si no, el rellotge del
+                        # teclat la tornava a fer sonar a l'acord següent
+                        if getattr(self.keyboard_mode, '_prog', None) is not None:
+                            from motor.kbd_progressio import atura as _prog_atura
+                            _prog_atura(self.keyboard_mode)
                         self.keyboard_mode.stop_all_notes()
                     except:
                         pass
